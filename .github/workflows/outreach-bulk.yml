@@ -27,6 +27,7 @@ on:
 jobs:
   send:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,6 +35,7 @@ jobs:
       - run: npm init -y && npm install nodemailer csv-parse
       - name: Send bulk
         run: node scripts/send_bulk.js "${{ github.event.inputs.csv_path }}" "${{ github.event.inputs.limit }}" "${{ github.event.inputs.offset }}" "${{ github.event.inputs.subject_tpl }}" "${{ github.event.inputs.body_tpl }}"
+        continue-on-error: true
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
