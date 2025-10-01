@@ -1,0 +1,43 @@
+name: Outreach (Bulk)
+
+on:
+  workflow_dispatch:
+    inputs:
+      csv_path:
+        description: "CSV path"
+        required: true
+        default: "data/leads.csv"
+      limit:
+        description: "Count to send (≤20 recommended)"
+        required: true
+        default: "10"
+      offset:
+        description: "Start index (0-based)"
+        required: true
+        default: "0"
+      subject_tpl:
+        description: "Subject template"
+        required: true
+        default: "Renewal heads-up: {v1}/{v2} updates you may want for due diligence"
+      body_tpl:
+        description: "Body template"
+        required: true
+        default: "Hi {company} team — quick heads-up.\n\nWe detected recent public changes across {v1}/{v2}/{v3} (pricing / terms / DPA / subprocessors / status). This may affect renewal or compliance.\n\nReply “1” to start a 7-day pilot. No login. Alerts delivered by email/Slack with a verifiable evidence card (diff + source + hash). Reply “9” to opt out.\n\n— CG Alert"
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm init -y && npm install nodemailer csv-parse
+      - name: Send bulk
+        run: node scripts/send_bulk.js "${{ github.event.inputs.csv_path }}" "${{ github.event.inputs.limit }}" "${{ github.event.inputs.offset }}" "${{ github.event.inputs.subject_tpl }}" "${{ github.event.inputs.body_tpl }}"
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
