@@ -1,8 +1,16 @@
 name: Outreach S2 (follow-up)
-on: workflow_dispatch:
-  inputs:
-    limit: { description: "count", required: true, default: "20" }
-    min_days: { description: "days since S1", required: true, default: "3" }
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "count"
+        required: true
+        default: "20"
+      min_days:
+        description: "days since S1"
+        required: true
+        default: "3"
+
 jobs:
   s2:
     runs-on: ubuntu-latest
@@ -10,12 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with:
+          node-version: '20'
       - run: npm init -y && npm install nodemailer csv-parse csv-stringify
       - name: Segment S2
         run: node scripts/segment.js 2 "${{ github.event.inputs.min_days }}" "${{ github.event.inputs.limit }}"
       - name: Send S2
-        run: node scripts/send_bulk.js "data/targets_stage2.csv" "${{ github.event.inputs.limit }}" "0" "Quick sanity check before renewal — {v1}/{v2}" "Hi {company} team — quick check.\n\nWe’ve seen more public changes on {v1}/{v2}/{v3} (pricing/terms/DPA/subprocessors). If you want, we can run a 7-day pilot and deliver Slack/email alerts with a verifiable evidence card (diff + source + hash). No login.\n\nReply “1” to start, or “9” to opt out.\n\n— CG Alert"
         env:
           CG_STAGE: "2"
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -25,3 +33,4 @@ jobs:
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: node scripts/send_bulk.js "data/targets_stage2.csv" "${{ github.event.inputs.limit }}" "0" "Quick sanity check before renewal — {v1}/{v2}" "Hi {company} team — quick check.\n\nWe’ve seen more public changes on {v1}/{v2}/{v3} (pricing/terms/DPA/subprocessors). If helpful, we can run a 7-day pilot. Reply “1” to start, or “9” to opt out.\n\n— CG Alert"
