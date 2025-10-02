@@ -2,6 +2,14 @@
 const fs = require("fs");
 const { parse } = require("csv-parse/sync");
 const nodemailer = require("nodemailer");
+const path = require("path");
+function appendCsvLine(filepath, line){
+  const dir = path.dirname(filepath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.appendFileSync(filepath, line + "\n", "utf8");
+}
+function iso(){ return new Date().toISOString(); }
+
 
 // ===== helpers =====
 function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
