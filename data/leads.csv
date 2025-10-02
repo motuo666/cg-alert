@@ -1,5 +1,4 @@
 email,company,domain,vendor1,vendor2,vendor3
-email	company	domain	vendor1	vendor2	vendor3
 procurement@asana.com	Asana	asana.com	Okta	Slack	Zoom
 vendor@intercom.com	Intercom	intercom.com	HubSpot	Stripe	Snowflake
 legal@zapier.com	Zapier	zapier.com	GitHub	Datadog	Cloudflare
