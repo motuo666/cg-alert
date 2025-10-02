@@ -16,7 +16,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with:
+          node-version: '20'
 
       - name: Install deps
         run: |
@@ -30,6 +31,11 @@ jobs:
           test -f scripts/send_bulk.js || (echo "❌ missing scripts/send_bulk.js" && exit 1)
           test -s data/leads.csv       || (echo "❌ data/leads.csv missing or empty" && exit 1)
           [ -f data/sent_log.csv ] || echo "ts,email,stage,status,subject" > data/sent_log.csv
+
+      - name: Peek leads (first 5 lines)
+        run: |
+          echo "----- data/leads.csv (first 5) -----"
+          head -n 5 data/leads.csv || true
 
       - name: Segment S1
         run: node scripts/segment.js 1 0 "${{ github.event.inputs.limit }}"
