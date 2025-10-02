@@ -1,11 +1,12 @@
 name: Outreach S1 (first touch)
+
 on:
   workflow_dispatch:
     inputs:
       limit:
         description: "count"
         required: true
-        default: "20"
+        default: "10"
 
 jobs:
   s1:
@@ -13,12 +14,41 @@ jobs:
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm init -y && npm install nodemailer csv-parse csv-stringify
+        with: { node-version: '20' }
+
+      - name: Install deps
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install nodemailer csv-parse csv-stringify --silent
+
+      - name: Sanity check
+        run: |
+          echo "::group::tree"; ls -R; echo "::endgroup::"
+          test -f scripts/segment.js   || (echo "❌ missing scripts/segment.js" && exit 1)
+          test -f scripts/send_bulk.js || (echo "❌ missing scripts/send_bulk.js" && exit 1)
+          test -s data/leads.csv       || (echo "❌ data/leads.csv missing or empty" && exit 1)
+          [ -f data/sent_log.csv ] || echo "ts,email,stage,status,subject" > data/sent_log.csv
+
       - name: Segment S1
         run: node scripts/segment.js 1 0 "${{ github.event.inputs.limit }}"
+
+      - name: Abort if no targets
+        run: |
+          if [ ! -s data/targets_stage1.csv ]; then
+            echo "No targets for S1 (already sent or all filtered)."
+            exit 0
+          fi
+
+      - name: (optional) Ping Slack start
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          [ -z "$SLACK_WEBHOOK" ] && exit 0
+          echo '{"text":"🔔 S1 started"}' > body.json
+          curl -s -X POST -H 'content-type: application/json' --data @body.json "$SLACK_WEBHOOK" || true
+
       - name: Send S1
         env:
           CG_STAGE: "1"
