@@ -1,152 +1,149 @@
-// scripts/poll_inbox.js  — IMAP inbox poll + auto-reply + Slack + CSV upsert
-// Deps: imapflow, nodemailer, csv-parse, csv-stringify
+// scripts/poll_inbox.js — stable r4
+// 功能：IMAP 读 Zoho 收件箱，识别 “1/9/unsubscribe”，写 trials.csv / unsubscribes.csv，报错详细推 Slack。
+// 依赖：imapflow, mailparser, csv-parse, csv-stringify, nodemailer（可选回信）
 
-const { ImapFlow } = require("imapflow");
-const nodemailer = require("nodemailer");
 const fs = require("fs");
+const path = require("path");
+const { ImapFlow } = require("imapflow");
+const { simpleParser } = require("mailparser");
 const { parse } = require("csv-parse/sync");
 const { stringify } = require("csv-stringify/sync");
+const nodemailer = require("nodemailer");
 
-function nowISO(){ return new Date().toISOString(); }
-function lc(s){ return (s||"").toLowerCase().trim(); }
-
-function readCsv(path){
-  if (!fs.existsSync(path)) return [];
-  const t = fs.readFileSync(path, "utf8");
-  return parse(t, { columns: true, skip_empty_lines: true, trim: true });
+// ---------- utils ----------
+function ensureHeader(file, header) {
+  const dir = path.dirname(file);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(file)) fs.writeFileSync(file, header + "\n", "utf8");
 }
-function writeCsv(path, rows){
-  const out = stringify(rows, { header: true });
-  fs.writeFileSync(path, out);
+function appendCsv(file, obj) {
+  ensureHeader(file, Object.keys(obj).join(","));
+  const line = Object.values(obj).map(v =>
+    String(v ?? "").includes(",") ? `"${String(v).replace(/"/g,'""')}"` : String(v ?? "")
+  ).join(",");
+  fs.appendFileSync(file, line + "\n", "utf8");
 }
-
-async function slack(msg){
+async function slack(msg) {
   const url = process.env.SLACK_WEBHOOK;
   if (!url) return;
   try {
-    await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: msg }) });
-  } catch {}
+    await fetch(url, {
+      method:"POST",
+      headers:{ "content-type":"application/json" },
+      body: JSON.stringify({ text: msg })
+    });
+  } catch(_) {}
+}
+function nowIso(){ return new Date().toISOString(); }
+
+async function sendAck(to, text) {
+  // 可选回信；不想回可以直接 return
+  try{
+    const host = process.env.SMTP_HOST, port = parseInt(process.env.SMTP_PORT||"587",10);
+    const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
+    const from = process.env.MAIL_FROM, fromName = process.env.MAIL_FROM_NAME || "CG Alert";
+    if (!host||!user||!pass||!from) return;
+
+    const tx = nodemailer.createTransport({ host, port, secure:false, auth:{user,pass}, tls:{ ciphers:"TLSv1.2" } });
+    await tx.sendMail({
+      envelope:{ from, to },
+      from: `"${fromName}" <${from}>`,
+      to, subject: "CG Alert — confirmed",
+      text
+    });
+  }catch(_){}
 }
 
-function looksOOO(subject, body){
-  const s = lc(subject), b = lc(body);
-  const patterns = [
-    "out of office","auto reply","autoreply","vacation","away",
-    "自动回复","外出","休假","离开办公室"
-  ];
-  return patterns.some(p => s.includes(p) || b.includes(p));
-}
-
-function bodyContainsTrial(body){
-  const b = lc(body);
-  // 单独的“1”，或“start/pilot/试用”等关键词
-  return /(^|\s)1(\s|$)/.test(b) || /(start|pilot|trial|试用|开通)/.test(b);
-}
-function bodyContainsOptOut(body){
-  const b = lc(body);
-  return /(^|\s)9(\s|$)/.test(b) || /\bunsubscribe\b|\bopt\s*out\b|退订|取消订阅/.test(b);
-}
-
+// ---------- main ----------
 async function main(){
-  // IMAP 登录（Zoho US 默认；若你是 EU，请把 IMAP_HOST 设为 imap.zoho.eu）
-  const imap = new ImapFlow({
-    host: process.env.IMAP_HOST || "imap.zoho.com",
-    port: parseInt(process.env.IMAP_PORT || "993", 10),
+  const IMAP_HOST = process.env.IMAP_HOST || "imap.zoho.com"; // EU 用 imap.zoho.eu
+  const IMAP_PORT = parseInt(process.env.IMAP_PORT || "993", 10);
+  const IMAP_USER = process.env.IMAP_USER || process.env.SMTP_USER;
+  const IMAP_PASS = process.env.IMAP_PASS || process.env.SMTP_PASS;
+
+  if (!IMAP_HOST || !IMAP_USER || !IMAP_PASS) {
+    throw new Error("Missing IMAP env (IMAP_HOST/IMAP_USER/IMAP_PASS)");
+  }
+
+  const client = new ImapFlow({
+    host: IMAP_HOST,
+    port: IMAP_PORT,
     secure: true,
-    auth: { user: process.env.IMAP_USER, pass: process.env.IMAP_PASS }
-  });
-  await imap.connect();
-  await imap.mailboxOpen("INBOX");
-
-  // 取最近 7 天未读
-  const uids = [];
-  for await (const msg of imap.search({ seen: false, since: new Date(Date.now() - 7*24*3600*1000) }, { uid: true })) {
-    uids.push(msg);
-  }
-
-  const trials = readCsv("data/trials.csv");
-  const unsub  = readCsv("data/unsubscribes.csv");
-  const trialSet = new Set(trials.map(r => lc(r.email)));
-  const unsubSet = new Set(unsub.map(r => lc(r.email)));
-
-  // SMTP 用于自动回信
-  const tx = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || "587", 10),
-    secure: false,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    tls: { ciphers: "TLSv1.2" }
+    auth: { user: IMAP_USER, pass: IMAP_PASS },
+    logger: false,
+    tls: { servername: IMAP_HOST }
   });
 
-  let took = 0, tri = 0, opt = 0, oth = 0;
-
-  for (const uid of uids){
-    const meta = await imap.fetchOne(uid, { envelope: true, source: true });
-    const from = lc(meta.envelope?.from?.[0]?.address);
-    if (!from){ await imap.messageFlagsAdd({ uid }, ["\\Seen"]); continue; }
-
-    // 只取前几 KB 文本做粗识别（足够判断 1/9）
-    const raw = meta.source.toString("utf8").slice(0, 4000);
-    const subject = meta.envelope?.subject || "";
-    if (looksOOO(subject, raw)) { // 自动回复直接跳过
-      await imap.messageFlagsAdd({ uid }, ["\\Seen"]);
-      oth++; continue;
+  await client.connect();
+  const lock = await client.getMailboxLock("INBOX");
+  try {
+    // 只看最近 2 天未读，最多 50 封
+    const since = new Date(Date.now() - 2*24*3600*1000);
+    const search = { seen: false, since };
+    const messages = [];
+    for await (let msg of client.search(search, { uid: true })) {
+      messages.push(msg);
+      if (messages.length >= 50) break;
     }
 
-    let tag = "other";
-    if (bodyContainsOptOut(raw)) tag = "optout";
-    else if (bodyContainsTrial(raw)) tag = "trial";
+    let handled = 0;
+    for (const uid of messages){
+      const { content } = await client.download(uid);
+      const parsed = await simpleParser(content);
+      const fromAddr = (parsed.from && parsed.from.value && parsed.from.value[0] && parsed.from.value[0].address) || "";
+      const subject = (parsed.subject || "").trim();
+      const bodyText = (parsed.text || "").trim();
 
-    // 标记已读
-    await imap.messageFlagsAdd({ uid }, ["\\Seen"]);
-    took++;
+      const text = `${subject}\n${bodyText}`.toLowerCase();
+      const isOptOut = /\bunsubscribe\b|\bopt[- ]?out\b|^9$|\n9\b/.test(text);
+      const isTrial  = /^1$|\n1\b/.test(text);
 
-    if (tag === "optout"){
-      if (!unsubSet.has(from)) {
-        unsub.push({ email: from, company:"", domain:"", vendor1:"", vendor2:"", vendor3:"", ts: nowISO() });
-        unsubSet.add(from);
-        await slack(`Opt-out recorded → ${from}`);
-      }
-      opt++;
-    } else if (tag === "trial"){
-      if (!trialSet.has(from)) {
-        trials.push({ email: from, company:"", domain:"", vendor1:"", vendor2:"", vendor3:"", ts: nowISO() });
-        trialSet.add(from);
-        await slack(`Trial request → ${from}`);
-      }
-      // 自动回一封确认
-      try {
-        await tx.sendMail({
-          from: `"CG Alert" <${process.env.MAIL_FROM}>`,
-          to: from,
-          subject: "CG Alert — your 7-day pilot is queued",
-          text:
-`Thanks — your 7-day pilot is queued.
-
-Please reply with:
-• Company name
-• Website
-• Top 3 vendors to monitor
-
-We deliver Slack/email alerts with a verifiable evidence card (diff + source + hash). Not legal advice.
-
-— CG Alert`
+      if (isOptOut && fromAddr){
+        appendCsv("data/unsubscribes.csv", {
+          email: fromAddr.toLowerCase(),
+          company: "",
+          domain: fromAddr.split("@")[1] || "",
+          vendor1:"", vendor2:"", vendor3:"",
+          ts: nowIso()
         });
-      } catch {}
-      tri++;
-    } else {
-      oth++;
+        await slack(`Inbound → Opt-out recorded: ${fromAddr}`);
+        await sendAck(fromAddr, "Opt-out confirmed. You won't receive further outreach from CG Alert.");
+        await client.messageFlagsAdd(uid, ["\\Seen"]);
+        handled++;
+        continue;
+      }
+
+      if (isTrial && fromAddr){
+        appendCsv("data/trials.csv", {
+          email: fromAddr.toLowerCase(),
+          company: "",
+          domain: fromAddr.split("@")[1] || "",
+          vendors: "",
+          ts: nowIso()
+        });
+        await slack(`Inbound → Trial request recorded: ${fromAddr}`);
+        await sendAck(fromAddr, "Pilot confirmed. We’ll start a 7-day trial and share alerts via email/Slack. Reply 9 to opt out anytime.");
+        await client.messageFlagsAdd(uid, ["\\Seen"]);
+        handled++;
+        continue;
+      }
+
+      // 其它邮件：仅标记已读，避免重复轮询
+      await client.messageFlagsAdd(uid, ["\\Seen"]);
     }
+
+    if (handled === 0) {
+      console.log("No actionable messages.");
+    }
+  } finally {
+    lock.release();
+    await client.logout();
   }
-
-  writeCsv("data/trials.csv", trials);
-  writeCsv("data/unsubscribes.csv", unsub);
-  await slack(`Inbound summary → scanned=${uids.length}, took=${took}, trials=${tri}, optouts=${opt}, others=${oth}`);
-
-  await imap.logout();
 }
 
-main().catch(async (e)=>{
-  await slack(`Inbound error: ${e.message||e}`);
-  process.exit(0);
+main().catch(async e=>{
+  const why = (e && (e.stack || e.message)) || String(e);
+  console.error("Inbound fatal:", why);
+  await slack(`Inbound error: ${why.slice(0,300)}`);
+  process.exit(1);
 });
