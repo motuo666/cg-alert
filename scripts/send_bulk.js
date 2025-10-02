@@ -1,18 +1,17 @@
-// scripts/send_bulk.js  — stable v3 (unsub filter + dedup + retry + slack + 60s interval)
+// scripts/send_bulk.js — stable v4 (unsub filter + retry + slack + 60s + sent_log.csv)
 const fs = require("fs");
+const path = require("path");
 const { parse } = require("csv-parse/sync");
 const nodemailer = require("nodemailer");
-const path = require("path");
+
+// ===== helpers =====
+function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+function iso(){ return new Date().toISOString(); }
 function appendCsvLine(filepath, line){
   const dir = path.dirname(filepath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   fs.appendFileSync(filepath, line + "\n", "utf8");
 }
-function iso(){ return new Date().toISOString(); }
-
-
-// ===== helpers =====
-function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
 function render(tpl, row){
   return (tpl || "")
     .replaceAll("{company}", row.company||"")
@@ -44,7 +43,6 @@ async function sendWithRetry(transporter, msg, maxRetry = 3){
       if (!recoverable || attempt >= maxRetry) break;
       const backoff = 30000 * attempt; // 30s, 60s, 90s
       console.warn(`[retry ${attempt}] ${text} → sleep ${backoff/1000}s`);
-      await slack(`Outreach retry ${attempt} → ${text}`);
       await sleep(backoff);
     }
   }
@@ -91,7 +89,7 @@ async function main(){
   });
   if (!rowsToSend.length){ console.log("Nothing to send after filtering."); return 0; }
 
-  // SMTP 连接池 + 调试
+  // SMTP 配置
   const host = process.env.SMTP_HOST, port = parseInt(process.env.SMTP_PORT||"587",10);
   const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
   const from = process.env.MAIL_FROM, fromName = process.env.MAIL_FROM_NAME || "CG Alert";
@@ -105,29 +103,47 @@ async function main(){
   });
   try { await transporter.verify(); console.log("SMTP verified:", host); } catch(e){ console.warn("SMTP verify warning:", e.toString()); }
 
+  const stage = process.env.CG_STAGE || "1";
+  const perEmailDelayMs = parseInt(process.env.CG_INTERVAL_MS || "60000", 10); // 默认 60s/封（暖箱）
+
   let sent=0, fail=0;
   for (const row of rowsToSend){
     const subject = render(subjectT, row);
     const body    = render(bodyT, row);
+    const toEmail = (row.email||"").trim();
+
     const msg = {
-      envelope: { from, to: row.email },                 // 确保 Return-Path/MAIL FROM 一致
+      envelope: { from, to: toEmail },
       from: `"${fromName}" <${from}>`,
-      to: row.email,
-      subject, text: body,
-      headers: { "List-Unsubscribe": `<mailto:${from}>`, "X-CG-Template":"bulk-v3" },
+      to: toEmail,
+      subject,
+      text: body,
+      headers: { "List-Unsubscribe": `<mailto:${from}>`, "X-CG-Template":"bulk-v4" },
     };
+
     const res = await sendWithRetry(transporter, msg, 3);
+
     if (res.ok){
-      console.log("OK:", row.email, res.id||"");
-      await slack(`Outreach OK → ${row.email}`);
-      sent++;
+      console.log("OK:", toEmail, res.id||"");
+      await slack(`Outreach OK → ${toEmail}`);
     }else{
       const reason = (res.err && (res.err.response || res.err.message)) || res.err || "";
-      console.error("FAIL:", row.email, reason);
-      await slack(`Outreach FAIL → ${row.email}`);
-      fail++;
+      console.error("FAIL:", toEmail, reason);
+      await slack(`Outreach FAIL → ${toEmail}`);
     }
-    await sleep(60000); // 60s/封：暖箱 & 限速
+
+    // === 发送日志：无论 OK/FAIL 都写一行 ===
+    appendCsvLine("data/sent_log.csv", [
+      iso(),
+      toEmail.toLowerCase(),
+      stage,
+      (res.ok ? "OK" : "FAIL"),
+      JSON.stringify(subject||"")
+    ].join(","));
+
+    // 节流（暖箱期 60s；可用 CG_INTERVAL_MS 覆盖）
+    await sleep(perEmailDelayMs);
+    if (res.ok) sent++; else fail++;
   }
 
   console.log(`Done. sent=${sent}, fail=${fail}`);
@@ -135,7 +151,7 @@ async function main(){
   return 0;
 }
 
-main().then(()=>process.exit(0)).catch(async e=>{ 
+main().then(()=>process.exit(0)).catch(async e=>{
   console.error("Fatal:", e.toString());
   await slack(`Outreach fatal → ${e.message||e}`);
   process.exit(0);
