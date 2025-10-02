@@ -1,7 +1,12 @@
 name: Outreach S1 (first touch)
-on: workflow_dispatch:
-  inputs:
-    limit: { description: "count", required: true, default: "20" }
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "count"
+        required: true
+        default: "20"
+
 jobs:
   s1:
     runs-on: ubuntu-latest
@@ -9,12 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with:
+          node-version: '20'
       - run: npm init -y && npm install nodemailer csv-parse csv-stringify
       - name: Segment S1
         run: node scripts/segment.js 1 0 "${{ github.event.inputs.limit }}"
       - name: Send S1
-        run: node scripts/send_bulk.js "data/targets_stage1.csv" "${{ github.event.inputs.limit }}" "0" "${{ github.event.inputs.subject_tpl || '' }}" "${{ github.event.inputs.body_tpl || '' }}"
         env:
           CG_STAGE: "1"
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -24,3 +29,4 @@ jobs:
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: node scripts/send_bulk.js "data/targets_stage1.csv" "${{ github.event.inputs.limit }}" "0"
