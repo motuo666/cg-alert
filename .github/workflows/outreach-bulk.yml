@@ -43,3 +43,5 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}   # ← 加上这一行
+          SEND_INTERVAL_MS: 60000                       # 每封间隔60s，可改90000=90s
