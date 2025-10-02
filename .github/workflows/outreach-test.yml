@@ -1,0 +1,27 @@
+name: Outreach (Test Send)
+on:
+  workflow_dispatch:
+    inputs:
+      to:       { description: "Recipient email", required: true }
+      subject:  { description: "Subject", required: false, default: "Renewal heads-up: quick test from CG Alert" }
+      body:     { description: "Plain text body", required: false, default: "This is a test email from CG Alert." }
+
+jobs:
+  send_one:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm init -y && npm install nodemailer
+      - name: Send one
+        run: node scripts/send_one.js "${{ github.event.inputs.to }}" "${{ github.event.inputs.subject }}" "${{ github.event.inputs.body }}"
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
