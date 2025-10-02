@@ -3,7 +3,7 @@ name: Inbound (poll inbox)
 on:
   schedule:
     - cron: "*/15 * * * *"   # 每 15 分钟
-  workflow_dispatch: {}       # 手动可随时跑
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -11,33 +11,48 @@ permissions:
 jobs:
   poll:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - run: npm init -y && npm install imapflow nodemailer csv-parse csv-stringify
-      - name: Poll inbox & update CSV
-        run: node scripts/poll_inbox.js
+
+      - name: Install deps
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install imapflow mailparser csv-parse csv-stringify nodemailer --silent
+
+      - name: Env check
         env:
-          # IMAP（Zoho US 默认；如果你注册在 EU，请把 IMAP_HOST 改成 imap.zoho.eu）
-          IMAP_HOST: imap.zoho.com
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+        run: |
+          echo "IMAP_HOST=${IMAP_HOST:-imap.zoho.com}"
+          echo "IMAP user set: $([ -n "$SMTP_USER" ] && echo yes || echo no)"
+
+      - name: Poll inbox & update CSV
+        env:
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}   # 若为空则脚本内默认 imap.zoho.com
           IMAP_PORT: 993
-          IMAP_USER: ${{ secrets.SMTP_USER }}   # 直接复用
+          IMAP_USER: ${{ secrets.SMTP_USER }}
           IMAP_PASS: ${{ secrets.SMTP_PASS }}
-          # SMTP（用于自动回信）
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          # Slack 通知
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-      - name: Commit updates
+        run: node scripts/poll_inbox.js
+
+      - name: Commit CSV changes
         run: |
+          git config user.name  "CG Bot"
+          git config user.email "ops@cg-alert.com"
           if [ -n "$(git status --porcelain data/*.csv 2>/dev/null)" ]; then
-            git config user.name "CG Bot"
-            git config user.email "ops@cg-alert.com"
             git add data/*.csv
             git commit -m "inbound sync"
             git push
+          else
+            echo "Nothing to commit."
           fi
