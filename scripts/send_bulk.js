@@ -1,198 +1,218 @@
-// scripts/send_bulk.js — CG Alert stable v4
-// 功能：Slack 通知 / 退订过滤 / 去重 / 重试 / 发送日志 / 60s 间隔
-// Node 20+（自带 fetch）
+/**
+ * scripts/send_bulk.js  —  stable v5
+ * - List-Unsubscribe 头（邮件页可一键退订）
+ * - 60–90s 随机节流（第三个参数传 75 即可）
+ * - Slack 单条日志 & 汇总
+ * - 写 data/sent_log.csv
+ * - 自动跳过 unsubscribes.csv / trials.csv / bounces.csv
+ * - 逗号或 Tab 都能解析（容错）
+ *
+ * CLI:
+ *   node scripts/send_bulk.js <inputCsv> <limit> <baseDelaySec=0> [subjectTpl] [bodyTpl]
+ *
+ * ENV (GitHub Secrets 注入):
+ *   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS,
+ *   MAIL_FROM, MAIL_FROM_NAME, SLACK_WEBHOOK, CG_STAGE
+ */
 
 const fs = require("fs");
-const path = require("path");
-const { parse } = require("csv-parse/sync");
 const nodemailer = require("nodemailer");
+const { parse } = require("csv-parse/sync");
 
-// ---------- utils ----------
-function iso(){ return new Date().toISOString(); }
-function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
-function render(tpl, row){
-  return (tpl || "")
-    .replaceAll("{company}", row.company||"")
-    .replaceAll("{domain}",  row.domain||"")
-    .replaceAll("{v1}",      row.vendor1||"")
-    .replaceAll("{v2}",      row.vendor2||"")
-    .replaceAll("{v3}",      row.vendor3||"");
+// -------- utils --------
+const nowIso = () => new Date().toISOString();
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const csvEscape = (s = "") => `"${String(s).replace(/"/g, '""')}"`;
+
+function autoDelimiter(text) {
+  const first = (text.split(/\r?\n/)[0] || "");
+  return first.includes("\t") ? "\t" : ",";
 }
-async function slack(msg){
-  const url = process.env.SLACK_WEBHOOK;
-  if (!url) return;
-  try{
+function loadCsvRelax(path) {
+  if (!fs.existsSync(path)) return [];
+  const t = fs.readFileSync(path, "utf8");
+  const delimiter = autoDelimiter(t);
+  return parse(t, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+    relax_column_count: true,
+    delimiter,
+  });
+}
+function ensureLog(path) {
+  if (!fs.existsSync(path)) {
+    fs.writeFileSync(path, "ts,email,stage,status,subject\n", "utf8");
+  }
+}
+async function slack(text) {
+  try {
+    const url = process.env.SLACK_WEBHOOK;
+    if (!url) return;
     await fetch(url, {
       method: "POST",
-      headers: { "content-type":"application/json" },
-      body: JSON.stringify({ text: msg })
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text }),
     });
-  }catch(_){}
+  } catch (_) {}
 }
-function appendCsvLine(filepath, fields){
-  const dir = path.dirname(filepath);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive:true });
-  fs.appendFileSync(filepath, fields.join(",") + "\n", "utf8");
+function jitterFrom(base) {
+  // 传 75 → 60–90 秒；最小 30 秒兜底
+  const b = parseInt(base || "0", 10);
+  if (!b) return 0;
+  const j = b + Math.floor(Math.random() * 30 - 15);
+  return Math.max(30, j);
 }
-async function sendWithRetry(transporter, msg, maxRetry=3){
-  let attempt = 0, lastErr;
-  while (attempt < maxRetry){
-    try{
-      const info = await transporter.sendMail(msg);
-      return { ok:true, id: info && info.messageId };
-    }catch(e){
-      lastErr = e;
-      const text = (e && (e.response || e.message) || "").toString();
-      const recoverable = /(^4\d\d)|ETIMEDOUT|ECONNRESET|EAI_AGAIN|ENOTFOUND|ESOCKET/i.test(text);
-      attempt++;
-      if (!recoverable || attempt >= maxRetry) break;
-      const backoff = 30000 * attempt; // 30s, 60s, 90s
-      console.warn(`[retry ${attempt}] ${text} → sleep ${backoff/1000}s`);
-      await sleep(backoff);
+function fmt(tpl, row) {
+  const map = {
+    company: row.company || "",
+    domain: row.domain || "",
+    v1: row.vendor1 || row.v1 || row.vendors || "",
+    v2: row.vendor2 || row.v2 || "",
+    v3: row.vendor3 || row.v3 || "",
+  };
+  return String(tpl || "").replace(/\{(company|domain|v1|v2|v3)\}/g, (_, k) => map[k] || "");
+}
+
+// -------- defaults by stage --------
+function defaultSubject(stage) {
+  if (stage === "2") return "Quick check before renewal — {v1}/{v2}";
+  if (stage === "3") return "Last ping — vendor change alerts?";
+  return "Vendor change alert — {v1}/{v2}";
+}
+function defaultBody(stage) {
+  if (stage === "2")
+    return (
+      "Hi {company} team — quick check.\n" +
+      "We saw public changes on {v1}/{v2}/{v3}. 7-day pilot, no login.\n" +
+      "Reply “1” to start, or “9” to opt out.\n— CG Alert"
+    );
+  if (stage === "3")
+    return (
+      "Last note.\nWe alert only high-impact changes (pricing/ToS/DPA/sub-processors).\n" +
+      "7-day pilot; reply “1” to start, “9” to opt out.\n— CG Alert"
+    );
+  return (
+    "Hi {company} team,\nWe noticed public changes on {v1}/{v2}/{v3}.\n" +
+    "We monitor pricing / ToS / DPA / sub-processors and alert only high-impact updates.\n" +
+    "Reply “1” to start a 7-day pilot, “9” to opt out.\n— CG Alert"
+  );
+}
+
+// -------- main --------
+(async function main() {
+  try {
+    const input = process.argv[2] || "data/targets_stage1.csv";
+    const limit = parseInt(process.argv[3] || "20", 10);
+    const baseDelay = parseInt(process.argv[4] || "0", 10);
+    const stage = String(process.env.CG_STAGE || "1");
+    const subjTpl = process.argv[5] || defaultSubject(stage);
+    const bodyTpl = process.argv[6] || defaultBody(stage);
+
+    // SMTP
+    const host = process.env.SMTP_HOST;
+    const port = parseInt(process.env.SMTP_PORT || "465", 10);
+    const user = process.env.SMTP_USER;
+    const pass = process.env.SMTP_PASS;
+    const fromAddr = process.env.MAIL_FROM;
+    const fromName = process.env.MAIL_FROM_NAME || "CG Alert";
+    if (!host || !port || !user || !pass || !fromAddr) {
+      console.error("Missing SMTP env (SMTP_HOST/PORT/USER/PASS, MAIL_FROM).");
+      await slack("Outreach fatal → SMTP env missing");
+      process.exit(1);
     }
-  }
-  return { ok:false, err:lastErr };
-}
 
-// ---------- main ----------
-async function main(){
-  // args: csv_path limit offset subject_tpl body_tpl
-  const csvPath   = process.argv[2] || "data/leads.csv";
-  const limit     = parseInt(process.argv[3] || "20", 10);
-  const offset    = parseInt(process.argv[4] || "0", 10);
-  const subjectT  = process.argv[5] || "Renewal heads-up: {v1}/{v2} updates you may want for due diligence";
-  const bodyT     = process.argv[6] || "Hi {company} team — quick heads-up.\n\nWe detected recent public changes across {v1}/{v2}/{v3} (pricing / terms / DPA / subprocessors / status). This may affect renewal or compliance.\n\nReply “1” to start a 7-day pilot. No login. Alerts delivered by email/Slack with a verifiable evidence card (diff + source + hash). Reply “9” to opt out.\n\n— CG Alert";
-
-  // read leads
-  let rows = [];
-  try{
-    const txt = fs.readFileSync(csvPath, "utf8");
-    rows = parse(txt, { columns:true, skip_empty_lines:true, trim:true });
-  }catch(e){
-    console.error("Failed to read/parse CSV:", e.toString());
-    await slack(`Outreach fatal → cannot read ${csvPath}`);
-    process.exit(1);
-  }
-
-  const batch = rows.slice(offset, offset + limit);
-  if (!batch.length){
-    console.log("No rows to send (empty targets).");
-    await slack("Outreach summary → sent=0, fail=0 (empty targets)");
-    return;
-  }
-
-  // build unsubscribe set
-  let unsubSet = new Set();
-  try{
-    const unsubTxt  = fs.readFileSync("data/unsubscribes.csv", "utf8");
-    const unsubRows = parse(unsubTxt, { columns:true, skip_empty_lines:true, trim:true });
-    for (const r of unsubRows){
-      const e = (r.email||"").trim().toLowerCase();
-      if (e) unsubSet.add(e);
+    // 读取数据
+    const rows = loadCsvRelax(input);
+    if (!rows.length) {
+      console.log(`No rows in ${input}`);
+      await slack(`Outreach notice → ${input} empty`);
+      return;
     }
-  }catch(_){
-    console.warn("No data/unsubscribes.csv yet — full batch.");
-  }
+    const unsub = loadCsvRelax("data/unsubscribes.csv").map((r) => (r.email || "").toLowerCase());
+    const trials = loadCsvRelax("data/trials.csv").map((r) => (r.email || "").toLowerCase());
+    const bounces = loadCsvRelax("data/bounces.csv").map((r) => (r.email || "").toLowerCase());
+    const banned = new Set([...unsub, ...trials, ...bounces]);
 
-  // dedupe & filter
-  const seen = new Set();
-  const rowsToSend = batch.filter(r=>{
-    const e = (r.email||"").trim().toLowerCase();
-    if (!e) return false;
-    if (unsubSet.has(e)){ console.log("SKIP (opt-out):", e); return false; }
-    if (seen.has(e)){    console.log("SKIP (dup):", e);     return false; }
-    seen.add(e);
-    return true;
-  });
-  if (!rowsToSend.length){
-    console.log("Nothing to send after filtering (all unsub/dup/invalid).");
-    await slack("Outreach summary → sent=0, fail=0 (all filtered)");
-    return;
-  }
+    // 过滤目标
+    const picked = [];
+    const seen = new Set();
+    for (const r of rows) {
+      const email = (r.email || "").toLowerCase();
+      if (!email || !email.includes("@")) continue;
+      if (seen.has(email)) continue;
+      seen.add(email);
+      if (banned.has(email)) continue;
+      picked.push(r);
+      if (picked.length >= limit) break;
+    }
+    if (!picked.length) {
+      console.log("No valid targets after filtering.");
+      await slack("Outreach notice → no targets after filtering (unsub/trial/bounce)");
+      return;
+    }
 
-  // SMTP env
-  const host = process.env.SMTP_HOST;
-  const port = parseInt(process.env.SMTP_PORT || "587", 10);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const from = process.env.MAIL_FROM;
-  const fromName = process.env.MAIL_FROM_NAME || "CG Alert";
+    // transporter
+    const transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465, // Zoho 465=SSL, 587=STARTTLS
+      auth: { user, pass },
+      pool: false,
+    });
 
-  if (!host || !user || !pass || !from){
-    const miss = ["SMTP_HOST","SMTP_USER","SMTP_PASS","MAIL_FROM"].filter(k=>!process.env[k]).join(", ");
-    console.error("Missing SMTP env:", miss);
-    await slack(`Outreach fatal → missing SMTP env: ${miss}`);
-    process.exit(1);
-  }
+    ensureLog("data/sent_log.csv");
 
-  const transporter = nodemailer.createTransport({
-    host, port, secure:false, auth:{ user, pass },
-    pool:true, maxConnections:1, maxMessages:50,
-    rateDelta: 60000, rateLimit: 8, // 1 分钟最多 8 封（我们另外每封 sleep 60s，更稳）
-    tls: { ciphers:"TLSv1.2" },
-    logger:true, debug:true
-  });
-  try{
-    await transporter.verify();
-    console.log("SMTP verified:", host);
-  }catch(e){
-    console.warn("SMTP verify warn:", (e && e.message) || e);
-  }
+    await slack(`Outreach start → stage ${stage}, targets ${picked.length}, delay≈${baseDelay}s`);
 
-  let sent=0, fail=0;
-  const stage = process.env.CG_STAGE || "1";
+    let ok = 0,
+      fail = 0,
+      sent = 0;
+    for (const row of picked) {
+      const to = (row.email || "").trim();
+      const subject = fmt(subjTpl, row);
+      const body = fmt(bodyTpl, row);
 
-  for (const row of rowsToSend){
-    const to = (row.email||"").trim();
-    const subject = render(subjectT, row);
-    const body    = render(bodyT, row);
+      try {
+        await transporter.sendMail({
+          from: `"${fromName}" <${fromAddr}>`,
+          to,
+          subject,
+          text: body,
+          headers: {
+            "List-Unsubscribe": `<mailto:${fromAddr}?subject=9>`,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          },
+        });
 
-    const msg = {
-      envelope: { from, to },
-      from: `"${fromName}" <${from}>`,
-      to, subject, text: body,
-      headers: {
-        "List-Unsubscribe": `<mailto:${from}>`,
-        "X-CG-Template": `bulk-stage-${stage}`
+        fs.appendFileSync(
+          "data/sent_log.csv",
+          `${nowIso()},${to},${stage},OK,${csvEscape(subject)}\n`,
+          "utf8"
+        );
+        ok++;
+        sent++;
+        await slack(`Outreach OK → ${to}`);
+      } catch (e) {
+        const code = e && (e.responseCode || e.code) ? ` ${e.responseCode || e.code}` : "";
+        fs.appendFileSync(
+          "data/sent_log.csv",
+          `${nowIso()},${to},${stage},FAIL${code},${csvEscape(subject)}\n`,
+          "utf8"
+        );
+        fail++;
+        await slack(`Outreach FAIL${code} → ${to}`);
       }
-    };
 
-    const res = await sendWithRetry(transporter, msg, 3);
-
-    // log + slack
-    if (res.ok){
-      console.log("OK:", to, res.id||"");
-      await slack(`Outreach OK → ${to}`);
-      sent++;
-    }else{
-      const why = (res.err && (res.err.response || res.err.message)) || "";
-      console.error("FAIL:", to, why);
-      await slack(`Outreach FAIL → ${to} — ${String(why).slice(0,140)}`);
-      fail++;
+      const wait = jitterFrom(baseDelay);
+      if (wait) await sleep(wait * 1000);
     }
 
-    // append to sent_log.csv
-    appendCsvLine("data/sent_log.csv", [
-      iso(),
-      to.toLowerCase(),
-      stage,
-      (res.ok ? "OK" : "FAIL"),
-      JSON.stringify(subject||"")
-    ]);
-
-    // 间隔：60s/封（暖箱期）
-    await sleep(60000);
-  }
-
-  console.log(`Done. sent=${sent}, fail=${fail}`);
-  await slack(`Outreach summary → sent=${sent}, fail=${fail}`);
-}
-
-// run
-main()
-  .then(()=>process.exit(0))
-  .catch(async e=>{
-    console.error("Fatal:", e);
-    await slack(`Outreach fatal → ${String(e && (e.message||e)).slice(0,160)}`);
+    await slack(`Outreach summary → stage ${stage}: sent ${sent}, OK ${ok}, FAIL ${fail}`);
+    console.log(`Done. OK=${ok} FAIL=${fail}`);
+  } catch (err) {
+    console.error(err);
+    await slack(`Outreach fatal → ${err.message || err}`);
     process.exit(1);
-  });
+  }
+})();
