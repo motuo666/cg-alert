@@ -12,9 +12,9 @@ jobs:
       - run: |
           npm init -y >/dev/null 2>&1
           npm install nodemailer csv-parse csv-stringify --silent
-      - name: Segment S2 (≥3天未回)
-        run: node scripts/segment.js 2 3 30
-      - name: Abort if no targets
+      - name: Segment S2 (≥3天)
+        run: node scripts/segment.js 2 3 50
+      - name: Abort if empty
         run: '[ -s data/targets_stage2.csv ] || { echo "no targets"; exit 0; }'
       - name: Send S2
         env:
@@ -26,4 +26,6 @@ jobs:
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: node scripts/send_bulk.js "data/targets_stage2.csv" "30" "75"
+        run: node scripts/send_bulk.js "data/targets_stage2.csv" "50" "75" \
+          "Quick check before renewal — {v1}/{v2}" \
+          "Hi {company} team — quick check.\nWe saw public changes on {v1}/{v2}/{v3}. 7-day pilot, no login. Reply “1” to start, “9” to opt out.\n— CG Alert"
