@@ -1,0 +1,27 @@
+name: Daily digest
+on:
+  schedule: [ { cron: "0 17 * * *" } ]   # 每天 17:00 UTC
+  workflow_dispatch: {}
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: |
+          npm init -y >/dev/null 2>&1
+          npm install csv-parse --silent
+      - name: Send digest
+        env: { SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }} }
+        run: |
+          node -e "
+          const fs=require('fs'); const {parse}=require('csv-parse/sync');
+          const load=p=>fs.existsSync(p)?parse(fs.readFileSync(p,'utf8'),{columns:true,skip_empty_lines:true,trim:true}):[];
+          const today=new Date().toISOString().slice(0,10);
+          const sent=load('data/sent_log.csv').filter(r=>r.ts?.startsWith(today));
+          const unsub=load('data/unsubscribes.csv').filter(r=>r.ts?.startsWith(today));
+          const trials=load('data/trials.csv').filter(r=>r.ts?.startsWith(today));
+          const body={text:`Daily digest ${today}\nSent: ${sent.length}\nTrials: ${trials.length}\nUnsubs: ${unsub.length}`};
+          fetch(process.env.SLACK_WEBHOOK,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}).catch(()=>{});
+          "
