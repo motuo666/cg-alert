@@ -1,28 +1,20 @@
-name: Outreach S3 (last touch)
+name: Outreach S3 (nudge)
 on:
+  schedule:
+    - cron: "15 4 * * 1-5"
   workflow_dispatch:
-    inputs:
-      limit:
-        description: "count"
-        required: true
-        default: "20"
-      min_days:
-        description: "days since S2"
-        required: true
-        default: "7"
-
+    inputs: { limit: { description: "count", required: true, default: "30" } }
 jobs:
   s3:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    concurrency: outreach
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        with: { node-version: '20' }
       - run: npm init -y && npm install nodemailer csv-parse csv-stringify
       - name: Segment S3
-        run: node scripts/segment.js 3 "${{ github.event.inputs.min_days }}" "${{ github.event.inputs.limit }}"
+        run: node scripts/segment.js 3 4 "${{ github.event.inputs.limit || 30 }}"
       - name: Send S3
         env:
           CG_STAGE: "3"
@@ -33,4 +25,4 @@ jobs:
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: node scripts/send_bulk.js "data/targets_stage3.csv" "${{ github.event.inputs.limit }}" "0" "Last ping — keep you posted on vendor changes?" "Last note from me.\n\nWe can quietly monitor {v1}/{v2}/{v3} and only alert on high-impact changes. 7-day pilot. Reply “1” to start, “9” to opt out.\n\n— CG Alert"
+        run: node scripts/send_bulk.js "data/targets_stage3.csv" "${{ github.event.inputs.limit || 30 }}" "0"
