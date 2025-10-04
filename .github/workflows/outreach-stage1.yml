@@ -1,60 +1,24 @@
-name: Outreach S1 (first touch)
-
+name: Outreach S1 (daily)
 on:
+  schedule:
+    - cron: "15 3 * * 1-5"   # 每个工作日 11:15 AM 北京/晚 3:15 UTC-7 自行换算
   workflow_dispatch:
     inputs:
       limit:
         description: "count"
         required: true
-        default: "10"
-
+        default: "30"
 jobs:
   s1:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    concurrency: outreach
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install deps
-        run: |
-          npm init -y >/dev/null 2>&1
-          npm install nodemailer csv-parse csv-stringify --silent
-
-      - name: Sanity check
-        run: |
-          echo "::group::tree"; ls -R; echo "::endgroup::"
-          test -f scripts/segment.js   || (echo "❌ missing scripts/segment.js" && exit 1)
-          test -f scripts/send_bulk.js || (echo "❌ missing scripts/send_bulk.js" && exit 1)
-          test -s data/leads.csv       || (echo "❌ data/leads.csv missing or empty" && exit 1)
-          [ -f data/sent_log.csv ] || echo "ts,email,stage,status,subject" > data/sent_log.csv
-
-      - name: Peek leads (first 5 lines)
-        run: |
-          echo "----- data/leads.csv (first 5) -----"
-          head -n 5 data/leads.csv || true
-
+        with: { node-version: '20' }
+      - run: npm init -y && npm install nodemailer csv-parse csv-stringify
       - name: Segment S1
-        run: node scripts/segment.js 1 0 "${{ github.event.inputs.limit }}"
-
-      - name: Abort if no targets
-        run: |
-          if [ ! -s data/targets_stage1.csv ]; then
-            echo "No targets for S1 (already sent or all filtered)."
-            exit 0
-          fi
-
-      - name: (optional) Ping Slack start
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: |
-          [ -z "$SLACK_WEBHOOK" ] && exit 0
-          echo '{"text":"🔔 S1 started"}' > body.json
-          curl -s -X POST -H 'content-type: application/json' --data @body.json "$SLACK_WEBHOOK" || true
-
+        run: node scripts/segment.js 1 0 "${{ github.event.inputs.limit || 30 }}"
       - name: Send S1
         env:
           CG_STAGE: "1"
@@ -65,4 +29,4 @@ jobs:
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: node scripts/send_bulk.js "data/targets_stage1.csv" "${{ github.event.inputs.limit }}" "0"
+        run: node scripts/send_bulk.js "data/targets_stage1.csv" "${{ github.event.inputs.limit || 30 }}" "0"
