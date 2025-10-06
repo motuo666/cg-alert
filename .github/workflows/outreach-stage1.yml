@@ -1,24 +1,59 @@
 name: Outreach S1 (daily)
+
 on:
+  # GitHub Actions 的 CRON 使用 UTC 时间
+  # 17:30 UTC = 11:30 America/Denver（夏令时 MDT）
+  # 冬令时变更后 17:30 UTC = 10:30 MST，如需保持本地 11:30，改成 18:30 UTC
   schedule:
-    - cron: "15 3 * * 1-5"   # 每个工作日 11:15 AM 北京/晚 3:15 UTC-7 自行换算
+    - cron: "30 17 * * 1-5"
   workflow_dispatch:
     inputs:
       limit:
         description: "count"
         required: true
         default: "30"
+
 jobs:
   s1:
     runs-on: ubuntu-latest
-    concurrency: outreach
+    timeout-minutes: 30
+    concurrency:
+      group: outreach-s1
+      cancel-in-progress: true
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: npm init -y && npm install nodemailer csv-parse csv-stringify
+        with:
+          node-version: '20'
+
+      - name: Sanity check
+        run: |
+          set -e
+          echo "::group::tree"
+          ls -la
+          echo "::endgroup::"
+          if [ ! -f data/leads.csv ]; then
+            echo "ERROR: data/leads.csv not found"
+            exit 1
+          fi
+          echo "::group::peek leads (head -5)"
+          head -5 data/leads.csv || true
+          echo "::endgroup::"
+
+      - name: Install deps
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install nodemailer csv-parse csv-stringify
+
       - name: Segment S1
-        run: node scripts/segment.js 1 0 "${{ github.event.inputs.limit || 30 }}"
+        run: |
+          node scripts/segment.js 1 0 "${{ github.event.inputs.limit || '30' }}"
+          echo "::group::peek targets_stage1.csv (head -5)"
+          head -5 data/targets_stage1.csv || true
+          echo "::endgroup::"
+
       - name: Send S1
         env:
           CG_STAGE: "1"
@@ -29,4 +64,5 @@ jobs:
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: node scripts/send_bulk.js "data/targets_stage1.csv" "${{ github.event.inputs.limit || 30 }}" "0"
+        run: |
+          node scripts/send_bulk.js "data/targets_stage1.csv" "${{ github.event.inputs.limit || '30' }}" "0"
