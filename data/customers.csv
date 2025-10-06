@@ -1,1 +1,3 @@
+email,company,domain,delivery,vendors
+alice@acme.com,Acme,acme.com,Email only,"Okta; Datadog"
 
