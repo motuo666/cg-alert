@@ -1,0 +1,36 @@
+name: Outreach S2
+on:
+  schedule:
+    - cron: '10 18 * * 1-5'   # 工作日 12:10 MT（夏令时）
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  followup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: Install deps
+        run: npm install nodemailer csv-parse csv-stringify
+      - name: Run follow-up (S2)
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          MAX_SEND_PER_RUN: '25'
+          MIN_DELAY_SEC: '45'
+          MAX_DELAY_SEC: '90'
+          PER_DOMAIN_CAP: '2'
+          DAYS_SINCE_S1: '4'
+        run: node scripts/follow_up.js
+      - name: Commit updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/leads.csv logs/*.jsonl || true
+          git commit -m "chore(outreach): S2 marks & logs" || echo "nothing to commit"
+          git push
