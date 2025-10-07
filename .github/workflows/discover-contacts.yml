@@ -1,0 +1,24 @@
+name: Discover Public Contacts
+on:
+  schedule:
+    - cron: '25 3 * * *'   # 每天 03:25 UTC（低峰）
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: Install deps
+        run: npm install csv-parse csv-stringify
+      - name: Discover public role emails
+        run: node scripts/discover_contacts.js
+      - name: Commit updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/leads.csv || true
+          git commit -m "chore(leads): auto-discovered public role emails" || echo "nothing to commit"
+          git push
