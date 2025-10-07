@@ -1,26 +1,50 @@
 name: Outreach Health
 on:
   schedule:
-    - cron: "30 14 * * *"   # 每天 08:30 MT ≈ 14:30 UTC
+    - cron: "30 14 * * *"   # 每天 08:30 MT
   workflow_dispatch:
 
+# 如果你的 Secrets 配在 Environment(比如 production)，取消下一行注释并改名：
+# jobs: { health: { environment: production } } 写法不被支持，按下面标准写：
 jobs:
   health:
     runs-on: ubuntu-latest
+    # 如果你的 IMAP_* / SLACK_WEBHOOK 放在某个 Environment，请取消注释并改名
+    # environment: production
+
+    # 关键：把 Secrets 绑定在“作业级 env”，所有 step 都能读到
+    env:
+      IMAP_HOST: ${{ secrets.IMAP_HOST }}
+      IMAP_PORT: ${{ secrets.IMAP_PORT }}
+      IMAP_USER: ${{ secrets.IMAP_USER }}
+      IMAP_PASS: ${{ secrets.IMAP_PASS }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      # 可选：
+      IMAP_SENT_BOX: ${{ secrets.IMAP_SENT_BOX }}
+      IMAP_BOUNCE_FROM: ${{ secrets.IMAP_BOUNCE_FROM }}
+      DEBUG: '1'   # 首次排错打开；正常后可删
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      # 前置自检：哪一个没注入，直接在日志里报出来并 fail
+      - name: Preflight - check required secrets present
+        run: |
+          missing=0
+          for n in IMAP_HOST IMAP_PORT IMAP_USER IMAP_PASS SLACK_WEBHOOK; do
+            if [ -z "${!n}" ]; then
+              echo "::error title=Missing secret::$n is empty/unset"
+              missing=1
+            else
+              echo "$n=OK"
+            fi
+          done
+          if [ "$missing" = "1" ]; then exit 1; fi
+
       - run: npm init -y && npm install imapflow
-      - name: Send health to Slack (DEBUG)
-        env:
-          IMAP_HOST: ${{ secrets.IMAP_HOST }}
-          IMAP_PORT: ${{ secrets.IMAP_PORT }}
-          IMAP_USER: ${{ secrets.IMAP_USER }}
-          IMAP_PASS: ${{ secrets.IMAP_PASS }}
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          DEBUG: '1'                      # ← 调试开启；定位完问题后可删掉
-          IMAP_SENT_BOX: ${{ secrets.IMAP_SENT_BOX }}           # 可不设，默认 'Sent'
-          IMAP_BOUNCE_FROM: ${{ secrets.IMAP_BOUNCE_FROM }}     # 可不设
+
+      - name: Run outreach health
         run: node scripts/outreach_health.js
