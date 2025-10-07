@@ -1,0 +1,24 @@
+name: Leads Lint
+on:
+  schedule:
+    - cron: '15 2 * * *'    # 每天 02:15 UTC（低峰）
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: Install deps
+        run: npm install csv-parse csv-stringify
+      - name: Validate & dedupe leads
+        run: node scripts/validate_leads.js
+      - name: Commit updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/leads.csv || true
+          git commit -m "chore(leads): validate/dedupe/mx" || echo "nothing to commit"
+          git push
