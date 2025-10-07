@@ -1,0 +1,34 @@
+name: Outreach Health
+on:
+  schedule:
+    - cron: "30 14 * * *"   # 每天 08:30 MT ≈ 14:30 UTC
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm init -y && npm install imapflow
+      - name: Send health to Slack
+        env:
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: node -e "require('fs').writeFileSync('outreach_health.js', `${process.env.SCRIPT}`)"
+        shell: bash
+        env:
+          SCRIPT: |
+            const { ImapFlow } = require('imapflow');const IMAP_HOST=process.env.IMAP_HOST;const IMAP_PORT=+process.env.IMAP_PORT||993;const IMAP_USER=process.env.IMAP_USER;const IMAP_PASS=process.env.IMAP_PASS;const SLACK_WEBHOOK=process.env.SLACK_WEBHOOK;const SENT_BOX=process.env.IMAP_SENT_BOX||'Sent';const BOUNCE_FROM_RE=new RegExp(process.env.IMAP_BOUNCE_FROM||'(mailer-daemon|postmaster|Mail Delivery Subsystem|no-reply@bounce)','i');const since=new Date(Date.now()-24*60*60*1000);async function countBox(c,m,f){await c.mailboxOpen(m,{readOnly:true});let s=0;for await(let msg of c.fetch({since},{envelope:true,internalDate:true,source:false})){if(!f||f(msg))s++}return s}async function main(){const c=new ImapFlow({host:IMAP_HOST,port:IMAP_PORT,secure:true,auth:{user:IMAP_USER,pass:IMAP_PASS}});await c.connect();let sentCount=0;try{sentCount=await countBox(c,SENT_BOX)}catch{sentCount=await countBox(c,'Sent Items')}await c.mailboxOpen('INBOX',{readOnly:true});let bounceCount=0;for await(let msg of c.fetch({since},{envelope:true,internalDate:true})){const from=(msg.envelope.from&&msg.envelope.from[0]&&(msg.envelope.from[0].address||msg.envelope.from[0].name))||'';const subj=msg.envelope.subject||'';if(BOUNCE_FROM_RE.test(from)||/delivery[ -]?status|undeliver|failure/i.test(subj))bounceCount++}const rate=sentCount?(bounceCount/sentCount*100):0;const text=['*Outreach Health (24h)*',`• Sent: ${sentCount}`,`• Bounces: ${bounceCount}`,`• Bounce rate: ${rate.toFixed(2)}%`,rate>=2?'→ ⚠️ 建议暂停扩量（先禁用 S1 的 schedule）':'→ ✅ 正常'].join('\n');await fetch(SLACK_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});await c.logout()}main().catch(async e=>{try{await fetch(SLACK_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:`Outreach Health error: ${e}`})})}catch(_){}process.exit(1);});
+      - name: Run
+        env:
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: node outreach_health.js
