@@ -1,0 +1,26 @@
+name: Weekly Public Updates
+on:
+  schedule:
+    - cron: '0 15 * * 1'   # 每周一 09:00 MT（夏令时）= 15:00 UTC
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: Build /updates (Top10)
+        env:
+          UPDATES_DAYS: '30'
+          UPDATES_LIMIT: '10'
+          SITE_ORIGIN: 'https://www.cg-alert.com'
+        run: node scripts/build_updates.js
+      - name: Commit updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add updates/index.html updates/rss.xml || true
+          git commit -m "chore(updates): weekly Top${UPDATES_LIMIT} public changes" || echo "nothing to commit"
+          git push
