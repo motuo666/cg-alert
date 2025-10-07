@@ -1,0 +1,33 @@
+name: Promote Intakes
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # 每15分钟
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm init -y && npm install
+      - name: Promote intakes -> customers
+        run: node scripts/promote_intakes.js
+      - name: Commit & push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git status --porcelain | grep -q "data/customers.csv"; then
+            git add data/customers.csv
+            git commit -m "promote intakes -> customers [skip ci]"
+            git push
+          else
+            echo "no changes"
+          fi
