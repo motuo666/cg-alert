@@ -13,13 +13,14 @@ jobs:
         with:
           node-version: '20'
       - run: npm init -y && npm install imapflow
-      - name: Send health to Slack
+      - name: Send health to Slack (DEBUG)
         env:
           IMAP_HOST: ${{ secrets.IMAP_HOST }}
           IMAP_PORT: ${{ secrets.IMAP_PORT }}
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASS: ${{ secrets.IMAP_PASS }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          IMAP_SENT_BOX: ${{ secrets.IMAP_SENT_BOX }}   # 可不配，默认 'Sent'
-          IMAP_BOUNCE_FROM: ${{ secrets.IMAP_BOUNCE_FROM }} # 可不配
+          DEBUG: '1'                      # ← 调试开启；定位完问题后可删掉
+          IMAP_SENT_BOX: ${{ secrets.IMAP_SENT_BOX }}           # 可不设，默认 'Sent'
+          IMAP_BOUNCE_FROM: ${{ secrets.IMAP_BOUNCE_FROM }}     # 可不设
         run: node scripts/outreach_health.js
