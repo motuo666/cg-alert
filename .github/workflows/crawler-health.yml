@@ -1,0 +1,18 @@
+name: Crawler Health
+on:
+  schedule:
+    - cron: "0 15 * * *"    # 每天 09:00 MT ≈ 15:00 UTC
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run crawler health
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: node scripts/crawler_health.js
