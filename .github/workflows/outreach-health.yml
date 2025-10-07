@@ -1,28 +1,28 @@
 name: Outreach Health
 on:
   schedule:
-    - cron: "30 14 * * *"   # 每天 08:30 MT
+    - cron: "30 14 * * *"   # 每天 08:30 MT ≈ 14:30 UTC
   workflow_dispatch:
 
-# 如果你的 Secrets 配在 Environment(比如 production)，取消下一行注释并改名：
-# jobs: { health: { environment: production } } 写法不被支持，按下面标准写：
 jobs:
   health:
     runs-on: ubuntu-latest
-    # 如果你的 IMAP_* / SLACK_WEBHOOK 放在某个 Environment，请取消注释并改名
+    timeout-minutes: 10
+
+    # 如果你的 IMAP_* / SLACK_WEBHOOK 放在 Environment(比如 production)，取消注释并改名：
     # environment: production
 
-    # 关键：把 Secrets 绑定在“作业级 env”，所有 step 都能读到
+    # 统一把 Secrets 注入到“作业级 env”，所有 step 可见
     env:
       IMAP_HOST: ${{ secrets.IMAP_HOST }}
       IMAP_PORT: ${{ secrets.IMAP_PORT }}
       IMAP_USER: ${{ secrets.IMAP_USER }}
       IMAP_PASS: ${{ secrets.IMAP_PASS }}
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-      # 可选：
+      # 可选（不配也行）
       IMAP_SENT_BOX: ${{ secrets.IMAP_SENT_BOX }}
       IMAP_BOUNCE_FROM: ${{ secrets.IMAP_BOUNCE_FROM }}
-      DEBUG: '1'   # 首次排错打开；正常后可删
+      DEBUG: '1'   # 首次排错保留，跑通后可以删
 
     steps:
       - uses: actions/checkout@v4
@@ -30,9 +30,10 @@ jobs:
         with:
           node-version: '20'
 
-      # 前置自检：哪一个没注入，直接在日志里报出来并 fail
+      # 0) 必要变量自检，缺哪个直接在日志里报错并终止
       - name: Preflight - check required secrets present
         run: |
+          set -e
           missing=0
           for n in IMAP_HOST IMAP_PORT IMAP_USER IMAP_PASS SLACK_WEBHOOK; do
             if [ -z "${!n}" ]; then
@@ -44,7 +45,25 @@ jobs:
           done
           if [ "$missing" = "1" ]; then exit 1; fi
 
-      - run: npm init -y && npm install imapflow
+      # 1) Slack 预检 Ping（这一步成功 == Webhook 没问题）
+      - name: Slack preflight ping
+        run: |
+          set -e
+          curl -fsS -X POST -H 'Content-Type: application/json' \
+            --data "{\"text\":\"[Outreach Health] preflight ping $(date -u +%F' '%T) UTC\"}" \
+            "$SLACK_WEBHOOK"
+
+      # 2) 安装依赖并运行脚本
+      - name: Install deps
+        run: npm init -y && npm install imapflow
 
       - name: Run outreach health
         run: node scripts/outreach_health.js
+
+      # 3) 无论成功/失败都发收尾消息，便于你在 Slack 看到状态
+      - name: Slack completion (always)
+        if: always()
+        run: |
+          curl -fsS -X POST -H 'Content-Type: application/json' \
+            --data "{\"text\":\"[Outreach Health] job status: ${{ job.status }} at $(date -u +%F' '%T) UTC\"}" \
+            "$SLACK_WEBHOOK"
