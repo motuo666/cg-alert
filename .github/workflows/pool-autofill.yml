@@ -1,0 +1,22 @@
+name: Pool AutoFill (from evidence)
+on:
+  schedule:
+    - cron: '40 14 * * 1'  # 每周一 08:40 MT
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  autofill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: Auto-fill pools from evidence
+        run: node scripts/autofill_domains_from_evidence.js
+      - name: Commit updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/domain_pool.csv || true
+          git commit -m "chore(pool): auto-filled domains from evidence" || echo "nothing to commit"
+          git push
