@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CG Alert — 供应商公开页面变更预警</title>
+<meta name="description" content="监控供应商公开页面（Pricing、ToS、DPA、Subprocessors、Status），生成可核证证据卡与自动月报。Portfolio 25个/年$2,988；Business 50个/年$6,000；Enterprise 200+。">
+<link rel="canonical" href="https://www.cg-alert.com/">
+<meta property="og:title" content="CG Alert — 供应商公开页面变更预警">
+<meta property="og:description" content="监控 Pricing / ToS / DPA / Subprocessors / Status；证据可核证；自动警报与月报。">
+<meta property="og:url" content="https://www.cg-alert.com/">
+<meta property="og:type" content="website">
+<style>
+  :root { --fg:#111; --muted:#666; --link:#0a58ca; --bd:#eee; --bg:#fff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1000px;margin:0 auto;padding:28px 16px}
+  header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .brand{font-weight:700;font-size:20px}
+  nav a{margin-left:14px;color:var(--link);text-decoration:none}
+  nav a:hover{text-decoration:underline}
+  h1{font-size:28px;margin:14px 0 6px}
+  p.muted{color:var(--muted);margin:0 0 12px}
+  .grid{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+  .btn{display:inline-block;padding:10px 14px;border-radius:12px;border:1px solid var(--bd);text-decoration:none;color:var(--fg);background:#fff}
+  .btn:hover{background:#f7f7f7}
+  .btn.primary{border-color:#d0e2ff;background:#f2f7ff;color:#0a58ca}
+  section{border:1px solid var(--bd);border-radius:16px;padding:14px 14px;margin:14px 0;background:#fff}
+  .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  .small{color:var(--muted);font-size:12px;margin-top:6px}
+  ul{margin:8px 0 0 18px}
+  li{margin:4px 0}
+  footer{color:var(--muted);font-size:12px;margin:18px 0 8px;display:flex;gap:12px;flex-wrap:wrap}
+  a{color:var(--link)}
+</style>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">CG Alert</div>
+      <nav>
+        <a href="/updates/">最近变更</a>
+        <a href="/vendors/">供应商档案</a>
+        <a href="/categories/">按分类浏览</a>
+        <a href="/feed">RSS</a>
+      </nav>
+    </header>
+
+    <h1>供应商公开页面变更预警（可核证证据卡）</h1>
+    <p class="muted">监控 Pricing / ToS / DPA / Subprocessors / Status · 即时警报 + 月度汇总 · 白底证据卡可审计</p>
+
+    <div class="grid">
+      <a class="btn primary" href="/updates/">查看最近变更</a>
+      <a class="btn" href="/vendors/">供应商档案库</a>
+      <a class="btn" href="/categories/">按分类浏览</a>
+    </div>
+
+    <section>
+      <div class="cols">
+        <div>
+          <h3>怎么交付</h3>
+          <ul>
+            <li>采集公开页面（尊重 robots.txt）</li>
+            <li>两段确认降噪 → <b>即时警报（Email/Slack）</b></li>
+            <li>证据卡含 URL/片段/时间戳/Hash，<b>可核证</b></li>
+            <li>每月 1 号自动发送 <b>CSV Digest</b></li>
+          </ul>
+          <div class="small">SLO：P95 延迟 &lt; 24h · 误报 &lt; 10% · Opt-out ≤ 72h</div>
+        </div>
+        <div>
+          <h3>方案与定价</h3>
+          <ul>
+            <li>Portfolio：<b>$2,988/年</b>（25 个供应商） → <a href="/buy/portfolio">下单</a></li>
+            <li>Business：<b>$6,000/年</b>（50 个供应商） → <a href="/buy/business">下单</a></li>
+            <li>Enterprise：<b>$18,000+/年</b>（200+） → <a href="/enterprise">联系开票</a></li>
+            <li>Channel：<b>$25,000/年</b> → <a href="/channel">渠道合作</a></li>
+          </ul>
+          <div class="small">自助档退款承诺：30 天内若无实质性警报可退款。</div>
+        </div>
+        <div>
+          <h3>样例入口</h3>
+          <ul>
+            <li><a href="/vendors/">供应商档案目录</a>（含每家 RSS）</li>
+            <li><a href="/updates/">近 30–180 天 Top 变更</a></li>
+            <li><a href="/api/vendors.json">公共 API（静态 JSON）</a></li>
+          </ul>
+          <div class="small">不做公开试用；仅受控白名单。</div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <span>© CG Alert</span>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+      <span>安全联络：<a href="mailto:security@cg-alert.com">security@cg-alert.com</a></span>
+    </footer>
+  </div>
+</body>
+</html>
