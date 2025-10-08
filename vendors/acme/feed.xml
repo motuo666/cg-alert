@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+  <title>acme · CG Alert</title>
+  <link>https://www.cg-alert.com/vendors/acme/</link>
+  <description>Recent evidence for acme</description>
+  <item>
+      <title>acme update</title>
+      <link>https://example.com/pricing</link>
+      <pubDate>Wed, 01 Oct 2025 09:00:00 GMT</pubDate>
+      <guid isPermaLink="false">acme::2025-10-01T09:00:00.000Z</guid>
+      <description><![CDATA[Updated pricing: Pro $49 → $59 on Oct 1, 2025.]]></description>
+    </item>
+</channel></rss>

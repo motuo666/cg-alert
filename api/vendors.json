@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "vendor": "acme",
+    "last_ts": "2025-10-01T09:00:00.000Z",
+    "count": 1,
+    "url": "https://www.cg-alert.com/vendors/acme/"
+  }
+]
