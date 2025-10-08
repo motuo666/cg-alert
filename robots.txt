@@ -1,3 +1,6 @@
 User-agent: *
 Allow: /
+
 Sitemap: https://www.cg-alert.com/sitemap.xml
+Sitemap: https://www.cg-alert.com/sitemap-vendors.xml
+Sitemap: https://www.cg-alert.com/sitemap-categories.xml
