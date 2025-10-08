@@ -1,0 +1,18 @@
+name: Sitemap Ping
+on:
+  schedule:
+    - cron: '30 15 * * 1'   # 每周一 09:30 MT
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Google/Bing for sitemaps
+        run: |
+          set -e
+          for sm in https://www.cg-alert.com/sitemap.xml \
+                    https://www.cg-alert.com/sitemap-vendors.xml \
+                    https://www.cg-alert.com/sitemap-categories.xml; do
+            curl -fsS "https://www.google.com/ping?sitemap=$sm" || true
+            curl -fsS "https://www.bing.com/ping?sitemap=$sm" || true
+          done
