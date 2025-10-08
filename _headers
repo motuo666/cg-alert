@@ -1,0 +1,19 @@
+/updates/rss.xml
+  Content-Type: application/rss+xml; charset=utf-8
+  Cache-Control: max-age=300
+
+/vendors/*/feed.xml
+  Content-Type: application/rss+xml; charset=utf-8
+  Cache-Control: max-age=300
+
+/updates/*
+  Cache-Control: max-age=600
+
+/vendors/*
+  Cache-Control: max-age=600
+
+/categories/*
+  Cache-Control: max-age=600
+
+/api/vendors.json
+  Cache-Control: max-age=60
