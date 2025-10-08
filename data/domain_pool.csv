@@ -1,0 +1,60 @@
+domain,company
+okta.com,Okta
+auth0.com,Auth0
+duo.com,Duo Security
+onelogin.com,OneLogin
+stripe.com,Stripe
+adyen.com,Adyen
+braintreepayments.com,Braintree
+checkout.com,Checkout.com
+paddle.com,Paddle
+recurly.com,Recurly
+chargebee.com,Chargebee
+salesforce.com,Salesforce
+hubspot.com,HubSpot
+zoho.com,Zoho
+freshworks.com,Freshworks
+zendesk.com,Zendesk
+intercom.com,Intercom
+help scout.com,Help Scout
+atlassian.com,Atlassian
+gitlab.com,GitLab
+github.com,GitHub
+bitbucket.org,Bitbucket
+linear.app,Linear
+asana.com,Asana
+notion.so,Notion
+monday.com,Monday.com
+slack.com,Slack
+zoom.us,Zoom
+dropbox.com,Dropbox
+box.com,Box
+google.com,Google Workspace
+microsoft.com,Microsoft 365
+aws.amazon.com,AWS
+cloudflare.com,Cloudflare
+fastly.com,Fastly
+vercel.com,Vercel
+netlify.com,Netlify
+datadoghq.com,Datadog
+newrelic.com,New Relic
+sentry.io,Sentry
+segment.com,Segment
+snowflake.com,Snowflake
+mongodb.com,MongoDB Atlas
+supabase.com,Supabase
+heroku.com,Heroku
+render.com,Render
+twilio.com,Twilio
+sendgrid.com,SendGrid
+mailgun.com,Mailgun
+postmarkapp.com,Postmark
+algolia.com,Algolia
+elastic.co,Elastic
+contentful.com,Contentful
+sanity.io,Sanity
+figma.com,Figma
+canva.com,Canva
+miro.com,Miro
+confluent.io,Confluent
+okta.com,Okta  # 去重会自动处理
