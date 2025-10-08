@@ -1,5 +1,4 @@
 Contact: mailto:security@cg-alert.com
-Policy: https://www.cg-alert.com/terms
-Acknowledgements: https://www.cg-alert.com/
-Preferred-Languages: zh, en
-Canonical: https://www.cg-alert.com/.well-known/security.txt
+Policy: https://www.cg-alert.com/privacy/
+Preferred-Languages: en
+Expires: 2026-12-31T23:59:59Z
