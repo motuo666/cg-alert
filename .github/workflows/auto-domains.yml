@@ -15,8 +15,8 @@ jobs:
         run: npm install csv-parse csv-stringify
       - name: Append 10-20 domains
         env:
-          BATCH_MIN: '10'
-          BATCH_MAX: '20'
+          BATCH_MIN: '30'
+          BATCH_MAX: '50'
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: node scripts/auto_append_domains.js
       - name: Commit changes
