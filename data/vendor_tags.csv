@@ -1,11 +1,9 @@
 vendor,tag
+acme,payments
 Okta,auth
 Auth0,auth
 Stripe,payments
-Adyen,payments
 HubSpot,crm
-Salesforce,crm
-Notion,productivity
-Slack,productivity
 Atlassian,devtools
 GitHub,devtools
+Slack,productivity
