@@ -1,0 +1,57 @@
+vendor,tag
+Okta,auth
+Auth0,auth
+Duo Security,auth
+OneLogin,auth
+Stripe,payments
+Adyen,payments
+Braintree,payments
+Checkout.com,payments
+Paddle,payments
+Recurly,billing
+Chargebee,billing
+Salesforce,crm
+HubSpot,crm
+Freshworks,crm
+Zendesk,cs
+Intercom,cs
+Help Scout,cs
+Atlassian,devtools
+GitHub,devtools
+GitLab,devtools
+Bitbucket,devtools
+Linear,pm
+Asana,pm
+Notion,productivity
+Monday.com,pm
+Slack,productivity
+Zoom,productivity
+Dropbox,storage
+Box,storage
+Google Workspace,collaboration
+Microsoft 365,collaboration
+Cloudflare,infra
+Fastly,infra
+Vercel,infra
+Netlify,infra
+Datadog,observability
+New Relic,observability
+Sentry,observability
+Segment,customer-data
+Snowflake,warehouse
+MongoDB Atlas,db
+Supabase,db
+Heroku,paas
+Render,paas
+Twilio,comm
+SendGrid,email
+Mailgun,email
+Postmark,email
+Algolia,search
+Elastic,search
+Contentful,content
+Sanity,content
+Figma,design
+Canva,design
+Miro,whiteboard
+Confluent,streaming
