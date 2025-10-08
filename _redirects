@@ -1,5 +1,4 @@
-/data/*   /404  404
-/logs/*   /404  404
+/   /updates/   302
 
 /buy/portfolio   https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801  301
 /buy/business    https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800  301
