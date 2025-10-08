@@ -1,0 +1,51 @@
+name: Restore Legacy Homepage
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mirror legacy site
+        run: |
+          set -e
+          LEGACY="https://3bdb2f73.cg-www.pages.dev/"
+          mkdir -p legacy_site
+          wget -q -e robots=off --mirror --adjust-extension --convert-links \
+               --page-requisites --no-parent --no-host-directories \
+               --directory-prefix=legacy_site "$LEGACY"
+
+      - name: Copy homepage + common assets
+        run: |
+          set -e
+          shopt -s nullglob
+          # 拷贝 index.html
+          if [ -f legacy_site/index.html ]; then
+            cp -f legacy_site/index.html index.html
+          elif [ -f legacy_site/3bdb2f73.cg-www.pages.dev/index.html ]; then
+            cp -f legacy_site/3bdb2f73.cg-www.pages.dev/index.html index.html
+          fi
+          # 常见静态目录（存在才拷贝）
+          for d in assets asset css styles style js scripts images img static fonts; do
+            [ -d "legacy_site/$d" ] && rsync -a "legacy_site/$d/" "./$d/"
+            [ -d "legacy_site/3bdb2f73.cg-www.pages.dev/$d" ] && rsync -a "legacy_site/3bdb2f73.cg-www.pages.dev/$d/" "./$d/"
+          done
+
+      - name: Remove temporary / -> /updates redirect if present
+        run: |
+          if [ -f _redirects ]; then
+            perl -ne 'print unless m{^/\s+/updates/\s+302\s*$}' _redirects > _redirects.new || true
+            mv _redirects.new _redirects || true
+          fi
+
+      - name: Commit & push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html assets css js images img static fonts _redirects || true
+          git commit -m "restore(legacy): homepage & assets from pages.dev mirror" || echo "no changes"
+          git push
