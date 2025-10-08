@@ -1,14 +1,3 @@
-# robots.txt for cg-alert.com
-
 User-agent: *
 Allow: /
-
-# Primary sitemap
 Sitemap: https://www.cg-alert.com/sitemap.xml
-# Vendor catalog sitemap
-Sitemap: https://www.cg-alert.com/sitemap-vendors.xml
-# Categories sitemap
-Sitemap: https://www.cg-alert.com/sitemap-categories.xml
-
-# Security contact (optional but recommended)
-# https://www.cg-alert.com/.well-known/security.txt
