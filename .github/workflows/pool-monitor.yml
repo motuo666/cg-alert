@@ -1,0 +1,21 @@
+name: Pool Monitor
+on:
+  schedule: [ { cron: '35 14 * * 1' } ]  # 每周一 08:35 MT
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check pools
+        env: { SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} }
+        run: |
+          rem() { [ -f "$1" ] && echo $(( $(wc -l < "$1") - 1 )); }
+          d=$(rem data/domain_pool.csv || echo 0)
+          t=$(rem data/vendor_tags_pool.csv || echo 0)
+          echo "domain_pool=$d, tags_pool=$t"
+          if [ "$d" -lt 50 ] || [ "$t" -lt 50 ]; then
+            curl -sS -X POST -H 'Content-Type: application/json' \
+              --data "{\"text\":\":battery: Pools low → domains:$d, tags:$t (please top up)\"}" \
+              "$SLACK_WEBHOOK_URL"
+          fi
