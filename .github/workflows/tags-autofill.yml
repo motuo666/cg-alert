@@ -1,0 +1,21 @@
+name: Tags AutoFill (from evidence)
+on:
+  schedule: [ { cron: '45 14 * * 1' } ]  # 每周一 08:45 MT
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  autofill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: Auto-fill vendor_tags_pool from evidence
+        run: node scripts/autofill_vendor_tags_pool.js
+      - name: Commit pool
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/vendor_tags_pool.csv || true
+          git commit -m "chore(pool): auto-filled vendor tags from evidence" || echo "nothing to commit"
+          git push
