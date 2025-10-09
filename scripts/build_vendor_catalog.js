@@ -66,7 +66,7 @@ function main(){
   ensure(OUT); ensure(API);
   fs.writeFileSync(path.join(OUT,'index.html'),indexHTML(summary),'utf8');
   fs.writeFileSync(path.join(API,'vendors.json'),JSON.stringify(summary,null,2),'utf8');
-  fs.writeFileSync(path.join(ROOT,'sitemap-vendors.xml'),`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${summary.map(r=>`  <url><loc>${esc(r.url)}</loc></url>`).join('\n')}\n</urlset>\n`,'utf8');
+  fs.writeFileSync(path.join('sitemap-vendors.xml'),`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${summary.map(r=>`  <url><loc>${esc(r.url)}</loc></url>`).join('\n')}\n</urlset>\n`,'utf8');
   console.log(`vendor_catalog: vendors=${summary.length}`);
 }
 main();

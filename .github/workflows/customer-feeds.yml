@@ -1,6 +1,6 @@
 name: Customer Feeds
 on:
-  schedule: [ { cron: '22 15 * * 1' } ]  # 周一 09:22 MT
+  schedule: [ { cron: '22 15 * * 1' } ]  # 每周一 09:22 MT
   workflow_dispatch:
 permissions: { contents: write }
 jobs:

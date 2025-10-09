@@ -11,7 +11,6 @@ function readCSV(fp){
   const rows=rs.map(l=>{const v=l.split(',');const o={};header.forEach((k,i)=>o[k]=String(v[i]??'').trim());return o;});
   return {header,rows};
 }
-
 function buildIdx(){
   const fp=path.join(ROOT,'data','customers.csv');
   const {header,rows}=readCSV(fp); const i=Object.fromEntries(header.map((k,n)=>[k,n]));
@@ -32,10 +31,8 @@ function isPriority(rec){
   if(rec.support==='priority') return true;
   const p=rec.plan||''; return p.includes('business')||p.includes('enterprise');
 }
-
 async function notifySlack(text, ctx={}){
-  let prefix=''; const idx=buildIdx();
-  let rec=null;
+  let prefix=''; const idx=buildIdx(); let rec=null;
   if(ctx.customerId)      rec=idx.byId.get(String(ctx.customerId).toLowerCase())||rec;
   if(ctx.customerEmail)   rec=idx.byEmail.get(String(ctx.customerEmail).toLowerCase())||rec;
   if(ctx.customerCompany) rec=idx.byCompany.get(String(ctx.customerCompany).toLowerCase())||rec;

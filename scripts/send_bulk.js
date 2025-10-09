@@ -1,11 +1,11 @@
-// 最优投递：双子域分流 + 主题/首句 A/B + 退场过滤 + MX 预检（Node 18）
+// scripts/send_bulk.js
 const fs=require('fs'),path=require('path'),crypto=require('crypto'),dns=require('dns').promises;
 const nodemailer=require('nodemailer'); const ROOT=path.join(__dirname,'..'); const LEADS=path.join(ROOT,'data','leads.csv');
 
 const SMTP_HOST=process.env.SMTP_HOST, SMTP_PORT=Number(process.env.SMTP_PORT||465),
       SMTP_USER=process.env.SMTP_USER, SMTP_PASS=process.env.SMTP_PASS;
 
-const FROMS=[{name:'CG Alert',address:'outreach@mail.cg-alert.com'}, {name:'CG Alert',address:'outreach@mail2.cg-alert.com'}];
+const FROMS=[{name:'CG Alert',address:'outreach@mail.cg-alert.com'},{name:'CG Alert',address:'outreach@mail2.cg-alert.com'}];
 const REPLY_TO='outreach@cg-alert.com'; const LIST_UNSUB='mailto:optout@cg-alert.com?subject=unsubscribe';
 
 const h=(s)=>crypto.createHash('sha1').update(String(s)).digest()[0]; const pickFrom=(e)=>FROMS[h(e)%FROMS.length];
@@ -16,10 +16,8 @@ function readCSV(fp){ if(!fs.existsSync(fp))return{header:[],rows:[]}; const raw
   const [hrow,...rs]=raw.split(/\r?\n/).filter(Boolean); const header=hrow.split(',').map(s=>s.trim());
   const rows=rs.map(l=>{const v=l.split(','); const o={}; header.forEach((k,i)=>o[k]=String(v[i]??'').trim()); return o;}); return {header,rows};}
 function writeCSV(fp,header,rows){ const head=header.join(',')+'\n'; const body=rows.map(r=>header.map(k=>r[k]??'').join(',')).join('\n'); fs.writeFileSync(fp, head+(rows.length?body+'\n':''),'utf8'); }
-
 async function hasMX(domain){ try{ const mx=await dns.resolveMx(domain); return Array.isArray(mx)&&mx.length>0; }catch{ return false; } }
 
-// A/B 模板（不改你文案，只做选择器）
 const S1_SUBJECTS=[ v=>`Evidence-backed alerts for ${v.company||v.domain}`,
   v=>`${v.domain}: pricing/ToS changes with proof`, v=>`Compliance-ready change alerts (DPA/Subprocessors)` ];
 const S1_BODIES=[ v=>`Hi team,
@@ -53,7 +51,7 @@ async function main(){
   for(const lead of rows){
     const email=(lead.email||'').toLowerCase(), domain=(lead.domain||'').toLowerCase(), status=(lead.status||'').toLowerCase();
     if(['optout','invalid','bad-mx'].includes(status)) { updated.push(lead); continue; }
-    if(!(await hasMX(domain))){ lead.status='bad-mx'; lead.last_touch=nowISO; updated.push(lead); continue; }
+    try{ if(!(await hasMX(domain))){ lead.status='bad-mx'; lead.last_touch=nowISO; updated.push(lead); continue; } }catch{}
 
     const sIdx=h(email)%S1_SUBJECTS.length, bIdx=h(email+'b')%S1_BODIES.length;
     const subject=S1_SUBJECTS[sIdx](lead), bodyRaw=S1_BODIES[bIdx](lead);
@@ -62,7 +60,7 @@ async function main(){
     await tr.sendMail({ from:pickFrom(email), to:email, replyTo:REPLY_TO, subject,
       text:wrap78(bodyRaw),
       headers:{'List-Unsubscribe':`<${LIST_UNSUB}>`,'Auto-Submitted':'auto-generated','X-Entity-Ref-ID':`${Date.now()}-${Math.random().toString(36).slice(2)}`}});
-    await new Promise(r=>setTimeout(r,1200+Math.random()*800)); // 1.2–2.0s/封
+    await new Promise(r=>setTimeout(r,1200+Math.random()*800));
 
     lead.seq = lead.seq || 's1'; lead.last_touch=nowISO; lead.status=lead.status||'sent'; updated.push(lead);
   }
