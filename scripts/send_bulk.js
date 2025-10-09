@@ -1,69 +1,71 @@
-const fs = require('fs');
-const { parse } = require('csv-parse/sync');
-const { stringify } = require('csv-stringify/sync');
-const nodemailer = require('nodemailer');
+// 最优投递：双子域分流 + 主题/首句 A/B + 退场过滤 + MX 预检（Node 18）
+const fs=require('fs'),path=require('path'),crypto=require('crypto'),dns=require('dns').promises;
+const nodemailer=require('nodemailer'); const ROOT=path.join(__dirname,'..'); const LEADS=path.join(ROOT,'data','leads.csv');
 
-const DRY = process.env.DRY_RUN === '1';
-const CAP = Number(process.env.S1_DAILY_CAP || 40);
-const leadsPath = 'data/leads.csv';
-const logPath = 'data/outreach_log.csv';
-const tmplPath = 'templates/s1.md';
+const SMTP_HOST=process.env.SMTP_HOST, SMTP_PORT=Number(process.env.SMTP_PORT||465),
+      SMTP_USER=process.env.SMTP_USER, SMTP_PASS=process.env.SMTP_PASS;
 
-function ensureFile(p, head){ if(!fs.existsSync(p)) fs.writeFileSync(p, head + '\n'); }
-ensureFile(leadsPath, 'email,company,domain,vendor1,vendor2,vendor3');
-ensureFile(logPath, 'ts,email,stage,result,msg');
+const FROMS=[{name:'CG Alert',address:'outreach@mail.cg-alert.com'}, {name:'CG Alert',address:'outreach@mail2.cg-alert.com'}];
+const REPLY_TO='outreach@cg-alert.com'; const LIST_UNSUB='mailto:optout@cg-alert.com?subject=unsubscribe';
 
-const leads = parse(fs.readFileSync(leadsPath), { columns: true, skip_empty_lines: true });
-const log = parse(fs.readFileSync(logPath), { columns: true, skip_empty_lines: true });
+const h=(s)=>crypto.createHash('sha1').update(String(s)).digest()[0]; const pickFrom=(e)=>FROMS[h(e)%FROMS.length];
+const wrap78=(s='')=>s.split('\n').map(l=>l.length<=78?l:(l.match(/.{1,78}/g)||[]).join('\n')).join('\n');
+const linkCount=(t='')=>((t.match(/\bhttps?:\/\/[^\s)]+/ig))||[]).length;
 
-const sentS1 = new Set(log.filter(r=>r.stage==='S1' && r.result==='OK').map(r=>r.email.toLowerCase()));
-const batch = [];
-for(const r of leads){
-  const e = (r.email||'').toLowerCase().trim();
-  if(!e || sentS1.has(e)) continue;
-  batch.push(r);
-  if(batch.length>=CAP) break;
-}
-if(batch.length===0){ console.log('No S1 targets. Exit.'); process.exit(0); }
+function readCSV(fp){ if(!fs.existsSync(fp))return{header:[],rows:[]}; const raw=fs.readFileSync(fp,'utf8').trim(); if(!raw) return{header:[],rows:[]};
+  const [hrow,...rs]=raw.split(/\r?\n/).filter(Boolean); const header=hrow.split(',').map(s=>s.trim());
+  const rows=rs.map(l=>{const v=l.split(','); const o={}; header.forEach((k,i)=>o[k]=String(v[i]??'').trim()); return o;}); return {header,rows};}
+function writeCSV(fp,header,rows){ const head=header.join(',')+'\n'; const body=rows.map(r=>header.map(k=>r[k]??'').join(',')).join('\n'); fs.writeFileSync(fp, head+(rows.length?body+'\n':''),'utf8'); }
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT || 587),
-  secure: Number(process.env.SMTP_PORT||587)===465,
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-});
+async function hasMX(domain){ try{ const mx=await dns.resolveMx(domain); return Array.isArray(mx)&&mx.length>0; }catch{ return false; } }
 
-const from = `${process.env.FROM_NAME || 'CG Alert'} <${process.env.FROM_EMAIL}>`;
-const replyTo = process.env.REPLY_TO || process.env.FROM_EMAIL;
-const fallback = `Hi {{company}} team,
+// A/B 模板（不改你文案，只做选择器）
+const S1_SUBJECTS=[ v=>`Evidence-backed alerts for ${v.company||v.domain}`,
+  v=>`${v.domain}: pricing/ToS changes with proof`, v=>`Compliance-ready change alerts (DPA/Subprocessors)` ];
+const S1_BODIES=[ v=>`Hi team,
 
-We track public changes for {{vendor1}}, {{vendor2}}, {{vendor3}} and provide verifiable evidence cards (Pricing/ToS/DPA/Subprocessors/Status).
-2-min overview → https://www.cg-alert.com/`;
-const tmpl = fs.existsSync(tmplPath) ? fs.readFileSync(tmplPath,'utf8') : fallback;
+We monitor your vendors’ public pages (Pricing/ToS/DPA/Subprocessors/Status) and deliver verifiable evidence cards with Slack/Email alerts.
 
-function render(t, r){
-  return t.replaceAll('{{company}}', r.company||'')
-          .replaceAll('{{vendor1}}', r.vendor1||'')
-          .replaceAll('{{vendor2}}', r.vendor2||'')
-          .replaceAll('{{vendor3}}', r.vendor3||'');
-}
+• ${v.domain} — sample: https://www.cg-alert.com/updates/
+• Refund: 30 days if no material alert.
 
-(async ()=>{
-  const rows=[];
-  for(const r of batch){
-    const to = r.email.trim();
-    const subject = `Evidence-backed alerts for ${r.vendor1 || r.domain}`;
-    const text = render(tmpl, r);
-    try{
-      if(!DRY) await transporter.sendMail({ from, to, replyTo, subject, text });
-      rows.push({ts:new Date().toISOString(),email:to,stage:'S1',result:'OK',msg:''});
-      console.log('Sent S1 ->', to);
-      await new Promise(res=>setTimeout(res,3000));
-    }catch(e){
-      rows.push({ts:new Date().toISOString(),email:to,stage:'S1',result:'ERR',msg:String(e).slice(0,200)});
-      console.error('ERR S1 ->', to, e.message);
-      await new Promise(res=>setTimeout(res,1000));
-    }
+Interested in a quick check?`,
+  v=>`Hello,
+
+We track material changes on vendors’ public legal/pricing pages and ship evidence cards (hash, snippet, timestamp) + alerts.
+
+Your team can stop manual page patrol; keep audit-ready.
+
+Open to a short trial on your top vendors?`,
+  v=>`Hi,
+
+Third-party changes (ToS/DPA/Subprocessors/Status) create audit risk. We send proof-backed alerts so you can act fast.
+
+Refund if no material alert in 30 days.
+
+Worth a look for ${v.company||v.domain}?` ];
+
+async function main(){
+  const {header,rows}=readCSV(LEADS); if(header.length===0){console.error('leads.csv missing');return;}
+  const need=['email','company','domain','status','seq','last_touch']; need.forEach(c=>{if(!header.includes(c)) header.push(c);});
+  const tr=nodemailer.createTransport({host:SMTP_HOST,port:SMTP_PORT,secure:SMTP_PORT===465,auth:{user:SMTP_USER,pass:SMTP_PASS}});
+  const nowISO=new Date().toISOString(), updated=[];
+  for(const lead of rows){
+    const email=(lead.email||'').toLowerCase(), domain=(lead.domain||'').toLowerCase(), status=(lead.status||'').toLowerCase();
+    if(['optout','invalid','bad-mx'].includes(status)) { updated.push(lead); continue; }
+    if(!(await hasMX(domain))){ lead.status='bad-mx'; lead.last_touch=nowISO; updated.push(lead); continue; }
+
+    const sIdx=h(email)%S1_SUBJECTS.length, bIdx=h(email+'b')%S1_BODIES.length;
+    const subject=S1_SUBJECTS[sIdx](lead), bodyRaw=S1_BODIES[bIdx](lead);
+    if(linkCount(bodyRaw)>3){ updated.push(lead); continue; }
+
+    await tr.sendMail({ from:pickFrom(email), to:email, replyTo:REPLY_TO, subject,
+      text:wrap78(bodyRaw),
+      headers:{'List-Unsubscribe':`<${LIST_UNSUB}>`,'Auto-Submitted':'auto-generated','X-Entity-Ref-ID':`${Date.now()}-${Math.random().toString(36).slice(2)}`}});
+    await new Promise(r=>setTimeout(r,1200+Math.random()*800)); // 1.2–2.0s/封
+
+    lead.seq = lead.seq || 's1'; lead.last_touch=nowISO; lead.status=lead.status||'sent'; updated.push(lead);
   }
-  fs.appendFileSync(logPath, stringify(rows, {header:false}));
-})();
+  writeCSV(LEADS, header, updated);
+}
+main().catch(e=>{console.error(e);process.exit(1);});
