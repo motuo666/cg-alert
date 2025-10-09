@@ -1,6 +1,6 @@
 name: Pool Monitor
 on:
-  schedule: [ { cron: '35 14 * * 1' } ]  # 每周一 08:35 MT
+  schedule: [ { cron: "35 14 * * 1" } ]  # 每周一 08:35 MT（=14:35 UTC）
   workflow_dispatch: {}
 
 permissions: { contents: read }
@@ -8,18 +8,52 @@ permissions: { contents: read }
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      DOM_THRESHOLD: "100"      # 你可以改，比如 80/150
+      TAG_THRESHOLD: "100"
     steps:
       - uses: actions/checkout@v4
-      - name: Check pools
+
+      - name: Count pool rows
+        id: c
+        run: |
+          count_file () {
+            f="$1"
+            if [ -f "$f" ]; then
+              # 扣除表头
+              echo $(( $(wc -l < "$f") - 1 ))
+            else
+              echo 0
+            fi
+          }
+          dom=$(count_file data/domain_pool.csv)
+          tag=$(count_file data/vendor_tags_pool.csv)
+          echo "dom=$dom" >> $GITHUB_OUTPUT
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "domain_pool=$dom, vendor_tags_pool=$tag"
+
+      - name: Alert (Slack if low)
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          DOM: ${{ steps.c.outputs.dom }}
+          TAG: ${{ steps.c.outputs.tag }}
+          DOM_THRESHOLD: ${{ env.DOM_THRESHOLD }}
+          TAG_THRESHOLD: ${{ env.TAG_THRESHOLD }}
         run: |
-          rem() { [ -f "$1" ] && echo $(( $(wc -l < "$1") - 1 )); }
-          d=$(rem data/domain_pool.csv || echo 0)
-          t=$(rem data/vendor_tags_pool.csv || echo 0)
-          echo "domain_pool=$d, tags_pool=$t"
-          if [ "$d" -lt 50 ] || [ "$t" -lt 50 ]; then
-            curl -sS -X POST -H 'Content-Type: application/json' \
-              --data "{\"text\":\":battery: Pools low → domains:$d, tags:$t (please top up)\"}" \
-              "$SLACK_WEBHOOK_URL"
+          low=""
+          if [ "${DOM}" -lt "${DOM_THRESHOLD}" ]; then low="domains:${DOM} (<${DOM_THRESHOLD})"; fi
+          if [ "${TAG}" -lt "${TAG_THRESHOLD}" ]; then
+            if [ -n "$low" ]; then low="$low, "; fi
+            low="${low}vendor_tags:${TAG} (<${TAG_THRESHOLD})"
           fi
+          if [ -z "$low" ]; then
+            echo "Pools OK"
+            exit 0
+          fi
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "LOW POOLS: $low"
+            exit 0
+          fi
+          curl -sS -X POST -H 'Content-Type: application/json' \
+            --data "{\"text\":\":battery: *Pool low* — ${low}\"}" \
+            "$SLACK_WEBHOOK_URL" >/dev/null
