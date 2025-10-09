@@ -1,7 +1,7 @@
-// scripts/send_bulk.js
 const fs = require('fs');
 const { parse } = require('csv-parse/sync');
 const nodemailer = require('nodemailer');
+const dns = require('dns').promises;
 
 const CSV_PATH = 'data/leads.csv';
 const SUBJECT_PATH = 'data/s1_subject.txt';
@@ -43,25 +43,41 @@ function pickPending(rows){
   });
 }
 
+async function ipv4(host){
+  try { const a = await dns.lookup(host, { family: 4 }); return a.address; }
+  catch { return host; }
+}
+
+async function getTransportWithFallback(){
+  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) throw new Error('缺少 SMTP_* secrets');
+  const ip4 = await ipv4(SMTP_HOST);
+  const portEnv = Number(SMTP_PORT || 0);
+  const candidates = portEnv
+    ? [{ host: ip4, port: portEnv, secure: portEnv===465, requireTLS: portEnv===587 }]
+    : [{ host: ip4, port: 465, secure: true }, { host: ip4, port: 587, secure: false, requireTLS: true }];
+
+  let lastErr, working;
+  for (const c of candidates) {
+    const tr = nodemailer.createTransport({
+      host: c.host, port: c.port, secure: c.secure, requireTLS: !!c.requireTLS,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+      tls: { minVersion: 'TLSv1.2', servername: SMTP_HOST },
+      connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 10000,
+    });
+    try { await tr.verify(); working = tr; break; }
+    catch(e){ lastErr = e; }
+  }
+  if (!working) throw new Error(`SMTP 连接失败（465/587 均不通）：${lastErr && lastErr.message}`);
+  return working;
+}
+
 async function realSend(rows, header){
-  // 校验模板
   const subject = (S1_SUBJECT || tryRead(SUBJECT_PATH) || '').trim();
   const html = tryRead(HTML_PATH);
   if (!subject) throw new Error('缺少主题：配置 S1_SUBJECT 或提供 data/s1_subject.txt');
   if (!html) throw new Error('缺少正文模板：提供 data/s1.html');
 
-  // SMTP
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-    throw new Error('缺少 SMTP_* secrets');
-  }
-  const secure = Number(SMTP_PORT) === 465;
-  const tr = nodemailer.createTransport({
-    host: SMTP_HOST, port: Number(SMTP_PORT), secure,
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-    tls: { minVersion: 'TLSv1.2' },
-  });
-  await tr.verify();
-
+  const tr = await getTransportWithFallback();
   const from = MAIL_FROM || SMTP_USER;
   const now = new Date().toISOString();
 
@@ -70,10 +86,7 @@ async function realSend(rows, header){
     try{
       await tr.sendMail({
         from: from, to: r.email, subject, html,
-        headers: {
-          'List-Unsubscribe': '<mailto:optout@cg-alert.com?subject=unsubscribe>',
-          'Auto-Submitted': 'auto-generated',
-        }
+        headers: {'List-Unsubscribe':'<mailto:optout@cg-alert.com?subject=unsubscribe>','Auto-Submitted':'auto-generated'}
       });
       r.status='sent'; r.last_error=''; r.last_sent=now; sent++;
     }catch(e){
