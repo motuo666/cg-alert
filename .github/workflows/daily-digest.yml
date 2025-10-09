@@ -1,6 +1,6 @@
-name: Daily digest
+name: Daily Digest
 on:
-  schedule: [ { cron: "0 17 * * *" } ]  # 每天 17:00 UTC
+  schedule: [ { cron: "5 15 * * *" } ]  # 每天 09:05 MT（夏令时=UTC-6 → 15:05 UTC）
   workflow_dispatch: {}
 
 permissions: { contents: read }
@@ -10,23 +10,66 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - name: Prepare deps
+
+      - name: Prepare env
         run: |
-          npm init -y >/dev/null 2>&1 || true
-          npm install csv-parse --silent
-      - name: Send digest
+          echo "TODAY=$(date -u +%Y-%m-%d)" >> $GITHUB_ENV
+
+      - name: Compute metrics
+        id: m
+        run: |
+          set -e
+          # leads.csv 形状：email,company,domain,vendor1,vendor2,vendor3,status,last_error,last_sent
+          f="data/leads.csv"
+          if [ ! -f "$f" ]; then
+            echo "sent=0" >> $GITHUB_OUTPUT
+            echo "err=0" >> $GITHUB_OUTPUT
+            echo "pending=0" >> $GITHUB_OUTPUT
+          else
+            sent=$(awk -F',' -v d="${TODAY}" 'NR>1 && $7=="sent" && $9 ~ "^"d {c++} END{print c+0}' "$f")
+            err=$(awk -F',' -v d="${TODAY}" 'NR>1 && $7 ~ /^err/ && $9 ~ "^"d {c++} END{print c+0}' "$f")
+            pending=$(awk -F',' 'NR>1 && ($7=="" || $7=="new" || $7=="retry") {c++} END{print c+0}' "$f")
+            echo "sent=$sent" >> $GITHUB_OUTPUT
+            echo "err=$err" >> $GITHUB_OUTPUT
+            echo "pending=$pending" >> $GITHUB_OUTPUT
+          fi
+          # 退订/投诉可选文件，若无则置 0
+          unsub_file="data/unsubscribes.csv"
+          if [ -f "$unsub_file" ]; then
+            unsubs=$(tail -n +2 "$unsub_file" | wc -l | tr -d ' ')
+          else
+            unsubs=0
+          fi
+          echo "unsubs=$unsubs" >> $GITHUB_OUTPUT
+
+      - name: Post to Slack
+        if: ${{ success() }}
         env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TODAY: ${{ env.TODAY }}
+          SENT: ${{ steps.m.outputs.sent }}
+          ERR: ${{ steps.m.outputs.err }}
+          PENDING: ${{ steps.m.outputs.pending }}
+          UNSUBS: ${{ steps.m.outputs.unsubs }}
         run: |
-          node -e "
-          const fs=require('fs'); const {parse}=require('csv-parse/sync');
-          const load=p=>fs.existsSync(p)?parse(fs.readFileSync(p,'utf8'),{columns:true,skip_empty_lines:true,trim:true}):[];
-          const today=new Date().toISOString().slice(0,10);
-          const sent=load('data/sent_log.csv').filter(r=>r.ts?.startsWith(today));
-          const unsub=load('data/unsubscribes.csv').filter(r=>r.ts?.startsWith(today));
-          const trials=load('data/trials.csv').filter(r=>r.ts?.startsWith(today));
-          const body={text:`Daily digest ${today}\nSent: ${sent.length}\nTrials: ${trials.length}\nUnsubs: ${unsub.length}`};
-          fetch(process.env.SLACK_WEBHOOK,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}).catch(()=>{});
-          "
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "No SLACK_WEBHOOK_URL provided; printing digest:"
+            echo "Daily ${TODAY} — sent:${SENT}, err:${ERR}, pending:${PENDING}, unsubs:${UNSUBS}"
+            exit 0
+          fi
+          payload=$(cat <<EOF
+          {
+            "text": "*Daily — ${TODAY}*",
+            "blocks": [
+              { "type": "section", "text": { "type": "mrkdwn", "text": "*CG Alert · Outreach Digest — ${TODAY}*" } },
+              { "type": "section", "fields": [
+                { "type": "mrkdwn", "text": "*Sent today:*\n${SENT}" },
+                { "type": "mrkdwn", "text": "*Errors today:*\n${ERR}" },
+                { "type": "mrkdwn", "text": "*Pending queue:*\n${PENDING}" },
+                { "type": "mrkdwn", "text": "*Unsubs total:*\n${UNSUBS}" }
+              ] }
+            ]
+          }
+          EOF
+          )
+          curl -sS -X POST -H 'Content-Type: application/json' -d "$payload" "$SLACK_WEBHOOK_URL" >/dev/null
