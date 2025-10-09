@@ -1,8 +1,9 @@
 name: Outreach S1
 on:
+  schedule: [ { cron: '30 17 * * 1-5' } ]  # 工作日 11:30 MT
   workflow_dispatch:
-  schedule:
-    - cron: '30 17 * * 1-5'   # 工作日 11:30 MT
+
+permissions: { contents: write }
 
 jobs:
   send:
@@ -11,16 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      - name: Install deps (ci if lockfile exists)
+        with: { node-version: '18' }
+      - name: Install deps
         run: |
           if [ -f package-lock.json ]; then
             npm ci --no-audit --no-fund
           else
-            npm i --no-audit --no-fund
+            npm i nodemailer --no-audit --no-fund
           fi
-      - name: Outreach S1
+      - name: Outreach S1 (DRY-RUN=0)
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -28,3 +28,14 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           DRY_RUN: "0"
         run: node scripts/send_bulk.js
+      - name: Commit leads.csv (optional persist)
+        run: |
+          if git diff --quiet --exit-code -- data/leads.csv; then
+            echo "no changes";
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/leads.csv || true
+            git commit -m "chore(outreach): update leads statuses" || true
+            git push || true
+          fi
