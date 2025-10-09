@@ -1,24 +1,36 @@
-name: Outreach S2
+name: Outreach S2 (Follow-up)
+
 on:
-  schedule: [ { cron: "30 17 * * 1-5" } ]
+  schedule:
+    - cron: '00 18 * * 1-5'  # 12:00 MT，自行改；也可只手动触发
   workflow_dispatch:
-permissions: { contents: read }
-concurrency: { group: "outreach-s2-${{ github.ref }}", cancel-in-progress: true }
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "outreach-s2-${{ github.ref }}"
+  cancel-in-progress: true
+
 jobs:
   send:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '18' }
-      - name: Send batch S2
+      - name: Checkout
+        uses: actions/checkout@v4   # ✅
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Send S2
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
           DRY_RUN: '0'
-        run: node scripts/send_bulk.js --stage s2
+        run: node scripts/send_followup.js
