@@ -1,7 +1,10 @@
 name: Daily digest
 on:
-  schedule: [ { cron: "0 17 * * *" } ]   # 每天 17:00 UTC
+  schedule: [ { cron: "0 17 * * *" } ]  # 每天 17:00 UTC
   workflow_dispatch: {}
+
+permissions: { contents: read }
+
 jobs:
   digest:
     runs-on: ubuntu-latest
@@ -9,11 +12,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - run: |
-          npm init -y >/dev/null 2>&1
+      - name: Prepare deps
+        run: |
+          npm init -y >/dev/null 2>&1 || true
           npm install csv-parse --silent
       - name: Send digest
-        env: { SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }} }
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: |
           node -e "
           const fs=require('fs'); const {parse}=require('csv-parse/sync');
