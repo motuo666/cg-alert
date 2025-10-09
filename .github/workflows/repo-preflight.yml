@@ -1,56 +1,53 @@
-  name: Repo Preflight
+name: Outreach Rescue
+
 on:
-  push:
-    paths:
-      - "scripts/**"
-      - ".github/workflows/**"
-      - "data/**"
-      - "evidence/**"
   workflow_dispatch:
-permissions: { contents: read }
+    inputs:
+      probe_to:
+        description: "测试收件地址（可选）"
+        required: false
+      dry_run:
+        description: "仅验证，不实际发信（0/1）"
+        default: "1"
+        required: true
+
+permissions:
+  contents: write
+
 jobs:
-  lint-and-preflight:
+  rescue:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Lint GitHub Workflows
-        uses: rhysd/actionlint@v1
       - uses: actions/setup-node@v4
-        with: { node-version: '18' }
-      - name: Run preflight checks
-        run: node scripts/preflight_check.js
-      - name: Build updates (dry)
-        env:
-          UPDATES_DAYS: '30'
-          UPDATES_LIMIT: '5'
-          SITE_ORIGIN: 'https://www.cg-alert.com'
+        with:
+          node-version: '18'
+
+      - name: Install deps
         run: |
-          node scripts/build_updates.js
-          test -f updates/index.html
-          test -f updates/rss.xml
-          echo "updates generated OK"
-      - name: Check required secrets presence
+          npm init -y >/dev/null 2>&1 || true
+          npm i nodemailer@6 csv-parse@5
+
+      - name: Leads sanity
+        run: node scripts/leads_sanity.js
+
+      - name: SMTP probe
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: |
-          missing=0
-          for k in SMTP_HOST SMTP_USER SMTP_PASS FROM_EMAIL SLACK_WEBHOOK_URL; do
-            v="${!k}"
-            if [ -z "$v" ]; then
-              echo "::warning ::Missing secret $k"
-              missing=1
-            fi
-          done
-          exit 0  # 只告警不失败，防止阻断其它流水线
-      - name: Upload updates preview
-        uses: actions/upload-artifact@v4
-        with:
-          name: updates-preview
-          path: |
-            updates/index.html
-            updates/rss.xml
-          if-no-files-found: warn
+          PROBE_TO: ${{ inputs.probe_to }}
+        run: node scripts/smtp_probe.js
+
+      - name: Dry-run S1
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ vars.MAIL_FROM }}
+          S1_SUBJECT: ${{ vars.S1_SUBJECT }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: node scripts/send_bulk.js
