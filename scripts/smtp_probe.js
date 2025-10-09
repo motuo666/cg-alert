@@ -1,31 +1,30 @@
 // scripts/smtp_probe.js
 const nodemailer = require('nodemailer');
-const HOST = process.env.SMTP_HOST;
-const PORT = Number(process.env.SMTP_PORT || 465);
-const USER = process.env.SMTP_USER;
-const PASS = process.env.SMTP_PASS;
-const FROM = process.env.FROM_ADDR || 'outreach@mail2.cg-alert.com';
-const TO   = process.env.PROBE_TO || '';
 
-async function main(){
-  const tr = nodemailer.createTransport({
-    host: HOST, port: PORT, secure: PORT===465,
-    auth: { user: USER, pass: PASS },
-    requireTLS: PORT!==465, tls: { minVersion: 'TLSv1.2' },
-    logger: true, debug: true
+const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, PROBE_TO } = process.env;
+if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
+  console.error('❌ 缺少 SMTP_* secrets');
+  process.exit(1);
+}
+const port = Number(SMTP_PORT);
+const secure = port === 465;
+
+async function main() {
+  const transport = nodemailer.createTransport({
+    host: SMTP_HOST, port, secure,
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+    tls: { rejectUnauthorized: false }
   });
-  console.log(`[probe] verify smtp://${HOST}:${PORT} as ${USER}`);
-  await tr.verify();
-  console.log('[probe] verify ok');
-  if(TO){
-    console.log(`[probe] send test to ${TO}`);
-    await tr.sendMail({
-      from: { name: 'CG Alert Probe', address: FROM },
-      to: TO, subject: 'CG Alert SMTP Probe',
-      text: 'GitHub Actions probe OK.',
-      headers: { 'Auto-Submitted': 'auto-generated' }
+  await transport.verify();
+  console.log('✅ SMTP 连接可用');
+  if (PROBE_TO) {
+    await transport.sendMail({
+      from: SMTP_USER,
+      to: PROBE_TO,
+      subject: 'CG Alert SMTP Probe',
+      text: 'SMTP OK',
     });
-    console.log('[probe] send ok');
+    console.log('✉️ 已发送测试信到:', PROBE_TO);
   }
 }
-main().catch(e=>{ console.error('[probe] fail:', e && (e.response || e.message || e)); process.exit(1); });
+main().catch(e => { console.error('❌ SMTP probe 失败:', e.message); process.exit(1); });
