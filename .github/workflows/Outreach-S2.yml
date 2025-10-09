@@ -2,15 +2,15 @@ name: Outreach S2 (Follow-up)
 
 on:
   schedule:
-    - cron: '00 18 * * 1-5'  # 12:00 MT
+    - cron: '00 18 * * 1-5' # 12:00 MT
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: "outreach-s2-${{ github.ref }}"
-  cancel-in-progress: true
+  group: outreach-s2
+  cancel-in-progress: false
 
 jobs:
   send:
@@ -20,7 +20,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with: { node-version: '18' }
@@ -33,6 +32,11 @@ jobs:
           node -v
           echo "repo files:" && ls -al
           echo "scripts dir:" && ls -al scripts || true
+
+      - name: Install deps (nodemailer/csv)
+        run: |
+          npm init -y >/dev/null 2>&1 || true
+          npm install nodemailer csv-parse@5 csv-stringify@6 --no-fund --no-audit
 
       - name: Pick script
         id: pick
@@ -50,5 +54,9 @@ jobs:
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+          FROM_NAME: ${{ secrets.FROM_NAME }}
+          REPLY_TO: ${{ secrets.REPLY_TO }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           DRY_RUN: '0'
         run: node "${{ steps.pick.outputs.script }}"
