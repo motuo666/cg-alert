@@ -1,5 +1,5 @@
 // scripts/build_updates.js — 增强版 Top Updates（近30天）
-// 读取 evidence/<vendor>/<YYYY-MM-DD>.json → 生成 /updates/index.html 与 /updates/rss.xml
+// 从 evidence/<vendor>/<YYYY-MM-DD>.json 聚合 → 生成 /updates/index.html 与 /updates/rss.xml
 const fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..');
 const EVID=path.join(ROOT,'evidence');
@@ -16,12 +16,12 @@ h1{font-size:26px;margin:0 0 8px}.meta{color:#666;font-size:12px}
 .cards{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:880px){.cards{grid-template-columns:1fr 1fr}}
 .card{border:1px solid #eee;border-radius:14px;padding:12px;background:#fff}
-.badge{display:inline-block;border:1px solid #ddd;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:6px;background:#f7f7f7}
+.badge{display:inline-block;border:1px solid #ddd;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:8px;background:#f7f7f7}
 blockquote{background:#fafafa;border:1px solid #eee;border-radius:12px;padding:10px;white-space:pre-wrap;margin:8px 0;max-height:260px;overflow:hidden}
 a{color:#0a58ca;text-decoration:none}a:hover{text-decoration:underline}
 .nav{margin:6px 0 14px}.small{color:#666;font-size:12px}
-.legend{margin:6px 0 10px}.legend .badge{margin-bottom:4px}
-.top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .top .right{margin-left:auto;text-align:right}
 `;
 
@@ -44,6 +44,7 @@ function collect(){
   const rows=[];
   for(const v of listVendors()){
     const dir=path.join(EVID,v);
+    if(!fs.existsSync(dir)) continue;
     const files=fs.readdirSync(dir).filter(f=>/^\d{4}-\d{2}-\d{2}\.json$/.test(f));
     for(const f of files){
       const day=f.replace(/\.json$/,'');
@@ -81,7 +82,7 @@ function pageHTML(items){
 </div>`;
   const cards=items.map(e=>`<div class="card">
   <div class="top">
-    <div><span class="badge">${esc(e.type)}</span><strong>${esc(e.vendor)}</strong></div>
+    <div><span class="badge">${esc(e.type)}</span><strong><a href="${esc(SITE+'/vendors/'+encodeURIComponent(e.vendor)+'/')}">${esc(e.vendor)}</a></strong></div>
     <div class="right"><span class="meta">${esc(e.date)}</span></div>
   </div>
   <div class="meta">${esc(e.host||'source')}</div>
