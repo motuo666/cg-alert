@@ -1,54 +1,49 @@
-name: Outreach S2 (Follow-up)
+name: Outreach S1 (Send)
 
 on:
   schedule:
-    - cron: '00 18 * * 1-5'  # 12:00 MT
+    - cron: '30 17 * * 1-5'   # 11:30 MT（GitHub 用 UTC）
   workflow_dispatch:
 
-permissions:
-  contents: read
+permissions: { contents: read }
 
 concurrency:
-  group: "outreach-s2-${{ github.ref }}"
-  cancel-in-progress: true
+  group: "outreach-s1"
+  cancel-in-progress: false
 
 jobs:
   send:
+    # 默认分支或手动触发才跑
     if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with: { node-version: '18' }
 
-      - name: Debug context
+      - name: Sanity
         run: |
-          echo "ref=$GITHUB_REF"
-          echo "event=$GITHUB_EVENT_NAME"
           echo "default_branch=${{ github.event.repository.default_branch }}"
           node -v
-          echo "repo files:" && ls -al
-          echo "scripts dir:" && ls -al scripts || true
+          ls -al
+          ls -al scripts || true
 
-      - name: Pick script
-        id: pick
+      - name: Install deps
         run: |
-          set -e
-          for c in scripts/send_followup.js scripts/outreach_s2.js scripts/send_follow.js; do
-            if [ -f "$c" ]; then echo "script=$c" >> $GITHUB_OUTPUT; echo "USING=$c"; exit 0; fi
-          done
-          echo "找不到 S2 发送脚本（期待 scripts/send_followup.js 或 outreach_s2.js）" >&2
-          exit 1
+          npm init -y >/dev/null 2>&1 || true
+          npm install nodemailer csv-parse@5 csv-stringify@6 --no-fund --no-audit
 
-      - name: Send S2
+      - name: Send S1
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          DRY_RUN: '0'
-        run: node "${{ steps.pick.outputs.script }}"
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+          FROM_NAME: ${{ secrets.FROM_NAME }}
+          REPLY_TO: ${{ secrets.REPLY_TO }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          DRY_RUN: '0'            # 排障可改成 '1'
+          S1_DAILY_CAP: '40'
+        run: node scripts/send_bulk.js
