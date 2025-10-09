@@ -3,31 +3,43 @@ on:
   schedule: [ { cron: '30 17 * * 1-5' } ]  # 工作日 11:30 MT
   workflow_dispatch:
 
-permissions: { contents: write }
+permissions:
+  contents: write  # 允许回写 leads.csv（可选）
+
+concurrency:
+  group: outreach-s1-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   send:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '18' }
-      - name: Install deps
+      - name: Install deps (robust)
         run: |
-          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm i nodemailer --no-audit --no-fund; fi
-      - name: Outreach S1 (DRY_RUN=0)
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm init -y >/dev/null 2>&1 || true
+            npm i nodemailer --no-audit --no-fund
+          fi
+      - name: Send S1
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          DRY_RUN: "0"   # 改为 "1" 可先干跑，验证流程不发信
+          DRY_RUN: "0"
         run: node scripts/send_bulk.js
       - name: Commit leads.csv status (optional)
+        if: success()
         run: |
           if git diff --quiet --exit-code -- data/leads.csv; then
-            echo "no changes";
+            echo "no changes"
           else
             git config user.name  "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
