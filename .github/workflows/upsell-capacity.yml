@@ -1,0 +1,17 @@
+name: Upsell Capacity
+on:
+  schedule: [ { cron: '28 15 * * 1' } ]  # 每周一 09:28 MT
+  workflow_dispatch:
+permissions: {}
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: Upsell capacity check
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          UPSELL_THRESHOLD: '0.8'
+        run: node scripts/upsell_capacity.js
