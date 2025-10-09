@@ -1,20 +1,19 @@
-name: Outreach S1 (Send)
+name: Outreach S2 (Follow-up)
 
 on:
   schedule:
-    - cron: '30 17 * * 1-5'  # 11:30 MT (UTC cron)
+    - cron: '00 18 * * 1-5'  # 12:00 MT
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: "outreach-s1-${{ github.ref }}"
+  group: "outreach-s2-${{ github.ref }}"
   cancel-in-progress: true
 
 jobs:
   send:
-    # ✅ 不再写死 main，用默认分支动态判断；手动触发也不会被跳过
     if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -35,22 +34,21 @@ jobs:
           echo "repo files:" && ls -al
           echo "scripts dir:" && ls -al scripts || true
 
-      # ✅ 自动探测脚本路径（你的仓库可能叫别的名字）
       - name: Pick script
         id: pick
         run: |
           set -e
-          for c in scripts/send_bulk.js scripts/outreach_s1.js scripts/send.js; do
+          for c in scripts/send_followup.js scripts/outreach_s2.js scripts/send_follow.js; do
             if [ -f "$c" ]; then echo "script=$c" >> $GITHUB_OUTPUT; echo "USING=$c"; exit 0; fi
           done
-          echo "找不到 S1 发送脚本（期待 scripts/send_bulk.js 或 outreach_s1.js 或 send.js）" >&2
+          echo "找不到 S2 发送脚本（期待 scripts/send_followup.js 或 outreach_s2.js）" >&2
           exit 1
 
-      - name: Send S1
+      - name: Send S2
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          DRY_RUN: '0'     # 排障可临时改成 '1'
+          DRY_RUN: '0'
         run: node "${{ steps.pick.outputs.script }}"
