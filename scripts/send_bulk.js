@@ -1,68 +1,95 @@
-// scripts/send_bulk.js  —— 技术增强版（不改文案）
-// 依赖：node 18 + nodemailer（或你现有 SMTP 客户端）
+// scripts/send_bulk.js
+// 读取 data/leads.csv，按天配额发送 S1；记录到 data/outreach_log.csv，防重复。
+// 依赖：nodemailer, csv-parse, csv-stringify（workflow 已安装）
+
+const fs = require('fs');
+const path = require('path');
+const { parse } = require('csv-parse/sync');
+const { stringify } = require('csv-stringify/sync');
 const nodemailer = require('nodemailer');
-const os = require('os');
 
-const SMTP_HOST = process.env.SMTP_HOST;
-const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
-const SMTP_USER = process.env.SMTP_USER;
-const SMTP_PASS = process.env.SMTP_PASS;
+const DRY = process.env.DRY_RUN === '1';
+const leadsPath = 'data/leads.csv';
+const logPath = 'data/outreach_log.csv';
+const tmplPath = 'templates/s1.md';
 
-const FROM_NAME = 'CG Alert';
-const FROM_ADDR = 'outreach@cg-alert.com';
-const REPLY_TO  = 'outreach@cg-alert.com';
-const LIST_UNSUB = 'mailto:optout@cg-alert.com?subject=unsubscribe';
-
-function wrap78(s=''){
-  return s.split('\n').map(line=>{
-    if(line.length<=78) return line;
-    const chunks=[]; let rest=line;
-    while(rest.length>78){ chunks.push(rest.slice(0,78)); rest=rest.slice(78); }
-    chunks.push(rest); return chunks.join('\n');
-  }).join('\n');
+function ensureFile(p, header) {
+  if (!fs.existsSync(p)) fs.writeFileSync(p, header + '\n');
 }
 
-function linkCount(text=''){
-  const re = /\bhttps?:\/\/[^\s)]+/ig;
-  return (text.match(re)||[]).length;
+ensureFile(leadsPath, 'email,company,domain,vendor1,vendor2,vendor3');
+ensureFile(logPath, 'ts,email,stage,result,msg');
+
+const leads = parse(fs.readFileSync(leadsPath), { columns: true, skip_empty_lines: true });
+const sentLog = parse(fs.readFileSync(logPath), { columns: true, skip_empty_lines: true });
+
+const sentSet = new Set(sentLog.filter(r => r.stage === 'S1' && r.result === 'OK').map(r => r.email.toLowerCase()));
+
+const dailyCap = Number(process.env.S1_DAILY_CAP || 40);
+const batch = [];
+
+for (const row of leads) {
+  const email = (row.email || '').trim().toLowerCase();
+  if (!email || sentSet.has(email)) continue;
+  batch.push(row);
+  if (batch.length >= dailyCap) break;
 }
 
-async function main(){
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT===465,
-    auth: { user: SMTP_USER, pass: SMTP_PASS }
-  });
+if (batch.length === 0) {
+  console.log('No S1 targets. Exit.');
+  process.exit(0);
+}
 
-  const leads = loadLeads(); // 你现有的读取 leads.csv 的逻辑
-  for(const lead of leads){
-    if((lead.status||'')==='optout' || (lead.status||'')==='invalid') continue;
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT || 587),
+  secure: Number(process.env.SMTP_PORT || 587) === 465,
+  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+});
 
-    const subject = renderSubject(lead);      // 不改你文案
-    const body    = renderBodyPlain(lead);    // 不改你文案（纯文本）
-    if(linkCount(body)>3) continue;           // 超 3 链接直接跳过（保守）
+const from = `${process.env.FROM_NAME || 'CG Alert'} <${process.env.FROM_EMAIL}>`;
+const replyTo = process.env.REPLY_TO || process.env.FROM_EMAIL;
 
-    const headers = {
-      'List-Unsubscribe': `<${LIST_UNSUB}>`,
-      'Auto-Submitted': 'auto-generated',
-      'X-Entity-Ref-ID': `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    };
+function renderTemplate(tmpl, row) {
+  return tmpl
+    .replaceAll('{{company}}', row.company || '')
+    .replaceAll('{{domain}}', row.domain || '')
+    .replaceAll('{{vendor1}}', row.vendor1 || '')
+    .replaceAll('{{vendor2}}', row.vendor2 || '')
+    .replaceAll('{{vendor3}}', row.vendor3 || '');
+}
 
-    await transporter.sendMail({
-      from: { name: FROM_NAME, address: FROM_ADDR },
-      to:   lead.email,
-      replyTo: REPLY_TO,
-      subject,
-      text: wrap78(body),
-      headers,
-    });
+const fallback = `Hi {{company}} team,
 
-    await sleep(1200 + Math.random()*800); // 1.2–2.0s/封，稳
+We monitor public changes on {{vendor1}}{{vendor2?}}, and provide verifiable evidence cards (Pricing/ToS/DPA/Subprocessors/Status).
+If you'd like "set-and-forget" alerts for your stack (e.g. {{vendor1}}, {{vendor2}}, {{vendor3}}), here’s the 2-min overview:
+https://www.cg-alert.com/
+
+— CG Alert
+`;
+
+const tmpl = fs.existsSync(tmplPath) ? fs.readFileSync(tmplPath, 'utf8') : fallback;
+
+(async () => {
+  const rowsToAppend = [];
+  for (const row of batch) {
+    const email = row.email.trim();
+    const subject = `Quick check: public changes on ${row.vendor1 || 'your suppliers'}`;
+    const text = renderTemplate(tmpl, row);
+
+    try {
+      if (!DRY) {
+        await transporter.sendMail({ from, to: email, replyTo, subject, text });
+      }
+      rowsToAppend.push({ ts: new Date().toISOString(), email, stage: 'S1', result: 'OK', msg: '' });
+      console.log('Sent S1 ->', email);
+      await new Promise(r => setTimeout(r, 3000)); // 3s 间隔，稳妥
+    } catch (e) {
+      rowsToAppend.push({ ts: new Date().toISOString(), email, stage: 'S1', result: 'ERR', msg: String(e).slice(0,200) });
+      console.error('ERR S1 ->', email, e.message);
+      await new Promise(r => setTimeout(r, 1000));
+    }
   }
-}
-
-function loadLeads(){ /* 读取 CSV 并生成 {email,...} 数组 —— 保持你原逻辑 */ return []; }
-function renderSubject(lead){ /* 你的 S1 文案 —— 不修改 */ return '...'; }
-function renderBodyPlain(lead){ /* 你的 S1 文案 —— 不修改 */ return '...'; }
-function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-
-main().catch(err=>{ console.error(err); process.exit(1); });
+  const appended = stringify(rowsToAppend, { header: false });
+  fs.appendFileSync(logPath, appended);
+})();
