@@ -15,20 +15,16 @@ jobs:
         with: { node-version: '18' }
       - name: Install deps
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci --no-audit --no-fund
-          else
-            npm i nodemailer --no-audit --no-fund
-          fi
-      - name: Outreach S1 (DRY-RUN=0)
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm i nodemailer --no-audit --no-fund; fi
+      - name: Outreach S1 (DRY_RUN=0)
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          DRY_RUN: "0"
+          DRY_RUN: "0"   # 改为 "1" 可先干跑，验证流程不发信
         run: node scripts/send_bulk.js
-      - name: Commit leads.csv (optional persist)
+      - name: Commit leads.csv status (optional)
         run: |
           if git diff --quiet --exit-code -- data/leads.csv; then
             echo "no changes";
