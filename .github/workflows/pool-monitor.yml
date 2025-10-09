@@ -1,14 +1,18 @@
 name: Pool Monitor
 on:
   schedule: [ { cron: '35 14 * * 1' } ]  # 每周一 08:35 MT
-  workflow_dispatch:
+  workflow_dispatch: {}
+
+permissions: { contents: read }
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Check pools
-        env: { SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           rem() { [ -f "$1" ] && echo $(( $(wc -l < "$1") - 1 )); }
           d=$(rem data/domain_pool.csv || echo 0)
