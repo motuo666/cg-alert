@@ -1,31 +1,53 @@
 name: Outreach Rescue
-on: { workflow_dispatch: {} }
-permissions: { contents: read }
+
+on:
+  workflow_dispatch:
+    inputs:
+      probe_to:
+        description: "测试收件地址（可选）"
+        required: false
+      dry_run:
+        description: "仅验证，不实际发信（0/1）"
+        default: "1"
+        required: true
+
+permissions:
+  contents: write
+
 jobs:
-  diag:
+  rescue:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '18' }
-      - name: Leads sanity
-        run: |
-          node -e "const fs=require('fs');const p='data/leads.csv';if(!fs.existsSync(p)){console.log('ERROR: leads.csv missing');process.exit(3)}
-          const t=fs.readFileSync(p,'utf8').trim().split(/\r?\n/);const h=t[0].split(',').map(s=>s.trim());
-          const need=['email','company','domain','status','seq','last_touch'];const miss=need.filter(k=>!h.includes(k));
-          if(miss.length){console.log('FAIL headers:',miss.join(','));process.exit(2)} console.log('leads.csv headers OK')"
+        with:
+          node-version: '18'
+
       - name: Install deps
         run: |
           npm init -y >/dev/null 2>&1 || true
-          npm i nodemailer --no-audit --no-fund
+          npm i nodemailer@6 csv-parse@5
+
+      - name: Leads sanity
+        run: node scripts/leads_sanity.js
+
       - name: SMTP probe
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-        run: |
-          node -e "
-          const nodemailer=require('nodemailer');
-          (async()=>{const tr=nodemailer.createTransport({host:process.env.SMTP_HOST,port:Number(process.env.SMTP_PORT||465),secure:true,auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}});
-          try{await tr.verify();console.log('SMTP verify ok')}catch(e){console.error('SMTP verify fail:',e&& (e.response||e.message));process.exit(1)}})()"
+          PROBE_TO: ${{ inputs.probe_to }}
+        run: node scripts/smtp_probe.js
+
+      - name: Dry-run S1
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ vars.MAIL_FROM }}
+          S1_SUBJECT: ${{ vars.S1_SUBJECT }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: node scripts/send_bulk.js
