@@ -1,0 +1,58 @@
+name: Outreach Rescue
+on: { workflow_dispatch: {} }
+
+permissions: { contents: read }
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Repo & runner info
+        run: |
+          echo "BRANCH=${GITHUB_REF}"
+          node -v || true
+          npm -v || true
+          ls -la
+          echo "---- tree ----"
+          find . -maxdepth 3 -type f | sed 's|^\./||' | sort | sed -n '1,200p'
+
+      - name: Check package.json (no ESM type)
+        run: |
+          test -f package.json || (echo "missing package.json" && exit 1)
+          if grep -q '"type": *"module"' package.json; then
+            echo 'ERROR: package.json contains "type":"module" (remove it for require(...))'
+            exit 2
+          else
+            echo 'OK: no "type":"module"'
+          fi
+
+      - name: Leads file exists?
+        run: |
+          test -f data/leads.csv || (echo "ERROR: data/leads.csv missing" && exit 3)
+          head -n 3 data/leads.csv || true
+
+      - name: Leads sanity
+        run: node scripts/leads_sanity.js
+
+      - name: Install deps (nodemailer)
+        run: |
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm i nodemailer --no-audit --no-fund; fi
+
+      - name: Secrets presence
+        run: |
+          test -n "${{ secrets.SMTP_HOST }}" || (echo "ERROR: missing SMTP_HOST secret" && exit 4)
+          test -n "${{ secrets.SMTP_USER }}" || (echo "ERROR: missing SMTP_USER secret" && exit 4)
+          test -n "${{ secrets.SMTP_PASS }}" || (echo "ERROR: missing SMTP_PASS secret" && exit 4)
+          echo "SMTP secrets present (values hidden)."
+
+      - name: SMTP probe (verify, optional real send)
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          FROM_ADDR: outreach@mail2.cg-alert.com
+          PROBE_TO: ${{ vars.PROBE_TO || '' }}
+        run: node scripts/smtp_probe.js
