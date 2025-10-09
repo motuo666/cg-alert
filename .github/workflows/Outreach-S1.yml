@@ -1,24 +1,38 @@
-name: Outreach S1
+name: Outreach S1 (Send)
+
 on:
-  schedule: [ { cron: "30 17 * * 1-5" } ]   # 工作日 11:30 MT（夏令时）
+  schedule:
+    # 11:30 MT（GitHub Actions 用 UTC，这里是 17:30）
+    - cron: '30 17 * * 1-5'
   workflow_dispatch:
-permissions: { contents: read }
-concurrency: { group: "outreach-s1-${{ github.ref }}", cancel-in-progress: true }
+
+permissions:
+  contents: read
+
+concurrency:
+  group: "outreach-s1-${{ github.ref }}"
+  cancel-in-progress: true
+
 jobs:
   send:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
-    uses: actions/checkout@v4
-    uses: actions/setup-node@v4
-        with: { node-version: '18' }
-      - name: Send batch S1
+      - name: Checkout
+        uses: actions/checkout@v4   # ✅ 用 tag，别用长 SHA
+
+      - name: Setup Node
+        uses: actions/setup-node@v4  # ✅ 用 tag
+        with:
+          node-version: '18'
+
+      # 可选：你没有 package.json 就跳过安装
+      - name: Send S1
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
-          DRY_RUN: '0'
-        run: node scripts/send_bulk.js --stage s1
+          DRY_RUN: '0'               # 临时排障可改 '1'
+        run: node scripts/send_bulk.js
