@@ -2,7 +2,7 @@ name: Outreach S2 (Follow-up)
 
 on:
   schedule:
-    - cron: '00 18 * * 1-5'  # 12:00 MT，自行改；也可只手动触发
+    - cron: '00 18 * * 1-5' # 12:00 MT
   workflow_dispatch:
 
 permissions:
@@ -25,6 +25,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+
+      - name: Sanity: list repo
+        run: |
+          pwd && node -v
+          ls -al
+          ls -al scripts || true
 
       - name: Send S2
         env:
