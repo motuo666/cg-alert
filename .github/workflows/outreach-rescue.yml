@@ -1,58 +1,31 @@
 name: Outreach Rescue
 on: { workflow_dispatch: {} }
-
 permissions: { contents: read }
-
 jobs:
   diag:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Repo & runner info
-        run: |
-          echo "BRANCH=${GITHUB_REF}"
-          node -v || true
-          npm -v || true
-          ls -la
-          echo "---- tree ----"
-          find . -maxdepth 3 -type f | sed 's|^\./||' | sort | sed -n '1,200p'
-
-      - name: Check package.json (no ESM type)
-        run: |
-          test -f package.json || (echo "missing package.json" && exit 1)
-          if grep -q '"type": *"module"' package.json; then
-            echo 'ERROR: package.json contains "type":"module" (remove it for require(...))'
-            exit 2
-          else
-            echo 'OK: no "type":"module"'
-          fi
-
-      - name: Leads file exists?
-        run: |
-          test -f data/leads.csv || (echo "ERROR: data/leads.csv missing" && exit 3)
-          head -n 3 data/leads.csv || true
-
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
       - name: Leads sanity
-        run: node scripts/leads_sanity.js
-
-      - name: Install deps (nodemailer)
         run: |
-          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm i nodemailer --no-audit --no-fund; fi
-
-      - name: Secrets presence
+          node -e "const fs=require('fs');const p='data/leads.csv';if(!fs.existsSync(p)){console.log('ERROR: leads.csv missing');process.exit(3)}
+          const t=fs.readFileSync(p,'utf8').trim().split(/\r?\n/);const h=t[0].split(',').map(s=>s.trim());
+          const need=['email','company','domain','status','seq','last_touch'];const miss=need.filter(k=>!h.includes(k));
+          if(miss.length){console.log('FAIL headers:',miss.join(','));process.exit(2)} console.log('leads.csv headers OK')"
+      - name: Install deps
         run: |
-          test -n "${{ secrets.SMTP_HOST }}" || (echo "ERROR: missing SMTP_HOST secret" && exit 4)
-          test -n "${{ secrets.SMTP_USER }}" || (echo "ERROR: missing SMTP_USER secret" && exit 4)
-          test -n "${{ secrets.SMTP_PASS }}" || (echo "ERROR: missing SMTP_PASS secret" && exit 4)
-          echo "SMTP secrets present (values hidden)."
-
-      - name: SMTP probe (verify, optional real send)
+          npm init -y >/dev/null 2>&1 || true
+          npm i nodemailer --no-audit --no-fund
+      - name: SMTP probe
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          FROM_ADDR: outreach@mail2.cg-alert.com
-          PROBE_TO: ${{ vars.PROBE_TO || '' }}
-        run: node scripts/smtp_probe.js
+        run: |
+          node -e "
+          const nodemailer=require('nodemailer');
+          (async()=>{const tr=nodemailer.createTransport({host:process.env.SMTP_HOST,port:Number(process.env.SMTP_PORT||465),secure:true,auth:{user:process.env.SMTP_USER,pass:process.env.SMTP_PASS}});
+          try{await tr.verify();console.log('SMTP verify ok')}catch(e){console.error('SMTP verify fail:',e&& (e.response||e.message));process.exit(1)}})()"
