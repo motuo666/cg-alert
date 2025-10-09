@@ -2,8 +2,7 @@ name: Outreach S1 (Send)
 
 on:
   schedule:
-    # 11:30 MT（GitHub Actions 用 UTC，这里是 17:30）
-    - cron: '30 17 * * 1-5'
+    - cron: '30 17 * * 1-5' # 11:30 MT (UTC-6/7季节变化，你在 MT)
   workflow_dispatch:
 
 permissions:
@@ -20,19 +19,24 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4   # ✅ 用 tag，别用长 SHA
+        uses: actions/checkout@v4   # ✅ 别用 tarball/SHA
 
       - name: Setup Node
-        uses: actions/setup-node@v4  # ✅ 用 tag
+        uses: actions/setup-node@v4 # ✅ 官方 tag
         with:
           node-version: '18'
 
-      # 可选：你没有 package.json 就跳过安装
+      - name: Sanity: list repo
+        run: |
+          pwd && node -v
+          ls -al
+          ls -al scripts || true
+
       - name: Send S1
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          DRY_RUN: '0'               # 临时排障可改 '1'
+          DRY_RUN: '0'            # 排障时可设 '1'
         run: node scripts/send_bulk.js
