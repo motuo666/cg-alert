@@ -1,115 +1,162 @@
+// scripts/send_bulk.js — 最优投递版（mail./mail2. 分流 + 主题/首句A/B + MX预检 + 退场过滤）
+// 依赖：node18 + nodemailer；纯文本发送（≤2 个链接）
+
 const fs = require('fs');
-const { parse } = require('csv-parse/sync');
-const nodemailer = require('nodemailer');
+const path = require('path');
+const crypto = require('crypto');
 const dns = require('dns').promises;
+const nodemailer = require('nodemailer');
 
-const CSV_PATH = 'data/leads.csv';
-const SUBJECT_PATH = 'data/s1_subject.txt';
-const HTML_PATH = 'data/s1.html';
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
 
-const {
-  SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS,
-  MAIL_FROM, S1_SUBJECT, DRY_RUN = '0',
-} = process.env;
+const SEQ  = (process.env.SEQ || 's1').toLowerCase(); // s1 | s2
+const FROMS = [
+  { name: 'CG Alert', address: 'outreach@mail.cg-alert.com'  },
+  { name: 'CG Alert', address: 'outreach@mail2.cg-alert.com' },
+];
+const REPLY_TO    = 'outreach@cg-alert.com';
+const LIST_UNSUB  = 'mailto:optout@cg-alert.com?subject=unsubscribe';
+const LANDING     = 'https://www.cg-alert.com/updates/'; // 已指向 /updates/
 
-function tryRead(p){ try{ return fs.readFileSync(p,'utf8'); }catch{ return null; } }
+const ROOT = path.join(__dirname, '..');
+const LEADS_FP = path.join(ROOT, 'data', 'leads.csv');
 
-function loadCsvAndHeader(){
-  if (!fs.existsSync(CSV_PATH)) throw new Error('缺失 data/leads.csv');
-  const raw = fs.readFileSync(CSV_PATH,'utf8').trim();
-  if (!raw) throw new Error('data/leads.csv 为空');
-  const [headerLine] = raw.split(/\r?\n/);
-  const header = headerLine.split(',').map(s=>s.trim());
-  const rows = parse(raw,{columns:true,skip_empty_lines:true,trim:true});
-  return { header, rows };
+function hnum(s){ return crypto.createHash('sha1').update(String(s)).digest()[0]; }
+function pickFrom(email){ return FROMS[hnum(email) % FROMS.length]; }
+function wrap78(s=''){ return s.split('\n').map(line=>{
+  if(line.length<=78) return line;
+  const out=[]; let rest=line;
+  while(rest.length>78){ out.push(rest.slice(0,78)); rest=rest.slice(78); }
+  out.push(rest); return out.join('\n');
+}).join('\n');}
+function linkCount(text=''){ const m = text.match(/\bhttps?:\/\/[^\s)]+/ig); return m?m.length:0; }
+
+function readCSV(fp){
+  if(!fs.existsSync(fp)) return {header:[],rows:[]};
+  const raw=fs.readFileSync(fp,'utf8').trim(); if(!raw) return {header:[],rows:[]};
+  const [h,...rs]=raw.split(/\r?\\n/).filter(Boolean);
+  const header=h.split(',').map(s=>s.trim());
+  const rows=rs.map(line=>{const v=line.split(',');const o={};header.forEach((k,i)=>o[k]=String(v[i]??'').trim());return o;});
+  return {header,rows};
 }
-function ensureColumns(rows, header){
-  const must = ['status','last_error','last_sent'];
-  for (const r of rows){ for (const k of must){ if(!(k in r)) r[k]=''; } }
-  for (const k of must){ if(!header.includes(k)) header.push(k); }
-  return header;
+function writeCSV(fp, header, rows){
+  const head = header.join(',')+'\n';
+  const body = rows.map(r=>header.map(k=>r[k]??'').join(',')).join('\n');
+  fs.writeFileSync(fp, head + (rows.length? body+'\n' : ''), 'utf8');
 }
-function saveCsv(header, rows){
-  const out=[header.join(',')];
-  for(const r of rows){
-    out.push(header.map(k => (r[k]??'').toString().replace(/\n/g,' ')).join(','));
-  }
-  fs.writeFileSync(CSV_PATH, out.join('\n'));
+
+async function hasMX(domain){
+  try{ const mx = await dns.resolveMx(domain); return Array.isArray(mx) && mx.length>0; }
+  catch{ return false; }
 }
-function pickPending(rows){
-  return rows.filter(r=>{
-    const st=(r.status||'').toLowerCase();
-    return !st || st==='new' || st==='retry';
+
+// —— S1/S2 模板（A/B自动分配；≤2个链接；退款承诺点到为止）——
+const S1_SUBJECTS = [
+  v=>`${v.domain}: evidence-backed vendor change alerts`,
+  v=>`Stop manual checks — proof-based alerts for ${v.domain}`,
+  v=>`Compliance-ready alerts (ToS/DPA/Subprocessors) — ${v.domain}`,
+];
+const S1_BODIES = [
+  v=>`Hi team,
+
+We monitor your vendors’ public pages (Pricing/ToS/DPA/Subprocessors/Status) and send verifiable evidence cards with Slack/Email alerts.
+
+• Proof-backed (hash, snippet, timestamp)
+• Refund: 30 days if no material alert
+
+Quick look: ${LANDING}
+If not relevant, reply STOP.`,
+  v=>`Hello,
+
+We track material changes on vendor legal/pricing pages and ship evidence cards + alerts, so your team can stop manual patrol and stay audit-ready.
+
+See how it works: ${LANDING}
+Refund if no material alert in 30 days. Reply STOP to opt out.`,
+  v=>`Hi,
+
+Third-party changes create audit and cost risk. We detect them and deliver proof-backed alerts (DPA/Subprocessors/ToS/Status), ready for compliance.
+
+Details: ${LANDING}
+Not for you? Reply STOP.`,
+];
+
+const S2_SUBJECTS = [
+  v=>`Quick nudge — vendor change alerts for ${v.domain}`,
+  v=>`${v.domain}: still useful to get proof-backed alerts?`,
+];
+const S2_BODIES = [
+  v=>`Quick nudge on vendor change alerts for ${v.domain}.
+We send evidence cards (hash + snippet) when vendors update Pricing/ToS/DPA/Subprocessors/Status.
+
+If useful, here’s the overview: ${LANDING}
+If not, reply STOP and I won’t follow up.`,
+  v=>`Following up briefly.
+We deliver proof-backed alerts (ToS/DPA/Subprocessors/Status) so teams stop manual page patrol and stay audit-ready.
+
+Overview: ${LANDING}
+Not relevant? Reply STOP.`,
+];
+
+function pickTpl(arr, salt=''){ return arr[hnum(salt)%arr.length]; }
+
+// —— 主流程 —— 
+(async function main(){
+  const {header, rows} = readCSV(LEADS_FP);
+  if(header.length===0){ console.error('leads.csv missing'); process.exit(0); }
+  // 确保列齐
+  const needCols = ['email','company','domain','status','seq','last_touch'];
+  needCols.forEach(c=>{ if(!header.includes(c)) header.push(c); });
+
+  const transporter = nodemailer.createTransport({
+    host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT===465,
+    auth: { user: SMTP_USER, pass: SMTP_PASS }
   });
-}
 
-async function ipv4(host){
-  try { const a = await dns.lookup(host, { family: 4 }); return a.address; }
-  catch { return host; }
-}
+  const nowISO = new Date().toISOString();
+  const updated = [];
 
-async function getTransportWithFallback(){
-  if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) throw new Error('缺少 SMTP_* secrets');
-  const ip4 = await ipv4(SMTP_HOST);
-  const portEnv = Number(SMTP_PORT || 0);
-  const candidates = portEnv
-    ? [{ host: ip4, port: portEnv, secure: portEnv===465, requireTLS: portEnv===587 }]
-    : [{ host: ip4, port: 465, secure: true }, { host: ip4, port: 587, secure: false, requireTLS: true }];
+  for(const lead of rows){
+    const email=(lead.email||'').toLowerCase();
+    const domain=(lead.domain||'').toLowerCase();
+    const status=(lead.status||'').toLowerCase();
 
-  let lastErr, working;
-  for (const c of candidates) {
-    const tr = nodemailer.createTransport({
-      host: c.host, port: c.port, secure: c.secure, requireTLS: !!c.requireTLS,
-      auth: { user: SMTP_USER, pass: SMTP_PASS },
-      tls: { minVersion: 'TLSv1.2', servername: SMTP_HOST },
-      connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 10000,
+    // 退场过滤
+    if(['optout','invalid','bad-mx'].includes(status)) { updated.push(lead); continue; }
+    if(!(await hasMX(domain))){ lead.status='bad-mx'; lead.last_touch=nowISO; updated.push(lead); continue; }
+
+    // 选择模板
+    const Sbj = (SEQ==='s2'? pickTpl(S2_SUBJECTS,email) : pickTpl(S1_SUBJECTS,email));
+    const Body= (SEQ==='s2'? pickTpl(S2_BODIES, email+'b') : pickTpl(S1_BODIES, email+'b'));
+    const subject = Sbj(lead);
+    const bodyRaw = Body(lead);
+    if(linkCount(bodyRaw)>2){ updated.push(lead); continue; } // 保守：≤2链接
+
+    // 发件分流
+    const from = pickFrom(email);
+
+    // 发送
+    await transporter.sendMail({
+      from, to: email, replyTo: REPLY_TO, subject,
+      text: wrap78(bodyRaw),
+      headers: {
+        'List-Unsubscribe': `<${LIST_UNSUB}>`,
+        'Auto-Submitted': 'auto-generated',
+        'X-Entity-Ref-ID': `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      }
     });
-    try { await tr.verify(); working = tr; break; }
-    catch(e){ lastErr = e; }
-  }
-  if (!working) throw new Error(`SMTP 连接失败（465/587 均不通）：${lastErr && lastErr.message}`);
-  return working;
-}
 
-async function realSend(rows, header){
-  const subject = (S1_SUBJECT || tryRead(SUBJECT_PATH) || '').trim();
-  const html = tryRead(HTML_PATH);
-  if (!subject) throw new Error('缺少主题：配置 S1_SUBJECT 或提供 data/s1_subject.txt');
-  if (!html) throw new Error('缺少正文模板：提供 data/s1.html');
+    // 轻节流
+    await new Promise(r=>setTimeout(r, 1200 + Math.random()*800));
 
-  const tr = await getTransportWithFallback();
-  const from = MAIL_FROM || SMTP_USER;
-  const now = new Date().toISOString();
-
-  let sent=0, fail=0;
-  for (const r of rows){
-    try{
-      await tr.sendMail({
-        from: from, to: r.email, subject, html,
-        headers: {'List-Unsubscribe':'<mailto:optout@cg-alert.com?subject=unsubscribe>','Auto-Submitted':'auto-generated'}
-      });
-      r.status='sent'; r.last_error=''; r.last_sent=now; sent++;
-    }catch(e){
-      r.status='err'; r.last_error=(e && e.message ? e.message.slice(0,200) : 'unknown'); fail++;
-    }
-    await new Promise(res=>setTimeout(res,400+Math.random()*400));
-  }
-  saveCsv(header, rows);
-  console.log(`✅ 真发完成：sent=${sent} fail=${fail}`);
-}
-
-(async()=>{
-  const { header, rows } = loadCsvAndHeader();
-  const hdr = ensureColumns(rows, header);
-  const pending = pickPending(rows);
-
-  if (DRY_RUN === '1') {
-    console.log(`🔎 DRY-RUN：发现待发送 ${pending.length} 行（不检查模板/SMTP，不改CSV）`);
-    for (const r of pending.slice(0,20)) console.log('→', r.email);
-    if (pending.length > 20) console.log(`… 以及 ${pending.length - 20} 行`);
-    process.exit(0);
+    // 标记
+    lead.seq = lead.seq || SEQ;
+    lead.last_touch = nowISO;
+    if(!lead.status) lead.status='sent';
+    updated.push(lead);
   }
 
-  if (!pending.length) { console.log('✅ 无待发送行'); saveCsv(hdr, rows); return; }
-  await realSend(pending, hdr);
-})().catch(e=>{ console.error('❌ 发送失败:', e.message); process.exit(1); });
+  writeCSV(LEADS_FP, header, updated);
+})().catch(e=>{ console.error(e); process.exit(1); });
