@@ -1,8 +1,7 @@
 name: Daily Digest
 on:
-  schedule: [ { cron: "5 15 * * *" } ]  # 每天 09:05 MT（夏令时=UTC-6 → 15:05 UTC）
+  schedule: [ { cron: "5 15 * * *" } ]  # 每天 09:05 MT
   workflow_dispatch: {}
-
 permissions: { contents: read }
 
 jobs:
@@ -12,35 +11,34 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Prepare env
-        run: |
-          echo "TODAY=$(date -u +%Y-%m-%d)" >> $GITHUB_ENV
+        run: echo "TODAY=$(date -u +%Y-%m-%d)" >> $GITHUB_ENV
 
-      - name: Compute metrics
+      - name: Compute metrics (header-aware)
         id: m
         run: |
           set -e
-          # leads.csv 形状：email,company,domain,vendor1,vendor2,vendor3,status,last_error,last_sent
           f="data/leads.csv"
           if [ ! -f "$f" ]; then
             echo "sent=0" >> $GITHUB_OUTPUT
             echo "err=0" >> $GITHUB_OUTPUT
             echo "pending=0" >> $GITHUB_OUTPUT
-          else
-            sent=$(awk -F',' -v d="${TODAY}" 'NR>1 && $7=="sent" && $9 ~ "^"d {c++} END{print c+0}' "$f")
-            err=$(awk -F',' -v d="${TODAY}" 'NR>1 && $7 ~ /^err/ && $9 ~ "^"d {c++} END{print c+0}' "$f")
-            pending=$(awk -F',' 'NR>1 && ($7=="" || $7=="new" || $7=="retry") {c++} END{print c+0}' "$f")
-            echo "sent=$sent" >> $GITHUB_OUTPUT
-            echo "err=$err" >> $GITHUB_OUTPUT
-            echo "pending=$pending" >> $GITHUB_OUTPUT
+            exit 0
           fi
-          # 退订/投诉可选文件，若无则置 0
-          unsub_file="data/unsubscribes.csv"
-          if [ -f "$unsub_file" ]; then
-            unsubs=$(tail -n +2 "$unsub_file" | wc -l | tr -d ' ')
-          else
-            unsubs=0
-          fi
-          echo "unsubs=$unsubs" >> $GITHUB_OUTPUT
+          awk -F',' '
+            NR==1{
+              for(i=1;i<=NF;i++){ gsub(/^[ \t]+|[ \t]+$/,"",$i); idx[$i]=i }
+              s=idx["status"]; t=idx["last_sent"]; next
+            }
+            {
+              status=(s? $s:""); ts=(t? $t:"");
+              if(status=="sent" && ts ~ ENVIRON["TODAY"]) sent++
+              if(status ~ /^err/) err++
+              if(status=="" || status=="new" || status=="retry") pending++
+            }
+            END{
+              printf("sent=%d\nerr=%d\npending=%d\n", sent+0, err+0, pending+0)
+            }
+          ' "$f" >> $GITHUB_OUTPUT
 
       - name: Post to Slack
         if: ${{ success() }}
@@ -50,26 +48,11 @@ jobs:
           SENT: ${{ steps.m.outputs.sent }}
           ERR: ${{ steps.m.outputs.err }}
           PENDING: ${{ steps.m.outputs.pending }}
-          UNSUBS: ${{ steps.m.outputs.unsubs }}
         run: |
+          msg="Daily ${TODAY} — sent:${SENT}, err:${ERR}, pending:${PENDING}"
           if [ -z "$SLACK_WEBHOOK_URL" ]; then
-            echo "No SLACK_WEBHOOK_URL provided; printing digest:"
-            echo "Daily ${TODAY} — sent:${SENT}, err:${ERR}, pending:${PENDING}, unsubs:${UNSUBS}"
+            echo "$msg"
             exit 0
           fi
-          payload=$(cat <<EOF
-          {
-            "text": "*Daily — ${TODAY}*",
-            "blocks": [
-              { "type": "section", "text": { "type": "mrkdwn", "text": "*CG Alert · Outreach Digest — ${TODAY}*" } },
-              { "type": "section", "fields": [
-                { "type": "mrkdwn", "text": "*Sent today:*\n${SENT}" },
-                { "type": "mrkdwn", "text": "*Errors today:*\n${ERR}" },
-                { "type": "mrkdwn", "text": "*Pending queue:*\n${PENDING}" },
-                { "type": "mrkdwn", "text": "*Unsubs total:*\n${UNSUBS}" }
-              ] }
-            ]
-          }
-          EOF
-          )
-          curl -sS -X POST -H 'Content-Type: application/json' -d "$payload" "$SLACK_WEBHOOK_URL" >/dev/null
+          curl -sS -X POST -H 'Content-Type: application/json' \
+            --data "{\"text\":\"$msg\"}" "$SLACK_WEBHOOK_URL" >/dev/null
