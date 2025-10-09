@@ -1,7 +1,6 @@
 {
   "name": "cg-alert",
   "private": true,
-  "type": "commonjs",
   "dependencies": {
     "nodemailer": "^6.9.0"
   }
