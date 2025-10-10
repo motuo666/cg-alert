@@ -1,87 +1,104 @@
 // scripts/weekly_health_check.js
-// 每周健康巡检：SMTP/IMAP/DNS/HTTP/外链/数据新鲜度 → Slack 报告 + 非零退出码
-// 运行：node scripts/weekly_health_check.js
+// 每周健康巡检：SMTP/IMAP/DNS( SPF/DKIM/DMARC )、站点关键页、Stripe 链接、Google Form、数据新鲜度
+// 用法（GitHub Actions 已给示例）：node scripts/weekly_health_check.js
+// 依赖：nodemailer、imapflow（工作流里 npm i nodemailer imapflow）
 
 const fs = require('fs');
 const path = require('path');
 const dns = require('dns').promises;
 
-// ---------- 环境 ----------
-const SITE = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
-const DOMAIN = process.env.DOMAIN || 'cg-alert.com';
-const STRIPE_PORTFOLIO_URL = process.env.STRIPE_PORTFOLIO_URL || 'https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801';
-const STRIPE_BUSINESS_URL  = process.env.STRIPE_BUSINESS_URL  || 'https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800';
-const FORM_URL = process.env.FORM_URL || 'https://forms.gle/TCaom33BRJGbcJ3r5';
+// -------- 环境与默认 --------
+const SITE   = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+const DOMAIN = process.env.DOMAIN      || 'cg-alert.com';
 
+// 允许两种变量名：SLACK_WEBHOOK_URL 或 SLACK_WEBHOOK
+const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || process.env.SLACK_WEBHOOK || '';
+
+// SMTP（Zoho 示例：smtp.zoho.com:465）
 const SMTP_HOST = process.env.SMTP_HOST || '';
 const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
 const SMTP_USER = process.env.SMTP_USER || '';
 const SMTP_PASS = process.env.SMTP_PASS || '';
 
-const IMAP_HOST = process.env.IMAP_HOST || '';
-const IMAP_PORT = Number(process.env.IMAP_PORT || 993);
-const IMAP_USER = process.env.IMAP_USER || '';
-const IMAP_PASS = process.env.IMAP_PASS || '';
+// IMAP（若未单独提供，则回退到 SMTP_*，并默认 host=imap.zoho.com:993）
+let IMAP_HOST = process.env.IMAP_HOST || '';
+let IMAP_PORT = Number(process.env.IMAP_PORT || 993);
+let IMAP_USER = process.env.IMAP_USER || '';
+let IMAP_PASS = process.env.IMAP_PASS || '';
 
-const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || '';
+if (!IMAP_HOST && SMTP_HOST) {
+  // 粗略从 smtp 推断 imap 主机
+  IMAP_HOST = SMTP_HOST.replace(/^smtp\./i, 'imap.') || 'imap.zoho.com';
+}
+if (!IMAP_USER && SMTP_USER) IMAP_USER = SMTP_USER;
+if (!IMAP_PASS && SMTP_PASS) IMAP_PASS = SMTP_PASS;
 
-// ---------- 工具 ----------
+// -------- 小工具 --------
 function nowISO(){ return new Date().toISOString(); }
-function agoDays(n){ return Date.now() - n*24*3600*1000; }
 async function postSlack(text){
   if (!SLACK_WEBHOOK_URL) return;
-  await fetch(SLACK_WEBHOOK_URL, { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ text }) });
+  await fetch(SLACK_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ text })
+  }).catch(()=>{ /* 静默 */ });
 }
-async function httpGet(url, want=200, mustContains=[]){
+async function httpGet(url, okStatuses=[200], mustContains=[]){
   const res = await fetch(url, { redirect: 'follow' });
-  const txt = await res.text();
-  const ok = (res.status === want || (Array.isArray(want)? want.includes(res.status): false))
-          && mustContains.every(s => txt.includes(s));
-  return { ok, status: res.status, snippet: txt.slice(0,200).replace(/\s+/g,' '), url };
+  const text = await res.text();
+  const statusOK = Array.isArray(okStatuses) ? okStatuses.includes(res.status) : res.status===okStatuses;
+  const bodyOK = mustContains.every(s => text.includes(s));
+  return { ok: statusOK && bodyOK, status: res.status, text, url };
 }
 async function dnsTxt(name){
-  try{
+  try {
     const rr = await dns.resolveTxt(name);
-    return rr.flat().join(' ');
-  }catch(e){
-    return '';
-  }
+    return rr.map(a=>a.join('')).join(' ');
+  } catch { return ''; }
 }
-function readCsvLines(fp){
+function readCsvRows(fp){
   try{
-    const s = fs.readFileSync(fp,'utf8').trim();
-    return s? s.split(/\r?\n/).filter(Boolean): [];
+    const raw = fs.readFileSync(fp,'utf8').trim();
+    if (!raw) return [];
+    const [h, ...lines] = raw.split(/\r?\n/).filter(Boolean);
+    const head = h.split(',').map(s=>s.trim());
+    return lines.map(line=>{
+      const v = line.split(',');
+      const o = {};
+      head.forEach((k,i)=>o[k]=String(v[i]??'').trim());
+      return o;
+    });
   }catch{ return []; }
 }
-function parseCsvRows(fp){
-  const lines = readCsvLines(fp);
-  if (lines.length < 2) return [];
-  const head = lines[0].split(',').map(s=>s.trim());
-  return lines.slice(1).map(line=>{
-    const v = line.split(',');
-    const o={}; head.forEach((k,i)=>o[k]=String(v[i]??'').trim());
-    return o;
-  });
+function parseDateMaybe(s){
+  const t = Date.parse(s);
+  return isNaN(t) ? 0 : t;
 }
+function daysAgo(n){ return Date.now() - n*24*3600*1000; }
 
-// ---------- 检查项 ----------
+// -------- 检查项 --------
 async function checkDNS(){
   const issues = [];
-  const spf = await dnsTxt(DOMAIN);
-  if (!/v=spf1/i.test(spf)) issues.push(`SPF 缺失：${spf||'（空）'}`);
+  // SPF（TXT 在根域）
+  const allTxt = await (async ()=> {
+    try { const rr = await dns.resolveTxt(DOMAIN); return rr.map(x=>x.join(' ')); }
+    catch { return []; }
+  })();
+  const spfRec = allTxt.find(s => /v=spf1/i.test(s)) || '';
+  if (!spfRec) issues.push('SPF 缺失（未找到 v=spf1 TXT）');
 
   // DMARC
   const dmarc = await dnsTxt(`_dmarc.${DOMAIN}`);
-  if (!/v=DMARC1/i.test(dmarc)) issues.push(`DMARC 缺失：${dmarc||'（空）'}`);
+  if (!/v=DMARC1/i.test(dmarc)) issues.push('DMARC 缺失（未找到 _dmarc TXT）');
 
   // DKIM（尝试常见 selector）
   const selectors = ['zmail','zoho','default','mail','s1','s2'];
-  let anyDKIM = false;
+  let hasDKIM = false;
   for (const s of selectors){
     const txt = await dnsTxt(`${s}._domainkey.${DOMAIN}`);
-    if (/v=DKIM1/i.test(txt)) { anyDKIM = true; break; }
+    if (/v=DKIM1/i.test(txt)) { hasDKIM = true; break; }
   }
-  if (!anyDKIM) issues.push('DKIM 记录未发现（尝试了 zmail/zoho/default/mail/s1/s2）');
+  if (!hasDKIM) issues.push('DKIM 记录未发现（尝试 zmail/zoho/default/mail/s1/s2）');
 
   return issues;
 }
@@ -93,10 +110,10 @@ async function checkSMTP(){
       host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT===465,
       auth: { user: SMTP_USER, pass: SMTP_PASS }
     });
-    await transporter.verify();
+    await transporter.verify(); // 只验证，不发信
     return null;
   }catch(e){
-    return `SMTP 验证失败：${e.message || e}`;
+    return `SMTP 验证失败：${e && e.message ? e.message : String(e)}`;
   }
 }
 
@@ -105,32 +122,31 @@ async function checkIMAP(){
     const { ImapFlow } = require('imapflow');
     const client = new ImapFlow({
       host: IMAP_HOST, port: IMAP_PORT, secure: IMAP_PORT===993,
-      auth: { user: IMAP_USER, pass: IMAP_PASS },
-      logger: false
+      auth: { user: IMAP_USER, pass: IMAP_PASS }
     });
     await client.connect();
     await client.logout();
     return null;
   }catch(e){
-    return `IMAP 登录失败：${e.message || e}`;
+    return `IMAP 登录失败：${e && e.message ? e.message : String(e)}`;
   }
 }
 
 async function checkHTTP(){
   const fails = [];
   const pages = [
-    [ `${SITE}/`, ['CG Alert','Pricing'] ],
-    [ `${SITE}/updates/`, ['Top Public Changes'] ],
-    [ `${SITE}/vendors/`, ['Vendors'] ],
-    [ `${SITE}/categories/`, ['Categories'] ],
-    [ `${SITE}/updates/rss.xml`, ['<rss','<channel>'] ],
+    [ `${SITE}/`,              ['CG Alert','Pricing'] ],
+    [ `${SITE}/updates/`,      ['Top Public Changes'] ],
+    [ `${SITE}/vendors/`,      ['Vendors'] ],
+    [ `${SITE}/categories/`,   ['Categories'] ],
+    [ `${SITE}/updates/rss.xml`,['<rss','<channel>'] ],
   ];
   for (const [url, must] of pages){
     try{
-      const r = await httpGet(url, 200, must);
+      const r = await httpGet(url, [200], must);
       if (!r.ok) fails.push(`${url} → ${r.status} 内容校验失败`);
     }catch(e){
-      fails.push(`${url} 请求失败：${e.message||e}`);
+      fails.push(`${url} 请求失败：${e && e.message ? e.message : String(e)}`);
     }
   }
   return fails;
@@ -138,23 +154,27 @@ async function checkHTTP(){
 
 async function checkExternal(){
   const fails = [];
-  // Stripe Links（200 或 3xx 都可接受）
-  for (const u of [STRIPE_PORTFOLIO_URL, STRIPE_BUSINESS_URL]){
+  const stripe = [
+    process.env.STRIPE_PORTFOLIO_URL || 'https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801',
+    process.env.STRIPE_BUSINESS_URL  || 'https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800'
+  ];
+  for (const u of stripe){
     try{
-      const r = await fetch(u, { method:'GET', redirect:'manual' });
-      if (![200,301,302,303,307,308].includes(r.status)){
-        fails.push(`Stripe 链接异常 ${u} → ${r.status}`);
+      const res = await fetch(u, { method:'GET', redirect:'manual' });
+      if (![200,301,302,303,307,308].includes(res.status)){
+        fails.push(`Stripe 链接异常：${u} → ${res.status}`);
       }
     }catch(e){
-      fails.push(`Stripe 链接不可达 ${u}：${e.message||e}`);
+      fails.push(`Stripe 链接不可达：${u}（${e && e.message ? e.message : String(e)}）`);
     }
   }
   // Google Form
+  const form = process.env.FORM_URL || 'https://forms.gle/TCaom33BRJGbcJ3r5';
   try{
-    const r = await httpGet(FORM_URL, 200, ['<html','form']);
-    if (!r.ok) fails.push(`Google Form 检查失败 → 状态/内容异常`);
+    const r = await httpGet(form, [200], ['<html','form']);
+    if (!r.ok) fails.push('Google Form 检查失败（状态或内容异常）');
   }catch(e){
-    fails.push(`Google Form 不可达：${e.message||e}`);
+    fails.push(`Google Form 不可达：${e && e.message ? e.message : String(e)}`);
   }
   return fails;
 }
@@ -162,31 +182,54 @@ async function checkExternal(){
 function checkDataFreshness(){
   const issues = [];
   const ROOT = path.join(__dirname,'..');
-  const leads = parseCsvRows(path.join(ROOT,'data','leads.csv'));
-  const intakes = parseCsvRows(path.join(ROOT,'data','intakes.csv'));
-  const customers = parseCsvRows(path.join(ROOT,'data','customers.csv'));
+  // 优先读 outreach 心跳文件（Outreach-S1.yml 可写入 data/last_outreach.txt）
+  const hb = path.join(ROOT,'data','last_outreach.txt');
+  try {
+    const s = fs.readFileSync(hb,'utf8').trim();
+    const t = parseDateMaybe(s);
+    if (t && t > daysAgo(7)) return issues; // 7 天内有触达
+  } catch {/* 无心跳文件则继续看 leads.csv */}
 
-  // 线索新鲜度：7 天内至少有一次触达或新增
-  const lastTouches = leads.map(r=>Date.parse(r.last_touch)).filter(n=>!isNaN(n));
-  const newest = lastTouches.length ? Math.max(...lastTouches) : 0;
-  if (!newest || newest < agoDays(7)) {
-    issues.push('leads.csv 近 7 天无触达更新（可能是 discover/Outreach 未运行）');
+  // 回退：看 leads.csv 的 last_touch
+  const leads = readCsvRows(path.join(ROOT,'data','leads.csv'));
+  const touches = leads.map(r => parseDateMaybe(r.last_touch)).filter(Boolean);
+  const newest = touches.length ? Math.max(...touches) : 0;
+  if (!newest || newest < daysAgo(7)) {
+    issues.push('leads.csv 近 7 天无触达更新（可能 discover/Outreach 未运行；或只跑了 DRY 未提交）');
   }
 
-  // 入站推进：若 intakes 有新增但 customers 长期不变
+  // 入站推进：若 intakes 有新增而 customers 超过 24h 未更新
+  const intakes   = readCsvRows(path.join(ROOT,'data','intakes.csv'));
+  const customers = readCsvRows(path.join(ROOT,'data','customers.csv'));
   if (intakes.length && customers.length){
-    const lastIntakeAt = Math.max(...intakes.map(r=>Date.parse(r.created_at||r.createdAt||r.date||0)).filter(n=>!isNaN(n)));
-    const lastCustomerAt = Math.max(...customers.map(r=>Date.parse(r.created_at||r.createdAt||r.date||0)).filter(n=>!isNaN(n)));
-    if (lastIntakeAt && lastCustomerAt && lastIntakeAt - lastCustomerAt > 24*3600*1000){
-      issues.push('intakes→customers 可能卡住（24h 以来有 intake 但无 customer 更新）');
+    const li = Math.max(...intakes.map(r => parseDateMaybe(r.created_at || r.createdAt || r.date || '0')).filter(Boolean));
+    const lc = Math.max(...customers.map(r => parseDateMaybe(r.created_at || r.createdAt || r.date || '0')).filter(Boolean));
+    if (li && lc && (li - lc > 24*3600*1000)) {
+      issues.push('intakes→customers 可能卡住（24h 内 intake>customer）');
     }
   }
 
   return issues;
 }
 
-// ---------- 主流程 ----------
+// -------- 主流程 --------
 (async function main(){
+  // 先检查必需配置，避免误连 127.0.0.1
+  const missing = [];
+  for (const k of ['SMTP_HOST','SMTP_PORT','SMTP_USER','SMTP_PASS']) {
+    if (!process.env[k] || String(process.env[k]).trim()==='') missing.push(k);
+  }
+  // IMAP 允许用 SMTP_* 回退，但 host/user/pass 仍需存在
+  for (const k of ['IMAP_HOST','IMAP_PORT','IMAP_USER','IMAP_PASS']) {
+    if (!eval(k) || String(eval(k)).trim()==='') missing.push(k);
+  }
+  if (missing.length) {
+    const msg = `配置缺失：${missing.join(', ')}（请在仓库 Secrets 补齐，Zoho 需 App Password）`;
+    console.error('❌ Weekly Health Check FAIL (config): ' + msg);
+    await postSlack('❌ Weekly Health Check FAIL (config): ' + msg);
+    process.exit(1);
+  }
+
   const problems = [];
 
   // DNS
@@ -201,7 +244,7 @@ function checkDataFreshness(){
   const httpIssues = await checkHTTP();
   if (httpIssues.length) problems.push(`站点：\n• ${httpIssues.join('\n• ')}`);
 
-  // 外链：Stripe / Form
+  // 外链
   const extIssues = await checkExternal();
   if (extIssues.length) problems.push(`外链：\n• ${extIssues.join('\n• ')}`);
 
@@ -209,9 +252,8 @@ function checkDataFreshness(){
   const dataIssues = checkDataFreshness();
   if (dataIssues.length) problems.push(`数据：\n• ${dataIssues.join('\n• ')}`);
 
-  // 汇报
-  if (problems.length === 0){
-    const okMsg = `✅ Weekly Health Check PASS @ ${nowISO()} \n• ${DOMAIN}\n• ${SITE}`;
+  if (problems.length === 0) {
+    const okMsg = `✅ Weekly Health Check PASS @ ${nowISO()}\n• ${DOMAIN}\n• ${SITE}`;
     console.log(okMsg);
     await postSlack(okMsg);
     process.exit(0);
