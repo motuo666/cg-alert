@@ -77,3 +77,13 @@ jobs:
           else
             echo "No changes to commit."
           fi
+
+- name: Heartbeat (record last outreach time)
+  run: |
+    mkdir -p data
+    date -u +"%FT%TZ" > data/last_outreach.txt
+    git config user.name "github-actions"
+    git config user.email "actions@users.noreply.github.com"
+    git add data/last_outreach.txt data/leads.csv || true
+    git commit -m "chore: outreach heartbeat" || echo "nothing to commit"
+    git push || echo "skip push"
