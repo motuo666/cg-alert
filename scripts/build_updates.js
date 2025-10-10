@@ -1,29 +1,29 @@
-// scripts/build_updates.js — 增强版 Top Updates（近30天）
-// 从 evidence/<vendor>/<YYYY-MM-DD>.json 聚合 → 生成 /updates/index.html 与 /updates/rss.xml
+// scripts/build_updates.js — Updates 增强版（可读性&布局收口）
+// 读取 evidence/<vendor>/<YYYY-MM-DD>.json → 生成 /updates/index.html 与 /updates/rss.xml
 const fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..');
 const EVID=path.join(ROOT,'evidence');
 const OUT =path.join(ROOT,'updates');
 const SITE=process.env.SITE_ORIGIN||'https://www.cg-alert.com';
 
-const DAY=24*3600*1000;
-const NOW=Date.now();
-const SINCE=NOW-30*DAY;
+const DAY=24*3600*1000, NOW=Date.now(), SINCE=NOW-30*DAY;
 
 const css=`body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#fff;color:#111;margin:0}
-.wrap{max-width:960px;margin:0 auto;padding:24px 16px}
+.wrap{max-width:980px;margin:0 auto;padding:24px 16px}
 h1{font-size:26px;margin:0 0 8px}.meta{color:#666;font-size:12px}
 .cards{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:880px){.cards{grid-template-columns:1fr 1fr}}
 .card{border:1px solid #eee;border-radius:14px;padding:12px;background:#fff}
-.badge{display:inline-block;border:1px solid #ddd;border-radius:999px;padding:2px 8px;font-size:12px;margin-right:8px;background:#f7f7f7}
+.badge{display:inline-block;border:1px solid #ddd;border-radius:999px;padding:2px 10px;font-size:12px;margin-right:8px;background:#f7f7f7;line-height:20px}
+.vendor{font-weight:600;margin-left:2px}
 blockquote{background:#fafafa;border:1px solid #eee;border-radius:12px;padding:10px;white-space:pre-wrap;margin:8px 0;max-height:260px;overflow:hidden}
 a{color:#0a58ca;text-decoration:none}a:hover{text-decoration:underline}
 .nav{margin:6px 0 14px}.small{color:#666;font-size:12px}
-.legend{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}
+.legend{margin:6px 0 10px}.legend .badge{margin:0 6px 6px 0}
 .top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.top .left{display:flex;align-items:center;gap:8px}
 .top .right{margin-left:auto;text-align:right}
-`;
+.host a{color:#0a58ca;text-decoration:none;word-break:break-all}`;
 
 function esc(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 function ensure(p){fs.mkdirSync(p,{recursive:true});}
@@ -77,18 +77,26 @@ function pageHTML(items){
   const url=`${SITE}/updates/`;
   const title='CG Alert — Top Public Changes (30 days)';
   const desc='Top changes across Pricing/ToS/DPA/Subprocessors/Status in the last 30 days, with verifiable evidence snippets.';
+  const counts=items.reduce((m,it)=>(m[it.type]=(m[it.type]||0)+1,m),{});
   const legend=`<div class="legend">
-  <span class="badge">Pricing</span><span class="badge">ToS</span><span class="badge">DPA</span><span class="badge">Subprocessors</span><span class="badge">Status</span>
+  <span class="badge">Pricing ${counts.Pricing||0}</span>
+  <span class="badge">ToS ${counts.ToS||0}</span>
+  <span class="badge">DPA ${counts.DPA||0}</span>
+  <span class="badge">Subprocessors ${counts.Subprocessors||0}</span>
+  <span class="badge">Status ${counts.Status||0}</span>
 </div>`;
-  const cards=items.map(e=>`<div class="card">
+  const cards=items.map(e=>{
+    const vendorURL=`${SITE}/vendors/${encodeURIComponent(e.vendor)}/`;
+    const hostLink = e.url ? `<a href="${esc(e.url)}" rel="nofollow">${esc(e.host||'source')}</a>` : esc(e.host||'source');
+    return `<div class="card">
   <div class="top">
-    <div><span class="badge">${esc(e.type)}</span><strong><a href="${esc(SITE+'/vendors/'+encodeURIComponent(e.vendor)+'/')}">${esc(e.vendor)}</a></strong></div>
+    <div class="left"><span class="badge">${esc(e.type)}</span><a class="vendor" href="${esc(vendorURL)}">${esc(e.vendor)}</a></div>
     <div class="right"><span class="meta">${esc(e.date)}</span></div>
   </div>
-  <div class="meta">${esc(e.host||'source')}</div>
-  <blockquote>${esc(e.snippet).slice(0,1500)||'<em>No snippet</em>'}</blockquote>
-  <div><a href="${esc(e.url)}" rel="nofollow">Open source page</a></div>
-</div>`).join('\n');
+  <div class="host">${hostLink}</div>
+  <blockquote>${esc(e.snippet).slice(0,1500) || '<em>No snippet</em>'}</blockquote>
+</div>`;
+  }).join('\n');
 
   const count=items.length;
   return `<!doctype html><html lang="en"><head>${headCommon(title,desc,url)}<style>${css}</style></head>
@@ -97,7 +105,7 @@ function pageHTML(items){
   <h1>Top Public Changes</h1>
   <div class="meta">Window: last 30 days · Items: ${count}</div>
   ${legend}
-  <div class="cards">${cards||'<div class="meta">No changes in the last 30 days.</div>'}</div>
+  <div class="cards">${cards || '<div class="meta">No changes in the last 30 days.</div>'}</div>
   <p class="small">We only collect public pages and respect robots.txt. Refund in 30 days if no material alert.</p>
 </div></body></html>`;
 }
@@ -115,6 +123,6 @@ function rssXML(items){
   const items=collect();
   fs.mkdirSync(OUT,{recursive:true});
   fs.writeFileSync(path.join(OUT,'index.html'), pageHTML(items), 'utf8');
-  fs.writeFileSync(path.join(OUT,'rss.xml'), rssXML(items), 'utf8');
+  fs.writeFileSync(path.join(OUT,'rss.xml'),  rssXML(items),  'utf8');
   console.log(`updates: built ${items.length} items (30d)`);
 })();
