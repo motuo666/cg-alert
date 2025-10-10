@@ -1,12 +1,33 @@
-<p>Hi team,</p>
-<p>We monitor your vendors’ public pages (Pricing / ToS / DPA / Subprocessors / Status) and deliver <b>verifiable evidence cards</b> with Slack/Email alerts.</p>
-<ul>
-  <li>Audit-ready proof: snippet + timestamp + hash</li>
-  <li>Low noise: P95 latency &lt; 24h, &lt;10% false positives</li>
-  <li>Refund: <b>30 days if no material alert</b></li>
-</ul>
-<p>
-  See how it works ▶
-  <a href="https://www.cg-alert.com/?utm_source=email&utm_medium=outreach&utm_campaign=s1">www.cg-alert.com</a>
-</p>
-<p>Best,<br/>CG Alert</p>
+// 单链接策略：仅放一个“Sample”链接，保证可达性最优
+const S1_BODIES = [
+  v=>`Hi team,
+
+We monitor your vendors’ public pages (Pricing/ToS/DPA/Subprocessors/Status) and send verifiable evidence cards with Slack/Email alerts.
+
+• Proof-backed (hash, snippet, timestamp)
+• Refund: 30 days if no material alert
+
+Sample: ${SAMPLE_URL}
+If not relevant, reply STOP.`,
+  v=>`Hello,
+
+We track material changes on vendor legal/pricing pages and ship evidence cards + alerts, so your team can stop manual patrol and stay audit-ready.
+
+Sample: ${SAMPLE_URL}
+Refund if no material alert in 30 days. Reply STOP to opt out.`,
+  v=>`Hi,
+
+Third-party changes create audit risk. We detect them and deliver proof-backed alerts (ToS/DPA/Subprocessors/Status), ready for compliance.
+
+Sample: ${SAMPLE_URL}
+If not useful, reply STOP.`
+];
+
+// （可选）如果你有 S2 模板，也替换为单链接版本：
+const S2_BODIES = [
+  v=>`Quick nudge on vendor change alerts for ${v.domain}.
+We send evidence cards (hash + snippet) when vendors update Pricing/ToS/DPA/Subprocessors/Status.
+
+Sample: ${SAMPLE_URL}
+Reply STOP to opt out.`
+];
