@@ -1,0 +1,33 @@
+name: E2E Self Test
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local-artifacts:
+    name: Local chain test (DRY)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: Run self_test (no outbound email/slack)
+        env:
+          SITE_ORIGIN: https://www.cg-alert.com
+          DRY_RUN: '1'
+        run: node scripts/self_test.js
+
+  http-check:
+    name: Live HTTP check
+    runs-on: ubuntu-latest
+    needs: local-artifacts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '18' }
+      - name: Probe production endpoints
+        env:
+          SITE_ORIGIN: https://www.cg-alert.com
+        run: node scripts/self_test_http.js
