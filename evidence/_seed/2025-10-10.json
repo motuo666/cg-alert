@@ -1,0 +1,29 @@
+[
+  {
+    "vendor": "acme",
+    "category": "Pricing",
+    "source": "https://example.com/pricing",
+    "date": "2025-10-10",
+    "summary": "Updated pricing: Pro $49 → $59 (Demo)",
+    "hash": "seed-1",
+    "is_demo": true
+  },
+  {
+    "vendor": "contoso",
+    "category": "ToS",
+    "source": "https://example.com/terms",
+    "date": "2025-10-08",
+    "summary": "Terms updated: arbitration clause clarified (Demo)",
+    "hash": "seed-2",
+    "is_demo": true
+  },
+  {
+    "vendor": "globex",
+    "category": "Subprocessors",
+    "source": "https://example.com/subprocessors",
+    "date": "2025-10-05",
+    "summary": "New subprocessor added: Example Cloud (Demo)",
+    "hash": "seed-3",
+    "is_demo": true
+  }
+]
