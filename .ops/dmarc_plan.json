@@ -1,0 +1,6 @@
+{
+  "start_date": "2025-10-10T00:00:00Z",
+  "domain": "cg-alert.com",
+  "rua": "mailto:dmarc@cg-alert.com",
+  "sp": "quarantine"
+}
