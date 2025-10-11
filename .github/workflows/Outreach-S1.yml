@@ -2,7 +2,7 @@ name: Outreach S1 (Send)
 
 on:
   schedule:
-    - cron: '30 17 * * 1-5'   # 每个工作日 11:30 MT（UTC 定时）
+    - cron: '30 17 * * 1-5'   # 每个工作日 11:30 MT（UTC）
   workflow_dispatch:
     inputs:
       dry:
@@ -23,7 +23,6 @@ concurrency:
 
 jobs:
   send:
-    # 仅在默认分支或手动触发时运行
     if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -38,13 +37,7 @@ jobs:
           node-version: 18
 
       - name: Install deps
-        run: |
-          if [ -f package.json ]; then
-            npm ci || npm i
-          else
-            # 临时兜底（runner 不提交）：仅安装发送所需最小包
-            npm i --no-audit --no-fund nodemailer@7 csv-parse@5
-          fi
+        run: npm ci || npm i
 
       - name: Pick script
         id: pick
@@ -65,7 +58,6 @@ jobs:
         id: flags
         shell: bash
         run: |
-          # 手动触发可传 dry/limit；定时任务默认 dry=false, limit=40
           DRY="${{ github.event.inputs.dry }}"
           LIMIT="${{ github.event.inputs.limit }}"
           [ -z "$DRY" ] && DRY=false
