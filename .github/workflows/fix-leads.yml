@@ -1,0 +1,70 @@
+name: Fix Leads (one-click)
+
+on:
+  workflow_dispatch: {}   # 手动点运行
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 18 }
+
+      - name: Normalize leads.csv (auto-fix status/mx_ok, split glued rows, dedupe)
+        run: |
+          test -f data/leads.csv || (echo "data/leads.csv missing" && exit 1)
+          sed -i 's/\r$//' data/leads.csv || true
+          node - <<'EOF'
+          const fs=require('fs');
+          const p='data/leads.csv';
+          const okStatus=new Set(['new','sent','bounced','unsub']);
+          const isEmail=x=>/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(x||'');
+          const isDomain=x=>/^[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(x||'');
+          let t=fs.readFileSync(p,'utf8').replace(/\r\n/g,'\n');
+          let lines=t.split('\n').filter(l=>l.trim().length>0);
+          const header='email,company,domain,vendor1,vendor2,vendor3,persona,status,mx_ok';
+          if(lines[0] && lines[0].trim().toLowerCase().replace(/\s+/g,'')===header){ lines.shift(); console.log('removed header'); }
+          const out=[], seen=new Set();
+          const push=(cols)=>{
+            cols=cols.map(s=>(s||'').trim());
+            while(cols.length<9) cols.push('');
+            if(cols.length>9) cols=cols.slice(0,9);
+            let [email,company,domain,v1,v2,v3,persona,status,mx_ok]=cols;
+            if(!isEmail(email)||!company||!isDomain(domain)) return;
+            email=email.toLowerCase(); domain=domain.toLowerCase();
+            status=okStatus.has((status||'').toLowerCase())?status.toLowerCase():'new';
+            mx_ok=/^[01]$/.test(mx_ok||'')?mx_ok:'1';
+            const key=email;
+            if(seen.has(key)) return;
+            seen.add(key);
+            out.push([email,company,domain,v1,v2,v3,persona||'procurement',status,mx_ok].join(','));
+          };
+          for(const line of lines){
+            const cols=line.split(',').map(s=>s.trim());
+            if(cols.length===9) push(cols);
+            else if(cols.length%9===0){ for(let i=0;i<cols.length;i+=9) push(cols.slice(i,i+9)); }
+            else if(cols.length>9) push(cols.slice(0,9));
+          }
+          if(out.length===0){ console.error('no valid leads after normalization'); process.exit(1); }
+          fs.writeFileSync(p,out.join('\n')+'\n','utf8');
+          console.log(`normalized & deduped: ${out.length} rows`);
+          EOF
+
+      - name: Validate (strict)
+        run: node scripts/validate_leads.js
+
+      - name: Commit if changed
+        run: |
+          if ! git diff --quiet -- data/leads.csv; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data/leads.csv
+            git commit -m "fix(leads): auto-normalize status/mx_ok & dedupe"
+            git push
+          else
+            echo "No changes to commit."
+          fi
