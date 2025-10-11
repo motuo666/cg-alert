@@ -79,9 +79,10 @@ jobs:
 
       - name: Leads sanity (optional)
         shell: bash
+        continue-on-error: true   # ✅ 可选检查，不阻断
         run: |
           if [ -f scripts/leads_sanity.js ]; then
-            node scripts/leads_sanity.js || true
+            node scripts/leads_sanity.js || echo "leads_sanity: WARN (non-blocking)"
           else
             echo "skip leads_sanity.js"
           fi
