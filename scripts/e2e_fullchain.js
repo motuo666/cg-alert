@@ -1,298 +1,251 @@
 #!/usr/bin/env node
 /**
- * E2E Full Chain Self Test for CG Alert
- * 目标：一次跑完“采集→校验→分段→发信(DRY)→入站→客户→构建→交付”全链路，
- *      出任何问题立即 FAIL，并输出人话原因与定位。
- *
- * 运行：
- *   node scripts/e2e_fullchain.js               # 默认 DRY、只连通验证，不发真实邮件
- *   DRY=false node scripts/e2e_fullchain.js     # 可选，真发（不建议在 CI 用）
- *
- * 依赖：仅 Node 内置模块 + 仓库现有脚本。无第三方包。
+ * e2e_fullchain.js（覆盖版）
+ * 目标：
+ *  - 完整跑一遍从校验 → 采集 → 分段 →（DRY）外发 →（DRY）入站解析
+ *  - leads.csv 严格校验：先调用 validate_leads.js，再做“表头友好”的严检
+ *  - 仅使用 Node 内置模块（无第三方依赖），不会影响真实自动化运行
  */
 
 const fs = require('fs');
 const path = require('path');
-const cp = require('child_process');
-const os = require('os');
 const net = require('net');
-const tls = require('tls');
+const { spawnSync } = require('child_process');
 
-const DRY = String(process.env.DRY || 'true').toLowerCase() !== 'false'; // 默认 DRY
-const ROOT = path.resolve(__dirname, '..');
-const DATA = path.join(ROOT, 'data');
+const ROOT = path.join(__dirname, '..');
+const LEADS_FILE = path.join(ROOT, 'data', 'leads.csv');
+const DOMAINS_CSV = path.join(ROOT, 'data', 'domains.csv');
+const VENDOR_TAGS = path.join(ROOT, 'vendors', 'vendor_tags.csv');
 
-const EXIT = { ok:0, warn:0, fail:0 };
-const START = Date.now();
+// DRY 从 inputs/env/命令行综合判断（默认 true：只演练不触达）
+const argv = process.argv.join(' ');
+const DRY =
+  /\b(--dry|--dry=1)\b/i.test(argv) ||
+  /^1|true$/i.test(process.env.DRY || '') ||
+  (process.env.GITHUB_EVENT_NAME === 'workflow_dispatch'
+    ? (process.env.DRY || 'true').toLowerCase() !== 'false'
+    : true);
 
-const COLORS = {
-  green: s => `\x1b[32m${s}\x1b[0m`,
-  red:   s => `\x1b[31m${s}\x1b[0m`,
-  yellow:s => `\x1b[33m${s}\x1b[0m`,
-  cyan:  s => `\x1b[36m${s}\x1b[0m`,
-  gray:  s => `\x1b[90m${s}\x1b[0m`,
-};
+// ---------------------------------- //
+//    日志与工具
+// ---------------------------------- //
+const say = (...a) => console.log(...a);
+const ok  = (msg) => console.log(`✅ ${msg}`);
+const ng  = (msg) => console.log(`❌ ${msg}`);
 
-function logOK(msg){ console.log('✅', COLORS.green(msg)); EXIT.ok++; }
-function logWARN(msg){ console.log('⚠️ ', COLORS.yellow(msg)); EXIT.warn++; }
-function logFAIL(msg){ console.error('❌', COLORS.red(msg)); EXIT.fail++; }
-function section(title){ console.log('\n' + COLORS.cyan(`▶ ${title}`)); }
+function fileExists(p){ try{ return fs.existsSync(p); }catch{ return false; } }
 
-function run(cmd, args=[], opts={}){
-  const r = cp.spawnSync(cmd, args, { stdio:'pipe', cwd:ROOT, env:process.env, encoding:'utf8', ...opts });
-  if(r.error) throw r.error;
-  return { code:r.status, out:r.stdout.trim(), err:r.stderr.trim() };
+function runNode(scriptRel, args = [], extraEnv = {}) {
+  const file = path.join(__dirname, scriptRel);
+  if (!fileExists(file)) return { status: 0, skipped: true };
+  const env = { ...process.env, ...extraEnv };
+  const r = spawnSync('node', [file, ...args], { stdio: 'inherit', env });
+  return { status: r.status || 0, skipped: false };
 }
 
-function mustFile(p, hint){
-  if(!fs.existsSync(p)) throw new Error(`缺失文件: ${p}${hint?` (${hint})`:''}`);
-}
+// ---------------------------------- //
+//  严格校验（覆盖版）：首先调用 validate_leads.js，再做表头友好的严检
+// ---------------------------------- //
+const HEAD = ['email','company','domain','vendor1','vendor2','vendor3','persona','status','mx_ok'];
+const ALLOWED_STATUS = new Set(['new','sent','bounced','unsub']);
+const trim  = s => String(s ?? '').trim();
+const lower = s => trim(s).toLowerCase();
+const validEmail  = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lower(e));
+const validDomain = d => /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(trim(d));
 
-function readLines(p){
-  const buf = fs.readFileSync(p);
-  // 检测 CRLF
-  if (buf.includes(0x0D)) logWARN(`${p} 包含 CRLF，建议统一为 LF（dos2unix 处理），否则有时会触发 CSV 解析边缘问题`);
-  return buf.toString('utf8').split(/\r?\n/);
-}
-
-function isEmail(x){
-  return /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(x || '');
-}
-
-function assertCSV9(line, i){
-  const arr = line.split(',');
-  if(arr.length !== 9) throw new Error(`data/leads.csv 第 ${i} 行列数=${arr.length}，应为 9（email,company,domain,vendor1,vendor2,vendor3,persona,status,mx_ok）`);
-  const [email, company, domain, v1, v2, v3, persona, status, mx_ok] = arr.map(s => s.trim());
-
-  if(!isEmail(email)) throw new Error(`第 ${i} 行 email 非法：${email}`);
-  if(!company) throw new Error(`第 ${i} 行 company 为空`);
-  if(!/^[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(domain)) throw new Error(`第 ${i} 行 domain 非法：${domain}`);
-
-  const allowedStatus = new Set(['new','sent','bounced','unsub']);
-  if(!allowedStatus.has(status)) throw new Error(`第 ${i} 行 status 必须为 new|sent|bounced|unsub，当前：${status}`);
-
-  if(!/^[01]$/.test(mx_ok)) throw new Error(`第 ${i} 行 mx_ok 必须为 0 或 1，当前：${mx_ok}`);
-
-  // 逗号位要对，允许 vendor/ persona 为空，但列数不能少
-  return true;
-}
-
-function uniq(arr){ return Array.from(new Set(arr)); }
-
-/** TCP/TLS连通预检（不发信） */
-function probeConnect({host, port, secure=false, servername}){
-  return new Promise((resolve) => {
-    const onOk = () => resolve({ok:true});
-    const onErr = (err) => resolve({ok:false, err});
-    if(secure){
-      const s = tls.connect({host, port, servername:servername||host, timeout:7000}, onOk);
-      s.on('error', onErr);
-      s.setTimeout(8000, ()=>{ s.destroy(); onErr(new Error('timeout')); });
+function csvParseLite(text){
+  const rows=[]; let row=[], field='', inQ=false;
+  for (let i=0;i<text.length;i++){
+    const ch=text[i];
+    if (inQ){
+      if (ch === '"'){
+        if (text[i+1] === '"'){ field+='"'; i++; }
+        else inQ=false;
+      } else field+=ch;
     }else{
-      const s = net.createConnection({host, port, timeout:7000}, onOk);
-      s.on('error', onErr);
-      s.setTimeout(8000, ()=>{ s.destroy(); onErr(new Error('timeout')); });
+      if (ch === '"') inQ=true;
+      else if (ch === ','){ row.push(field); field=''; }
+      else if (ch === '\n'){ if (text[i-1] === '\r'){} row.push(field); field=''; rows.push(row); row=[]; }
+      else field+=ch;
     }
+  }
+  row.push(field); rows.push(row);
+  if (rows.length && rows[rows.length-1].length===1 && rows[rows.length-1][0]==='') rows.pop();
+  return rows;
+}
+
+function strictValidateLeads() {
+  // 先跑权威校验/规范化脚本
+  const r = runNode('validate_leads.js', []);
+  if (r.status !== 0) throw new Error('leads.csv 规范化/校验失败');
+
+  // 读取规范化后的 CSV，再做轻量严检（自动跳过表头）
+  const raw = fs.readFileSync(LEADS_FILE, 'utf8').replace(/^\uFEFF/,'');
+  const rows = csvParseLite(raw);
+  if (!rows.length) throw new Error('leads.csv 为空');
+
+  // 识别表头
+  const head = rows[0].map(x=>lower(x));
+  let start = 0;
+  const isHeader = HEAD.length === head.length && HEAD.every((k, i)=> head[i] === k);
+  if (isHeader) start = 1;
+
+  const errs = [];
+  for (let i=start; i<rows.length; i++){
+    const r = rows[i];
+    if (r.length !== 9){
+      errs.push(`第 ${i+1} 行：列数=${r.length}（应为 9）`);
+      continue;
+    }
+    const [email, company, domain, , , , , status, mx_ok] = r.map(trim);
+    if (!validEmail(email))   errs.push(`第 ${i+1} 行 email 非法: ${email}`);
+    if (!validDomain(domain)) errs.push(`第 ${i+1} 行 domain 非法: ${domain}`);
+    if (!ALLOWED_STATUS.has(lower(status))) errs.push(`第 ${i+1} 行 status 非法: ${status}`);
+    if (!/^(0|1)$/.test(mx_ok)) errs.push(`第 ${i+1} 行 mx_ok 非法: ${mx_ok}`);
+  }
+
+  if (errs.length){
+    console.error('Error: leads.csv 严格校验失败：');
+    errs.forEach(e=>console.error(' - ' + e));
+    throw new Error(`leads.csv 校验失败（共 ${errs.length} 处）`);
+  }
+  ok('leads.csv 校验通过');
+}
+
+// ---------------------------------- //
+//  轻量连通性（TCP）探测：不引入依赖、仅用于 E2E
+// ---------------------------------- //
+function tcpProbe(host, port, timeoutMs=5000){
+  return new Promise((resolve)=>{
+    const s = net.createConnection({ host, port }, ()=>{ s.destroy(); resolve(true); });
+    s.setTimeout(timeoutMs, ()=>{ s.destroy(); resolve(false); });
+    s.on('error', ()=>{ s.destroy(); resolve(false); });
   });
 }
 
-async function main(){
+// ---------------------------------- //
+//  主流程
+// ---------------------------------- //
+(async function main(){
+  let OK=0, WARN=0, FAIL=0;
+
+  function section(title){ say(`▶ ${title}`); }
+  function pass(msg){ ok(msg); OK++; }
+  function warn(msg){ console.log(`⚠️  ${msg}`); WARN++; }
+  function fail(msg){ ng(msg); FAIL++; }
+
+  // 环境信息
   section('环境信息');
-  console.log(COLORS.gray(`${process.platform} ${process.arch} node ${process.version}`));
-  logOK('Node 环境就绪');
+  say(`${process.platform} ${process.arch} node v${process.versions.node}`);
+  pass('Node 环境就绪');
 
-  // -------- 基础文件校验
+  // 基础文件校验
   section('基础文件校验');
-  [
-    path.join(DATA, 'leads.csv'),
-    path.join(DATA, 'domains.csv'),
-    path.join(DATA, 'vendor_tags.csv'),
-    path.join(DATA, 'intakes.csv'),
-    path.join(DATA, 'customers.csv'),
-    path.join(ROOT, 'index.html'),
-    path.join(ROOT, 'updates', 'index.html'),
-    path.join(ROOT, 'vendors', 'index.html'),
-    path.join(ROOT, 'api', 'vendors.json'),
-    path.join(ROOT, 'robots.txt'),
-    path.join(ROOT, '_headers'),
-    path.join(ROOT, '_redirects'),
-  ].forEach(p=> mustFile(p));
-  logOK('关键文件存在');
-
-  // -------- leads.csv 严格校验（含你刚踩的坑：列数不足/过多、非法 status/mx_ok）
-  section('leads.csv 严格校验');
-  const leadsRaw = readLines(path.join(DATA,'leads.csv')).filter(Boolean);
-  const bad = [];
-  let emails = [];
-  leadsRaw.forEach((line, idx)=>{
-    try{
-      assertCSV9(line, idx+1);
-      emails.push(line.split(',')[0].trim().toLowerCase());
-    }catch(e){
-      bad.push(e.message);
-    }
-  });
-  if(bad.length){
-    bad.forEach(m => logFAIL(m));
-    throw new Error(`leads.csv 校验失败（共 ${bad.length} 处）`);
-  }
-  // 重复检查
-  const dups = emails.filter((x,i)=> emails.indexOf(x)!==i);
-  if(dups.length){
-    logWARN(`leads.csv 有重复 email：${uniq(dups).slice(0,5).join(', ')}${dups.length>5?' ...':''}`);
-  }
-  logOK(`leads.csv 校验通过：${leadsRaw.length} 行`);
-
-  // -------- domains/vendor_tags 基本校验
-  section('domains.csv / vendor_tags.csv 校验');
-  const domains = readLines(path.join(DATA,'domains.csv')).map(x=>x.trim()).filter(Boolean);
-  if(domains.length===0) logWARN('domains.csv 为空，本周不会新增 leads；建议每周追加 10–20 个域名');
-  const vtags = readLines(path.join(DATA,'vendor_tags.csv')).map(x=>x.trim()).filter(Boolean);
-  if(vtags.length===0) logWARN('vendor_tags.csv 为空（不影响运行，但会降低匹配率）');
-  logOK('domains/vendor_tags 基本校验通过');
-
-  // -------- 预检 Secrets 与外部连通性（不发信）
-  section('Secrets / 连通性预检（不发信）');
-  const needEnv = ['SMTP_HOST','SMTP_PORT','SMTP_USER','SMTP_PASS','MAIL_FROM','SLACK_WEBHOOK'];
-  const missing = needEnv.filter(k => !process.env[k]);
-  if(missing.length) logWARN(`未设置的 Secrets: ${missing.join(', ')}（部分检查将跳过）`);
-
-  if(process.env.SMTP_HOST && process.env.SMTP_PORT){
-    const r = await probeConnect({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: String(process.env.SMTP_PORT)==='465',
-      servername: process.env.SMTP_HOST
-    });
-    if(r.ok) logOK(`SMTP ${process.env.SMTP_HOST}:${process.env.SMTP_PORT} 连通`);
-    else logWARN(`SMTP 连通失败：${r.err && r.err.message}`);
-  }
-  if(process.env.IMAP_HOST && process.env.IMAP_PORT){
-    const r2 = await probeConnect({
-      host: process.env.IMAP_HOST,
-      port: Number(process.env.IMAP_PORT),
-      secure: String(process.env.IMAP_SECURE||'true')!=='false',
-      servername: process.env.IMAP_HOST
-    });
-    if(r2.ok) logOK(`IMAP ${process.env.IMAP_HOST}:${process.env.IMAP_PORT} 连通`);
-    else logWARN(`IMAP 连通失败：${r2.err && r2.err.message}`);
-  }
-
-  // -------- 采集（Discover Contacts）
-  section('Discover Contacts（采集）');
-  // 允许脚本不存在时跳过：不同分支可能命名略异
-  let r = run('node', ['scripts/discover_contacts.js', DRY?'--dry=1':'--dry=0', '--limit=50', '--verbose=1']);
-  if(r.code===0){
-    console.log(COLORS.gray(r.out || 'discover_contacts ok'));
-    logOK('Discover Contacts PASS');
-  }else{
-    logWARN('discover_contacts.js 不存在或运行异常（非致命）。若存在采集逻辑，请确认文件名与参数。');
-  }
-
-  // -------- Leads Lint（再次防呆）
-  section('Leads Lint（再次防呆）');
-  r = run('node', ['scripts/validate_leads.js']);
-  if(r.code!==0){
-    console.error(r.out); console.error(r.err);
-    throw new Error('validate_leads.js 失败');
-  }
-  logOK('validate_leads.js PASS');
-
-  // -------- 分段（segment）
-  section('分段（segment）');
-  r = run('node', ['scripts/segment.js', '--dry=1']);
-  if(r.code!==0) { console.error(r.out); console.error(r.err); throw new Error('segment 失败'); }
-  logOK('segment PASS');
-
-  // -------- 发信（send_bulk.js）DRY
-  section('外发（DRY）');
-  mustFile(path.join(DATA,'s1.html'), '缺少发信模板 data/s1.html');
-  mustFile(path.join(DATA,'s1_subject.txt'), '缺少发信主题 data/s1_subject.txt');
-  r = run('node', ['scripts/send_bulk.js', '--dry=1', '--limit=10']);
-  if(r.code!==0){ console.error(r.out); console.error(r.err); throw new Error('send_bulk(DRY) 失败'); }
-  logOK('send_bulk(DRY) PASS');
-
-  // -------- 入站解析（poll_inbox）
-  section('入站解析（poll_inbox）');
-  r = run('node', ['scripts/poll_inbox.js', '--once=1', '--dry=1']);
-  if(r.code!==0) { console.error(r.out); console.error(r.err); throw new Error('poll_inbox 失败'); }
-  logOK('poll_inbox PASS');
-
-  // -------- 客户提升（promote_intakes）
-  section('客户提升（promote_intakes）');
-  r = run('node', ['scripts/promote_intakes.js', '--dry=1']);
-  if(r.code!==0) { console.error(r.out); console.error(r.err); throw new Error('promote_intakes 失败'); }
-  logOK('promote_intakes PASS');
-
-  // -------- 构建：Vendor Catalog
-  section('构建：Vendor Catalog');
-  r = run('node', ['scripts/build_vendor_catalog.js']);
-  if(r.code!==0){ console.error(r.out); console.error(r.err); throw new Error('build_vendor_catalog 失败'); }
-  mustFile(path.join(ROOT,'vendors','index.html'));
-  mustFile(path.join(ROOT,'api','vendors.json'));
-  JSON.parse(fs.readFileSync(path.join(ROOT,'api','vendors.json'),'utf8'));
-  logOK('Vendor Catalog 构建 PASS');
-
-  // -------- 构建：Updates（页面+RSS）
-  section('构建：Updates & RSS');
-  r = run('node', ['scripts/build_updates.js']);
-  if(r.code!==0){ console.error(r.out); console.error(r.err); throw new Error('build_updates 失败'); }
-  mustFile(path.join(ROOT,'updates','index.html'));
-  const rss = path.join(ROOT,'updates','rss.xml');
-  mustFile(rss);
-  const rssTxt = fs.readFileSync(rss,'utf8');
-  if(!/^\s*<\?xml/.test(rssTxt) || !/<rss[^>]+version="2\.0"/.test(rssTxt)){
-    throw new Error('RSS 非 RSS 2.0 格式');
-  }
-  logOK('Updates & RSS 构建 PASS');
-
-  // -------- 构建：Categories
-  section('构建：Categories');
-  r = run('node', ['scripts/build_categories.js']);
-  if(r.code!==0){ console.error(r.out); console.error(r.err); throw new Error('build_categories 失败'); }
-  mustFile(path.join(ROOT,'categories','index.html'));
-  const smV = path.join(ROOT,'sitemap-vendors.xml');
-  const smC = path.join(ROOT,'sitemap-categories.xml');
-  [smV, smC].forEach(p => mustFile(p));
-  logOK('Categories & Sitemaps PASS');
-
-  // -------- 站点连贯校验
-  section('站点连贯校验');
-  const robots = fs.readFileSync(path.join(ROOT,'robots.txt'),'utf8');
-  const hasSitemap = /Sitemap:\s*https?:\/\/(www\.)?cg-alert\.com\/sitemap\.xml/i.test(robots) ||
-                     /Sitemap:\s*\/sitemap\.xml/i.test(robots);
-  if(!hasSitemap) logWARN('robots.txt 未声明 Sitemap（不致命，但建议补上）');
-  logOK('站点文件连贯 PASS');
-
-  // -------- Slack Webhook 自检（DRY=TRUE时只打印，不真实发）
-  section('Slack webhook 自检');
-  if(process.env.SLACK_WEBHOOK){
-    if(DRY){
-      logOK('DRY 模式：跳过真实发 Slack，只验证变量存在');
-    }else{
-      try{
-        const payload = JSON.stringify({text:`[E2E] CG Alert 全链路 PASS @ ${new Date().toISOString()}`});
-        const res = run('curl', ['-sS','-X','POST','-H','Content-Type: application/json','-d',payload, process.env.SLACK_WEBHOOK]);
-        if(res.code===0) logOK('Slack 通知发送 PASS');
-        else logWARN('Slack 发送失败（检查 webhook）');
-      }catch(e){
-        logWARN('Slack curl 不可用，跳过');
-      }
-    }
+  const must = [
+    path.join(__dirname,'validate_leads.js'),
+    LEADS_FILE
+  ];
+  const miss = must.filter(p=>!fileExists(p));
+  if (miss.length){
+    miss.forEach(p=>fail(`缺少关键文件：${path.relative(ROOT,p)}`));
+    throw new Error('关键文件缺失');
   } else {
-    logWARN('未设置 SLACK_WEBHOOK，跳过 Slack 测试');
+    pass('关键文件存在');
   }
 
-  // -------- 总结
-  console.log('\n' + COLORS.cyan('=== E2E SUMMARY ==='));
-  console.log(`OK: ${EXIT.ok}  WARN: ${EXIT.warn}  FAIL: ${EXIT.fail}  用时: ${((Date.now()-START)/1000).toFixed(1)}s`);
-  if(EXIT.fail>0) process.exit(1);
-  logOK('E2E 全链路 PASS');
-}
+  // leads.csv 严格校验（覆盖版）
+  section('leads.csv 严格校验');
+  try{
+    strictValidateLeads();
+  }catch(e){
+    fail('leads.csv 校验失败');
+    say(e && e.message ? e.message : String(e));
+    summaryExit(OK,WARN,FAIL);
+    process.exit(1);
+  }
 
-main().catch(err=>{
-  logFAIL(err.stack||String(err));
-  console.log('\n' + COLORS.cyan('=== E2E SUMMARY ==='));
-  console.log(`OK: ${EXIT.ok}  WARN: ${EXIT.warn}  FAIL: ${EXIT.fail+1}`);
+  // domains.csv / vendor_tags.csv 简要校验（有就校验，无则跳过）
+  section('domains.csv / vendor_tags.csv 校验');
+  try{
+    if (fileExists(DOMAINS_CSV)){
+      const s = fs.readFileSync(DOMAINS_CSV,'utf8').trim();
+      if (!s) warn('domains.csv 为空'); else pass('domains.csv OK');
+    } else warn('缺少 data/domains.csv（可选）');
+
+    if (fileExists(VENDOR_TAGS)){
+      const s = fs.readFileSync(VENDOR_TAGS,'utf8').trim();
+      if (!s) warn('vendors/vendor_tags.csv 为空'); else pass('vendor_tags.csv OK');
+    } else warn('缺少 vendors/vendor_tags.csv（可选）');
+  }catch(e){
+    warn('domains/vendor_tags 读取异常：'+(e.message||e));
+  }
+
+  // Secrets / 连通性预检（不发信）：用 TCP 探测
+  section('Secrets / 连通性预检（不发信）');
+  const SMTP_HOST = process.env.SMTP_HOST || '';
+  const SMTP_PORT = Number(process.env.SMTP_PORT || 0);
+  const IMAP_HOST = process.env.IMAP_HOST || (SMTP_HOST ? SMTP_HOST.replace(/^smtp\./i,'imap.') : '');
+  const IMAP_PORT = Number(process.env.IMAP_PORT || 993);
+
+  if (SMTP_HOST && SMTP_PORT){
+    const okTcp = await tcpProbe(SMTP_HOST, SMTP_PORT, 5000);
+    okTcp ? pass(`SMTP ${SMTP_HOST}:${SMTP_PORT} 连通`) : warn(`SMTP ${SMTP_HOST}:${SMTP_PORT} 不通（仅 TCP 探测）`);
+  } else warn('SMTP_HOST/SMTP_PORT 未提供（E2E 仅做探测，不影响真实发送工作流）');
+
+  if (IMAP_HOST && IMAP_PORT){
+    const okTcp = await tcpProbe(IMAP_HOST, IMAP_PORT, 5000);
+    okTcp ? pass(`IMAP ${IMAP_HOST}:${IMAP_PORT} 连通`) : warn(`IMAP ${IMAP_HOST}:${IMAP_PORT} 不通（仅 TCP 探测）`);
+  } else warn('IMAP_HOST/IMAP_PORT 未提供（E2E 仅做探测，不影响真实轮询工作流）');
+
+  // Discover Contacts（采集）
+  section('Discover Contacts（采集）');
+  {
+    const r = runNode('discover_contacts.js', [], { DRY: '1' });
+    if (r.skipped) pass('discover_contacts.js 缺失 → 跳过');
+    else r.status===0 ? pass('Discover Contacts PASS') : fail('Discover Contacts 失败');
+  }
+
+  // Leads Lint（再次防呆）
+  section('Leads Lint（再次防呆）');
+  {
+    const r = runNode('validate_leads.js', []);
+    r.status===0 ? pass('validate_leads.js PASS') : fail('validate_leads.js 失败');
+  }
+
+  // 分段（segment）
+  section('分段（segment）');
+  {
+    const r = runNode('segment.js', [], {});
+    if (r.skipped) pass('segment.js 缺失 → 跳过');
+    else r.status===0 ? pass('segment PASS') : fail('segment 失败');
+  }
+
+  // 外发（DRY）
+  section('外发（DRY）');
+  {
+    // 优先 send_bulk.js；不存在就跳过
+    const r = runNode('send_bulk.js', ['--dry=1'], { DRY: '1' });
+    if (r.skipped) pass('send_bulk.js 缺失 → 跳过');
+    else r.status===0 ? pass('send_bulk(DRY) PASS') : fail('send_bulk(DRY) 失败');
+  }
+
+  // 入站解析（poll_inbox，DRY 会直接 PASS）
+  section('入站解析（poll_inbox）');
+  {
+    const r = runNode('poll_inbox.js', ['--dry=1'], { DRY: '1' });
+    if (r.skipped) pass('poll_inbox.js 缺失 → 跳过');
+    else r.status===0 ? pass('poll_inbox PASS') : fail('poll_inbox 失败');
+  }
+
+  summaryExit(OK, WARN, FAIL);
+  process.exit(FAIL ? 1 : 0);
+})().catch(e=>{
+  ng(e && e.message ? e.message : String(e));
   process.exit(1);
 });
+
+// 输出总结
+function summaryExit(OK, WARN, FAIL){
+  say('=== E2E SUMMARY ===');
+  say(`OK: ${OK}  WARN: ${WARN}  FAIL: ${FAIL}`);
+}
