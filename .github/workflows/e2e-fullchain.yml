@@ -41,10 +41,9 @@ jobs:
         with:
           node-version: 18
 
-      - name: Print env (masked)
-        run: |
-          echo "DRY=${{ github.event.inputs.dry || 'true' }}"
-          echo "Repo: $GITHUB_REPOSITORY @ $GITHUB_SHA"
+- name: Install deps
+  run: npm ci || npm i
+
 
       - name: Install (if needed)
         run: |
