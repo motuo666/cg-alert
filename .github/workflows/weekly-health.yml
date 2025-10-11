@@ -44,19 +44,18 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
 
-          # 收件（IMAP）
+          # 收件（IMAP）→ 显式映射账号，避免缺凭据
           IMAP_HOST: ${{ secrets.IMAP_HOST }}
           IMAP_PORT: ${{ secrets.IMAP_PORT }}
-          IMAP_USER: ${{ secrets.IMAP_USER }}
-          IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          IMAP_USER: ${{ secrets.SMTP_USER }}
+          IMAP_PASS: ${{ secrets.SMTP_PASS }}
           IMAP_SECURE: "true"
 
-          # Slack（脚本里用 SLACK_WEBHOOK；兼容两种命名）
+          # Slack
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: node scripts/weekly_health_check.js
 
-      # 失败时把关键产物打包，便于排查（可选）
       - name: Upload report artifacts (on failure)
         if: failure()
         uses: actions/upload-artifact@v4
