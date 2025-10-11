@@ -6,8 +6,9 @@
   "license": "UNLICENSED",
   "engines": { "node": ">=18" },
   "dependencies": {
+    "archiver": "6.0.2",
     "imapflow": "1.0.199",
-    "nodemailer": "6.9.14",
-    "archiver": "6.0.2"
+    "mailparser": "3.9.0",
+    "nodemailer": "6.9.14"
   }
 }
