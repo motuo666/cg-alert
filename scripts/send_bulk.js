@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * send_bulk.js — 9列CSV 兼容版（不会写表头）
- * 每行固定9列：[email,company,domain,v1,v2,v3,persona,status,mx_ok]
- * 仅把第8列 status 从 new 改 sent；其他一律不动
+ * 每行固定 9 列：[email,company,domain,v1,v2,v3,persona,status,mx_ok]
+ * 仅把第 8 列 status 从 new 改 sent；其他一律不动
+ * - 示例链接：优先真实 vendors/<slug>/index.html（过滤 _ 前缀与 acme），其次 api/vendors.json，兜底 /updates/；随收件人自动均匀分配并带 utm
  */
 
 const fs = require('fs');
@@ -21,6 +22,7 @@ if (!DRY) {
   catch { console.error('Missing nodemailer. npm i nodemailer'); process.exit(1); }
 }
 
+// SMTP
 const SMTP_HOST = process.env.SMTP_HOST || '';
 const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
 const SMTP_USER = process.env.SMTP_USER || '';
@@ -28,28 +30,30 @@ const SMTP_PASS = process.env.SMTP_PASS || '';
 const MAIL_FROM = process.env.MAIL_FROM || SMTP_USER;
 const BCC_TO    = process.env.BCC_TO || '';
 
+// 发件分流（若你的发信端未放行这些别名，会由服务端拒投；建议已放行）
 const FROMS = [
   { name: 'CG Alert', address: 'outreach@mail.cg-alert.com'  },
   { name: 'CG Alert', address: 'outreach@mail2.cg-alert.com' },
 ];
+// 若未配置，回退 MAIL_FROM（最稳）
 function allowedFrom(desired){
   if (!desired || !desired.address) return MAIL_FROM;
-  // 如果你还没在发信端放行这两个别名，就用 MAIL_FROM 兜底
-  return MAIL_FROM ? desired : MAIL_FROM;
+  return desired; // 已放行别名时使用；否则 SMTP 会报错并在日志可见
 }
+
 const REPLY_TO   = 'outreach@cg-alert.com';
 const LIST_UNSUB = 'mailto:optout@cg-alert.com?subject=unsubscribe';
 
 const LIMIT = Number((process.argv.join(' ').match(/--limit=(\d+)/)||[])[1] || 40);
 
-// ------------- CSV I/O（固定9列，无表头） -------------
+// ---------- CSV I/O（固定 9 列，无表头） ----------
 function read9(fp){
   if(!fs.existsSync(fp)) return [];
   const raw = fs.readFileSync(fp,'utf8').trim();
   if(!raw) return [];
   return raw.split(/\r?\n/).filter(Boolean).map(line=>{
     const v = line.split(',').map(x=>String(x||'').trim());
-    // 跳过任何“疑似表头”的残片行
+    // 丢弃“疑似表头”的残片
     const joined = v.join(',').toLowerCase();
     if (joined.includes('email,company,domain')) return null;
     const c = v.slice(0,9); while(c.length<9) c.push('');
@@ -61,7 +65,7 @@ function write9(fp, rows){
   fs.writeFileSync(fp, out + (rows.length? '\n' : ''), 'utf8');
 }
 
-// ------------- 工具 -------------
+// ---------- 工具 ----------
 const hnum = s => crypto.createHash('sha1').update(String(s)).digest()[0];
 const linkCount = t => ((t||'').match(/\bhttps?:\/\/[^\s)]+/ig)||[]).length;
 const wrap78 = s => (s||'').split('\n').map(l=>{
@@ -75,19 +79,56 @@ async function hasMX(domain){
   catch { return false; }
 }
 
-function sampleURL(){
-  const SITE='https://www.cg-alert.com';
-  try{
-    const d=path.join(ROOT,'evidence');
-    if(fs.existsSync(d)){
-      const vs=fs.readdirSync(d,{withFileTypes:true}).filter(x=>x.isDirectory()).map(x=>x.name).filter(x=>x && x!=='acme');
-      if(vs.length) return `${SITE}/vendors/${encodeURIComponent(vs[0])}/`;
+// ---------- 更稳的示例链接（自动切换） ----------
+function listVendorSlugs() {
+  const vd = path.join(ROOT, 'vendors');
+  const out = [];
+  try {
+    if (fs.existsSync(vd)) {
+      for (const d of fs.readdirSync(vd, { withFileTypes: true })) {
+        if (!d.isDirectory()) continue;
+        const slug = d.name;
+        if (!slug) continue;
+        if (slug === 'acme') continue;
+        if (slug.startsWith('_')) continue; // 过滤 _seed 等隐藏目录
+        const idx = path.join(vd, slug, 'index.html');
+        if (fs.existsSync(idx) && fs.statSync(idx).size > 100) {
+          out.push(slug);
+        }
+      }
     }
-  }catch{}
-  return `${SITE}/updates/`;
+  } catch {}
+  return out;
 }
-const SAMPLE = sampleURL();
 
+function sampleURLForLead(lead) {
+  const SITE = 'https://www.cg-alert.com';
+  // 1) 优先 vendors/ 真实页面
+  const slugs = listVendorSlugs();
+  if (slugs.length) {
+    const i = crypto.createHash('sha1').update(String(lead.email||'') + ':sample').digest()[0] % slugs.length;
+    return `${SITE}/vendors/${encodeURIComponent(slugs[i])}/?utm=outreach_s1`;
+  }
+  // 2) 次选 api/vendors.json
+  try {
+    const api = path.join(ROOT, 'api', 'vendors.json');
+    if (fs.existsSync(api)) {
+      const arr = JSON.parse(fs.readFileSync(api,'utf8')) || [];
+      const valid = arr
+        .map(v => v && v.slug ? String(v.slug) : '')
+        .filter(s => s && !s.startsWith('_') && s !== 'acme');
+      if (valid.length) {
+        const i = crypto.createHash('sha1').update(String(lead.email||'') + ':sample').digest()[0] % valid.length;
+        return `${SITE}/vendors/${encodeURIComponent(valid[i])}/?utm=outreach_s1`;
+      }
+    }
+  } catch {}
+
+  // 3) 兜底：/updates/（永不 404）
+  return `${SITE}/updates/?utm=outreach_s1`;
+}
+
+// ---------- 模板 ----------
 const SUBJS = [
   v=>`${v.domain}: evidence-backed vendor change alerts`,
   v=>`Stop manual checks — proof-based alerts for ${v.domain}`,
@@ -101,25 +142,25 @@ We monitor your vendors’ public pages (Pricing/ToS/DPA/Subprocessors/Status) a
 • Proof-backed (hash, snippet, timestamp)
 • Refund: 30 days if no material alert
 
-Sample: ${SAMPLE}
+Sample: ${sampleURLForLead(v)}
 If not relevant, reply STOP.`,
   v=>`Hello,
 
 We track material changes on vendor legal/pricing pages and ship evidence cards + alerts, so your team can stop manual patrol and stay audit-ready.
 
-Sample: ${SAMPLE}
+Sample: ${sampleURLForLead(v)}
 Refund if no material alert in 30 days. Reply STOP to opt out.`,
   v=>`Hi,
 
 Third-party changes create audit risk. We detect them and deliver proof-backed alerts (ToS/DPA/Subprocessors/Status), ready for compliance.
 
-Sample: ${SAMPLE}
+Sample: ${sampleURLForLead(v)}
 If not useful, reply STOP.`
 ];
 const pickSubj = l => SUBJS[hnum(l.email)%SUBJS.length](l);
 const pickBody = l => BODYS[hnum(l.email+'b')%BODYS.length](l);
 
-// ------------- 主流程 -------------
+// ---------- 主流程 ----------
 (async () => {
   const rows = read9(CSV);
   if (!rows.length) { console.log('leads.csv empty'); process.exit(0); }
@@ -152,7 +193,7 @@ const pickBody = l => BODYS[hnum(l.email+'b')%BODYS.length](l);
   for (const i of todo){
     const [email,company,domain] = rows[i];
     const emailDomain = (email.split('@')[1]||'').toLowerCase();
-    // 关键：如第3列为空或与邮箱域不一致，用邮箱域兜底
+    // 如第3列为空或与邮箱域不一致，用邮箱域兜底
     const dom = (domain||'').toLowerCase() === emailDomain ? domain.toLowerCase() : emailDomain;
 
     if (!DRY){
@@ -175,12 +216,12 @@ const pickBody = l => BODYS[hnum(l.email+'b')%BODYS.length](l);
           'X-Entity-Ref-ID': `${Date.now()}-${Math.random().toString(36).slice(2)}`
         }
       });
-      await new Promise(r=>setTimeout(r,1200+Math.random()*800));
+      await new Promise(r=>setTimeout(r,1200+Math.random()*800)); // 1.2–2.0s/封
     }else{
       console.log(`[DRY] ${email} <- ${typeof from==='string'?from:from.address} "${subj}"`);
     }
 
-    // 仅把第8列改成 sent
+    // 仅把第 8 列改成 sent
     rows[i][7] = 'sent';
     sent++;
   }
