@@ -8,19 +8,26 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: inbound-poll
+  cancel-in-progress: false
+
 jobs:
   poll:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # 固定版本，避免 mailparser/imapflow 版本波动
       - name: Install deps
         run: |
-          npm init -y >/dev/null 2>&1
-          npm install imapflow mailparser csv-parse csv-stringify nodemailer --silent
+          npm ci || true
+          npm i --no-audit --no-fund imapflow@1 mailparser@3.8.1 csv-parse@5 csv-stringify@6 nodemailer@7 || true
 
       - name: Env check
         env:
@@ -32,26 +39,42 @@ jobs:
 
       - name: Poll inbox & update CSV
         env:
-          IMAP_HOST: ${{ secrets.IMAP_HOST }}   # 若为空则脚本内默认 imap.zoho.com
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}   # 为空则脚本内部回退
           IMAP_PORT: 993
-          IMAP_USER: ${{ secrets.SMTP_USER }}
-          IMAP_PASS: ${{ secrets.SMTP_PASS }}
+          IMAP_USER: ${{ secrets.IMAP_USER || secrets.SMTP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS || secrets.SMTP_PASS }}
+          IMAP_SECURE: "true"
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: node scripts/poll_inbox.js
+        run: node scripts/poll_inbox.js --dry=0
 
-      - name: Commit CSV changes
+      # 心跳写入：仅在收件成功后记录，日报读取此文件判断“今天是否真的跑过收件”
+      - name: Heartbeat (record last poll time)
+        if: success()
+        run: |
+          mkdir -p data
+          NOW=$(date -u +"%FT%TZ")
+          TODAY=$(date -u +"%F")
+          if [ -f data/last_poll.txt ] && grep -q "^$TODAY" data/last_poll.txt; then
+            echo "already recorded today: $(cat data/last_poll.txt)"
+          else
+            echo "$NOW" > data/last_poll.txt
+          fi
+
+      # 一次性提交：CSV 变更（如 bounces.csv）+ 心跳文件
+      - name: Commit & push changes
+        if: always()
         run: |
           git config user.name  "CG Bot"
           git config user.email "ops@cg-alert.com"
-          if [ -n "$(git status --porcelain data/*.csv 2>/dev/null)" ]; then
-            git add data/*.csv
-            git commit -m "inbound sync"
+          git add data/*.csv 2>/dev/null || true
+          git add data/last_poll.txt 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "inbound sync: csv+heartbeat"
             git push
           else
             echo "Nothing to commit."
