@@ -1,7 +1,7 @@
 procurement@asana.com,Asana,asana.com,Okta,Slack,Zoom,,,1
 vendor@intercom.com,Intercom,intercom.com,HubSpot,Stripe,Snowflake,,,1
 legal@zapier.com,Zapier,zapier.com,GitHub,Datadog,Cloudflare,,,1
-procurement@notion.so,Notion,notion.so,Slack,Zoom,Stripe,,invalid,
+procurement@notion.so,Notion,notion.so,Slack,Zoom,Stripe,,,1
 vendor@linear.app,Linear,linear.app,GitHub,Vercel,Sentry,,,1
 purchasing@atlassian.com,Atlassian,atlassian.com,Okta,Cloudflare,Datadog,,,1
 procurement@cloudflare.com,Cloudflare,cloudflare.com,Okta,PagerDuty,Datadog,,,1
