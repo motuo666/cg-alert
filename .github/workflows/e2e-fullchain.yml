@@ -59,18 +59,18 @@ jobs:
       - name: E2E Full Chain
         env:
           DRY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry || 'true' }}
-          # SMTP
+          # 发件（SMTP）
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          # IMAP（显式回退到 SMTP，防止缺 cred）
+          # 收件（IMAP）→ 显式映射到 SMTP 账号，防止缺凭据
           IMAP_HOST: ${{ secrets.IMAP_HOST }}
           IMAP_PORT: ${{ secrets.IMAP_PORT }}
           IMAP_SECURE: "true"
-          IMAP_USER: ${{ secrets.IMAP_USER || secrets.SMTP_USER }}
-          IMAP_PASS: ${{ secrets.IMAP_PASS || secrets.SMTP_PASS }}
+          IMAP_USER: ${{ secrets.SMTP_USER }}
+          IMAP_PASS: ${{ secrets.SMTP_PASS }}
           # Slack
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: node scripts/e2e_fullchain.js
