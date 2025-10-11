@@ -1,0 +1,50 @@
+name: Daily Ops Report
+
+on:
+  schedule:
+    - cron: "5 1 * * *"   # 每天 09:05 北京时间（UTC+8 -> 01:05 UTC）
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Shanghai
+      SITE_ORIGIN: https://www.cg-alert.com
+      EXPECT_DISCOVER_MIN: "10"
+      EXPECT_SEND_MIN: "40"
+      EXPECT_REVENUE_MIN: "0"
+      EXPECT_DELIVERY_MIN: "0"
+      ENABLE_DISCOVER_SLO: "1"
+      ENABLE_SEND_SLO: "1"
+      ENABLE_REVENUE_SLO: "1"
+      ENABLE_DELIVERY_SLO: "0"   # 先不强制交付阈值，后续可开
+      GH_CHECK: "1"              # 打开工作流近况检查
+      DAILY_CHECK_WORKFLOWS: "Outreach S1 (Send),Inbound (poll inbox),E2E Full Chain,Weekly Health Check"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: 18 }
+
+      - name: Run daily ops report
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          GITHUB_TOKEN:  ${{ secrets.GITHUB_TOKEN }}   # 默认就有，保持即可
+        run: node scripts/daily_ops_report.js
+
+      - name: Commit daily reports
+        if: always()
+        run: |
+          git config user.name  "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          if ! git diff --quiet; then
+            git add reports/daily/*.json reports/daily/*.md || true
+            git commit -m "chore(report): daily ops"
+            git push
+          else
+            echo "No report changes."
+          fi
