@@ -2,8 +2,17 @@ name: Outreach S1 (Send)
 
 on:
   schedule:
-    - cron: '30 17 * * 1-5' # 11:30 MT (UTC cron)
+    - cron: '30 17 * * 1-5'   # 每个工作日 11:30 MT（UTC 定时）
   workflow_dispatch:
+    inputs:
+      dry:
+        description: 'Dry run? true/false'
+        required: false
+        default: 'false'
+      limit:
+        description: 'Send limit per run'
+        required: false
+        default: '40'
 
 permissions:
   contents: write
@@ -14,9 +23,11 @@ concurrency:
 
 jobs:
   send:
+    # 仅在默认分支或手动触发时运行
     if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,35 +35,59 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
 
       - name: Install deps
         run: |
-          npm --version
-          npm init -y >/dev/null 2>&1 || true
-          npm i nodemailer@6 csv-parse@5
-
-      - name: Debug context
-        run: |
-          echo "ref=$GITHUB_REF"
-          echo "event=$GITHUB_EVENT_NAME"
-          echo "default_branch=${{ github.event.repository.default_branch }}"
-          node -v
-          echo "repo files:" && ls -al
-          echo "scripts dir:" && ls -al scripts || true
+          if [ -f package.json ]; then
+            npm ci || npm i
+          else
+            # 临时兜底（runner 不提交）：仅安装发送所需最小包
+            npm i --no-audit --no-fund nodemailer@7 csv-parse@5
+          fi
 
       - name: Pick script
         id: pick
+        shell: bash
         run: |
           set -e
           for c in scripts/send_bulk.js scripts/outreach_s1.js scripts/send.js; do
-            if [ -f "$c" ]; then echo "script=$c" >> $GITHUB_OUTPUT; echo "USING=$c"; exit 0; fi
+            if [ -f "$c" ]; then
+              echo "script=$c" >> $GITHUB_OUTPUT
+              echo "USING=$c"
+              exit 0
+            fi
           done
           echo "找不到 S1 发送脚本（期待 scripts/send_bulk.js 或 outreach_s1.js 或 send.js）" >&2
           exit 1
 
-      - name: Leads sanity
-        run: node scripts/leads_sanity.js
+      - name: Prepare flags
+        id: flags
+        shell: bash
+        run: |
+          # 手动触发可传 dry/limit；定时任务默认 dry=false, limit=40
+          DRY="${{ github.event.inputs.dry }}"
+          LIMIT="${{ github.event.inputs.limit }}"
+          [ -z "$DRY" ] && DRY=false
+          [ -z "$LIMIT" ] && LIMIT=40
+          if [ "$DRY" = "true" ] || [ "$DRY" = "1" ]; then
+            echo "dry_flag=--dry=1" >> $GITHUB_OUTPUT
+            echo "dry_env=1" >> $GITHUB_OUTPUT
+          else
+            echo "dry_flag=--dry=0" >> $GITHUB_OUTPUT
+            echo "dry_env=0" >> $GITHUB_OUTPUT
+          fi
+          echo "limit=$LIMIT" >> $GITHUB_OUTPUT
+          echo "Using DRY=$DRY LIMIT=$LIMIT"
+
+      - name: Leads sanity (optional)
+        shell: bash
+        run: |
+          if [ -f scripts/leads_sanity.js ]; then
+            node scripts/leads_sanity.js
+          else
+            echo "skip leads_sanity.js"
+          fi
 
       - name: Send S1
         env:
@@ -60,10 +95,11 @@ jobs:
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          MAIL_FROM: ${{ vars.MAIL_FROM }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
           S1_SUBJECT: ${{ vars.S1_SUBJECT }}
-          DRY_RUN: '0'
-        run: node "${{ steps.pick.outputs.script }}"
+          DRY_RUN: ${{ steps.flags.outputs.dry_env }}
+        run: |
+          node "${{ steps.pick.outputs.script }}" "${{ steps.flags.outputs.dry_flag }}" --limit=${{ steps.flags.outputs.limit }}
 
       - name: Commit CSV updates
         if: always()
@@ -78,12 +114,13 @@ jobs:
             echo "No changes to commit."
           fi
 
-- name: Heartbeat (record last outreach time)
-  run: |
-    mkdir -p data
-    date -u +"%FT%TZ" > data/last_outreach.txt
-    git config user.name "github-actions"
-    git config user.email "actions@users.noreply.github.com"
-    git add data/last_outreach.txt data/leads.csv || true
-    git commit -m "chore: outreach heartbeat" || echo "nothing to commit"
-    git push || echo "skip push"
+      - name: Heartbeat (record last outreach time)
+        if: always()
+        run: |
+          mkdir -p data
+          date -u +"%FT%TZ" > data/last_outreach.txt
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/last_outreach.txt data/leads.csv || true
+          git commit -m "chore: outreach heartbeat" || echo "nothing to commit"
+          git push || echo "skip push"
