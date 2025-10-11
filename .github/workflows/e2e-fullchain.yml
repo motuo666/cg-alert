@@ -29,6 +29,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: e2e-full-chain
+  cancel-in-progress: false
+
 jobs:
   e2e:
     runs-on: ubuntu-latest
@@ -41,22 +45,20 @@ jobs:
         with:
           node-version: 18
 
-- name: Install deps
-  run: npm ci || npm i
+      - name: Install deps
+        run: npm ci || npm i
 
-
-      - name: Install (if needed)
+      - name: Print env (masked)
         run: |
-          if [ -f package.json ]; then
-            npm ci || npm i
-          fi
+          echo "DRY=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry || 'true' }}"
+          echo "Commit: $GITHUB_SHA"
 
       - name: Leads Lint
         run: node scripts/validate_leads.js
 
       - name: E2E Full Chain
         env:
-          DRY: ${{ github.event.inputs.dry || 'true' }}
+          DRY: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry || 'true' }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
