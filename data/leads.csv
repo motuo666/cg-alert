@@ -17,5 +17,6 @@ legal@hubspot.com,HubSpot,hubspot.com,Cloudflare,Datadog,Stripe,procurement,new,
 procurement@shopify.com,Shopify,shopify.com,Cloudflare,Klaviyo,Stripe,procurement,new,1
 vendor@datadoghq.com,Datadog,datadoghq.com,Okta,GitHub,PagerDuty,procurement,new,1
 legal@basecamp.com,Basecamp,basecamp.com,Stripe,Cloudflare,Statuspage,procurement,new,1
-vendor@segment.com,Segment,segment.com,Twilio,Snowflake,Datadog,procurement,new,1,email,company,domain,status,seq,last_touch
-szning1117@gmail.com,Your Co,yourdomain.com,Slack,Zoom,Stripe,new,,1,last_touch
+vendor@segment.com,Segment,segment.com,Twilio,Snowflake,Datadog,procurement,new,1
+szning1117@gmail.com,Your Co,yourdomain.com,Slack,Zoom,Stripe,,new,1
+
