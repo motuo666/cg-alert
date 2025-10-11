@@ -1,0 +1,85 @@
+name: E2E Full Chain
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "scripts/**"
+      - "data/**"
+      - "updates/**"
+      - "vendors/**"
+      - "api/**"
+      - "index.html"
+      - "_headers"
+      - "_redirects"
+      - "robots.txt"
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: "DRY run (true/false)"
+        default: "true"
+        required: true
+      verbose:
+        description: "Verbose logs"
+        default: "false"
+        required: false
+  schedule:
+    - cron: "25 3 * * 1"   # 每周一 11:25 北京时间（UTC+8）
+
+permissions:
+  contents: write
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Print env (masked)
+        run: |
+          echo "DRY=${{ github.event.inputs.dry || 'true' }}"
+          echo "Repo: $GITHUB_REPOSITORY @ $GITHUB_SHA"
+
+      - name: Install (if needed)
+        run: |
+          if [ -f package.json ]; then
+            npm ci || npm i
+          fi
+
+      - name: Leads Lint
+        run: node scripts/validate_leads.js
+
+      - name: E2E Full Chain
+        env:
+          DRY: ${{ github.event.inputs.dry || 'true' }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+          IMAP_SECURE: "true"
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: node scripts/e2e_fullchain.js
+
+      - name: Upload build artifacts (for debugging)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: |
+            updates/rss.xml
+            updates/index.html
+            vendors/index.html
+            api/vendors.json
+            sitemap-*.xml
+            data/leads.csv
+            data/intakes.csv
+            data/customers.csv
