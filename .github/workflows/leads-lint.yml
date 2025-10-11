@@ -13,6 +13,19 @@ jobs:
         with: { node-version: '18' }
       - name: Install deps
         run: npm install csv-parse csv-stringify
+    - name: Normalize leads.csv
+  run: |
+    sed -i 's/\r$//' data/leads.csv 2>/dev/null || true
+    awk -F',' 'BEGIN{OFS=","}
+    {
+      hdr=tolower($1$2$3$4$5$6$7$8$9);
+      if (NR==1 && hdr=="emailcompanydomainvendor1vendor2vendor3personastatusmx_ok") next;
+      for (i=NF+1; i<=9; i++) $i="";
+      $1=tolower($1);
+      s=tolower($8); if (s!="new" && s!="sent" && s!="bounced" && s!="unsub") $8="new";
+      if ($9!="0" && $9!="1") $9="1";
+      print
+    }' data/leads.csv > data/leads.fixed.csv && mv -f data/leads.fixed.csv data/leads.csv 
       - name: Validate & dedupe leads
         run: node scripts/validate_leads.js
       - name: Commit updates
