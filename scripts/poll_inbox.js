@@ -20,6 +20,7 @@ const SLACK_WEBHOOK = process.env.SLACK_WEBHOOK || '';
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const BOUNCES  = path.join(DATA_DIR, 'bounces.csv');
+const LAST_POLL = path.join(DATA_DIR, 'last_poll.txt');
 
 function say(...a){ console.log(...a); }
 function die(msg){ console.error(msg); process.exit(1); }
@@ -90,6 +91,13 @@ function die(msg){ console.error(msg); process.exit(1); }
     }
 
     say(`poll_inbox: scanned=${picked.length}, bounces=${bounces}`);
+
+    // 心跳：记录最后一次成功轮询时间
+    try {
+      if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+      fs.writeFileSync(LAST_POLL, new Date().toISOString() + '\n', 'utf8');
+    } catch {}
+
     lock.release();
     await client.logout();
     process.exit(0);
@@ -122,7 +130,6 @@ async function toBuffer(input) {
       input.on('data', c => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
       input.once('end',  () => resolve(Buffer.concat(chunks)));
       input.once('error', reject);
-      // 某些 stream 需要 resume 才会触发 'data'
       if (typeof input.resume === 'function') { try { input.resume(); } catch {} }
     });
   }
