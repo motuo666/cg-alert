@@ -99,6 +99,9 @@ jobs:
         run: |
           node "${{ steps.pick.outputs.script }}" "${{ steps.flags.outputs.dry_flag }}" --limit=${{ steps.flags.outputs.limit }}
 
+- name: Scrub leads (guard)
+  run: node scripts/leads_guard.js
+ 
       - name: Commit CSV updates
         if: always()
         run: |
