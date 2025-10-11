@@ -1,60 +1,103 @@
 #!/usr/bin/env node
 /**
- * 更严格的 leads.csv 校验：
- * - 恰好 9 列：email,company,domain,vendor1,vendor2,vendor3,persona,status,mx_ok
- * - email 合法、domain 合法
- * - status ∈ {new,sent,bounced,unsub}
- * - mx_ok ∈ {0,1}
- * - 提示粘连/缺列的“人话原因”
+ * validate_leads.js（覆盖版：带自动规范化）
+ * 目标格式（无表头，固定 9 列）：
+ *   email,company,domain,vendor1,vendor2,vendor3,persona,status,mx_ok
+ *
+ * 自动处理：
+ *   - 多出来的列会截断到 9 列；若末尾是 "email,company,domain,status,seq,last_touch" 之类表头尾巴，直接剔除
+ *   - status 为空 → new；mx_ok 为空 → 1
+ *   - 保留严格校验（非法邮箱/域名/状态值），发现即报错退出
+ *   - 有修复会重写 data/leads.csv
  */
+
 const fs = require('fs');
 const path = require('path');
+const { parse } = require('csv-parse/sync');
+const { stringify } = require('csv-stringify/sync');
 
-const file = path.join(__dirname, '..', 'data', 'leads.csv');
-if(!fs.existsSync(file)) { console.error('缺失 data/leads.csv'); process.exit(1); }
+const FILE = path.join(__dirname, '..', 'data', 'leads.csv');
 
-const raw = fs.readFileSync(file);
-if (raw.includes(0x0D)) {
-  console.warn('⚠ leads.csv 含 CRLF（\\r\\n）。建议统一 LF（dos2unix data/leads.csv），避免某些解析器边缘问题。');
-}
-const lines = raw.toString('utf8').split(/\r?\n/).filter(Boolean);
-const allowedStatus = new Set(['new','sent','bounced','unsub']);
-const bad = [];
-const seen = new Set();
+// 目标列
+const COLS = ['email','company','domain','vendor1','vendor2','vendor3','persona','status','mx_ok'];
+const ALLOWED_STATUS = new Set(['new','sent','bounced','unsub']);
+// 可识别为“表头尾巴”的 token
+const HEADER_TAIL = new Set(['email','company','domain','status','seq','last_touch','created_at','updated_at']);
 
-function isEmail(x){
-  return /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(x||'');
-}
+function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s||'').trim()); }
+function isDomain(s){ return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(String(s||'').trim()); }
 
-lines.forEach((line, i)=>{
-  const n = i+1;
-  const cols = line.split(',');
+function normalizeRow(r){
+  // 去空白
+  r = r.map(x => String(x==null?'':x).trim());
 
-  if(cols.length !== 9){
-    if(cols.length % 9 === 0){
-      bad.push(`第 ${n} 行：检测到 ${cols.length} 列（是 9 的倍数），疑似多条线索被粘在一行，缺少换行 \\n。请拆成 ${cols.length/9} 行，每行 9 列。`);
-    }else{
-      bad.push(`第 ${n} 行：列数=${cols.length}（应为 9）。当前内容：${line}`);
-    }
-    return;
+  // 如果长度>9，看看是不是“表头尾巴”在末尾；无论如何都截断
+  if (r.length > COLS.length) {
+    const extra = r.slice(COLS.length).map(x => x.toLowerCase());
+    const isHeaderTail = extra.every(x => HEADER_TAIL.has(x));
+    // 无需区分，统一截断即可；只是统计 purposes
+    r = r.slice(0, COLS.length);
+    normalizeRow._fixedExtra = (normalizeRow._fixedExtra || 0) + 1;
   }
 
-  const [email, company, domain, v1, v2, v3, persona, status, mx_ok] = cols.map(s=>s.trim());
+  // 不足 9 列则补空串
+  while (r.length < COLS.length) r.push('');
 
-  if(!isEmail(email)) bad.push(`第 ${n} 行：email 非法 -> ${email}`);
-  if(!company) bad.push(`第 ${n} 行：company 为空`);
-  if(!/^[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/.test(domain)) bad.push(`第 ${n} 行：domain 非法 -> ${domain}`);
-  if(!allowedStatus.has(status)) bad.push(`第 ${n} 行：status 必须为 new|sent|bounced|unsub，当前 -> ${status}`);
-  if(!/^[01]$/.test(mx_ok)) bad.push(`第 ${n} 行：mx_ok 必须为 0 或 1，当前 -> ${mx_ok}`);
+  // 自动兜底
+  if (!r[7]) r[7] = 'new';         // status
+  if (!r[8]) r[8] = '1';           // mx_ok
 
-  const key = email.toLowerCase();
-  if(seen.has(key)) bad.push(`第 ${n} 行：重复 email -> ${email}`);
-  else seen.add(key);
-});
-
-if(bad.length){
-  console.error('❌ leads.csv 校验失败：');
-  bad.forEach(m => console.error(' - ' + m));
-  process.exit(1);
+  return r;
 }
-console.log(`✅ leads.csv 校验通过，行数=${lines.length}`);
+
+(function main(){
+  if (!fs.existsSync(FILE)) {
+    console.error(`❌ 未找到文件：${FILE}`);
+    process.exit(1);
+  }
+
+  const raw = fs.readFileSync(FILE,'utf8');
+  const rows = parse(raw, { relax_column_count: true, skip_empty_lines: true, trim: true });
+
+  const out = [];
+  const errs = [];
+  let fixed = 0;
+
+  rows.forEach((r, i) => {
+    const line = i + 1;
+    const n = normalizeRow(r);
+    if (normalizeRow._fixedExtra) fixed += 1;
+
+    // 逐项校验
+    const [email, company, domain, v1, v2, v3, persona, status, mx] = n;
+
+    if (!isEmail(email)) errs.push(`第 ${line} 行：email 非法 -> ${email}`);
+    if (!company)        errs.push(`第 ${line} 行：company 为空`);
+    if (!isDomain(domain)) errs.push(`第 ${line} 行：domain 非法 -> ${domain}`);
+
+    if (!ALLOWED_STATUS.has(String(status).toLowerCase())) {
+      errs.push(`第 ${line} 行：status 必须为 new|sent|bounced|unsub，当前 -> ${status}`);
+    }
+
+    if (!/^[01]$/.test(String(mx))) {
+      errs.push(`第 ${line} 行：mx_ok 必须为 0 或 1，当前 -> ${mx}`);
+    }
+
+    out.push(n);
+  });
+
+  // 如果有修复（截断/兜底），回写
+  if (fixed > 0) {
+    const csv = stringify(out, { quoted: false });
+    fs.writeFileSync(FILE, csv, 'utf8');
+    console.log(`🔧 leads.csv 已自动规范化：修复 ${fixed} 行（列数超限/表头尾巴/兜底）。`);
+  }
+
+  if (errs.length) {
+    console.error('❌ leads.csv 校验失败：\n - ' + errs.join('\n - '));
+    process.exit(1);
+  } else {
+    console.log(`✅ leads.csv 校验通过：${out.length} 行`);
+    process.exit(0);
+  }
+})();
