@@ -1,36 +1,70 @@
 name: Weekly Health Check
+
 on:
   schedule:
-    - cron: "0 15 * * 1"   # 每周一 15:00 UTC（可改）
-  workflow_dispatch:
+    - cron: "0 15 * * 1"   # 每周一 15:00 UTC
+  workflow_dispatch: {}
 
 permissions:
   contents: read
+
+concurrency:
+  group: weekly-health-check
+  cancel-in-progress: false
 
 jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '18' }
-      - name: Install deps for SMTP/IMAP checks
-        run: npm i --no-audit --no-fund nodemailer imapflow
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install deps
+        run: npm ci || npm i
+
       - name: Weekly Health Check
         env:
+          # 站点与业务常量
           SITE_ORIGIN: https://www.cg-alert.com
           DOMAIN: cg-alert.com
           STRIPE_PORTFOLIO_URL: https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801
           STRIPE_BUSINESS_URL:  https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800
           FORM_URL: https://forms.gle/TCaom33BRJGbcJ3r5
+
+          # 发件（SMTP）
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+
+          # 收件（IMAP）
           IMAP_HOST: ${{ secrets.IMAP_HOST }}
           IMAP_PORT: ${{ secrets.IMAP_PORT }}
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          IMAP_SECURE: "true"
+
+          # Slack（脚本里用 SLACK_WEBHOOK；兼容两种命名）
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: node scripts/weekly_health_check.js
+
+      # 失败时把关键产物打包，便于排查（可选）
+      - name: Upload report artifacts (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-health-report
+          path: |
+            health-report.json
+            logs/**
+            data/leads.csv
+            data/intakes.csv
+            data/customers.csv
