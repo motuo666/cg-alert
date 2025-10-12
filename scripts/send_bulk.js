@@ -1,232 +1,190 @@
-#!/usr/bin/env node
-/**
- * send_bulk.js — 9列CSV 兼容版（不会写表头）
- * 每行固定 9 列：[email,company,domain,v1,v2,v3,persona,status,mx_ok]
- * 仅把第 8 列 status 从 new 改 sent；其他一律不动
- * - 示例链接：优先真实 vendors/<slug>/index.html（过滤 _ 前缀与 acme），其次 api/vendors.json，兜底 /updates/；随收件人自动均匀分配并带 utm
- */
-
+// scripts/send_bulk.js — Brevo 最优版（587/STARTTLS、发件池、BCC 调试、CSV 安全写回）
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 const dns = require('dns').promises;
 
 const ROOT = path.join(__dirname, '..');
-const CSV  = path.join(ROOT, 'data', 'leads.csv');
-const DRY  = process.env.DRY_RUN === '1';
+const LEADS_FP = path.join(ROOT, 'data', 'leads.csv');
 
-// 非 DRY 才加载 nodemailer
-let nodemailer = null;
-if (!DRY) {
-  try { nodemailer = require('nodemailer'); }
-  catch { console.error('Missing nodemailer. npm i nodemailer'); process.exit(1); }
-}
+const DRY = process.env.DRY_RUN === '1';
 
-// SMTP
 const SMTP_HOST = process.env.SMTP_HOST || '';
-const SMTP_PORT = Number(process.env.SMTP_PORT || 465);
+const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
 const SMTP_USER = process.env.SMTP_USER || '';
 const SMTP_PASS = process.env.SMTP_PASS || '';
-const MAIL_FROM = process.env.MAIL_FROM || SMTP_USER;
-const BCC_TO    = process.env.BCC_TO || '';
 
-// 发件分流（若你的发信端未放行这些别名，会由服务端拒投；建议已放行）
-const FROMS = [
-  { name: 'CG Alert', address: 'outreach@mail.cg-alert.com'  },
-  { name: 'CG Alert', address: 'outreach@mail2.cg-alert.com' },
+const MAIL_FROM      = (process.env.MAIL_FROM || 'outreach@m1.cg-alert.com').toLowerCase();
+const MAIL_FROM_NAME = process.env.MAIL_FROM_NAME || 'CG Alert';
+const BCC_TO         = process.env.BCC_TO || ''; // 可填你的测试邮箱
+
+// From 池：与 m1 域一致（不要再用 mail./mail2.）
+const FROM_POOL = [
+  { name: MAIL_FROM_NAME, address: MAIL_FROM },
+  { name: MAIL_FROM_NAME, address: 'ops@m1.cg-alert.com' },
 ];
-// 若未配置，回退 MAIL_FROM（最稳）
-function allowedFrom(desired){
-  if (!desired || !desired.address) return MAIL_FROM;
-  return desired; // 已放行别名时使用；否则 SMTP 会报错并在日志可见
-}
 
-const REPLY_TO   = 'outreach@cg-alert.com';
-const LIST_UNSUB = 'mailto:optout@cg-alert.com?subject=unsubscribe';
+// ====== 模板 ======
+const SITE = 'https://www.cg-alert.com';
+const SAMPLE_FALLBACK = `${SITE}/updates/`;
 
-const LIMIT = Number((process.argv.join(' ').match(/--limit=(\d+)/)||[])[1] || 40);
-
-// ---------- CSV I/O（固定 9 列，无表头） ----------
-function read9(fp){
-  if(!fs.existsSync(fp)) return [];
-  const raw = fs.readFileSync(fp,'utf8').trim();
-  if(!raw) return [];
-  return raw.split(/\r?\n/).filter(Boolean).map(line=>{
-    const v = line.split(',').map(x=>String(x||'').trim());
-    // 丢弃“疑似表头”的残片
-    const joined = v.join(',').toLowerCase();
-    if (joined.includes('email,company,domain')) return null;
-    const c = v.slice(0,9); while(c.length<9) c.push('');
-    return c;
-  }).filter(Boolean);
-}
-function write9(fp, rows){
-  const out = rows.map(r => r.slice(0,9).map(x => String(x??'')).join(',')).join('\n');
-  fs.writeFileSync(fp, out + (rows.length? '\n' : ''), 'utf8');
-}
-
-// ---------- 工具 ----------
-const hnum = s => crypto.createHash('sha1').update(String(s)).digest()[0];
-const linkCount = t => ((t||'').match(/\bhttps?:\/\/[^\s)]+/ig)||[]).length;
-const wrap78 = s => (s||'').split('\n').map(l=>{
-  if(l.length<=78) return l; const out=[]; let r=l;
-  while(r.length>78){ out.push(r.slice(0,78)); r=r.slice(78); }
-  out.push(r); return out.join('\n');
-}).join('\n');
-
-async function hasMX(domain){
-  try { const mx = await dns.resolveMx(domain); return Array.isArray(mx)&&mx.length>0; }
-  catch { return false; }
-}
-
-// ---------- 更稳的示例链接（自动切换） ----------
-function listVendorSlugs() {
-  const vd = path.join(ROOT, 'vendors');
-  const out = [];
+function pickSampleURL(){
   try {
-    if (fs.existsSync(vd)) {
-      for (const d of fs.readdirSync(vd, { withFileTypes: true })) {
-        if (!d.isDirectory()) continue;
-        const slug = d.name;
-        if (!slug) continue;
-        if (slug === 'acme') continue;
-        if (slug.startsWith('_')) continue; // 过滤 _seed 等隐藏目录
-        const idx = path.join(vd, slug, 'index.html');
-        if (fs.existsSync(idx) && fs.statSync(idx).size > 100) {
-          out.push(slug);
-        }
-      }
-    }
-  } catch {}
-  return out;
+    const dir = path.join(ROOT, 'evidence');
+    const vendors = fs.existsSync(dir)
+      ? fs.readdirSync(dir, { withFileTypes: true })
+          .filter(d => d.isDirectory() && d.name !== '_seed' && d.name !== 'acme')
+          .map(d => d.name)
+      : [];
+    return vendors.length ? `${SITE}/vendors/${encodeURIComponent(vendors[0])}/` : SAMPLE_FALLBACK;
+  } catch { return SAMPLE_FALLBACK; }
 }
+const SAMPLE_URL = pickSampleURL();
 
-function sampleURLForLead(lead) {
-  const SITE = 'https://www.cg-alert.com';
-  // 1) 优先 vendors/ 真实页面
-  const slugs = listVendorSlugs();
-  if (slugs.length) {
-    const i = crypto.createHash('sha1').update(String(lead.email||'') + ':sample').digest()[0] % slugs.length;
-    return `${SITE}/vendors/${encodeURIComponent(slugs[i])}/?utm=outreach_s1`;
-  }
-  // 2) 次选 api/vendors.json
-  try {
-    const api = path.join(ROOT, 'api', 'vendors.json');
-    if (fs.existsSync(api)) {
-      const arr = JSON.parse(fs.readFileSync(api,'utf8')) || [];
-      const valid = arr
-        .map(v => v && v.slug ? String(v.slug) : '')
-        .filter(s => s && !s.startsWith('_') && s !== 'acme');
-      if (valid.length) {
-        const i = crypto.createHash('sha1').update(String(lead.email||'') + ':sample').digest()[0] % valid.length;
-        return `${SITE}/vendors/${encodeURIComponent(valid[i])}/?utm=outreach_s1`;
-      }
-    }
-  } catch {}
-
-  // 3) 兜底：/updates/（永不 404）
-  return `${SITE}/updates/?utm=outreach_s1`;
-}
-
-// ---------- 模板 ----------
-const SUBJS = [
-  v=>`${v.domain}: evidence-backed vendor change alerts`,
-  v=>`Stop manual checks — proof-based alerts for ${v.domain}`,
-  v=>`Compliance-ready alerts (ToS/DPA/Subprocessors) — ${v.domain}`
+const SUBS = [
+  v => `${v.domain}: evidence-backed vendor change alerts`,
+  v => `Stop manual checks — proof-based alerts for ${v.domain}`,
+  v => `Compliance-ready alerts (ToS/DPA/Subprocessors) — ${v.domain}`,
 ];
-const BODYS = [
-  v=>`Hi team,
+const BODIES = [
+  v => `Hi team,
 
 We monitor your vendors’ public pages (Pricing/ToS/DPA/Subprocessors/Status) and send verifiable evidence cards with Slack/Email alerts.
 
 • Proof-backed (hash, snippet, timestamp)
 • Refund: 30 days if no material alert
 
-Sample: ${sampleURLForLead(v)}
+Sample: ${SAMPLE_URL}
 If not relevant, reply STOP.`,
-  v=>`Hello,
+  v => `Hello,
 
 We track material changes on vendor legal/pricing pages and ship evidence cards + alerts, so your team can stop manual patrol and stay audit-ready.
 
-Sample: ${sampleURLForLead(v)}
+Sample: ${SAMPLE_URL}
 Refund if no material alert in 30 days. Reply STOP to opt out.`,
-  v=>`Hi,
+  v => `Hi,
 
 Third-party changes create audit risk. We detect them and deliver proof-backed alerts (ToS/DPA/Subprocessors/Status), ready for compliance.
 
-Sample: ${sampleURLForLead(v)}
-If not useful, reply STOP.`
+Sample: ${SAMPLE_URL}
+If not useful, reply STOP.`,
 ];
-const pickSubj = l => SUBJS[hnum(l.email)%SUBJS.length](l);
-const pickBody = l => BODYS[hnum(l.email+'b')%BODYS.length](l);
 
-// ---------- 主流程 ----------
-(async () => {
-  const rows = read9(CSV);
-  if (!rows.length) { console.log('leads.csv empty'); process.exit(0); }
+function h(s){ let x=0; for (const c of Buffer.from(String(s))) x=(x*131+c)%0x7fffffff; return x; }
+function pick(arr, key){ return arr[h(key)%arr.length]; }
+function pickFrom(email){ return pick(FROM_POOL, email); }
+function wrap78(s=''){
+  return s.split('\n').map(line=>{
+    if(line.length<=78) return line;
+    const out=[]; let rest=line;
+    while(rest.length>78){ out.push(rest.slice(0,78)); rest=rest.slice(78); }
+    out.push(rest); return out.join('\n');
+  }).join('\n');
+}
+function linkCount(t=''){ const m=t.match(/\bhttps?:\/\/[^\s)]+/ig); return m?m.length:0; }
 
-  let transporter = null;
-  if (!DRY) {
-    if (!SMTP_HOST||!SMTP_PORT||!SMTP_USER||!SMTP_PASS||!MAIL_FROM){
-      console.error('SMTP secrets missing'); process.exit(1);
+function readCSV(fp){
+  if(!fs.existsSync(fp)) return {header:[], rows:[]};
+  const raw = fs.readFileSync(fp,'utf8').trim();
+  if(!raw) return {header:[], rows:[]};
+  const lines = raw.split(/\r?\n/).filter(Boolean);
+  const header = lines[0].split(',').map(s=>s.trim());
+  const rows = lines.slice(1).map(line=>{
+    const v=line.split(',');
+    const o={}; header.forEach((k,i)=>o[k]=String(v[i]??'').trim());
+    return o;
+  });
+  return {header, rows};
+}
+function writeCSV(fp, header, rows){
+  const head = header.join(',')+'\n';
+  const body = rows.map(r=>header.map(k=>r[k]??'').join(',')).join('\n');
+  fs.writeFileSync(fp, head + (rows.length? body+'\n' : ''), 'utf8');
+}
+async function hasMX(domain){
+  try{ const mx=await dns.resolveMx(domain); return Array.isArray(mx)&&mx.length>0; }catch{ return false; }
+}
+
+async function makeTransport(){
+  if (DRY) return { sendMail: async ()=>{}, verify: async ()=>{} };
+  const nodemailer = require('nodemailer');
+  const t = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,        // 587
+    secure: false,          // 587 = STARTTLS
+    requireTLS: true,       // 强制 STARTTLS
+    auth: { user: SMTP_USER, pass: SMTP_PASS },
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 100,
+  });
+  await t.verify(); // 若认证错，会直接抛 535
+  return t;
+}
+
+async function main(){
+  const {header, rows} = readCSV(LEADS_FP);
+  if(header.length===0){ console.error('leads.csv missing'); return; }
+
+  // 确保表头齐全（不会把表头当一行数据追加）
+  const need = ['email','company','domain','status','seq','last_touch'];
+  for (const c of need) if (!header.includes(c)) header.push(c);
+
+  const limitArg = Number((process.argv.find(a=>a.startsWith('--limit='))||'').split('=')[1]||'0');
+  let remain = limitArg>0 ? limitArg : Infinity;
+
+  const t = await makeTransport();
+  console.log(`ready=${t?1:0} DRY=${DRY}`);
+
+  const nowISO = new Date().toISOString();
+  const updated = [];
+
+  for (const lead of rows) {
+    if (remain<=0) { updated.push(lead); continue; }
+
+    const email   = (lead.email||'').toLowerCase();
+    const domain  = (lead.domain||'').toLowerCase();
+    const status  = (lead.status||'').toLowerCase();
+
+    if (!email || !domain) { updated.push(lead); continue; }
+    if (['optout','invalid','bad-mx','bounced'].includes(status)) { updated.push(lead); continue; }
+
+    // 非 DRY 才做 MX 预检（提升成功率）
+    if (!DRY) {
+      if (!(await hasMX(domain))) {
+        lead.status='bad-mx'; lead.last_touch=nowISO; updated.push(lead); continue;
+      }
     }
-    transporter = nodemailer.createTransport({
-      host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT===465,
-      auth: { user: SMTP_USER, pass: SMTP_PASS }
-    });
-    await transporter.verify();
-  }
 
-  // 选“可发”的 new & mx_ok=1
-  const todo = [];
-  for (let i=0;i<rows.length;i++){
-    const [email,company,domain,,, , ,status,mx_ok] = rows[i];
-    if (!email) continue;
-    if ((status||'').toLowerCase()!=='new') continue;
-    if (String(mx_ok)!=='1') continue;
-    todo.push(i);
-    if (todo.length>=LIMIT) break;
-  }
-  console.log(`ready=${todo.length} DRY=${DRY}`);
+    const subject = pick(SUBS, email)({domain});
+    const bodyRaw = pick(BODIES, email)({domain});
+    if (linkCount(bodyRaw)>3) { updated.push(lead); continue; }
 
-  let sent=0;
-  for (const i of todo){
-    const [email,company,domain] = rows[i];
-    const emailDomain = (email.split('@')[1]||'').toLowerCase();
-    // 如第3列为空或与邮箱域不一致，用邮箱域兜底
-    const dom = (domain||'').toLowerCase() === emailDomain ? domain.toLowerCase() : emailDomain;
+    const from = pickFrom(email);
 
-    if (!DRY){
-      const ok = await hasMX(dom);
-      if (!ok){ console.log(`skip mx: ${email} (${dom})`); continue; }
-    }
-
-    const from = allowedFrom(FROMS[hnum(email)%FROMS.length]) || MAIL_FROM;
-    const subj = pickSubj({email,company,domain:dom});
-    const text = wrap78(pickBody({email,company,domain:dom}));
-    if (linkCount(text)>3){ console.log(`skip links: ${email}`); continue; }
-
-    if (!DRY){
-      await transporter.sendMail({
-        from, to: email, replyTo: REPLY_TO, subject: subj, text,
-        ...(BCC_TO ? { bcc: BCC_TO } : {}),
+    if (DRY) {
+      console.log(`[DRY] to=${email} from=${from.address} sub="${subject}"`);
+    } else {
+      await t.sendMail({
+        from, to: email, bcc: BCC_TO || undefined,
+        subject, text: wrap78(bodyRaw),
+        replyTo: MAIL_FROM,
         headers: {
-          'List-Unsubscribe': `<${LIST_UNSUB}>`,
-          'Auto-Submitted': 'auto-generated',
-          'X-Entity-Ref-ID': `${Date.now()}-${Math.random().toString(36).slice(2)}`
+          'List-Unsubscribe': `<mailto:optout@m1.cg-alert.com?subject=unsubscribe>`,
+          'Auto-Submitted': 'auto-generated'
         }
       });
-      await new Promise(r=>setTimeout(r,1200+Math.random()*800)); // 1.2–2.0s/封
-    }else{
-      console.log(`[DRY] ${email} <- ${typeof from==='string'?from:from.address} "${subj}"`);
+      await new Promise(r=>setTimeout(r, 1200 + Math.random()*800));
+      remain--;
     }
 
-    // 仅把第 8 列改成 sent
-    rows[i][7] = 'sent';
-    sent++;
+    lead.seq = lead.seq || 's1';
+    lead.status = lead.status || 'sent';
+    lead.last_touch = nowISO;
+    updated.push(lead);
   }
 
-  write9(CSV, rows);
-  console.log(DRY ? `S1 dry-run complete, updated=${sent}` : `S1 sent complete, updated=${sent}`);
-  process.exit(0);
-})().catch(e=>{ console.error(e); process.exit(1); });
+  writeCSV(LEADS_FP, header, updated);
+  console.log(DRY ? 'S1 dry-run complete' : 'S1 sent complete');
+}
+
+main().catch(e=>{ console.error(e); process.exit(1); });
