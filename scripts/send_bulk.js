@@ -1,190 +1,89 @@
-// scripts/send_bulk.js — Brevo 最优版（587/STARTTLS、发件池、BCC 调试、CSV 安全写回）
+#!/usr/bin/env node
+/**
+ * send_bulk.js
+ * - 读取 data/s1_subject.txt & data/s1.html 作为模板
+ * - leads.csv（9列）过滤 {status ∉ unsub/optout/bounced/invalid}
+ * - 支持 --limit --dry
+ * - nodemailer 池化 + 限速；List-Unsubscribe 头；可选 BCC
+ * - 链接选择：vendors/<slug>/ 优先；否则 /updates/?utm=outreach_s1
+ */
 const fs = require('fs');
 const path = require('path');
-const dns = require('dns').promises;
+const nodemailer = require('nodemailer');
+const argv = require('minimist')(process.argv.slice(2), { boolean: ['dry'], string: ['limit'], default: { dry: true, limit: '20' } });
 
-const ROOT = path.join(__dirname, '..');
-const LEADS_FP = path.join(ROOT, 'data', 'leads.csv');
+const { SMTP_HOST, SMTP_PORT = 587, SMTP_USER, SMTP_PASS, MAIL_FROM, BCC_TO } = process.env;
 
-const DRY = process.env.DRY_RUN === '1';
-
-const SMTP_HOST = process.env.SMTP_HOST || '';
-const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
-const SMTP_USER = process.env.SMTP_USER || '';
-const SMTP_PASS = process.env.SMTP_PASS || '';
-
-const MAIL_FROM      = (process.env.MAIL_FROM || 'outreach@m1.cg-alert.com').toLowerCase();
-const MAIL_FROM_NAME = process.env.MAIL_FROM_NAME || 'CG Alert';
-const BCC_TO         = process.env.BCC_TO || ''; // 可填你的测试邮箱
-
-// From 池：与 m1 域一致（不要再用 mail./mail2.）
-const FROM_POOL = [
-  { name: MAIL_FROM_NAME, address: MAIL_FROM },
-  { name: MAIL_FROM_NAME, address: 'ops@m1.cg-alert.com' },
-];
-
-// ====== 模板 ======
-const SITE = 'https://www.cg-alert.com';
-const SAMPLE_FALLBACK = `${SITE}/updates/`;
-
-function pickSampleURL(){
-  try {
-    const dir = path.join(ROOT, 'evidence');
-    const vendors = fs.existsSync(dir)
-      ? fs.readdirSync(dir, { withFileTypes: true })
-          .filter(d => d.isDirectory() && d.name !== '_seed' && d.name !== 'acme')
-          .map(d => d.name)
-      : [];
-    return vendors.length ? `${SITE}/vendors/${encodeURIComponent(vendors[0])}/` : SAMPLE_FALLBACK;
-  } catch { return SAMPLE_FALLBACK; }
+function read(p, fallback=''){ try { return fs.readFileSync(p,'utf8'); } catch { return fallback; } }
+function lines(p){ return read(p).split(/\r?\n/).filter(Boolean); }
+function parseLeadsRow(row){
+  const arr = row.split(',');
+  if (arr.length < 9) return null;
+  return {
+    email: arr[0].trim(), company: arr[1].trim(), domain: arr[2].trim(),
+    vendors: [arr[3].trim(), arr[4].trim(), arr[5].trim()].filter(Boolean),
+    persona: arr[6].trim(), status: arr[7].trim(), mx_ok: arr[8].trim()==='1'
+  };
 }
-const SAMPLE_URL = pickSampleURL();
-
-const SUBS = [
-  v => `${v.domain}: evidence-backed vendor change alerts`,
-  v => `Stop manual checks — proof-based alerts for ${v.domain}`,
-  v => `Compliance-ready alerts (ToS/DPA/Subprocessors) — ${v.domain}`,
-];
-const BODIES = [
-  v => `Hi team,
-
-We monitor your vendors’ public pages (Pricing/ToS/DPA/Subprocessors/Status) and send verifiable evidence cards with Slack/Email alerts.
-
-• Proof-backed (hash, snippet, timestamp)
-• Refund: 30 days if no material alert
-
-Sample: ${SAMPLE_URL}
-If not relevant, reply STOP.`,
-  v => `Hello,
-
-We track material changes on vendor legal/pricing pages and ship evidence cards + alerts, so your team can stop manual patrol and stay audit-ready.
-
-Sample: ${SAMPLE_URL}
-Refund if no material alert in 30 days. Reply STOP to opt out.`,
-  v => `Hi,
-
-Third-party changes create audit risk. We detect them and deliver proof-backed alerts (ToS/DPA/Subprocessors/Status), ready for compliance.
-
-Sample: ${SAMPLE_URL}
-If not useful, reply STOP.`,
-];
-
-function h(s){ let x=0; for (const c of Buffer.from(String(s))) x=(x*131+c)%0x7fffffff; return x; }
-function pick(arr, key){ return arr[h(key)%arr.length]; }
-function pickFrom(email){ return pick(FROM_POOL, email); }
-function wrap78(s=''){
-  return s.split('\n').map(line=>{
-    if(line.length<=78) return line;
-    const out=[]; let rest=line;
-    while(rest.length>78){ out.push(rest.slice(0,78)); rest=rest.slice(78); }
-    out.push(rest); return out.join('\n');
-  }).join('\n');
+function sampleURLForLead(lead){
+  for (const slug of lead.vendors) {
+    const p = path.join('vendors', slug, 'index.html');
+    if (fs.existsSync(p)) return `https://www.cg-alert.com/vendors/${encodeURIComponent(slug)}/`;
+  }
+  return `https://www.cg-alert.com/updates/?utm=outreach_s1`;
 }
-function linkCount(t=''){ const m=t.match(/\bhttps?:\/\/[^\s)]+/ig); return m?m.length:0; }
-
-function readCSV(fp){
-  if(!fs.existsSync(fp)) return {header:[], rows:[]};
-  const raw = fs.readFileSync(fp,'utf8').trim();
-  if(!raw) return {header:[], rows:[]};
-  const lines = raw.split(/\r?\n/).filter(Boolean);
-  const header = lines[0].split(',').map(s=>s.trim());
-  const rows = lines.slice(1).map(line=>{
-    const v=line.split(',');
-    const o={}; header.forEach((k,i)=>o[k]=String(v[i]??'').trim());
-    return o;
-  });
-  return {header, rows};
+function personalize(html, lead){
+  return html.replace(/\{\{company\}\}/g, lead.company || lead.domain || 'your team')
+             .replace(/\{\{sample_url\}\}/g, sampleURLForLead(lead));
 }
-function writeCSV(fp, header, rows){
-  const head = header.join(',')+'\n';
-  const body = rows.map(r=>header.map(k=>r[k]??'').join(',')).join('\n');
-  fs.writeFileSync(fp, head + (rows.length? body+'\n' : ''), 'utf8');
-}
-async function hasMX(domain){
-  try{ const mx=await dns.resolveMx(domain); return Array.isArray(mx)&&mx.length>0; }catch{ return false; }
-}
-
-async function makeTransport(){
-  if (DRY) return { sendMail: async ()=>{}, verify: async ()=>{} };
-  const nodemailer = require('nodemailer');
-  const t = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,        // 587
-    secure: false,          // 587 = STARTTLS
-    requireTLS: true,       // 强制 STARTTLS
-    auth: { user: SMTP_USER, pass: SMTP_PASS },
-    pool: true,
-    maxConnections: 1,
-    maxMessages: 100,
-  });
-  await t.verify(); // 若认证错，会直接抛 535
-  return t;
+function readLeads(){
+  const p = path.join('data','leads.csv');
+  if (!fs.existsSync(p)) return [];
+  return lines(p).map(parseLeadsRow).filter(Boolean)
+    .filter(x => !['unsub','optout','bounced','invalid','bad-mx'].includes(x.status));
 }
 
 async function main(){
-  const {header, rows} = readCSV(LEADS_FP);
-  if(header.length===0){ console.error('leads.csv missing'); return; }
+  const dry = !!argv.dry;
+  const limit = Number(argv.limit);
 
-  // 确保表头齐全（不会把表头当一行数据追加）
-  const need = ['email','company','domain','status','seq','last_touch'];
-  for (const c of need) if (!header.includes(c)) header.push(c);
+  const subject = read(path.join('data','s1_subject.txt'), 'Evidence-backed vendor changes for you');
+  const htmlTpl = read(path.join('data','s1.html'), '<p>Hi {{company}}, see {{sample_url}}</p>');
+  const leads = readLeads().slice(0, limit);
+  if (leads.length === 0) { console.log('[bulk] no eligible leads'); return; }
 
-  const limitArg = Number((process.argv.find(a=>a.startsWith('--limit='))||'').split('=')[1]||'0');
-  let remain = limitArg>0 ? limitArg : Infinity;
+  const transport = nodemailer.createTransport({
+    host: SMTP_HOST, port: Number(SMTP_PORT), secure: Number(SMTP_PORT) === 465,
+    pool: true, maxConnections: 2, maxMessages: 50, rateDelta: 60000, rateLimit: 120,
+    auth: { user: SMTP_USER, pass: SMTP_PASS }
+  });
+  const headers = {
+    'List-Unsubscribe': `<mailto:${MAIL_FROM}?subject=unsubscribe>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+  };
 
-  const t = await makeTransport();
-  console.log(`ready=${t?1:0} DRY=${DRY}`);
-
-  const nowISO = new Date().toISOString();
-  const updated = [];
-
-  for (const lead of rows) {
-    if (remain<=0) { updated.push(lead); continue; }
-
-    const email   = (lead.email||'').toLowerCase();
-    const domain  = (lead.domain||'').toLowerCase();
-    const status  = (lead.status||'').toLowerCase();
-
-    if (!email || !domain) { updated.push(lead); continue; }
-    if (['optout','invalid','bad-mx','bounced'].includes(status)) { updated.push(lead); continue; }
-
-    // 非 DRY 才做 MX 预检（提升成功率）
-    if (!DRY) {
-      if (!(await hasMX(domain))) {
-        lead.status='bad-mx'; lead.last_touch=nowISO; updated.push(lead); continue;
-      }
+  let sent = 0;
+  for (const lead of leads) {
+    const html = personalize(htmlTpl, lead);
+    if (dry) {
+      console.log(`[dry] ${lead.email} ← ${subject}`);
+      continue;
     }
-
-    const subject = pick(SUBS, email)({domain});
-    const bodyRaw = pick(BODIES, email)({domain});
-    if (linkCount(bodyRaw)>3) { updated.push(lead); continue; }
-
-    const from = pickFrom(email);
-
-    if (DRY) {
-      console.log(`[DRY] to=${email} from=${from.address} sub="${subject}"`);
-    } else {
-      await t.sendMail({
-        from, to: email, bcc: BCC_TO || undefined,
-        subject, text: wrap78(bodyRaw),
-        replyTo: MAIL_FROM,
-        headers: {
-          'List-Unsubscribe': `<mailto:optout@m1.cg-alert.com?subject=unsubscribe>`,
-          'Auto-Submitted': 'auto-generated'
-        }
+    try {
+      await transport.sendMail({
+        from: MAIL_FROM, to: lead.email, bcc: BCC_TO || undefined,
+        subject, html, headers
       });
-      await new Promise(r=>setTimeout(r, 1200 + Math.random()*800));
-      remain--;
+      sent++;
+    } catch (e) {
+      console.error('[send][err]', lead.email, e.message);
     }
-
-    lead.seq = lead.seq || 's1';
-    lead.status = lead.status || 'sent';
-    lead.last_touch = nowISO;
-    updated.push(lead);
   }
-
-  writeCSV(LEADS_FP, header, updated);
-  console.log(DRY ? 'S1 dry-run complete' : 'S1 sent complete');
+  if (!dry) await transport.close();
+  const dt = new Date().toISOString();
+  fs.appendFileSync(path.join('data','sent_log.csv'), `${dt},bulk,${sent},${subject.replace(/,/g,';')}\n`);
+  fs.writeFileSync(path.join('data','last_outreach.txt'), `${dt} bulk sent=${sent}\n`);
+  console.log(`[bulk] done: sent=${sent}/${leads.length}`);
 }
 
-main().catch(e=>{ console.error(e); process.exit(1); });
+main().catch(e => { console.error(e); process.exit(1); });
