@@ -1,5 +1,4 @@
-email,company,domain,vendor1,vendor2,vendor3,persona,status,mx_ok
-2318542412@qq.com,Your Co,qq.com,Slack,Zoom,Stripe,procurement,sent,1
+manningtopps@gmail.com,Your Co,gmail.com,Slack,Zoom,Stripe,procurement,sent,1
 procurement@asana.com,Asana,asana.com,Okta,Slack,Zoom,procurement,sent,1
 vendor@intercom.com,Intercom,intercom.com,HubSpot,Stripe,Snowflake,procurement,sent,1
 legal@zapier.com,Zapier,zapier.com,GitHub,Datadog,Cloudflare,procurement,sent,1
