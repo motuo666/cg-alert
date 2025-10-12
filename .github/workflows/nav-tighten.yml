@@ -1,0 +1,33 @@
+name: Nav Tighten
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "index.html"
+      - "updates/**"
+      - "vendors/**"
+  workflow_dispatch: {}
+
+permissions: { contents: write }
+
+jobs:
+  nav:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 18 }
+      - name: Inject Channel link into footers
+        run: node scripts/nav_inject.js
+      - name: Commit nav injections
+        run: |
+          git config user.name "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "nav: add /channel/ footer link"
+            git push
+          else
+            echo "No nav changes."
+          fi
