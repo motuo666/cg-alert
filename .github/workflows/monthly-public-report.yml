@@ -1,0 +1,37 @@
+name: Monthly Public Report
+
+on:
+  schedule:
+    - cron: "10 15 1 * *"   # 每月1日 15:10 UTC（≈ 北京时间 23:10）
+  workflow_dispatch:
+    inputs:
+      month:
+        description: "YYYY-MM（留空=上月）"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 18 }
+      - name: Build public monthly
+        env:
+          REPORT_MONTH: ${{ github.event.inputs.month }}
+        run: node scripts/build_public_monthly.js
+      - name: Commit & push
+        run: |
+          git config user.name "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "reports: publish public monthly ${REPORT_MONTH:-auto}"
+            git push
+          else
+            echo "No changes."
+          fi
