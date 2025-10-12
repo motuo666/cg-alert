@@ -1,149 +1,69 @@
-name: Outreach S1 (Send)
+name: Outreach S1
 
 on:
   schedule:
-    - cron: '30 17 * * 1-5'   # 每个工作日 11:30 MT（UTC）
+    - cron: "30 17 * * 1-5"
   workflow_dispatch:
     inputs:
-      dry:
-        description: 'Dry run? true/false'
-        required: false
-        default: 'false'
-      limit:
-        description: 'Send limit per run'
-        required: false
-        default: '40'
+      dry:   { description: "Dry run (true/false)", required: true, default: "false" }
+      limit: { description: "Max emails to send",    required: true, default: "20" }
 
-permissions:
-  contents: write
-
-concurrency:
-  group: outreach-s1
-  cancel-in-progress: false
+concurrency: { group: outreach-s1, cancel-in-progress: false }
 
 jobs:
-  send:
-    if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || github.event_name == 'workflow_dispatch' }}
+  run:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
+    env:
+      DRY:   ${{ inputs.dry   || 'false' }}
+      LIMIT: ${{ inputs.limit || '20'  }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      MAIL_FROM: ${{ secrets.MAIL_FROM }}
+      IMAP_HOST: ${{ secrets.IMAP_HOST }}
+      IMAP_PORT: ${{ secrets.IMAP_PORT }}
+      IMAP_USER: ${{ secrets.IMAP_USER }}
+      IMAP_PASS: ${{ secrets.IMAP_PASS }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      BCC_TO: ${{ secrets.BCC_TO }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
       - name: Install deps
-        run: |
-          # 优先用仓库锁定的依赖；失败则最小集兜底（不写入仓库）
-          npm ci || npm i || true
-          # 最小集（仅 runner 环境安装，不提交）
-          node -e "process.exit(require('fs').existsSync('node_modules/nodemailer')?0:1)" || npm i --no-audit --no-fund nodemailer@7
-          node -e "process.exit(require('fs').existsSync('node_modules/csv-parse')?0:1)"   || npm i --no-audit --no-fund csv-parse@5
+        run: npm ci
 
-      - name: Pick script
-        id: pick
-        shell: bash
-        run: |
-          set -e
-          for c in scripts/send_bulk.js scripts/outreach_s1.js scripts/send.js; do
-            if [ -f "$c" ]; then
-              echo "script=$c" >> $GITHUB_OUTPUT
-              echo "USING=$c"
-              exit 0
-            fi
-          done
-          echo "找不到 S1 发送脚本（期待 scripts/send_bulk.js 或 outreach_s1.js 或 send.js）" >&2
-          exit 1
-
-      - name: Prepare flags
-        id: flags
-        shell: bash
-        run: |
-          DRY="${{ github.event.inputs.dry }}"
-          LIMIT="${{ github.event.inputs.limit }}"
-          [ -z "$DRY" ] && DRY=false
-          [ -z "$LIMIT" ] && LIMIT=40
-          if [ "$DRY" = "true" ] || [ "$DRY" = "1" ]; then
-            echo "dry_flag=--dry=1" >> $GITHUB_OUTPUT
-            echo "dry_env=1" >> $GITHUB_OUTPUT
-          else
-            echo "dry_flag=--dry=0" >> $GITHUB_OUTPUT
-            echo "dry_env=0" >> $GITHUB_OUTPUT
-          fi
-          echo "limit=$LIMIT" >> $GITHUB_OUTPUT
-          echo "Using DRY=$DRY LIMIT=$LIMIT"
-
-      - name: Leads sanity (optional)
-        shell: bash
-        continue-on-error: true   # ✅ 可选检查，不阻断
-        run: |
-          if [ -f scripts/leads_sanity.js ]; then
-            node scripts/leads_sanity.js || echo "leads_sanity: WARN (non-blocking)"
-          else
-            echo "skip leads_sanity.js"
-          fi   
-          
-# ... 你的前置 steps 保持不动（Checkout/Setup/Install/Scrub/Prepare flags）
+      - name: Leads sanity
+        run: node scripts/validate_leads.js
 
       - name: Gate by recent evidence (48h)
         id: gate
-        env:
-          TRIGGER_WINDOW_H: "48"
+        env: { TRIGGER_WINDOW_H: "48" }
         run: node scripts/s1_gate.js
 
-      - name: Send S1
+      - name: Send S1 (only when gate=1)
         if: steps.gate.outputs.ok == '1'
-        env:
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          BCC_TO:     ${{ secrets.BCC_TO }}
-          DRY_RUN:    ${{ steps.flags.outputs.dry_env }}
-        run: |
-          node "${{ steps.pick.outputs.script }}" "${{ steps.flags.outputs.dry_flag }}" --limit=${{ steps.flags.outputs.limit }}
+        run: node scripts/send_bulk.js --dry=${DRY} --limit=${LIMIT}
 
       - name: Skip note (no fresh evidence)
         if: steps.gate.outputs.ok != '1'
         run: echo "No fresh evidence → skip S1 this run"
 
-      - name: Send S1
-        env:
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          S1_SUBJECT: ${{ vars.S1_SUBJECT }}
-          DRY_RUN: ${{ steps.flags.outputs.dry_env }}
-        run: |
-          node "${{ steps.pick.outputs.script }}" "${{ steps.flags.outputs.dry_flag }}" --limit=${{ steps.flags.outputs.limit }}
-
-      - name: Commit CSV updates
+      - name: Heartbeat
         if: always()
         run: |
-          git config user.name "CG Bot"
+          mkdir -p .heartbeat
+          date -u +"%Y-%m-%dT%H:%M:%SZ gate=${{ steps.gate.outputs.ok }} dry=${DRY} limit=${LIMIT}" > .heartbeat/outreach-s1.txt
+          git config user.name "cg-alert-bot"
           git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "inbound sync"
-            git push
-          else
-            echo "No changes to commit."
-          fi
+          git add .heartbeat/outreach-s1.txt || true
+          git commit -m "heartbeat(outreach-s1): update" || true
+          git push || true
 
-      - name: Heartbeat (record last outreach time)
+      - name: Slack notify
         if: always()
         run: |
-          mkdir -p data
-          date -u +"%FT%TZ" > data/last_outreach.txt
-          git config user.name "github-actions"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/last_outreach.txt data/leads.csv || true
-          git commit -m "chore: outreach heartbeat" || echo "nothing to commit"
-          git push || echo "skip push"
+          STATUS="${{ job.status }}"
+          MSG="Outreach S1 • status=${STATUS} • gate=${{ steps.gate.outputs.ok }} • dry=${DRY} • limit=${LIMIT}"
+          curl -sS -X POST -H 'Content-type: application/json' --data "$(jq -n --arg t "$MSG" '{text:$t}')" "$SLACK_WEBHOOK"
