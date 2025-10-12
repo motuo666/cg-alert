@@ -1023,3 +1023,20 @@ outreach@mail2.cg-alert.com,2025-10-12T09:18:03.202Z,Undelivered Mail Returned t
 legal@github.com,2025-10-12T09:18:03.301Z,Delivery Status Notification (Failure)
 vendor@stripe.com,2025-10-12T09:18:03.403Z,Delivery Status Notification (Failure)
 outreach@mail.cg-alert.com,2025-10-12T09:18:03.500Z,Undelivered Mail Returned to Sender
+procurement@asana.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-06T17:39:47.000Z
+unknown,bounce,2025-10-06T17:40:17.000Z
+vendor@stripe.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-06T17:40:18.000Z
+purchasing@twilio.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-06T17:40:24.000Z
+purchasing@snowflake.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-06T17:40:30.000Z
+procurement@notion.so,Host not reachable.,2025-10-06T18:25:42.000Z
+procurement@asana.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-11T15:10:52.000Z
+unknown,bounce,2025-10-11T15:11:18.000Z
+vendor@stripe.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-11T15:11:20.000Z
+purchasing@snowflake.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-11T15:11:37.000Z
+procurement@asana.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-11T15:32:38.000Z
+procurement@asana.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-11T15:33:24.000Z
+unknown,bounce,2025-10-11T15:33:43.000Z
+purchasing@snowflake.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-11T15:34:11.000Z
+vendor@stripe.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-11T15:35:07.000Z
+unknown,bounce,2025-10-11T15:43:49.000Z
+vendor@stripe.com,smtp; The email account that you tried to reach does not exist. Please try double-checking the recipient's email address for typos or unnecessary spaces. For more information; go to https://support.google.com/mail/?p=NoSuchUser,2025-10-11T15:43:50.000Z
