@@ -1,20 +1,9 @@
-const fs=require('fs'),path=require('path'); const ROOT=path.join(__dirname,'..');
-const IN=path.join(ROOT,'data','intakes.csv'); const OUT=path.join(ROOT,'data','customers.csv');
-function readCSV(fp){ if(!fs.existsSync(fp)) return {h:[],r:[]}; const raw=fs.readFileSync(fp,'utf8').trim(); if(!raw) return {h:[],r:[]};
-  const [h,...rs]=raw.split(/\r?\n/).filter(Boolean); const head=h.split(',').map(s=>s.trim());
-  const rows=rs.map(l=>{const v=l.split(','); const o={}; head.forEach((k,i)=>o[k]=String(v[i]??'').trim()); return o;}); return {h:head,r:rows}; }
-function writeCSV(fp,head,rows){ const headRow=head.join(',')+'\n'; const body=rows.map(r=>head.map(k=>r[k]??'').join(',')).join('\n'); fs.writeFileSync(fp, headRow+(rows.length?body+'\n':''),'utf8');}
-function planToSupport(p=''){const s=p.toLowerCase(); return (s.includes('business')||s.includes('enterprise'))?'priority':'standard';}
+#!/usr/bin/env node
+// promote_intakes.js — dedupe-append data/intakes.csv -> data/customers.csv
+const fs=require('fs'), path=require('path'); const F_IN='data/intakes.csv', F_OUT='data/customers.csv';
+function readCSV(p){ if(!fs.existsSync(p)) return []; return fs.readFileSync(p,'utf8').split(/\r?\n/).filter(Boolean).map(l=>l.split(',')); }
 (function main(){
-  const {h:ih, r:ir}=readCSV(IN); if(ih.length===0) return;
-  const need=['id','company','email','plan','vendors','support']; const oh=[...new Set([...ih,...need])];
-  const {h:ch, r:cr}=readCSV(OUT);
-  const key=(row,H)=>`${(row[H.indexOf('id')]||'').toLowerCase()}::${(row[H.indexOf('email')]||'').toLowerCase()}`;
-  const map=new Map(cr.map(r=>[key(r,ch),r]));
-  for(const r of ir){
-    const o={}; oh.forEach(k=>o[k]=r[ih.indexOf(k)]??'');
-    o.support = planToSupport(o.plan||''); map.set(key(o,oh), o);
-  }
-  const out=[...map.values()];
-  writeCSV(OUT, oh, out);
+  const inRows = readCSV(F_IN), outRows = readCSV(F_OUT); const keys = new Set(outRows.map(r=>r[0]));
+  const add = inRows.filter(r => r.length && !keys.has(r[0])); if(!add.length){ console.log('[promote] nothing new'); return; }
+  const lines = add.map(r=>r.join(',')).join('\n')+'\n'; fs.appendFileSync(F_OUT, lines, 'utf8'); console.log(`[promote] appended ${add.length}`);
 })();

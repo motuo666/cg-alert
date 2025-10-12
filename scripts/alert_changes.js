@@ -1,51 +1,9 @@
-// scripts/alert_changes.js
-const fs=require('fs'),path=require('path');
-const { notifySlack } = require('./lib/slack_notify');
-const ROOT=path.join(__dirname,'..');
-
-function readCSV(fp){
-  if(!fs.existsSync(fp)) return {header:[],rows:[]};
-  const raw=fs.readFileSync(fp,'utf8').trim(); if(!raw) return {header:[],rows:[]};
-  const [h,...rs]=raw.split(/\r?\n/).filter(Boolean);
-  const header=h.split(',').map(s=>s.trim());
-  const rows=rs.map(l=>{const v=l.split(',');const o={};header.forEach((k,i)=>o[k]=String(v[i]??'').trim());return o;});
-  return {header,rows};
-}
-function vendorToCustomers(){
-  const {header,rows}=readCSV(path.join(ROOT,'data','customers.csv'));
-  const map=new Map();
-  for(const r of rows){
-    const company=r.company||r.name||''; const id=r.id||r.customer_id||''; const email=r.email||'';
-    const vendors=(r.vendors||'').split(/[, \t\r\n]+/).map(s=>s.trim()).filter(Boolean);
-    for(const v of vendors){
-      const key=v.toLowerCase(); if(!map.has(key)) map.set(key,new Set());
-      map.get(key).add(JSON.stringify({company,id,email}));
-    }
-  }
-  const out=new Map(); for(const [v,set] of map.entries()) out.set(v, Array.from(set).map(s=>JSON.parse(s)));
-  return out;
-}
-function summarizeFile(fp){
-  try{
-    const txt=fs.readFileSync(fp,'utf8');
-    const data=JSON.parse(txt); const arr=Array.isArray(data)?data:[data];
-    const items=arr.map(it=>({ url: it.url||it.URL||it.link||'', snippet: String(it.snippet||it.fragment||it.text||'').slice(0,200), ts: (it.timestamp||it.ts||'') }));
-    return {count:arr.length, first:items[0]||null};
-  }catch{ return {count:0, first:null}; }
-}
-async function main(){
-  const changedListPath=process.argv[2]||''; if(!changedListPath||!fs.existsSync(changedListPath)){ console.log('no changed list'); return; }
-  const lines=fs.readFileSync(changedListPath,'utf8').split(/\r?\n/).filter(Boolean);
-  const v2c=vendorToCustomers();
-  for(const rel of lines){
-    if(!/^evidence\//.test(rel)) continue;
-    const parts=rel.split('/'); if(parts.length<3) continue;
-    const vendor=parts[1]; const {count,first}=summarizeFile(path.join(ROOT,rel)); if(count===0) continue;
-    const customers = v2c.get(vendor.toLowerCase()) || []; if(customers.length===0) continue;
-    const pageUrl=`https://www.cg-alert.com/vendors/${encodeURIComponent(vendor)}/`;
-    const head=`${vendor} 有 ${count} 条更新`; const tail= first ? `\n示例：${first.url||pageUrl}\n“${first.snippet}”` : '';
-    const text=`${head}\n${pageUrl}${tail}`;
-    for(const c of customers){ await notifySlack(text, { customerCompany: c.company, customerId: c.id, customerEmail: c.email }); }
-  }
-}
-main().catch(e=>{ console.error(e); process.exit(1); });
+#!/usr/bin/env node
+// alert_changes.js — push Slack alert when new evidence landed in last 24h
+const fs=require('fs'), path=require('path'); const { post } = require('./lib/slack_notify');
+const SLACK=process.env.SLACK_WEBHOOK || process.env.SLACK_WEBHOOK_URL || '';
+(function main(){
+  const base='evidence', min=Date.now()-24*3600e3; let n=0;
+  if(fs.existsSync(base)){ for(const d of fs.readdirSync(base,{withFileTypes:true})){ if(!d.isDirectory()) continue; for(const f of fs.readdirSync(path.join(base,d.name))){ if(!/\.json$/i.test(f)) continue; const st=fs.statSync(path.join(base,d.name,f)); if(st.mtimeMs>=min) n++; } } }
+  const msg = `New evidence last 24h: ${n}`; console.log(msg); if(SLACK) post(SLACK, msg);
+})();

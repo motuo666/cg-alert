@@ -13,5 +13,11 @@
     "imapflow": "1.0.195",
     "mailparser": "3.7.5",
     "nodemailer": "7.0.9"
-  }
+  },
+  "patch": {
+    "dependencies": {
+      "minimist": "^1.2.8"
+    }
+  },
+  "notes": "Run: jq -s '.[0] * .[1]' package.json package.patch.json > package.json.tmp && mv package.json.tmp package.json && npm ci"
 }
