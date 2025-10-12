@@ -32,7 +32,9 @@ function ensureDir(p){ fs.mkdirSync(p, { recursive: true }); }
 function ymd(d){ return d.toISOString().slice(0,10); }
 function ymOfDate(d){ return d.toISOString().slice(0,7); }
 function readJSON(p){ try { return JSON.parse(fs.readFileSync(p,'utf8')); } catch { return null; } }
-function htmlEscape(s){return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]);}
+function htmlEscape(s){
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
 
 function detectType(obj, fname=''){
   const blob = (JSON.stringify(obj||{}) + ' ' + fname).toLowerCase();
