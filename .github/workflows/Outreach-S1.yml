@@ -85,7 +85,17 @@ jobs:
             node scripts/leads_sanity.js || echo "leads_sanity: WARN (non-blocking)"
           else
             echo "skip leads_sanity.js"
-          fi
+          fi     
+      - name: SMTP Verify (Brevo)
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+        run: |
+          node -e "try{require('nodemailer')}catch(e){process.exit(1)}" || npm i --no-audit --no-fund nodemailer@7
+          node scripts/smtp_verify.js
+
 
       - name: Send S1
         env:
