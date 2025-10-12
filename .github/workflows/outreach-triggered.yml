@@ -1,69 +1,43 @@
-name: Outreach S1 (Triggered)
+name: Outreach Triggered
 
 on:
   schedule:
-    - cron: "5 16 * * 1-5"   # 工作日 16:05 UTC（≈ 北京 00:05）
+    - cron: "5 16 * * 1-5"
   workflow_dispatch:
     inputs:
-      dry:
-        description: 'Dry run? true/false'
-        default: 'false'
-        required: false
-      limit:
-        description: 'Max sends this run'
-        default: '20'
-        required: false
-      window_h:
-        description: 'Evidence window hours'
-        default: '48'
-        required: false
+      dry:      { description: "Dry run (true/false)", required: true, default: "false" }
+      limit:    { description: "Max emails to send",    required: true, default: "20" }
+      window_h: { description: "Evidence window hours", required: true, default: "48" }
 
-permissions:
-  contents: write
-
-concurrency:
-  group: outreach-triggered
-  cancel-in-progress: false
+concurrency: { group: outreach-triggered, cancel-in-progress: false }
 
 jobs:
-  send:
+  run:
     runs-on: ubuntu-latest
+    env:
+      DRY:   ${{ inputs.dry   || 'false' }}
+      LIMIT: ${{ inputs.limit || '20'  }}
+      WINDOW_H: ${{ inputs.window_h || '48' }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      MAIL_FROM: ${{ secrets.MAIL_FROM }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      BCC_TO: ${{ secrets.BCC_TO }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 18 }
-      - name: Install deps (runner-local)
-        run: |
-          npm i --no-audit --no-fund nodemailer@7
-      - name: Prepare flags
-        id: flags
-        run: |
-          DRY="${{ github.event.inputs.dry }}"
-          [ -z "$DRY" ] && DRY=false
-          echo "dry_env=$([ "$DRY" = "true" ] && echo 1 || echo 0)" >> $GITHUB_OUTPUT
-          echo "limit=${{ github.event.inputs.limit || '20' }}" >> $GITHUB_OUTPUT
-          echo "window=${{ github.event.inputs.window_h || '48' }}" >> $GITHUB_OUTPUT
-      - name: Send Triggered
-        env:
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          BCC_TO:     ${{ secrets.BCC_TO }}
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          DRY_RUN:    ${{ steps.flags.outputs.dry_env }}
-          TRIGGER_WINDOW_H: ${{ steps.flags.outputs.window }}
-        run: node scripts/send_triggered.js --limit=${{ steps.flags.outputs.limit }}
-      - name: Commit CSV updates
+        with: { node-version: "20" }
+      - name: Install deps
+        run: npm ci
+
+      - name: Send Triggered (auto-detect changes)
+        run: node scripts/send_triggered.js --dry=${DRY} --limit=${LIMIT} --window-h=${WINDOW_H}
+
+      - name: Slack notify
         if: always()
         run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "triggered outreach updates"
-            git push
-          else
-            echo "No changes."
-          fi
+          STATUS="${{ job.status }}"
+          MSG="Outreach Triggered • status=${STATUS} • dry=${DRY} • limit=${LIMIT} • window_h=${WINDOW_H}"
+          curl -sS -X POST -H 'Content-type: application/json' --data "$(jq -n --arg t "$MSG" '{text:$t}')" "$SLACK_WEBHOOK"
