@@ -15,19 +15,34 @@ permissions:
 jobs:
   collect:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
       USER_AGENT: CGAlertBot/1.0 (+https://www.cg-alert.com)
+      RETRIES: "3"
+      TIMEOUT_MS: "12000"
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+
       - uses: actions/setup-node@v4
         with: { node-version: "20" }
+
       - name: Install deps
         run: npm ci
-      - name: Collect evidence (robots-aware)
+
+      - name: Sanity check domains.csv
+        run: |
+          echo "---- data/domains.csv (first 20 lines) ----"
+          [ -f data/domains.csv ] && head -n 20 data/domains.csv || echo "NO data/domains.csv"
+          echo "-------------------------------------------"
+
+      - name: Collect evidence (robots-aware, resilient)
+        continue-on-error: true
         run: node scripts/collect_evidence.js
+
       - name: Commit & push evidence/state
+        if: always()
         run: |
           git config user.name "cg-alert-bot"
           git config user.email "bot@cg-alert.com"
@@ -38,6 +53,7 @@ jobs:
           else
             echo "No changes to commit."
           fi
+
       - name: Slack notify
         if: always()
         run: |
