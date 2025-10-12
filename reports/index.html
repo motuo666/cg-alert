@@ -1,17 +1,44 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reports — CG Alert</title>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reports — CG Alert</title>
 <meta name="description" content="Monthly evidence-backed public changes.">
 <link rel="canonical" href="https://www.cg-alert.com/reports/">
 <link rel="alternate" type="application/rss+xml" title="CG Alert Reports RSS" href="https://www.cg-alert.com/reports/rss.xml">
 <style>
-body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;color:#111}
-.wrap{max-width:720px;margin:0 auto;padding:28px 16px}
-h1{font-size:28px;margin:8px 0 16px}
-li{margin:8px 0}
-</style></head>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;color:#111;background:#fff}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 16px}
+h1{font-size:28px;margin:8px 0 12px}
+h2{font-size:18px;margin:24px 0 10px}
+p{line-height:1.65}
+.header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.meta{color:#666;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(6, minmax(110px,1fr));gap:10px;margin:18px 0}
+.kpi{border:1px solid #eee;border-radius:12px;padding:10px;text-align:center}
+.kpi .n{font-size:20px;font-weight:600}
+.kpi .t{font-size:12px;color:#555}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-block;padding:10px 14px;border:1px solid #222;border-radius:10px;color:#111;text-decoration:none}
+.btn:hover{background:#111;color:#fff}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:14px}
+.badge{display:inline-block;border:1px solid #ddd;border-radius:999px;padding:2px 8px;margin-right:6px;font-size:12px}
+.section{margin-top:28px}
+.footer{margin-top:28px;color:#666;font-size:12px}
+ul{padding-left:18px}
+.breadcrumb{font-size:13px;margin-bottom:12px;color:#666}
+.breadcrumb a{color:#666}
+.wrap{max-width:820px}
+</style>
+</head>
 <body>
 <div class="wrap">
   <h1>Reports</h1>
-  <p>Latest: <a href="/reports/2025-10/">2025-10</a></p>
-  <ul><li><a href="/reports/2025-10/">2025-10</a></li></ul>
-</div></body></html>
+  <p>Latest: <a href="/reports/2025-10/">2025-10</a> · <a class="btn" href="/reports/rss.xml">RSS</a></p>
+  <ul><li><a href="/reports/2025-10/">2025-10</a> — 2 changes</li></ul>
+  <div class="section">
+    <h2>What’s included</h2>
+    <p>Evidence-backed changes on vendors’ public pages (Pricing / ToS / DPA / Subprocessors / Status). Generated automatically on the 1st of each month.</p>
+  </div>
+</div>
+</body></html>
