@@ -1,8 +1,14 @@
 [
   {
     "vendor": "acme",
-    "last_ts": "2025-10-01T09:00:00.000Z",
+    "last_ts": "2025-10-12T09:00:00.000Z",
     "count": 1,
     "url": "https://www.cg-alert.com/vendors/acme/"
+  },
+  {
+    "vendor": "_seed",
+    "last_ts": "2025-10-10T00:00:00.000Z",
+    "count": 3,
+    "url": "https://www.cg-alert.com/vendors/_seed/"
   }
 ]
