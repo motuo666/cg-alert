@@ -1,222 +1,156 @@
 #!/usr/bin/env node
 /**
  * send_triggered.js
- * 只在“最近 TRIGGER_WINDOW_H 小时内”有真实变更的 vendor 才发；
- * 且按变更类型（pricing/tos/dpa/subprocessors/status）动态选择主题与正文。
- * CSV 固定 9 列：[email,company,domain,v1,v2,v3,persona,status,mx_ok]
+ * - 读取 data/leads.csv（9列，无表头）
+ * - 48h 内 evidence/*/*.json 有变更才发（可用 --window-h）
+ * - 动态主题/正文：按类型聚合（pricing/tos/dpa/subprocessors/status）
+ * - 支持 --limit、--dry；支持 BCC、List-Unsubscribe
  */
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
-const dns = require('dns').promises;
+const nodemailer = require('nodemailer');
 
-const ROOT = path.join(__dirname, '..');
-const CSV  = path.join(ROOT, 'data', 'leads.csv');
-const EVI  = path.join(ROOT, 'evidence');
-const DRY  = process.env.DRY_RUN === '1';
+const {
+  SMTP_HOST, SMTP_PORT = 587, SMTP_USER, SMTP_PASS, MAIL_FROM,
+  SLACK_WEBHOOK, BCC_TO
+} = process.env;
 
-const WINDOW_H = Number(process.env.TRIGGER_WINDOW_H || 48);
-const SLACK_WEBHOOK = process.env.SLACK_WEBHOOK || process.env.SLACK_WEBHOOK_URL || '';
+const argv = require('minimist')(process.argv.slice(2), {
+  boolean: ['dry'],
+  string: ['window-h','limit'],
+  default: { 'window-h': '48', 'limit': '20', dry: true }
+});
 
-let nodemailer = null;
-if (!DRY) {
-  try { nodemailer = require('nodemailer'); }
-  catch { console.error('Missing nodemailer'); process.exit(1); }
+function lines(p){ return fs.readFileSync(p,'utf8').split(/\r?\n/).filter(Boolean); }
+function parseLeadsRow(row){
+  const arr = row.split(','); // 9列：email,company,domain,v1,v2,v3,persona,status,mx_ok
+  if (arr.length < 9) return null;
+  return {
+    email: arr[0].trim(), company: arr[1].trim(), domain: arr[2].trim(),
+    vendors: [arr[3].trim(), arr[4].trim(), arr[5].trim()].filter(Boolean),
+    persona: arr[6].trim(), status: arr[7].trim(), mx_ok: arr[8].trim() === '1'
+  };
+}
+function readLeads(){
+  const p = path.join('data','leads.csv');
+  if (!fs.existsSync(p)) return [];
+  return lines(p).map(parseLeadsRow).filter(Boolean).filter(x=>x.status!=='unsub' && x.status!=='optout' && x.status!=='bounced' && x.status!=='invalid');
 }
 
-const SMTP_HOST = process.env.SMTP_HOST || '';
-const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
-const SMTP_USER = process.env.SMTP_USER || '';
-const SMTP_PASS = process.env.SMTP_PASS || '';
-const MAIL_FROM = process.env.MAIL_FROM || SMTP_USER;
-const BCC_TO    = process.env.BCC_TO || '';
-
-function postSlack(text){ if(!SLACK_WEBHOOK) return Promise.resolve();
-  return fetch(SLACK_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})}).catch(()=>{});
-}
-
-function read9(fp){
-  if(!fs.existsSync(fp)) return [];
-  const raw = fs.readFileSync(fp,'utf8').trim();
-  if(!raw) return [];
-  return raw.split(/\r?\n/).filter(Boolean).map(line=>{
-    if (/^email,company,domain/i.test(line)) return null;
-    const v = line.split(',').map(x=>String(x||'').trim());
-    const c = v.slice(0,9); while(c.length<9) c.push('');
-    return c;
-  }).filter(Boolean);
-}
-function write9(fp, rows){
-  const out = rows.map(r => r.slice(0,9).map(x => String(x??'')).join(',')).join('\n');
-  fs.writeFileSync(fp, out + (rows.length? '\n' : ''), 'utf8');
-}
-async function hasMX(domain){ try{ const mx=await dns.resolveMx(domain); return !!(mx&&mx.length);}catch{ return false; } }
-
-function hnum(s){ return crypto.createHash('sha1').update(String(s)).digest()[0]; }
-
-// —— 取“最近 48h”的 vendor→变更项 —— //
-function freshChanges(hours){
-  const since = Date.now() - hours*3600*1000;
-  const map = new Map(); // slug -> [{type,url,title,snippet,date}]
-  if (!fs.existsSync(EVI)) return map;
-  for (const d of fs.readdirSync(EVI,{withFileTypes:true})) {
-    if (!d.isDirectory()) continue;
-    const slug = d.name;
-    if (!slug || slug==='acme' || slug.startsWith('_')) continue;
-    const dir = path.join(EVI, slug);
+function listFreshEvidence(windowH){
+  const base = 'evidence';
+  const minMs = Date.now() - windowH*3600*1000;
+  const items = [];
+  if (!fs.existsSync(base)) return [];
+  for (const vd of fs.readdirSync(base, { withFileTypes: true })) {
+    if (!vd.isDirectory()) continue;
+    const slug = vd.name;
+    const dir = path.join(base, slug);
     for (const f of fs.readdirSync(dir)) {
       if (!/\.json$/i.test(f)) continue;
-      const fp = path.join(dir, f);
-      const st = fs.statSync(fp);
-      if (st.mtimeMs < since) continue;
-      let raw; try{ raw=JSON.parse(fs.readFileSync(fp,'utf8')); }catch{ continue; }
-      const dateISO = f.replace('.json','')+'T00:00:00Z';
-      const arr = Array.isArray(raw)? raw : [raw];
-      for (const x of arr) {
-        const type = String((x.type||'other')).toLowerCase();
-        const url  = x.url || '';
-        const title= x.title || '';
-        const snip = x.message || x.summary || x.snippet || '';
-        const item = { type, url, title, snippet: snip, date: dateISO.slice(0,10) };
-        if (!map.has(slug)) map.set(slug, []);
-        map.get(slug).push(item);
+      const p = path.join(dir, f);
+      const st = fs.statSync(p);
+      if (st.mtimeMs >= minMs) {
+        const obj = JSON.parse(fs.readFileSync(p,'utf8'));
+        const type = detectType(obj, f);
+        items.push({ slug, type, when: new Date(st.mtimeMs) });
       }
     }
   }
-  // 每 vendor 只保留最近的前若干条
-  for (const [k,v] of map) map.set(k, v.sort((a,b)=>a.date<b.date?1:-1).slice(0,3));
-  return map;
+  return items;
+}
+function detectType(obj, fname=''){
+  const text = JSON.stringify(obj || {}).toLowerCase() + ' ' + fname.toLowerCase();
+  if (/pricing|price|plan/.test(text)) return 'Pricing';
+  if (/\btos\b|terms of service|terms/.test(text)) return 'ToS';
+  if (/\bdpa\b|data processing/.test(text)) return 'DPA';
+  if (/subprocessor|sub-?processor/.test(text)) return 'Subprocessors';
+  if (/status|incident|uptime/.test(text)) return 'Status';
+  return 'Public change';
+}
+function unique(arr){ return [...new Set(arr)]; }
+function sampleURLForVendor(slug){
+  const p = path.join('vendors', slug, 'index.html');
+  return fs.existsSync(p) ? `https://www.cg-alert.com/vendors/${encodeURIComponent(slug)}/`
+                          : `https://www.cg-alert.com/updates/?utm=outreach_triggered`;
+}
+function makeSubject(changes){
+  // 取 Top1 类型+Vendor，或合并
+  if (changes.length===1) return `[${changes[0].type}] ${changes[0].slug} updated — evidence inside`;
+  const byType = {};
+  changes.forEach(c => { byType[c.type] ||= []; byType[c.type].push(c.slug); });
+  const parts = Object.entries(byType).map(([t, slugs]) => `${t}(${unique(slugs).slice(0,3).join('+')}${slugs.length>3?'+…':''})`);
+  return `Recent changes: ${parts.slice(0,3).join(' · ')}`;
+}
+function makeHTML(changes){
+  const items = changes.slice(0,6).map(c => {
+    const url = sampleURLForVendor(c.slug);
+    return `<li><b>[${c.type}]</b> ${c.slug} — <a href="${url}">evidence</a> <span style="color:#666">(${c.when.toISOString().slice(0,10)})</span></li>`;
+  }).join('\n');
+  return `<!doctype html><html><body style="font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;color:#111">
+  <p>Hi, we detected verifiable public changes in the past ${argv['window-h']} hours:</p>
+  <ul>${items || '<li>No recent changes.</li>'}</ul>
+  <p style="margin-top:16px">We monitor Pricing / ToS / DPA / Subprocessors / Status and deliver evidence-backed alerts.</p>
+  <p><a href="https://www.cg-alert.com/updates/?utm=outreach_triggered">View more updates</a></p>
+  <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
+  <p style="color:#666;font-size:12px">
+    Unsubscribe: reply "STOP" or click <a href="mailto:outreach@cg-alert.com?subject=Unsubscribe">here</a>.
+  </p>
+</body></html>`;
 }
 
-// —— 示例链接（优先 /vendors/slug/，否则 /updates/） —— //
-function listVendorSlugsForPage() {
-  const vd = path.join(ROOT, 'vendors');
-  const out = [];
-  try{
-    if (fs.existsSync(vd)) {
-      for (const d of fs.readdirSync(vd,{withFileTypes:true})) {
-        if (d.isDirectory()) {
-          const slug = d.name;
-          if (slug && slug!=='acme' && !slug.startsWith('_')) {
-            const idx = path.join(vd, slug, 'index.html');
-            if (fs.existsSync(idx) && fs.statSync(idx).size>100) out.push(slug);
-          }
-        }
-      }
-    }
-  }catch{}
-  return out;
-}
-function vendorUrl(slug){
-  const SITE = 'https://www.cg-alert.com';
-  const slugs = listVendorSlugsForPage();
-  if (slugs.includes(slug)) return `${SITE}/vendors/${encodeURIComponent(slug)}/?utm=triggered`;
-  return `${SITE}/updates/?utm=triggered`;
-}
+async function main(){
+  const windowH = Number(argv['window-h']);
+  const limit = Number(argv['limit']);
+  const dry = !!argv.dry;
 
-// —— 类型模板 —— //
-function subjectByType(slug, type){
-  switch(type){
-    case 'pricing':        return `${slug} pricing changed — quick heads-up`;
-    case 'tos':            return `${slug} Terms updated — audit-safe evidence`;
-    case 'dpa':            return `${slug} DPA updated — compliance alert`;
-    case 'subprocessors':  return `${slug} subprocessor list changed`;
-    case 'status':         return `${slug} status/incident notice`;
-    default:               return `${slug} public change detected`;
+  const changes = listFreshEvidence(windowH);
+  if (changes.length === 0) {
+    console.log(`[triggered] no fresh evidence in ${windowH}h → exit`);
+    return;
   }
-}
-function bodyByType(slug, type, date, srcUrl){
-  const link1 = vendorUrl(slug);
-  const link2 = srcUrl || link1;
-  const lines = {
-    pricing:       `We detected a pricing page change on ${slug} (${date}).\n\nEvidence page: ${link1}\nSource: ${link2}`,
-    tos:           `We detected a Terms of Service update on ${slug} (${date}).\n\nEvidence page: ${link1}\nSource: ${link2}`,
-    dpa:           `We detected a Data Processing Addendum update on ${slug} (${date}).\n\nEvidence page: ${link1}\nSource: ${link2}`,
-    subprocessors: `We detected a subprocessor list change on ${slug} (${date}).\n\nEvidence page: ${link1}\nSource: ${link2}`,
-    status:        `We recorded a status/incident notice on ${slug} (${date}).\n\nEvidence page: ${link1}\nSource: ${link2}`,
-    other:         `We detected a public page change on ${slug} (${date}).\n\nEvidence page: ${link1}\nSource: ${link2}`
+  const leads = readLeads().filter(x => x.mx_ok !== false).slice(0, limit);
+  if (leads.length === 0) {
+    console.log('[triggered] no eligible leads');
+    return;
+  }
+
+  const transport = nodemailer.createTransport({
+    host: SMTP_HOST, port: Number(SMTP_PORT), secure: Number(SMTP_PORT) === 465,
+    pool: true, maxConnections: 2, maxMessages: 50, rateDelta: 60000, rateLimit: 120,
+    auth: { user: SMTP_USER, pass: SMTP_PASS }
+  });
+
+  const subject = makeSubject(changes);
+  const html = makeHTML(changes);
+  const headers = {
+    'List-Unsubscribe': `<mailto:${MAIL_FROM}?subject=unsubscribe>`,
+    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
   };
-  return `${lines[type] || lines.other}\n\nRefund: 30 days if no material alert.\nIf not relevant, reply STOP.`;
-}
 
-function wrap78(s=''){ return s.split('\n').map(line=>{
-  if(line.length<=78) return line; const out=[]; let rest=line;
-  while(rest.length>78){ out.push(rest.slice(0,78)); rest=rest.slice(78); }
-  out.push(rest); return out.join('\n');
-}).join('\n'); }
-
-(async function main(){
-  const rows = read9(CSV);
-  if (!rows.length) { console.log('leads.csv empty'); process.exit(0); }
-
-  const changes = freshChanges(WINDOW_H); // slug -> items[]
-  const hotVendors = new Set(Array.from(changes.keys()));
-  if (!hotVendors.size) {
-    console.log(`no fresh evidence in ${WINDOW_H}h → skip`);
-    process.exit(0);
-  }
-
-  let transporter = null;
-  if (!DRY) {
-    transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: Number(SMTP_PORT)===465,
-      auth: { user: SMTP_USER, pass: SMTP_PASS },
-      pool: true, maxConnections: 2, maxMessages: 50, rateDelta: 60000, rateLimit: 120
-    });
-    await transporter.verify();
-  }
-
-  const LIMIT = Number((process.argv.join(' ').match(/--limit=(\d+)/)||[])[1] || 40);
   let sent = 0;
-
-  for (let i=0;i<rows.length;i++){
-    if (sent >= LIMIT) break;
-    const [email,company,domain,v1,v2,v3,,status,mxok] = rows[i];
-    if (!email || (status||'').toLowerCase()!=='new' || String(mxok)!=='1') continue;
-
-    const vendors = [v1,v2,v3].map(s=>String(s||'').trim()).filter(Boolean);
-    const match = vendors.find(v => hotVendors.has(v));
-    if (!match) continue;
-
-    const ev = (changes.get(match)||[])[0] || { type:'other', date:new Date().toISOString().slice(0,10), url:'' };
-    const subj = subjectByType(match, ev.type);
-    const text = wrap78(bodyByType(match, ev.type, ev.date, ev.url));
-
-    // MX 预检（非 DRY）
-    if (!DRY) {
-      const dom = (email.split('@')[1]||'').toLowerCase();
-      if (!(await hasMX(dom))) continue;
-    }
-
-    try{
-      if (!DRY){
-        await transporter.sendMail({
-          from: { name:'CG Alert', address: MAIL_FROM },
-          to: email,
-          subject: subj,
-          text,
-          headers:{
-            'List-Unsubscribe':'<mailto:optout@cg-alert.com?subject=unsubscribe>',
-            'Auto-Submitted':'auto-generated'
-          },
-          ...(BCC_TO ? { bcc: BCC_TO } : {})
-        });
-        await new Promise(r=>setTimeout(r, 1200 + Math.random()*800));
-      } else {
-        console.log(`[DRY] ${email} <- "${subj}"`);
-      }
-      rows[i][7] = 'sent'; // 仅改 status 列
-      sent++;
-    }catch(e){
-      console.error('send error:', e && (e.response || e.message || e));
+  for (const lead of leads) {
+    const to = lead.email;
+    if (dry) {
+      console.log(`[dry] ${to} ← ${subject}`);
       continue;
     }
+    try {
+      await transport.sendMail({
+        from: MAIL_FROM, to, bcc: BCC_TO || undefined, subject, html, headers
+      });
+      sent++;
+    } catch (e) {
+      console.error('[send][err]', to, e.message);
+    }
   }
+  if (!dry) await transport.close();
 
-  write9(CSV, rows);
-  console.log(`triggered send complete: sent=${sent}, window=${WINDOW_H}h, vendors=${hotVendors.size}`);
-  if (sent>0) postSlack(`📤 Triggered S1 sent: ${sent} lead(s) within ${WINDOW_H}h evidence window.`);
-  process.exit(0);
-})().catch(e=>{ console.error(e); process.exit(1); });
+  // 写入心跳与 sent_log
+  const dt = new Date().toISOString();
+  fs.appendFileSync(path.join('data','sent_log.csv'), `${dt},triggered,${sent},${subject.replace(/,/g,';')}\n`);
+  fs.writeFileSync(path.join('data','last_outreach.txt'), `${dt} triggered sent=${sent}\n`);
+  console.log(`[triggered] done: sent=${sent}/${leads.length}`);
+}
+
+main().catch(err => { console.error(err); process.exit(1); });
