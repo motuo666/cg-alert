@@ -87,15 +87,30 @@ jobs:
             echo "skip leads_sanity.js"
           fi   
           
-      - name: SMTP Verify (Brevo)
+# ... 你的前置 steps 保持不动（Checkout/Setup/Install/Scrub/Prepare flags）
+
+      - name: Gate by recent evidence (48h)
+        id: gate
+        env:
+          TRIGGER_WINDOW_H: "48"
+        run: node scripts/s1_gate.js
+
+      - name: Send S1
+        if: steps.gate.outputs.ok == '1'
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          BCC_TO:     ${{ secrets.BCC_TO }}
+          DRY_RUN:    ${{ steps.flags.outputs.dry_env }}
         run: |
-          node -e "try{require('nodemailer')}catch(e){process.exit(1)}" || npm i --no-audit --no-fund nodemailer@7
-          node scripts/smtp_verify.js
+          node "${{ steps.pick.outputs.script }}" "${{ steps.flags.outputs.dry_flag }}" --limit=${{ steps.flags.outputs.limit }}
+
+      - name: Skip note (no fresh evidence)
+        if: steps.gate.outputs.ok != '1'
+        run: echo "No fresh evidence → skip S1 this run"
 
       - name: Send S1
         env:
