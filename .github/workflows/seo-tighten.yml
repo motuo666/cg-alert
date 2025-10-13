@@ -1,5 +1,4 @@
 name: SEO Tighten
-
 on:
   push:
     branches: [ main ]
@@ -8,28 +7,18 @@ on:
       - "updates/**"
       - "evidence/**"
   workflow_dispatch: {}
-
 permissions: { contents: write }
-
 jobs:
   tighten:
     runs-on: ubuntu-latest
+    concurrency: { group: cg-write, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
-        with: { node-version: 18 }
-      - name: Run injector
+        with: { node-version: 20 }
+      - run: node scripts/seo_inject.js
+      - name: Safe push
         run: |
-          node -e "process.exit(require('fs').existsSync('node_modules')?0:1)" || true
-          node scripts/seo_inject.js
-      - name: Commit SEO injections
-        run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "seo: inject json-ld/canonical/meta"
-            git push
-          else
-            echo "No SEO changes."
-          fi
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "seo: inject json-ld/canonical/meta"
