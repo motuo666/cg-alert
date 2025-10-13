@@ -4,12 +4,14 @@ on:
   schedule: [{ cron: "*/15 * * * *" }]  # 每15分钟
   workflow_dispatch: {}
 
-permissions: { contents: write }
+permissions:
+  contents: write
 
 jobs:
   promote:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write, cancel-in-progress: false }
+    # 单独并发组，避免和其它会写仓库的任务互相取消
+    concurrency: { group: cg-write-promote, cancel-in-progress: false }
 
     steps:
       - uses: actions/checkout@v4
@@ -22,25 +24,61 @@ jobs:
       - name: Install deps
         run: npm ci || npm install --no-audit --no-fund
 
-      # 保险：路径/文件存在性与样本统计，方便排障
-      - name: Preflight - list files
+      # 预检：路径、脚本、数据目录与文件；缺就创建空文件，保证脚本不报错
+      - name: Preflight & prepare
+        shell: bash
         run: |
           set -euxo pipefail
-          ls -la
-          ls -la scripts || true
-          mkdir -p data
-          ls -la data || true
-          wc -l data/intakes.csv 2>/dev/null || true
-          wc -l data/customers.csv 2>/dev/null || true
+          echo "Node: $(node -v)"
+          test -f scripts/promote-intakes.js && echo "script ok" || (echo "ERROR: scripts/promote-intakes.js missing"; exit 1)
+          mkdir -p data .tmp
+          # 若不存在则创建空文件，脚本会幂等处理
+          [ -f data/intakes.csv ]   || : > data/intakes.csv
+          [ -f data/customers.csv ] || : > data/customers.csv
+          echo "---- ls -la"; ls -la
+          echo "---- ls data"; ls -la data
+          echo "---- head intakes"; head -n 5 data/intakes.csv || true
+          echo "---- head customers"; head -n 5 data/customers.csv || true
 
-      - name: Promote intakes -> customers (dedup)
+      # 运行脚本（带一次自愈重试）：第一次失败→自动补文件/清锁后再试一次
+      - name: Run promote (with retry)
+        id: runpromote
+        shell: bash
+        env:
+          # 可控开关（默认真实写入；调试可设PROMOTE_DRY=1）
+          PROMOTE_DRY: "0"
+          PROMOTE_MAX: "0"        # 每次最多追加 0=不限
+          PROMOTE_STRICT_HEADER: "0"
         run: |
-          set -euxo pipefail
-          node scripts/promote-intakes.js
+          set +e
+          echo "[1st try] promote-intakes.js"
+          OUT1="$(node scripts/promote-intakes.js 2>&1)"; EC1=$?
+          echo "${OUT1}"
+          # 成功 or 无事可做，直接通过
+          if [ $EC1 -eq 0 ]; then
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "[auto-fix] ensure dirs/files & clear lock then retry"
+          mkdir -p data .tmp
+          rm -f .tmp/promote-intakes.lock || true
+          [ -f data/customers.csv ] || : > data/customers.csv
+          [ -f data/intakes.csv ] || : > data/intakes.csv
+          OUT2="$(node scripts/promote-intakes.js 2>&1)"; EC2=$?
+          echo "${OUT2}"
+          if [ $EC2 -eq 0 ]; then
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "ok=0" >> "$GITHUB_OUTPUT"
+          echo "Promote still failing after retry."
+          exit 1
 
-      # 检测是否真的有变更；只有变更才 commit+push
+      # 只有真的有变更才提交（避免空 push & 并发冲突）
       - name: Detect changes
         id: diff
+        if: steps.runpromote.outputs.ok == '1'
+        shell: bash
         run: |
           if git diff --quiet; then
             echo "changed=0" >> "$GITHUB_OUTPUT"
@@ -50,6 +88,7 @@ jobs:
 
       - name: Commit customers list
         if: steps.diff.outputs.changed == '1'
+        shell: bash
         run: |
           set -euxo pipefail
           git config user.name "CG Bot"
@@ -59,8 +98,9 @@ jobs:
 
       - name: Safe push with rebase & retry
         if: steps.diff.outputs.changed == '1'
+        shell: bash
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           tries=0
           until [ $tries -ge 3 ]
           do
@@ -73,4 +113,5 @@ jobs:
             echo "Push failed. Retry #$tries ..."
             sleep 3
           done
-          echo "Push failed after retries."; exit 1
+          echo "Push failed after retries."
+          exit 1
