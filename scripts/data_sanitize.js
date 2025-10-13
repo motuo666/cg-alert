@@ -1,57 +1,65 @@
 #!/usr/bin/env node
-const fs = require('fs'), path = require('path');
+// data_sanitize.js — 修正 data/*.csv 中的常见格式问题；确保 endpoints.csv 三列规范化(host,url,type)
+const fs = require('fs');
+const path = require('path');
 
-const domFile = 'data/domains.csv';
-const epFile  = 'data/endpoints.csv';
+const VALID_TYPES = new Set(['Pricing','ToS','Privacy','DPA','Subprocessors','Security','Status','Other']);
 
-function ensureDir(p){ fs.mkdirSync(path.dirname(p), {recursive:true}); }
 function normHost(s){
-  if(!s) return '';
-  s = String(s).trim().replace(/^"|"$/g,'');      // 去引号
-  s = s.split(',')[0].trim();                     // 逗号前
-  s = s.replace(/^https?:\/\//,'');               // 去协议
-  s = s.replace(/\/.*$/,'');                      // 去路径
+  s = String(s||'').trim().replace(/^"|"$/g,'');
+  s = s.split(/[\s,]+/)[0];                      // 只取逗号/空白前
+  s = s.replace(/^https?:\/\//,'').replace(/\/.*/,''); // 去协议与路径
   s = s.replace(/^www\./,'').toLowerCase();
-  // 仅保留域名允许字符
-  s = s.replace(/[^a-z0-9\.\-\_]/g,'');
+  s = s.replace(/[^a-z0-9._-]/g,'');
   return s;
 }
-const isBad = h => /^(_seed|acme|example)\./i.test(h) || h === 'example.com';
 
-function uniq(a){ return [...new Set(a)]; }
+function fixDomains(){
+  const f = 'data/domains.csv';
+  if(!fs.existsSync(f)) return;
+  const lines = fs.readFileSync(f,'utf8').split(/\r?\n/).filter(Boolean);
+  const out = [];
+  const seen = new Set();
+  for(const l of lines){
+    const h = normHost(l);
+    if(!h) continue;
+    if(/^(_seed|acme|example)\./i.test(h) || h==='example.com') continue;
+    if(!seen.has(h)){ seen.add(h); out.push(h); }
+  }
+  fs.writeFileSync(f, out.join('\n')+'\n','utf8');
+  console.log(`[sanitize] domains.csv => ${out.length} lines`);
+}
 
-function writeSeedsIfEmpty(){
-  const seeds = [
-    'stripe.com','cloudflare.com','twilio.com','slack.com','zoom.us','box.com','dropbox.com','atlassian.com',
-    'datadoghq.com','pagerduty.com','okta.com','auth0.com','github.com','gitlab.com','vercel.com','netlify.com',
-    'algolia.com','airtable.com','monday.com','sentry.io','notion.so','intercom.com','zendesk.com','freshworks.com',
-    'segment.com','linear.app','supabase.com','render.com','hashicorp.com','snowflake.com','mongodb.com',
-    'elastic.co','newrelic.com','confluent.io','openai.com','anthropic.com','huggingface.co','digitalocean.com',
-    'heroku.com','salesforce.com','mailchimp.com','sendgrid.com','postmarkapp.com','fastly.com','amplitude.com',
-    'miro.com','figma.com','datadog.com','statuspage.io'
-  ];
-  ensureDir(domFile);
-  fs.writeFileSync(domFile, seeds.join('\n')+'\n','utf8');
-  console.log(`[sanitize] domains.csv seeded=${seeds.length}`);
+function parseEndpointLine(l){
+  // 尝试从一行中提取 url 与类型；容错处理逗号造成的脏数据
+  const urlMatch = l.match(/https?:\/\/[^,\s]+/i);
+  const typeMatch = l.split(',').map(s=>s.trim()).reverse().find(s=>VALID_TYPES.has(s));
+  const url = urlMatch ? urlMatch[0] : '';
+  const host = url ? new URL(url).hostname.replace(/^www\./,'').toLowerCase() : normHost(l.split(',')[0]);
+  const type = typeMatch || 'Other';
+  if(!url || !host) return null;
+  return `${host},${url},${type}`;
+}
+
+function fixEndpoints(){
+  const f = 'data/endpoints.csv';
+  if(!fs.existsSync(f)) return;
+  const lines = fs.readFileSync(f,'utf8').split(/\r?\n/).filter(Boolean);
+  const outSet = new Set();
+  for(const l of lines){
+    const fixed = parseEndpointLine(l);
+    if(fixed){
+      const host = fixed.split(',')[0];
+      if(/^(_seed|acme|example)\./i.test(host) || host==='example.com') continue;
+      outSet.add(fixed);
+    }
+  }
+  const out = [...outSet].sort();
+  fs.writeFileSync(f, out.join('\n')+'\n','utf8');
+  console.log(`[sanitize] endpoints.csv => ${out.length} lines`);
 }
 
 (function main(){
-  let domains=[];
-  if(fs.existsSync(domFile)){
-    domains = fs.readFileSync(domFile,'utf8').split(/\r?\n/).map(normHost)
-      .filter(Boolean).filter(h=>!isBad(h));
-    domains = uniq(domains);
-    if(domains.length) fs.writeFileSync(domFile, domains.join('\n')+'\n','utf8');
-  }
-  if(!domains.length) writeSeedsIfEmpty();
-
-  if(fs.existsSync(epFile)){
-    const cleaned = fs.readFileSync(epFile,'utf8').split(/\r?\n/)
-      .filter(Boolean).filter(l=> (l.match(/,/g)||[]).length >= 2) // 必须三列 host,url,type
-      .filter(l=> !/https?:\/\/[^,\s]+,/.test(l)); // 删除“URL里带逗号”的垃圾
-    if(cleaned.length){
-      fs.writeFileSync(epFile, cleaned.join('\n')+'\n','utf8');
-      console.log(`[sanitize] endpoints.csv cleaned=${cleaned.length}`);
-    }
-  }
+  fixDomains();
+  fixEndpoints();
 })();
