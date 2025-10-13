@@ -3,7 +3,7 @@ name: E2E Full Chain
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: "0 6 * * 1" # 每周一 06:00 UTC（你也可以只保留手动）
+    - cron: "0 6 * * 1" # 周一 06:00 UTC
 
 permissions: { contents: read }
 
@@ -14,32 +14,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-
-      # 依赖最小；你的脚本只用到 minimist/nodemailer/csv-parse 等
       - name: Install deps
         run: npm ci || npm install --no-audit --no-fund
 
-      - name: Preflight (dirs & seed will be handled in script)
-        run: |
-          node -v
-          ls -la || true
-          ls -la scripts || true
-
-      # DRY 环境：即使脚本内部没做DRY分支，也尽量不触发真实发送
-      - name: Run E2E (DRY, tolerate gate=0)
+      - name: Run E2E (DRY; gate=0 也算通过)
         env:
           DRY_RUN: "true"
-          # 若你的 send_bulk 在DRY仍初始化SMTP，这里给最小的占位以避免校验失败
+          # 防守：有些发送脚本即便 dry 也会 init transport，给占位避免 verify 报错
           SMTP_HOST: "localhost"
           SMTP_PORT: "25"
           SMTP_USER: "dummy"
           SMTP_PASS: "dummy"
           MAIL_FROM: "outreach@cg-alert.com"
-        run: |
-          set -euxo pipefail
-          node scripts/e2e_fullchain.js
-
-      # E2E 不提交任何改动；仅验证链路
+        run: node scripts/e2e_fullchain.js
