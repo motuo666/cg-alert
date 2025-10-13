@@ -3,6 +3,7 @@ on:
   schedule: [{ cron: "0 15 * * 1" }]  # 周一 15:00 UTC
   workflow_dispatch: {}
 permissions: { contents: write }
+
 jobs:
   health:
     runs-on: ubuntu-latest
@@ -17,9 +18,28 @@ jobs:
       - name: Untrack caches if previously added
         run: git rm -r --cached .cache || true
 
+      # 第一次健康检查（带 SMTP/IMAP secrets）
       - name: Run health check
         id: health
-        shell: bash
+        env:
+          # SMTP Secrets —— 必须传，避免回落到 127.0.0.1
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          SMTP_REQUIRED: "1"   # 有密钥就严格校验；如暂时没配，可改成 "0"
+
+          # IMAP（可选）
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          IMAP_REQUIRED: "0"
+
+          # KPI 阈值（可调）
+          KPI_48H_MIN: "4"
+          KPI_7D_MIN: "4"
         run: |
           set +e
           node scripts/weekly_health_check.js
@@ -31,6 +51,7 @@ jobs:
           fi
           exit 0
 
+      # 自愈：只有当 FAIL 才跑
       - name: Self-heal when FAIL
         if: steps.health.outputs.ok != '1'
         run: |
@@ -63,6 +84,21 @@ jobs:
           done
           echo "Push failed after retries."; exit 1
 
+      # 复检：自愈后再检查一次（仍红才失败）
       - name: Verify GREEN after self-heal
         if: steps.health.outputs.ok != '1'
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          SMTP_REQUIRED: "1"
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          IMAP_REQUIRED: "0"
+          KPI_48H_MIN: "4"
+          KPI_7D_MIN: "4"
         run: node scripts/weekly_health_check.js
