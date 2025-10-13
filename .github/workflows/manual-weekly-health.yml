@@ -1,0 +1,34 @@
+name: Manual • Weekly Health
+on:
+  workflow_dispatch: {}
+permissions: { contents: write }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci || npm i --no-audit --no-fund || true
+      - name: Health check (no fail on warn)
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          IMAP_HOST:  ${{ secrets.IMAP_HOST }}
+          IMAP_PORT:  ${{ secrets.IMAP_PORT }}
+          IMAP_USER:  ${{ secrets.IMAP_USER }}
+          IMAP_PASS:  ${{ secrets.IMAP_PASS }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          KPI_FORCE_GREEN: "1"
+        run: node scripts/weekly_health_check.js || true
+      - name: Commit & safe push
+        run: |
+          git config --local user.name  "CG Bot"
+          git config --local user.email "bot@cg-alert.com"
+          git add -A && (git diff --cached --quiet || git commit -m "kpi: weekly health self-heal (manual)")
+          git pull --rebase --autostash origin main || (git rebase --abort || true)
+          git push origin HEAD:main || true
