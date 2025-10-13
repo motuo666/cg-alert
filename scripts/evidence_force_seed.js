@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// evidence_force_seed.js — 一次性把今天的 evidence 拉到目标值（合规：公开端点 + robots + HEAD/GET）
+// evidence_force_seed.js — 一次性把“今天”的 evidence 拉到目标值（公开端点 + robots + HEAD/GET）
+// 合规：只抓公开页面；尊重 robots.txt；每 vendor 最多 2 条；产生 JSON 证据（带 etag/last-modified/sha256）
 const fs=require('fs'), path=require('path'), crypto=require('crypto'), https=require('https'), http=require('http'), { URL } = require('url');
 
-const TARGET_TODAY = Math.max(12, Number(process.env.SEED_TODAY_MIN||12)); // 今天至少 12 条
+const TARGET_TODAY = Math.max(30, Number(process.env.SEED_TODAY_MIN||30)); // 今天至少 30 条
 const PER_VENDOR_MAX = Math.max(2, Number(process.env.SEED_PER_VENDOR_MAX||2));
-const MAX_ENDPOINTS = Math.max(2000, Number(process.env.SEED_MAX_ENDPOINTS||2000));
+const MAX_ENDPOINTS = Math.max(3000, Number(process.env.SEED_MAX_ENDPOINTS||3000));
 const TIMEOUT_MS = 12000;
 const UA = "CGAlertBot/1.0 (+https://www.cg-alert.com/)";
 
@@ -36,32 +37,43 @@ function allowed(robots, pathn){
     const m2=s.match(/^Disallow:\s*(.*)$/i); if(m2 && (ua==='*'||ua==='cgalertbot')) dis.push(m2[1]); }
   return !dis.some(p=>p && pathn.startsWith(p));
 }
-
 function countToday(){ const base='evidence'; if(!fs.existsSync(base)) return 0;
   let n=0; for(const d of fs.readdirSync(base,{withFileTypes:true})) if(d.isDirectory()){
-    const dir=path.join(base,d.name); n += fs.readdirSync(dir).filter(f=>f.startsWith(today()+'-') && f.endsWith('.json')).length;
+    n += fs.readdirSync(path.join('evidence',d.name)).filter(f=>f.startsWith(today()+'-') && f.endsWith('.json')).length;
   } return n;
 }
 function vendorTodayCount(v){ const dir=path.join('evidence',v); if(!fs.existsSync(dir)) return 0;
   return fs.readdirSync(dir).filter(f=>f.startsWith(today()+'-') && f.endsWith('.json')).length;
 }
 
+// 更大的默认种子池（保证首次就能拉满）
+const DEFAULT_DOMAINS = [
+  'stripe.com','cloudflare.com','twilio.com','slack.com','zoom.us','box.com','dropbox.com','atlassian.com',
+  'datadoghq.com','pagerduty.com','okta.com','auth0.com','github.com','gitlab.com','vercel.com','netlify.com',
+  'algolia.com','airtable.com','monday.com','sentry.io','notion.so','intercom.com','zendesk.com','freshworks.com',
+  'datadog.com','segment.com','linear.app','supabase.com','render.com','hashicorp.com','snowflake.com','mongodb.com',
+  'elastic.co','newrelic.com','confluent.io','openai.com','anthropic.com','huggingface.co','digitalocean.com',
+  'heroku.com','salesforce.com','mailchimp.com','sendgrid.com','postmarkapp.com','statuspage.io','status.io',
+  'fastly.com','cloudfront.net','smartlook.com','mixpanel.com','heap.io','posthog.com','segment.com','launchdarkly.com',
+  'featureflag.co','appcues.com','amplitude.com','braze.com','clevertap.com','iterable.com','loom.com','miro.com','figma.com'
+];
+
 function ensureDomainsAndEndpoints(){
-  // domains.csv 不存在就放 50 个常见可达域（保守、公开页稳定；只做一次种子）
-  if(!fs.existsSync('data/domains.csv')){
-    const sample = [
-      'stripe.com','cloudflare.com','twilio.com','slack.com','zoom.us','box.com','dropbox.com','atlassian.com',
-      'datadoghq.com','pagerduty.com','auth0.com','okta.com','segment.com','linear.app','sentry.io','notion.so',
-      'intercom.com','github.com','gitlab.com','vercel.com','netlify.com','algolia.com','airtable.com','monday.com',
-      'dropbox.com','zendesk.com','freshworks.com','workato.com','posthog.com','supabase.com','render.com',
-      'loom.com','miro.com','figma.com','hashicorp.com','snowflake.com','mongodb.com','elastic.co','newrelic.com',
-      'confluent.io','openai.com','anthropic.com','huggingface.co','digitalocean.com','heroku.com','salesforce.com',
-      'mailchimp.com','sendgrid.com','postmarkapp.com'
-    ];
-    ensureFile('data/domains.csv', sample.join('\n')+'\n');
+  const norm = s => s.replace(/^https?:\/\//,'').replace(/\/+$/,'').toLowerCase();
+  if(!fs.existsSync('data/domains.csv') || lines('data/domains.csv').length < 40){
+    const uniq=[...new Set(DEFAULT_DOMAINS.map(norm))];
+    ensureFile('data/domains.csv', uniq.join('\n')+'\n');
   }
-  // endpoints.csv 由 endpoint_inventory.js 生成
-  try{ require('child_process').execSync('node scripts/endpoint_inventory.js', {stdio:'inherit'}); }catch{}
+  // 生成端点
+  try{ require('child_process').execSync('node scripts/endpoint_inventory.js', {stdio:'inherit'}); }catch(e){
+    // 兜底：直接用常见路径生成 endpoints.csv
+    const PATHS=['/pricing','/plans','/terms','/privacy','/legal/privacy','/dpa','/legal/dpa','/subprocessors','/sub-processors','/security','/trust','/.well-known/security.txt','/status'];
+    const domains=lines('data/domains.csv'); const out=[];
+    for(const d of domains){ const host=d.replace(/^www\./,'');
+      PATHS.forEach(p=>out.push(`${host},https://${host}${p},`)); out.push(`${host},https://status.${host}/,Status`); out.push(`${host},https://status.${host}/api/v2/summary.json,Status`);
+    }
+    ensureFile('data/endpoints.csv', out.join('\n')+'\n');
+  }
   if(!fs.existsSync('data/endpoints.csv')) throw new Error('endpoints.csv missing');
 }
 
@@ -80,23 +92,27 @@ async function seed(){
       const u = new URL(r.url); const robots = await fetchRobots(u.hostname);
       if(!allowed(robots, u.pathname)) continue;
 
-      // 先 HEAD，拿 etag/last；不行再 GET
+      // HEAD -> 条件信息；不行再 GET
       let head = await httpGet(r.url, {method:'HEAD'}).catch(()=>null);
       let etag = head?.res?.headers?.etag||'', last = head?.res?.headers?.['last-modified']||'';
       let bodyBuf = head?.body||Buffer.from('');
       if(!etag && !last){ const got = await httpGet(r.url, {method:'GET'}).catch(()=>null);
         if(got){ etag = got.res.headers.etag||etag; last = got.res.headers['last-modified']||last; bodyBuf = got.body||bodyBuf; }
       }
+      // 没拿到正文也不强求（以头部特征为证据），但尽量取到
       const hash = sha256(bodyBuf);
       const dir = path.join('evidence', r.vendor); fs.mkdirSync(dir,{recursive:true});
-      const fname = `${today()}-${(r.type||'Baseline').replace(/\s+/g,'_')}-${hash.slice(0,10)}.json`;
+      const tag = (r.type||'Baseline').replace(/\s+/g,'_');
+      const fname = `${today()}-${tag}-${hash.slice(0,10)}.json`;
+
       if(vendorTodayCount(r.vendor) >= PER_VENDOR_MAX) continue;
+
       const obj = { vendor:r.vendor, type:(r.type||'Baseline'), url:r.url,
                     detected_at:new Date().toISOString(),
-                    etag: etag||null, last_modified:last||null, hash:`sha256:${hash}` };
+                    etag: etag||null, last_modified:last||null, hash: bodyBuf.length?`sha256:${hash}`:null };
       fs.writeFileSync(path.join(dir, fname), JSON.stringify(obj,null,2),'utf8');
-      vendorQuota.set(r.vendor, (vendorQuota.get(r.vendor)||0)+1);
-      console.log('[seed]', r.vendor, r.type, '→', fname);
+      vendorQuota.set(r.vendor, used+1);
+      console.log('[seed]', r.vendor, r.type||'Baseline', '→', fname);
     }catch(e){ /* 忽略错误继续 */ }
   }
   console.log(`[seed] today=${countToday()}/${TARGET_TODAY}`);
