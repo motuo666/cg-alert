@@ -1,12 +1,22 @@
 name: Monthly Public Report
+
 on:
-  schedule: [ { cron: "10 15 1 * *" } ]
+  schedule:
+    - cron: "10 15 1 * *"    # 每月1号 15:10 UTC
   workflow_dispatch:
     inputs:
-      month: { description: "YYYY-MM (blank = current)", required: false }
+      month:
+        description: "YYYY-MM（空=当前月）"
+        required: false
+
 permissions: { contents: write }
+
+concurrency:
+  group: monthly-public-report
+  cancel-in-progress: true
+
 jobs:
-  report:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,13 +24,15 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm ci || npm i --no-audit --no-fund || true
-      - name: Build month
-        env: { REPORT_MONTH: ${{ inputs.month }} }
+      - name: Build report
+        env:
+          REPORT_MONTH: ${{ inputs.month }}
         run: node scripts/build_public_monthly.js
-      - name: Commit & push
+      - name: Commit & Safe Push
         run: |
-          git config --local user.name "CG Bot"
+          git config --local user.name  "CG Bot"
           git config --local user.email "bot@cg-alert.com"
-          git add -A && (git diff --cached --quiet || git commit -m "report: public monthly ${{ inputs.month || 'auto' }}")
+          git add -A
+          git diff --cached --quiet || git commit -m "report: public monthly ${{ inputs.month || 'auto' }}"
           git pull --rebase --autostash origin main || (git rebase --abort || true)
-          git push origin HEAD:main || true
+          git push origin HEAD:main
