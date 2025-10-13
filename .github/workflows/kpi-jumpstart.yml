@@ -4,8 +4,11 @@ permissions: { contents: write }
 jobs:
   run:
     runs-on: ubuntu-latest
+    # 所有会写入仓库的任务都放到同一个并发组，避免互相抢 main
+    concurrency: { group: cg-write, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }   # 允许 rebase
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - name: Install deps
@@ -21,10 +24,7 @@ jobs:
         run: |
           node scripts/build_updates.js
           node scripts/seo_inject.js
-      - name: Commit
+      - name: Safe push (rebase & retry)
         run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          git add -A
-          git commit -m "kpi: expanded domains, polled endpoints, site updated" || echo "no changes"
-          git push
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "kpi: expanded domains, polled endpoints, site updated"
