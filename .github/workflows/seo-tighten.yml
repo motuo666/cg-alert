@@ -11,40 +11,13 @@ permissions: { contents: write }
 jobs:
   tighten:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write, cancel-in-progress: false }
+    concurrency: { group: cg-write-seo, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm install --no-audit --no-fund
-      - name: Untrack caches if previously added
-        run: git rm -r --cached .cache || true
       - name: Run injector
         run: node scripts/seo_inject.js
-      - name: Commit SEO injections
-        run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "seo: inject json-ld/canonical/meta"
-          else
-            echo "No SEO changes."
-          fi
-      - name: Safe push with rebase & retry
-        run: |
-          tries=0
-          until [ $tries -ge 3 ]
-          do
-            git pull --rebase --autostash origin main || (git rebase --abort || true)
-            if git push origin HEAD:main; then
-              echo "Push succeeded."
-              exit 0
-            fi
-            tries=$((tries+1))
-            echo "Push failed. Retry #$tries ..."
-            sleep 3
-          done
-          echo "Push failed after retries."; exit 1
+      - name: Commit & Safe push
+        run: scripts/_ci_safe_push.sh main "seo: inject json-ld/canonical/meta"
