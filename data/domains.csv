@@ -12,3 +12,52 @@ snowflake.com,snowflake
 github.com,github
 _seed.com
 acme.com
+domain,company
+okta.com,okta
+duo.com,duo security
+onelogin.com,onelogin
+adyen.com,adyen
+braintreepayments.com,braintree
+checkout.com,checkout.com
+paddle.com,paddle
+recurly.com,recurly
+chargebee.com,chargebee
+salesforce.com,salesforce
+hubspot.com,hubspot
+zoho.com,zoho
+freshworks.com,freshworks
+zendesk.com,zendesk
+intercom.com,intercom
+help scout.com,help scout
+gitlab.com,gitlab
+bitbucket.org,bitbucket
+linear.app,linear
+asana.com,asana
+monday.com,monday.com
+zoom.us,zoom
+dropbox.com,dropbox
+box.com,box
+google.com,google workspace
+microsoft.com,microsoft 365
+aws.amazon.com,aws
+fastly.com,fastly
+vercel.com,vercel
+netlify.com,netlify
+newrelic.com,new relic
+sentry.io,sentry
+segment.com,segment
+mongodb.com,mongodb atlas
+supabase.com,supabase
+heroku.com,heroku
+render.com,render
+sendgrid.com,sendgrid
+mailgun.com,mailgun
+postmarkapp.com,postmark
+algolia.com,algolia
+elastic.co,elastic
+contentful.com,contentful
+sanity.io,sanity
+figma.com,figma
+canva.com,canva
+miro.com,miro
+confluent.io,confluent
