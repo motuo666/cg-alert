@@ -1,28 +1,31 @@
 name: Auto Append Domains
+
 on:
-  schedule:
-    - cron: '45 14 * * 1'   # 每周一 08:45 MT（夏令时）= 14:45 UTC
-  workflow_dispatch:
+  schedule: [{ cron: "45 14 * * 1" }] # 每周一 14:45 UTC
+  workflow_dispatch: {}
+
 permissions: { contents: write }
+
 jobs:
   append:
     runs-on: ubuntu-latest
+    concurrency: { group: cg-write-domains, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
-        with: { node-version: '18' }
+        with: { node-version: 20 }
       - name: Install deps
         run: npm install csv-parse csv-stringify
-      - name: Append 10-20 domains
+      - name: Append 30-50 domains (from pool & discovery)
         env:
-          BATCH_MIN: '30'
-          BATCH_MAX: '50'
+          BATCH_MIN: "30"
+          BATCH_MAX: "50"
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: node scripts/auto_append_domains.js
-      - name: Commit changes
+      - name: Commit (safe push)
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          chmod +x scripts/_ci_safe_push.sh
           git add data/domains.csv || true
-          git commit -m "chore(domains): weekly auto-append targets" || echo "nothing to commit"
-          git push
+          git diff --quiet || git commit -m "grow: +auto discovered domains (weekly)"
+          bash scripts/_ci_safe_push.sh main origin 5
