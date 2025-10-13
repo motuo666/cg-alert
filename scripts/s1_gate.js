@@ -1,25 +1,35 @@
 #!/usr/bin/env node
-// s1_gate.js — allow send only if evidence updated within TRIGGER_WINDOW_H hours (no set-output)
-const fs = require('fs');
-const path = require('path');
-const WINDOW_H = Number(process.env.TRIGGER_WINDOW_H || '48');
+// s1_gate.js — 48h 内是否存在 kind=change 的证据？有则 gate=1，否则0
+const fs = require('fs'), path = require('path');
+const ROOT = path.join(__dirname, '..');
+const EVI  = path.join(ROOT, 'evidence');
+const WINDOW_H = Number(process.env.TRIGGER_WINDOW_H || 48);
 
-(function main () {
-  const base = path.join(__dirname, '..', 'evidence');
-  let latest = 0;
-  if (fs.existsSync(base)) {
-    for (const d of fs.readdirSync(base, { withFileTypes: true })) {
-      if (!d.isDirectory()) continue;
-      const dir = path.join(base, d.name);
-      for (const f of fs.readdirSync(dir)) {
-        if (!/\.json$/i.test(f)) continue;
-        const mt = fs.statSync(path.join(dir, f)).mtimeMs;
-        if (mt > latest) latest = mt;
-      }
+function hasRecentChange(){
+  if(!fs.existsSync(EVI)) return false;
+  const since = Date.now() - WINDOW_H*3600e3;
+  for(const v of fs.readdirSync(EVI, { withFileTypes:true })){
+    if(!v.isDirectory()) continue;
+    const dir = path.join(EVI, v.name);
+    for(const f of fs.readdirSync(dir)){
+      if(!f.endsWith('.json')) continue;
+      try{
+        const j = JSON.parse(fs.readFileSync(path.join(dir,f),'utf8'));
+        if(j && j.kind === 'change'){
+          const t = Date.parse(j.detected_at || '');
+          if(!Number.isNaN(t) && t >= since) return true;
+        }
+      }catch(e){}
     }
   }
-  const ok = latest && (Date.now() - latest) <= WINDOW_H * 3600 * 1000 ? '1' : '0';
-  const ageH = latest ? ((Date.now() - latest) / 3600e3).toFixed(1) : '∞';
-  console.log(ok === '1' ? `fresh evidence found ${ageH}h → gate=1` : `no fresh evidence in ${WINDOW_H}h → gate=0`);
-  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `ok=${ok}\n`);
+  return false;
+}
+
+(function main(){
+  const ok = hasRecentChange() ? '1' : '0';
+  console.log(`gate=${ok} (window_h=${WINDOW_H})`);
+  if (process.env.GITHUB_OUTPUT) {
+    require('fs').appendFileSync(process.env.GITHUB_OUTPUT, `ok=${ok}\n`);
+  }
+  process.exit(0);
 })();
