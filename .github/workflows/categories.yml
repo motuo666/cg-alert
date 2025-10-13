@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4           # ← 改为官方 tag
+      - uses: actions/checkout@v5           # ← 改为官方 tag
       - uses: actions/setup-node@v4         # ← 改为官方 tag
         with:
           node-version: '18'

@@ -6,7 +6,7 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Ensure fixpack exists
         run: |
           test -f cg-alert-fixpack-2025-10-12.zip || (echo "fixpack zip not found in repo root" && exit 1)

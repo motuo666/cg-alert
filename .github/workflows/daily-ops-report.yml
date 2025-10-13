@@ -25,7 +25,7 @@ jobs:
       GH_CHECK: "1"              # 打开工作流近况检查
       DAILY_CHECK_WORKFLOWS: "Outreach S1 (Send),Inbound (poll inbox),E2E Full Chain,Weekly Health Check"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v4
         with: { node-version: 18 }

@@ -22,7 +22,7 @@ jobs:
       RETRIES: "3"
       TIMEOUT_MS: "12000"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: { fetch-depth: 0 }
 
       - uses: actions/setup-node@v4
