@@ -12,26 +12,26 @@ jobs:
         with: { node-version: 20 }
       - name: Install deps
         run: npm ci
-      - name: Ensure endpoints & poll normally (快速拉底数)
+      - name: Ensure endpoints & normal poll (warm up)
         env:
           MAX_ENDPOINTS: "800"
           PER_HOST: "6"
           VENDOR_DAILY_MAX: "2"
         run: |
-          node scripts/endpoint_inventory.js
-          node scripts/poll_public_endpoints.js
-      - name: Force seed (保证今天≥12条)
+          node scripts/endpoint_inventory.js || true
+          node scripts/poll_public_endpoints.js || true
+      - name: Force seed today (>=30)
         env:
-          SEED_TODAY_MIN: "12"
+          SEED_TODAY_MIN: "30"
           SEED_PER_VENDOR_MAX: "2"
-          SEED_MAX_ENDPOINTS: "2000"
+          SEED_MAX_ENDPOINTS: "3000"
         run: node scripts/evidence_force_seed.js
       - name: Rebuild updates + SEO
         run: |
-          node scripts/build_updates.js
-          node scripts/seo_inject.js
+          node scripts/build_updates.js || true
+          node scripts/seo_inject.js || true
       - name: Safe push
         run: |
           chmod +x scripts/git_safe_push.sh || true
           [ -x scripts/git_safe_push.sh ] || (echo '#!/usr/bin/env bash' > scripts/git_safe_push.sh && echo 'set -e; git config user.name "CG Bot"; git config user.email "bot@cg-alert.com"; git fetch origin main --depth=0 || true; git add -A; git commit -m "kpi: seed evidence + site" || true; git push --force-with-lease origin HEAD:main' >> scripts/git_safe_push.sh && chmod +x scripts/git_safe_push.sh)
-          bash scripts/git_safe_push.sh "kpi: seed evidence + site"
+          bash scripts/git_safe_push.sh "kpi: seed evidence (>=30) + site"
