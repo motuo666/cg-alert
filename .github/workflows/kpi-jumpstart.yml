@@ -10,17 +10,17 @@ jobs:
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci
-      - name: Expand domains from pool (+120)
-        run: node scripts/domains_expand_from_pool.js 120
-      - name: Build endpoint inventory
-        run: node scripts/endpoint_inventory.js
+      - run: npm ci
+      - name: Expand domains from pool (+150)
+        run: node scripts/domains_expand_from_pool.js 150
+      - run: node scripts/endpoint_inventory.js
       - name: Poll public endpoints (robots-aware)
-        env: { MAX_ENDPOINTS: "800", PER_HOST: "6" }
+        env:
+          MAX_ENDPOINTS: "1000"
+          PER_HOST: "6"
+          VENDOR_DAILY_MAX: "2"   # ★ 新增：每 vendor 每天最多 2 条
         run: node scripts/poll_public_endpoints.js
-      - name: Build updates + SEO
-        run: |
+      - run: |
           node scripts/build_updates.js
           node scripts/seo_inject.js
       - name: Safe push
