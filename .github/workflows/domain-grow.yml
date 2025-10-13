@@ -1,42 +1,79 @@
 name: Domain Grow (daily)
+
 on:
   schedule: [{ cron: "0 9 * * *" }]  # 每天 09:00 UTC
   workflow_dispatch: {}
+
 permissions: { contents: write }
+
 jobs:
   grow:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write, cancel-in-progress: false }
+    concurrency:
+      group: cg-write
+      cancel-in-progress: false
+
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+
       - name: Install deps
         run: npm ci
-      - name: Warm poll with body
+
+      # 确保本地不会把 .cache 提交上去（即便历史曾被跟踪）
+      - name: Untrack caches if previously added
+        run: |
+          git rm -r --cached .cache || true
+
+      - name: Warm poll with body (writes to .cache only)
         env:
           SAVE_BODY: "1"
           MAX_ENDPOINTS: "600"
           PER_HOST: "6"
           VENDOR_DAILY_MAX: "2"
         run: node scripts/poll_public_endpoints.js || true
+
       - name: Auto discover domains
         env:
           NEW_DOMAINS_LIMIT: "50"   # 每天最多新增 50 个域
         run: node scripts/auto_discover_domains.js
+
       - name: Sanitize + inventory
         run: |
           node scripts/data_sanitize.js
-          node scripts/endpoint_inventory.js
-      - name: Commit growth
+          node scripts/endpoint_inventory.js || true
+
+      - name: Commit (if changes)
         run: |
           git config user.name "CG Bot"
           git config user.email "bot@cg-alert.com"
           if ! git diff --quiet; then
             git add -A
             git commit -m "grow: +auto discovered domains (daily)"
-            git push
           else
             echo "No growth changes."
+          fi
+
+      - name: Safe push with rebase & retry
+        if: success()
+        run: |
+          if git rev-parse --verify HEAD >/dev/null 2>&1 && ! git diff --quiet HEAD^ HEAD 2>/dev/null; then
+            tries=0
+            until [ $tries -ge 3 ]
+            do
+              git pull --rebase --autostash origin main || (git rebase --abort || true)
+              if git push origin HEAD:main; then
+                echo "Push succeeded."
+                exit 0
+              fi
+              tries=$((tries+1))
+              echo "Push failed. Retry #$tries ..."
+              sleep 3
+            done
+            echo "Push failed after retries."; exit 1
+          else
+            echo "Nothing to push."
           fi
