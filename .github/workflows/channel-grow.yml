@@ -1,51 +1,20 @@
 name: Channel Grow (weekly)
 on:
-  schedule: [{ cron: "20 9 * * 1" }]  # 每周一 09:20 UTC
+  schedule:
+    - cron: "20 9 * * 1"  # 每周一 09:20 UTC
   workflow_dispatch: {}
 permissions: { contents: write }
 jobs:
   channel_grow:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write, cancel-in-progress: false }
+    concurrency: { group: cg-write-channel, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm install --no-audit --no-fund
-      - name: Untrack caches if previously added
-        run: git rm -r --cached .cache || true
-      - name: Discover channel candidates from vendors' partner pages
-        env:
-          NEW_CHANNELS_LIMIT: "30"   # 每周新增候选域上限
+      - name: Discover channels
+        env: { CHANNEL_LIMIT: "40" }
         run: node scripts/auto_discover_channels.js
-      - name: Enrich candidates and promote to partners (MX validated)
-        env:
-          CHANNEL_PROMOTE_LIMIT: "10"  # 每周加入 partners 上限
-        run: node scripts/channel_contact_enrich.js
-      - name: Commit channel growth
-        run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "channel: +candidates & +partners (weekly)"
-          else
-            echo "No channel changes."
-          fi
-      - name: Safe push with rebase & retry
-        run: |
-          tries=0
-          until [ $tries -ge 3 ]
-          do
-            git pull --rebase --autostash origin main || (git rebase --abort || true)
-            if git push origin HEAD:main; then
-              echo "Push succeeded."
-              exit 0
-            fi
-            tries=$((tries+1))
-            echo "Push failed. Retry #$tries ..."
-            sleep 3
-          done
-          echo "Push failed after retries."; exit 1
+      - name: Commit & Safe push
+        run: scripts/_ci_safe_push.sh main "channel: +auto discovered (weekly)"
