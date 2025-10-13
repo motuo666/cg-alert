@@ -1,0 +1,25 @@
+name: Internal Linking
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "vendors/**"
+      - "reports/**"
+      - "updates/**"
+      - "data/vendor_tags.csv"
+  workflow_dispatch: {}
+permissions: { contents: write }
+jobs:
+  linkify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: node scripts/internal_linking.js
+      - run: |
+          git config user.name "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          git add -A
+          git commit -m "internal: related vendors & browse sections" || echo "no changes"
+          git push
