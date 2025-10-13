@@ -1,0 +1,42 @@
+name: Domain Grow (weekly)
+on:
+  schedule: [{ cron: "0 9 * * 1" }]   # 每周一 09:00 UTC
+  workflow_dispatch: {}
+permissions: { contents: write }
+jobs:
+  grow:
+    runs-on: ubuntu-latest
+    concurrency: { group: cg-write, cancel-in-progress: false }
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Install deps
+        run: npm ci
+      - name: Warm poll with body
+        env:
+          SAVE_BODY: "1"
+          MAX_ENDPOINTS: "600"
+          PER_HOST: "6"
+          VENDOR_DAILY_MAX: "2"
+        run: node scripts/poll_public_endpoints.js || true
+      - name: Auto discover domains
+        env:
+          NEW_DOMAINS_LIMIT: "50"
+        run: node scripts/auto_discover_domains.js
+      - name: Sanitize + inventory
+        run: |
+          node scripts/data_sanitize.js
+          node scripts/endpoint_inventory.js
+      - name: Commit growth
+        run: |
+          git config user.name "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "grow: +auto discovered domains (weekly)"
+            git push
+          else
+            echo "No growth changes."
+          fi
