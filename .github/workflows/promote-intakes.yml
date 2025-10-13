@@ -1,33 +1,43 @@
 name: Promote Intakes
 on:
-  schedule:
-    - cron: "*/15 * * * *"   # 每15分钟
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
+  schedule: [{ cron: "*/15 * * * *" }]
+  workflow_dispatch: {}
+permissions: { contents: write }
 jobs:
   promote:
     runs-on: ubuntu-latest
+    concurrency: { group: cg-write, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: npm init -y && npm install
-      - name: Promote intakes -> customers
-        run: node scripts/promote_intakes.js
-      - name: Commit & push if changed
+        with: { node-version: 20 }
+      - name: Install deps
+        run: npm ci || npm install --no-audit --no-fund
+      - name: Promote intakes
+        run: node scripts/promote-intakes.js
+      - name: Commit customers list
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git status --porcelain | grep -q "data/customers.csv"; then
-            git add data/customers.csv
-            git commit -m "promote intakes -> customers [skip ci]"
-            git push
+          git config user.name "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "promote: intakes -> customers (dedup)"
           else
-            echo "no changes"
+            echo "No changes."
           fi
+      - name: Safe push with rebase & retry
+        run: |
+          tries=0
+          until [ $tries -ge 3 ]
+          do
+            git pull --rebase --autostash origin main || (git rebase --abort || true)
+            if git push origin HEAD:main; then
+              echo "Push succeeded."
+              exit 0
+            fi
+            tries=$((tries+1))
+            echo "Push failed. Retry #$tries ..."
+            sleep 3
+          done
+          echo "Push failed after retries."; exit 1
