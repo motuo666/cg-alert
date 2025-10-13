@@ -1,53 +1,39 @@
 name: Promote Intakes
+
 on:
-  schedule: [ { cron: "*/15 * * * *" } ]
-  workflow_dispatch: {}
+  schedule:
+    - cron: "*/15 * * * *"   # 保留原来的每15分钟
+  workflow_dispatch: {}       # 恢复按钮
+
 permissions: { contents: write, pull-requests: write }
+
+concurrency:
+  group: promote-intakes
+  cancel-in-progress: false
+
 jobs:
   promote:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-promote, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm i --no-audit --no-fund || true
-      - name: Safe push helper
+      - run: npm ci || npm i --no-audit --no-fund || true
+      - name: Run promote script
         run: |
-          cat > scripts/_ci_safe_push.sh <<'SH'
-          #!/usr/bin/env bash
-          set -euo pipefail
-          BR="${1:-main}"; MSG="${2:-chore: update}"
-          git config --local user.name  "${GIT_COMMIT_NAME:-CG Bot}"  || true
-          git config --local user.email "${GIT_COMMIT_EMAIL:-bot@cg-alert.com}" || true
-          if git diff --quiet; then echo "changed=0" >>"$GITHUB_OUTPUT"; echo "pushed=0" >>"$GITHUB_OUTPUT"; exit 0; fi
-          git add -A && git commit -m "$MSG"
-          pushed=0
-          for i in 1 2 3; do
-            git pull --rebase --autostash origin "$BR" || (git rebase --abort || true)
-            if git push origin HEAD:"$BR"; then pushed=1; break; fi
-            sleep 3
-          done
-          echo "changed=1" >>"$GITHUB_OUTPUT"; echo "pushed=$pushed" >>"$GITHUB_OUTPUT"
-          SH
-          chmod +x scripts/_ci_safe_push.sh
-      - name: Prepare data files
+          if [ -f scripts/promote-intakes.js ]; then
+            node scripts/promote-intakes.js
+          elif [ -f scripts/promote_intakes.js ]; then
+            node scripts/promote_intakes.js
+          else
+            echo "promote-intakes script not found"; exit 1
+          fi
+      - name: Commit & Safe Push
         run: |
-          mkdir -p data
-          : > data/intakes.csv || true
-          : > data/customers.csv || true
-      - name: Promote
-        run: node scripts/promote-intakes.js
-      - name: Commit & push
-        id: push
-        run: scripts/_ci_safe_push.sh main "promote: intakes -> customers"
-      - name: Fallback PR
-        if: steps.push.outputs.changed == '1' && steps.push.outputs.pushed != '1'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          title: "Promote Intakes (auto PR)"
-          commit-message: "promote: intakes -> customers"
-          branch: bot/promote-intakes
-          base: main
+          git config --local user.name  "CG Bot"
+          git config --local user.email "bot@cg-alert.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "promote: intakes -> customers"
+          git pull --rebase --autostash origin main || (git rebase --abort || true)
+          git push origin HEAD:main
