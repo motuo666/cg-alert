@@ -1,7 +1,7 @@
 name: Promote Intakes
 
 on:
-  schedule: [{ cron: "*/15 * * * *" }]   # 每15分钟
+  schedule: [{ cron: "*/15 * * * *" }]
   workflow_dispatch: {}
 
 permissions:
@@ -12,42 +12,22 @@ jobs:
   promote:
     runs-on: ubuntu-latest
     concurrency: { group: cg-write-promote, cancel-in-progress: false }
-
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
 
-      - name: Install deps
-        run: npm ci || npm install --no-audit --no-fund
-
-      - name: Preflight & promote
+      - name: Promote intakes -> customers (idempotent)
         env:
-          PROMOTE_DRY: ${{ inputs.dry || '' }}
-          PROMOTE_MAX: '500'
-        run: |
-          node scripts/promote-intakes.js
+          PROMOTE_DRY: "0"
+          PROMOTE_MAX: "200"
+          PROMOTE_STRICT_HEADER: "0"
+        run: node scripts/promote-intakes.js
 
-      - name: Safe push (with rebase & retries)
+      - name: Commit (safe push)
         run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "promote: intakes → customers (auto)"
-            tries=0
-            until [ $tries -ge 3 ]
-            do
-              git pull --rebase --autostash origin main || (git rebase --abort || true)
-              if git push origin HEAD:main; then
-                echo "Push OK"; exit 0
-              fi
-              tries=$((tries+1))
-              echo "Retry #$tries after 3s"; sleep 3
-            done
-            echo "Push failed after retries"; exit 1
-          else
-            echo "No changes."
-          fi
+          chmod +x scripts/_ci_safe_push.sh
+          git add data/customers.csv || true
+          git diff --quiet || git commit -m "promote: +customers (from intakes)"
+          bash scripts/_ci_safe_push.sh main origin 5
