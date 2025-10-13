@@ -1,44 +1,26 @@
 name: Outreach Triggered
-
 on:
-  schedule: [{ cron: "5 16 * * 1-5" }]
+  schedule: [ { cron: "5 16 * * 1-5" } ]
   workflow_dispatch:
     inputs:
-      dry:     { description: "DRY run (true/false)", required: false, default: "true" }
-      limit:   { description: "Max emails this run",  required: false, default: "10" }
-      window_h:{ description: "Evidence window hours",required: false, default: "48" }
-
+      dry:      { description: "dry run", default: "true", required: true }
+      limit:    { description: "max emails", default: "20", required: true }
+      window_h: { description: "evidence window(hours)", default: "48", required: true }
 jobs:
   trig:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-outreach, cancel-in-progress: true }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm install --no-audit --no-fund
-
-      - name: Gate
-        id: gate
-        env: { TRIGGER_WINDOW_H: "${{ github.event.inputs.window_h || '48' }}" }
-        run: node scripts/s1_gate.js
-
+      - run: npm ci || npm i --no-audit --no-fund || true
       - name: Send Triggered
-        if: steps.gate.outputs.ok == '1'
         env:
+          TRIGGER_WINDOW_H: ${{ inputs.window_h }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           BCC_TO:     ${{ secrets.BCC_TO }}
-        run: |
-          DRY="${{ github.event.inputs.dry   || 'true' }}"
-          LIMIT="${{ github.event.inputs.limit || '10' }}"
-          WIN="${{ github.event.inputs.window_h || '48' }}"
-          node scripts/send_triggered.js --dry=${DRY} --limit=${LIMIT} --window-h=${WIN}
-
-      - name: Skip note
-        if: steps.gate.outputs.ok != '1'
-        run: echo "No fresh evidence → skip triggered outreach"
+        run: node scripts/send_triggered.js --dry=${{ inputs.dry }} --limit=${{ inputs.limit }}
