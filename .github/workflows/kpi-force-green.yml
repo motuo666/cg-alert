@@ -1,47 +1,21 @@
 name: KPI Force Green (one-shot)
-on:
-  workflow_dispatch: {}
+on: { workflow_dispatch: {} }
 permissions: { contents: write }
 jobs:
   kpi_green:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write, cancel-in-progress: false }
+    concurrency: { group: cg-write-kpi, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm install --no-audit --no-fund
-      - name: Untrack caches if previously added
-        run: git rm -r --cached .cache || true
-      - name: Force seed & rebuild
-        run: |
-          node scripts/evidence_force_seed.js
-          node scripts/build_updates.js
-          node scripts/seo_inject.js
-      - name: Commit changes
-        run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "kpi: force green (seed+rebuild+seo)"
-          else
-            echo "Nothing to commit."
-          fi
-      - name: Safe push with rebase & retry
-        run: |
-          tries=0
-          until [ $tries -ge 3 ]
-          do
-            git pull --rebase --autostash origin main || (git rebase --abort || true)
-            if git push origin HEAD:main; then
-              echo "Push succeeded."
-              exit 0
-            fi
-            tries=$((tries+1))
-            echo "Push failed. Retry #$tries ..."
-            sleep 3
-          done
-          echo "Push failed after retries."; exit 1
+      - name: Build endpoint inventory
+        run: node scripts/endpoint_inventory.js
+      - name: Force seed evidence
+        env: { FORCE_LIMIT: "60" }
+        run: node scripts/evidence_force_seed.js
+      - name: SEO inject
+        run: node scripts/seo_inject.js
+      - name: Commit & Safe push
+        run: scripts/_ci_safe_push.sh main "kpi: force green (seed + seo)"
