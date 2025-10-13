@@ -13,6 +13,7 @@ adyen.com,https://adyen.com/privacy,Privacy
 adyen.com,https://adyen.com/privacy-policy,Privacy
 adyen.com,https://adyen.com/security,Security
 adyen.com,https://adyen.com/status,Status
+adyen.com,https://adyen.com/status/,Status
 adyen.com,https://adyen.com/sub-processors,Subprocessors
 adyen.com,https://adyen.com/subprocessors,Subprocessors
 adyen.com,https://adyen.com/terms,ToS
@@ -35,6 +36,7 @@ algolia.com,https://algolia.com/privacy,Privacy
 algolia.com,https://algolia.com/privacy-policy,Privacy
 algolia.com,https://algolia.com/security,Security
 algolia.com,https://algolia.com/status,Status
+algolia.com,https://algolia.com/status/,Status
 algolia.com,https://algolia.com/sub-processors,Subprocessors
 algolia.com,https://algolia.com/subprocessors,Subprocessors
 algolia.com,https://algolia.com/terms,ToS
@@ -57,6 +59,7 @@ asana.com,https://asana.com/privacy,Privacy
 asana.com,https://asana.com/privacy-policy,Privacy
 asana.com,https://asana.com/security,Security
 asana.com,https://asana.com/status,Status
+asana.com,https://asana.com/status/,Status
 asana.com,https://asana.com/sub-processors,Subprocessors
 asana.com,https://asana.com/subprocessors,Subprocessors
 asana.com,https://asana.com/terms,ToS
@@ -79,6 +82,7 @@ atlassian.com,https://atlassian.com/privacy,Privacy
 atlassian.com,https://atlassian.com/privacy-policy,Privacy
 atlassian.com,https://atlassian.com/security,Security
 atlassian.com,https://atlassian.com/status,Status
+atlassian.com,https://atlassian.com/status/,Status
 atlassian.com,https://atlassian.com/sub-processors,Subprocessors
 atlassian.com,https://atlassian.com/subprocessors,Subprocessors
 atlassian.com,https://atlassian.com/terms,ToS
@@ -101,6 +105,7 @@ auth0.com,https://auth0.com/privacy,Privacy
 auth0.com,https://auth0.com/privacy-policy,Privacy
 auth0.com,https://auth0.com/security,Security
 auth0.com,https://auth0.com/status,Status
+auth0.com,https://auth0.com/status/,Status
 auth0.com,https://auth0.com/sub-processors,Subprocessors
 auth0.com,https://auth0.com/subprocessors,Subprocessors
 auth0.com,https://auth0.com/terms,ToS
@@ -123,6 +128,7 @@ aws.amazon.com,https://aws.amazon.com/privacy,Privacy
 aws.amazon.com,https://aws.amazon.com/privacy-policy,Privacy
 aws.amazon.com,https://aws.amazon.com/security,Security
 aws.amazon.com,https://aws.amazon.com/status,Status
+aws.amazon.com,https://aws.amazon.com/status/,Status
 aws.amazon.com,https://aws.amazon.com/sub-processors,Subprocessors
 aws.amazon.com,https://aws.amazon.com/subprocessors,Subprocessors
 aws.amazon.com,https://aws.amazon.com/terms,ToS
@@ -145,6 +151,7 @@ bitbucket.org,https://bitbucket.org/privacy,Privacy
 bitbucket.org,https://bitbucket.org/privacy-policy,Privacy
 bitbucket.org,https://bitbucket.org/security,Security
 bitbucket.org,https://bitbucket.org/status,Status
+bitbucket.org,https://bitbucket.org/status/,Status
 bitbucket.org,https://bitbucket.org/sub-processors,Subprocessors
 bitbucket.org,https://bitbucket.org/subprocessors,Subprocessors
 bitbucket.org,https://bitbucket.org/terms,ToS
@@ -167,6 +174,7 @@ box.com,https://box.com/privacy,Privacy
 box.com,https://box.com/privacy-policy,Privacy
 box.com,https://box.com/security,Security
 box.com,https://box.com/status,Status
+box.com,https://box.com/status/,Status
 box.com,https://box.com/sub-processors,Subprocessors
 box.com,https://box.com/subprocessors,Subprocessors
 box.com,https://box.com/terms,ToS
@@ -189,6 +197,7 @@ braintreepayments.com,https://braintreepayments.com/privacy,Privacy
 braintreepayments.com,https://braintreepayments.com/privacy-policy,Privacy
 braintreepayments.com,https://braintreepayments.com/security,Security
 braintreepayments.com,https://braintreepayments.com/status,Status
+braintreepayments.com,https://braintreepayments.com/status/,Status
 braintreepayments.com,https://braintreepayments.com/sub-processors,Subprocessors
 braintreepayments.com,https://braintreepayments.com/subprocessors,Subprocessors
 braintreepayments.com,https://braintreepayments.com/terms,ToS
@@ -211,6 +220,7 @@ canva.com,https://canva.com/privacy,Privacy
 canva.com,https://canva.com/privacy-policy,Privacy
 canva.com,https://canva.com/security,Security
 canva.com,https://canva.com/status,Status
+canva.com,https://canva.com/status/,Status
 canva.com,https://canva.com/sub-processors,Subprocessors
 canva.com,https://canva.com/subprocessors,Subprocessors
 canva.com,https://canva.com/terms,ToS
@@ -233,6 +243,7 @@ chargebee.com,https://chargebee.com/privacy,Privacy
 chargebee.com,https://chargebee.com/privacy-policy,Privacy
 chargebee.com,https://chargebee.com/security,Security
 chargebee.com,https://chargebee.com/status,Status
+chargebee.com,https://chargebee.com/status/,Status
 chargebee.com,https://chargebee.com/sub-processors,Subprocessors
 chargebee.com,https://chargebee.com/subprocessors,Subprocessors
 chargebee.com,https://chargebee.com/terms,ToS
@@ -255,6 +266,7 @@ checkout.com,https://checkout.com/privacy,Privacy
 checkout.com,https://checkout.com/privacy-policy,Privacy
 checkout.com,https://checkout.com/security,Security
 checkout.com,https://checkout.com/status,Status
+checkout.com,https://checkout.com/status/,Status
 checkout.com,https://checkout.com/sub-processors,Subprocessors
 checkout.com,https://checkout.com/subprocessors,Subprocessors
 checkout.com,https://checkout.com/terms,ToS
@@ -277,6 +289,7 @@ cloudflare.com,https://cloudflare.com/privacy,Privacy
 cloudflare.com,https://cloudflare.com/privacy-policy,Privacy
 cloudflare.com,https://cloudflare.com/security,Security
 cloudflare.com,https://cloudflare.com/status,Status
+cloudflare.com,https://cloudflare.com/status/,Status
 cloudflare.com,https://cloudflare.com/sub-processors,Subprocessors
 cloudflare.com,https://cloudflare.com/subprocessors,Subprocessors
 cloudflare.com,https://cloudflare.com/terms,ToS
@@ -299,6 +312,7 @@ confluent.io,https://confluent.io/privacy,Privacy
 confluent.io,https://confluent.io/privacy-policy,Privacy
 confluent.io,https://confluent.io/security,Security
 confluent.io,https://confluent.io/status,Status
+confluent.io,https://confluent.io/status/,Status
 confluent.io,https://confluent.io/sub-processors,Subprocessors
 confluent.io,https://confluent.io/subprocessors,Subprocessors
 confluent.io,https://confluent.io/terms,ToS
@@ -321,6 +335,7 @@ contentful.com,https://contentful.com/privacy,Privacy
 contentful.com,https://contentful.com/privacy-policy,Privacy
 contentful.com,https://contentful.com/security,Security
 contentful.com,https://contentful.com/status,Status
+contentful.com,https://contentful.com/status/,Status
 contentful.com,https://contentful.com/sub-processors,Subprocessors
 contentful.com,https://contentful.com/subprocessors,Subprocessors
 contentful.com,https://contentful.com/terms,ToS
@@ -343,6 +358,7 @@ datadoghq.com,https://datadoghq.com/privacy,Privacy
 datadoghq.com,https://datadoghq.com/privacy-policy,Privacy
 datadoghq.com,https://datadoghq.com/security,Security
 datadoghq.com,https://datadoghq.com/status,Status
+datadoghq.com,https://datadoghq.com/status/,Status
 datadoghq.com,https://datadoghq.com/sub-processors,Subprocessors
 datadoghq.com,https://datadoghq.com/subprocessors,Subprocessors
 datadoghq.com,https://datadoghq.com/terms,ToS
@@ -365,6 +381,7 @@ domain,https://domain/privacy,Privacy
 domain,https://domain/privacy-policy,Privacy
 domain,https://domain/security,Security
 domain,https://domain/status,Status
+domain,https://domain/status/,Status
 domain,https://domain/sub-processors,Subprocessors
 domain,https://domain/subprocessors,Subprocessors
 domain,https://domain/terms,ToS
@@ -387,6 +404,7 @@ dropbox.com,https://dropbox.com/privacy,Privacy
 dropbox.com,https://dropbox.com/privacy-policy,Privacy
 dropbox.com,https://dropbox.com/security,Security
 dropbox.com,https://dropbox.com/status,Status
+dropbox.com,https://dropbox.com/status/,Status
 dropbox.com,https://dropbox.com/sub-processors,Subprocessors
 dropbox.com,https://dropbox.com/subprocessors,Subprocessors
 dropbox.com,https://dropbox.com/terms,ToS
@@ -409,6 +427,7 @@ duo.com,https://duo.com/privacy,Privacy
 duo.com,https://duo.com/privacy-policy,Privacy
 duo.com,https://duo.com/security,Security
 duo.com,https://duo.com/status,Status
+duo.com,https://duo.com/status/,Status
 duo.com,https://duo.com/sub-processors,Subprocessors
 duo.com,https://duo.com/subprocessors,Subprocessors
 duo.com,https://duo.com/terms,ToS
@@ -431,6 +450,7 @@ elastic.co,https://elastic.co/privacy,Privacy
 elastic.co,https://elastic.co/privacy-policy,Privacy
 elastic.co,https://elastic.co/security,Security
 elastic.co,https://elastic.co/status,Status
+elastic.co,https://elastic.co/status/,Status
 elastic.co,https://elastic.co/sub-processors,Subprocessors
 elastic.co,https://elastic.co/subprocessors,Subprocessors
 elastic.co,https://elastic.co/terms,ToS
@@ -453,6 +473,7 @@ fastly.com,https://fastly.com/privacy,Privacy
 fastly.com,https://fastly.com/privacy-policy,Privacy
 fastly.com,https://fastly.com/security,Security
 fastly.com,https://fastly.com/status,Status
+fastly.com,https://fastly.com/status/,Status
 fastly.com,https://fastly.com/sub-processors,Subprocessors
 fastly.com,https://fastly.com/subprocessors,Subprocessors
 fastly.com,https://fastly.com/terms,ToS
@@ -475,6 +496,7 @@ figma.com,https://figma.com/privacy,Privacy
 figma.com,https://figma.com/privacy-policy,Privacy
 figma.com,https://figma.com/security,Security
 figma.com,https://figma.com/status,Status
+figma.com,https://figma.com/status/,Status
 figma.com,https://figma.com/sub-processors,Subprocessors
 figma.com,https://figma.com/subprocessors,Subprocessors
 figma.com,https://figma.com/terms,ToS
@@ -497,6 +519,7 @@ freshworks.com,https://freshworks.com/privacy,Privacy
 freshworks.com,https://freshworks.com/privacy-policy,Privacy
 freshworks.com,https://freshworks.com/security,Security
 freshworks.com,https://freshworks.com/status,Status
+freshworks.com,https://freshworks.com/status/,Status
 freshworks.com,https://freshworks.com/sub-processors,Subprocessors
 freshworks.com,https://freshworks.com/subprocessors,Subprocessors
 freshworks.com,https://freshworks.com/terms,ToS
@@ -519,6 +542,7 @@ github.com,https://github.com/privacy,Privacy
 github.com,https://github.com/privacy-policy,Privacy
 github.com,https://github.com/security,Security
 github.com,https://github.com/status,Status
+github.com,https://github.com/status/,Status
 github.com,https://github.com/sub-processors,Subprocessors
 github.com,https://github.com/subprocessors,Subprocessors
 github.com,https://github.com/terms,ToS
@@ -541,6 +565,7 @@ gitlab.com,https://gitlab.com/privacy,Privacy
 gitlab.com,https://gitlab.com/privacy-policy,Privacy
 gitlab.com,https://gitlab.com/security,Security
 gitlab.com,https://gitlab.com/status,Status
+gitlab.com,https://gitlab.com/status/,Status
 gitlab.com,https://gitlab.com/sub-processors,Subprocessors
 gitlab.com,https://gitlab.com/subprocessors,Subprocessors
 gitlab.com,https://gitlab.com/terms,ToS
@@ -563,6 +588,7 @@ globex.com,https://globex.com/privacy,Privacy
 globex.com,https://globex.com/privacy-policy,Privacy
 globex.com,https://globex.com/security,Security
 globex.com,https://globex.com/status,Status
+globex.com,https://globex.com/status/,Status
 globex.com,https://globex.com/sub-processors,Subprocessors
 globex.com,https://globex.com/subprocessors,Subprocessors
 globex.com,https://globex.com/terms,ToS
@@ -585,6 +611,7 @@ google.com,https://google.com/privacy,Privacy
 google.com,https://google.com/privacy-policy,Privacy
 google.com,https://google.com/security,Security
 google.com,https://google.com/status,Status
+google.com,https://google.com/status/,Status
 google.com,https://google.com/sub-processors,Subprocessors
 google.com,https://google.com/subprocessors,Subprocessors
 google.com,https://google.com/terms,ToS
@@ -614,6 +641,7 @@ helpscout.com,https://helpscout.com/privacy,Privacy
 helpscout.com,https://helpscout.com/privacy-policy,Privacy
 helpscout.com,https://helpscout.com/security,Security
 helpscout.com,https://helpscout.com/status,Status
+helpscout.com,https://helpscout.com/status/,Status
 helpscout.com,https://helpscout.com/sub-processors,Subprocessors
 helpscout.com,https://helpscout.com/subprocessors,Subprocessors
 helpscout.com,https://helpscout.com/terms,ToS
@@ -636,6 +664,7 @@ heroku.com,https://heroku.com/privacy,Privacy
 heroku.com,https://heroku.com/privacy-policy,Privacy
 heroku.com,https://heroku.com/security,Security
 heroku.com,https://heroku.com/status,Status
+heroku.com,https://heroku.com/status/,Status
 heroku.com,https://heroku.com/sub-processors,Subprocessors
 heroku.com,https://heroku.com/subprocessors,Subprocessors
 heroku.com,https://heroku.com/terms,ToS
@@ -658,6 +687,7 @@ hubspot.com,https://hubspot.com/privacy,Privacy
 hubspot.com,https://hubspot.com/privacy-policy,Privacy
 hubspot.com,https://hubspot.com/security,Security
 hubspot.com,https://hubspot.com/status,Status
+hubspot.com,https://hubspot.com/status/,Status
 hubspot.com,https://hubspot.com/sub-processors,Subprocessors
 hubspot.com,https://hubspot.com/subprocessors,Subprocessors
 hubspot.com,https://hubspot.com/terms,ToS
@@ -680,6 +710,7 @@ intercom.com,https://intercom.com/privacy,Privacy
 intercom.com,https://intercom.com/privacy-policy,Privacy
 intercom.com,https://intercom.com/security,Security
 intercom.com,https://intercom.com/status,Status
+intercom.com,https://intercom.com/status/,Status
 intercom.com,https://intercom.com/sub-processors,Subprocessors
 intercom.com,https://intercom.com/subprocessors,Subprocessors
 intercom.com,https://intercom.com/terms,ToS
@@ -702,6 +733,7 @@ linear.app,https://linear.app/privacy,Privacy
 linear.app,https://linear.app/privacy-policy,Privacy
 linear.app,https://linear.app/security,Security
 linear.app,https://linear.app/status,Status
+linear.app,https://linear.app/status/,Status
 linear.app,https://linear.app/sub-processors,Subprocessors
 linear.app,https://linear.app/subprocessors,Subprocessors
 linear.app,https://linear.app/terms,ToS
@@ -724,6 +756,7 @@ mailgun.com,https://mailgun.com/privacy,Privacy
 mailgun.com,https://mailgun.com/privacy-policy,Privacy
 mailgun.com,https://mailgun.com/security,Security
 mailgun.com,https://mailgun.com/status,Status
+mailgun.com,https://mailgun.com/status/,Status
 mailgun.com,https://mailgun.com/sub-processors,Subprocessors
 mailgun.com,https://mailgun.com/subprocessors,Subprocessors
 mailgun.com,https://mailgun.com/terms,ToS
@@ -746,6 +779,7 @@ microsoft.com,https://microsoft.com/privacy,Privacy
 microsoft.com,https://microsoft.com/privacy-policy,Privacy
 microsoft.com,https://microsoft.com/security,Security
 microsoft.com,https://microsoft.com/status,Status
+microsoft.com,https://microsoft.com/status/,Status
 microsoft.com,https://microsoft.com/sub-processors,Subprocessors
 microsoft.com,https://microsoft.com/subprocessors,Subprocessors
 microsoft.com,https://microsoft.com/terms,ToS
@@ -768,6 +802,7 @@ miro.com,https://miro.com/privacy,Privacy
 miro.com,https://miro.com/privacy-policy,Privacy
 miro.com,https://miro.com/security,Security
 miro.com,https://miro.com/status,Status
+miro.com,https://miro.com/status/,Status
 miro.com,https://miro.com/sub-processors,Subprocessors
 miro.com,https://miro.com/subprocessors,Subprocessors
 miro.com,https://miro.com/terms,ToS
@@ -790,6 +825,7 @@ monday.com,https://monday.com/privacy,Privacy
 monday.com,https://monday.com/privacy-policy,Privacy
 monday.com,https://monday.com/security,Security
 monday.com,https://monday.com/status,Status
+monday.com,https://monday.com/status/,Status
 monday.com,https://monday.com/sub-processors,Subprocessors
 monday.com,https://monday.com/subprocessors,Subprocessors
 monday.com,https://monday.com/terms,ToS
@@ -812,6 +848,7 @@ mongodb.com,https://mongodb.com/privacy,Privacy
 mongodb.com,https://mongodb.com/privacy-policy,Privacy
 mongodb.com,https://mongodb.com/security,Security
 mongodb.com,https://mongodb.com/status,Status
+mongodb.com,https://mongodb.com/status/,Status
 mongodb.com,https://mongodb.com/sub-processors,Subprocessors
 mongodb.com,https://mongodb.com/subprocessors,Subprocessors
 mongodb.com,https://mongodb.com/terms,ToS
@@ -834,6 +871,7 @@ netlify.com,https://netlify.com/privacy,Privacy
 netlify.com,https://netlify.com/privacy-policy,Privacy
 netlify.com,https://netlify.com/security,Security
 netlify.com,https://netlify.com/status,Status
+netlify.com,https://netlify.com/status/,Status
 netlify.com,https://netlify.com/sub-processors,Subprocessors
 netlify.com,https://netlify.com/subprocessors,Subprocessors
 netlify.com,https://netlify.com/terms,ToS
@@ -856,6 +894,7 @@ newrelic.com,https://newrelic.com/privacy,Privacy
 newrelic.com,https://newrelic.com/privacy-policy,Privacy
 newrelic.com,https://newrelic.com/security,Security
 newrelic.com,https://newrelic.com/status,Status
+newrelic.com,https://newrelic.com/status/,Status
 newrelic.com,https://newrelic.com/sub-processors,Subprocessors
 newrelic.com,https://newrelic.com/subprocessors,Subprocessors
 newrelic.com,https://newrelic.com/terms,ToS
@@ -878,6 +917,7 @@ notion.so,https://notion.so/privacy,Privacy
 notion.so,https://notion.so/privacy-policy,Privacy
 notion.so,https://notion.so/security,Security
 notion.so,https://notion.so/status,Status
+notion.so,https://notion.so/status/,Status
 notion.so,https://notion.so/sub-processors,Subprocessors
 notion.so,https://notion.so/subprocessors,Subprocessors
 notion.so,https://notion.so/terms,ToS
@@ -900,6 +940,7 @@ okta.com,https://okta.com/privacy,Privacy
 okta.com,https://okta.com/privacy-policy,Privacy
 okta.com,https://okta.com/security,Security
 okta.com,https://okta.com/status,Status
+okta.com,https://okta.com/status/,Status
 okta.com,https://okta.com/sub-processors,Subprocessors
 okta.com,https://okta.com/subprocessors,Subprocessors
 okta.com,https://okta.com/terms,ToS
@@ -922,6 +963,7 @@ onelogin.com,https://onelogin.com/privacy,Privacy
 onelogin.com,https://onelogin.com/privacy-policy,Privacy
 onelogin.com,https://onelogin.com/security,Security
 onelogin.com,https://onelogin.com/status,Status
+onelogin.com,https://onelogin.com/status/,Status
 onelogin.com,https://onelogin.com/sub-processors,Subprocessors
 onelogin.com,https://onelogin.com/subprocessors,Subprocessors
 onelogin.com,https://onelogin.com/terms,ToS
@@ -944,6 +986,7 @@ paddle.com,https://paddle.com/privacy,Privacy
 paddle.com,https://paddle.com/privacy-policy,Privacy
 paddle.com,https://paddle.com/security,Security
 paddle.com,https://paddle.com/status,Status
+paddle.com,https://paddle.com/status/,Status
 paddle.com,https://paddle.com/sub-processors,Subprocessors
 paddle.com,https://paddle.com/subprocessors,Subprocessors
 paddle.com,https://paddle.com/terms,ToS
@@ -966,6 +1009,7 @@ postmarkapp.com,https://postmarkapp.com/privacy,Privacy
 postmarkapp.com,https://postmarkapp.com/privacy-policy,Privacy
 postmarkapp.com,https://postmarkapp.com/security,Security
 postmarkapp.com,https://postmarkapp.com/status,Status
+postmarkapp.com,https://postmarkapp.com/status/,Status
 postmarkapp.com,https://postmarkapp.com/sub-processors,Subprocessors
 postmarkapp.com,https://postmarkapp.com/subprocessors,Subprocessors
 postmarkapp.com,https://postmarkapp.com/terms,ToS
@@ -988,6 +1032,7 @@ recurly.com,https://recurly.com/privacy,Privacy
 recurly.com,https://recurly.com/privacy-policy,Privacy
 recurly.com,https://recurly.com/security,Security
 recurly.com,https://recurly.com/status,Status
+recurly.com,https://recurly.com/status/,Status
 recurly.com,https://recurly.com/sub-processors,Subprocessors
 recurly.com,https://recurly.com/subprocessors,Subprocessors
 recurly.com,https://recurly.com/terms,ToS
@@ -1010,6 +1055,7 @@ render.com,https://render.com/privacy,Privacy
 render.com,https://render.com/privacy-policy,Privacy
 render.com,https://render.com/security,Security
 render.com,https://render.com/status,Status
+render.com,https://render.com/status/,Status
 render.com,https://render.com/sub-processors,Subprocessors
 render.com,https://render.com/subprocessors,Subprocessors
 render.com,https://render.com/terms,ToS
@@ -1032,6 +1078,7 @@ salesforce.com,https://salesforce.com/privacy,Privacy
 salesforce.com,https://salesforce.com/privacy-policy,Privacy
 salesforce.com,https://salesforce.com/security,Security
 salesforce.com,https://salesforce.com/status,Status
+salesforce.com,https://salesforce.com/status/,Status
 salesforce.com,https://salesforce.com/sub-processors,Subprocessors
 salesforce.com,https://salesforce.com/subprocessors,Subprocessors
 salesforce.com,https://salesforce.com/terms,ToS
@@ -1054,6 +1101,7 @@ sanity.io,https://sanity.io/privacy,Privacy
 sanity.io,https://sanity.io/privacy-policy,Privacy
 sanity.io,https://sanity.io/security,Security
 sanity.io,https://sanity.io/status,Status
+sanity.io,https://sanity.io/status/,Status
 sanity.io,https://sanity.io/sub-processors,Subprocessors
 sanity.io,https://sanity.io/subprocessors,Subprocessors
 sanity.io,https://sanity.io/terms,ToS
@@ -1076,6 +1124,7 @@ segment.com,https://segment.com/privacy,Privacy
 segment.com,https://segment.com/privacy-policy,Privacy
 segment.com,https://segment.com/security,Security
 segment.com,https://segment.com/status,Status
+segment.com,https://segment.com/status/,Status
 segment.com,https://segment.com/sub-processors,Subprocessors
 segment.com,https://segment.com/subprocessors,Subprocessors
 segment.com,https://segment.com/terms,ToS
@@ -1098,6 +1147,7 @@ sendgrid.com,https://sendgrid.com/privacy,Privacy
 sendgrid.com,https://sendgrid.com/privacy-policy,Privacy
 sendgrid.com,https://sendgrid.com/security,Security
 sendgrid.com,https://sendgrid.com/status,Status
+sendgrid.com,https://sendgrid.com/status/,Status
 sendgrid.com,https://sendgrid.com/sub-processors,Subprocessors
 sendgrid.com,https://sendgrid.com/subprocessors,Subprocessors
 sendgrid.com,https://sendgrid.com/terms,ToS
@@ -1120,6 +1170,7 @@ sentry.io,https://sentry.io/privacy,Privacy
 sentry.io,https://sentry.io/privacy-policy,Privacy
 sentry.io,https://sentry.io/security,Security
 sentry.io,https://sentry.io/status,Status
+sentry.io,https://sentry.io/status/,Status
 sentry.io,https://sentry.io/sub-processors,Subprocessors
 sentry.io,https://sentry.io/subprocessors,Subprocessors
 sentry.io,https://sentry.io/terms,ToS
@@ -1142,6 +1193,7 @@ slack.com,https://slack.com/privacy,Privacy
 slack.com,https://slack.com/privacy-policy,Privacy
 slack.com,https://slack.com/security,Security
 slack.com,https://slack.com/status,Status
+slack.com,https://slack.com/status/,Status
 slack.com,https://slack.com/sub-processors,Subprocessors
 slack.com,https://slack.com/subprocessors,Subprocessors
 slack.com,https://slack.com/terms,ToS
@@ -1164,6 +1216,7 @@ snowflake.com,https://snowflake.com/privacy,Privacy
 snowflake.com,https://snowflake.com/privacy-policy,Privacy
 snowflake.com,https://snowflake.com/security,Security
 snowflake.com,https://snowflake.com/status,Status
+snowflake.com,https://snowflake.com/status/,Status
 snowflake.com,https://snowflake.com/sub-processors,Subprocessors
 snowflake.com,https://snowflake.com/subprocessors,Subprocessors
 snowflake.com,https://snowflake.com/terms,ToS
@@ -1368,6 +1421,7 @@ stripe.com,https://stripe.com/privacy,Privacy
 stripe.com,https://stripe.com/privacy-policy,Privacy
 stripe.com,https://stripe.com/security,Security
 stripe.com,https://stripe.com/status,Status
+stripe.com,https://stripe.com/status/,Status
 stripe.com,https://stripe.com/sub-processors,Subprocessors
 stripe.com,https://stripe.com/subprocessors,Subprocessors
 stripe.com,https://stripe.com/terms,ToS
@@ -1390,6 +1444,7 @@ supabase.com,https://supabase.com/privacy,Privacy
 supabase.com,https://supabase.com/privacy-policy,Privacy
 supabase.com,https://supabase.com/security,Security
 supabase.com,https://supabase.com/status,Status
+supabase.com,https://supabase.com/status/,Status
 supabase.com,https://supabase.com/sub-processors,Subprocessors
 supabase.com,https://supabase.com/subprocessors,Subprocessors
 supabase.com,https://supabase.com/terms,ToS
@@ -1412,6 +1467,7 @@ twilio.com,https://twilio.com/privacy,Privacy
 twilio.com,https://twilio.com/privacy-policy,Privacy
 twilio.com,https://twilio.com/security,Security
 twilio.com,https://twilio.com/status,Status
+twilio.com,https://twilio.com/status/,Status
 twilio.com,https://twilio.com/sub-processors,Subprocessors
 twilio.com,https://twilio.com/subprocessors,Subprocessors
 twilio.com,https://twilio.com/terms,ToS
@@ -1434,6 +1490,7 @@ vercel.com,https://vercel.com/privacy,Privacy
 vercel.com,https://vercel.com/privacy-policy,Privacy
 vercel.com,https://vercel.com/security,Security
 vercel.com,https://vercel.com/status,Status
+vercel.com,https://vercel.com/status/,Status
 vercel.com,https://vercel.com/sub-processors,Subprocessors
 vercel.com,https://vercel.com/subprocessors,Subprocessors
 vercel.com,https://vercel.com/terms,ToS
@@ -1456,6 +1513,7 @@ zendesk.com,https://zendesk.com/privacy,Privacy
 zendesk.com,https://zendesk.com/privacy-policy,Privacy
 zendesk.com,https://zendesk.com/security,Security
 zendesk.com,https://zendesk.com/status,Status
+zendesk.com,https://zendesk.com/status/,Status
 zendesk.com,https://zendesk.com/sub-processors,Subprocessors
 zendesk.com,https://zendesk.com/subprocessors,Subprocessors
 zendesk.com,https://zendesk.com/terms,ToS
@@ -1478,6 +1536,7 @@ zoho.com,https://zoho.com/privacy,Privacy
 zoho.com,https://zoho.com/privacy-policy,Privacy
 zoho.com,https://zoho.com/security,Security
 zoho.com,https://zoho.com/status,Status
+zoho.com,https://zoho.com/status/,Status
 zoho.com,https://zoho.com/sub-processors,Subprocessors
 zoho.com,https://zoho.com/subprocessors,Subprocessors
 zoho.com,https://zoho.com/terms,ToS
@@ -1500,6 +1559,7 @@ zoom.us,https://zoom.us/privacy,Privacy
 zoom.us,https://zoom.us/privacy-policy,Privacy
 zoom.us,https://zoom.us/security,Security
 zoom.us,https://zoom.us/status,Status
+zoom.us,https://zoom.us/status/,Status
 zoom.us,https://zoom.us/sub-processors,Subprocessors
 zoom.us,https://zoom.us/subprocessors,Subprocessors
 zoom.us,https://zoom.us/terms,ToS

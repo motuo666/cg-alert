@@ -1,0 +1,10 @@
+{
+  "vendor": "duo.com",
+  "type": "Security",
+  "url": "https://duo.com/.well-known/security.txt",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T07:04:36.995Z",
+  "etag": "\"685ef5fe-e2\"",
+  "last_modified": "Fri, 27 Jun 2025 19:50:22 GMT",
+  "hash": null
+}

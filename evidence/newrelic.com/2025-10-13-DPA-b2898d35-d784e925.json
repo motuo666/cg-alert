@@ -1,0 +1,10 @@
+{
+  "vendor": "newrelic.com",
+  "type": "DPA",
+  "url": "https://newrelic.com/legal/dpa",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T07:08:14.897Z",
+  "etag": "\"93a1105b19c60dda591418e69f57ce45\"",
+  "last_modified": "Sun, 12 Oct 2025 00:27:06 GMT",
+  "hash": "sha256:d784e925ca7db969d51a5cfe443e1a11b69d854ecf33bbdbef42c0fb7e4be6a2"
+}

@@ -1,0 +1,10 @@
+{
+  "vendor": "render.com",
+  "type": "Security",
+  "url": "https://render.com/.well-known/security.txt",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T07:08:23.675Z",
+  "etag": "W/\"ba-199d0b38128\"",
+  "last_modified": "Sat, 11 Oct 2025 00:37:29 GMT",
+  "hash": null
+}

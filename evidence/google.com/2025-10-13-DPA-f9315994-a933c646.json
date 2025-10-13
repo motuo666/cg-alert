@@ -1,0 +1,10 @@
+{
+  "vendor": "google.com",
+  "type": "DPA",
+  "url": "https://google.com/legal/dpa",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T07:07:51.866Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": "sha256:a933c646e9687f2e6ddcd98604043801dc768e4c1a714023b1d86f7ed80c104c"
+}

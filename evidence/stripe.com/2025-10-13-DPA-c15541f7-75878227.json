@@ -1,0 +1,10 @@
+{
+  "vendor": "stripe.com",
+  "type": "DPA",
+  "url": "https://stripe.com/dpa",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T07:12:27.574Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": "sha256:758782270e53c05d29e3448d9b6298bf387cf691fe79405d81c4fe6609cbc21e"
+}

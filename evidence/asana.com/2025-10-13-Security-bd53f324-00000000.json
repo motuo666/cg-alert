@@ -1,0 +1,10 @@
+{
+  "vendor": "asana.com",
+  "type": "Security",
+  "url": "https://asana.com/.well-known/security.txt",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T07:04:20.180Z",
+  "etag": "\"38b5c65e1aa51cb4e299d72ad0d431a5-ssl\"",
+  "last_modified": null,
+  "hash": null
+}

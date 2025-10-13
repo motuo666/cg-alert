@@ -1,0 +1,10 @@
+{
+  "vendor": "newrelic.com",
+  "type": "Security",
+  "url": "https://newrelic.com/.well-known/security.txt",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T07:08:13.339Z",
+  "etag": "\"cd626820fb33af3d1cf00b08ad850ecf\"",
+  "last_modified": null,
+  "hash": null
+}
