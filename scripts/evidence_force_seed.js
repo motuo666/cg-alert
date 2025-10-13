@@ -1,10 +1,4 @@
 #!/usr/bin/env node
-/**
- * 一次性把“今天”的 evidence 拉到目标值（公开端点 + robots）
- * - 以 URL 为准解析 vendor（避免逗号错位）
- * - 文件名唯一：YYYY-MM-DD-Type-<url8>-<body8>.json（不再被覆盖）
- * - 跳过 _seed.*, acme.*, example.*
- */
 const fs=require('fs'), path=require('path'), crypto=require('crypto'), https=require('https'), http=require('http');
 
 const TARGET_TODAY = Math.max(30, Number(process.env.SEED_TODAY_MIN||30));
@@ -17,7 +11,7 @@ const EP_FILE='data/endpoints.csv';
 const today = ()=> new Date().toISOString().slice(0,10);
 const sha256 = b => crypto.createHash('sha256').update(b).digest('hex');
 const sha1   = s => crypto.createHash('sha1').update(s).digest('hex');
-const isBadHost = h => /^(_seed|acme|example)\./i.test(h) || h.endsWith('.example.com');
+const isBadHost = h => /^(_seed|acme|example)\./i.test(h) || h==='example.com' || h.endsWith('.example.com');
 
 function ensureFile(p, content){ fs.mkdirSync(path.dirname(p), {recursive:true}); if(!fs.existsSync(p)) fs.writeFileSync(p, content,'utf8'); }
 function lines(p){ return fs.existsSync(p)?fs.readFileSync(p,'utf8').split(/\r?\n/).filter(Boolean):[]; }
@@ -29,9 +23,7 @@ function httpRequest(u, opt={}){
       headers: { 'user-agent': UA, 'accept': '*/*', ...(opt.headers||{}) }}, res=>{
         const bufs=[]; res.on('data',d=>bufs.push(d)); res.on('end',()=>resolve({res, body:Buffer.concat(bufs)}));
       });
-    req.on('timeout',()=>req.destroy(new Error('timeout')));
-    req.on('error',reject);
-    req.end();
+    req.on('timeout',()=>req.destroy(new Error('timeout'))); req.on('error',reject); req.end();
   });
 }
 function allowed(robots, pathname){
@@ -67,22 +59,6 @@ function vendorTodayCount(vendor){
   return fs.readdirSync(dir).filter(f=>f.startsWith(today()+'-') && f.endsWith('.json')).length;
 }
 
-function ensureDomainsAndEndpoints(){
-  if(!fs.existsSync('data/domains.csv') || lines('data/domains.csv').length < 40){
-    const seeds = [
-      'stripe.com','cloudflare.com','twilio.com','slack.com','zoom.us','box.com','dropbox.com','atlassian.com',
-      'datadoghq.com','pagerduty.com','okta.com','auth0.com','github.com','gitlab.com','vercel.com','netlify.com',
-      'algolia.com','airtable.com','monday.com','sentry.io','notion.so','intercom.com','zendesk.com','freshworks.com',
-      'segment.com','linear.app','supabase.com','render.com','hashicorp.com','snowflake.com','mongodb.com',
-      'elastic.co','newrelic.com','confluent.io','openai.com','anthropic.com','huggingface.co','digitalocean.com',
-      'heroku.com','salesforce.com','mailchimp.com','sendgrid.com','postmarkapp.com','fastly.com','amplitude.com'
-    ];
-    ensureFile('data/domains.csv', seeds.join('\n')+'\n');
-  }
-  try{ require('child_process').execSync('node scripts/endpoint_inventory.js', {stdio:'inherit'}); }catch{}
-  if(!fs.existsSync(EP_FILE)) throw new Error('endpoints.csv missing');
-}
-
 function parseEndpoints(){
   const rows = lines(EP_FILE);
   const out=[];
@@ -92,7 +68,7 @@ function parseEndpoints(){
     const url=m[0]; const u=new URL(url);
     const host=u.hostname.replace(/^www\./,'').toLowerCase();
     if(isBadHost(host)) continue;
-    const type = l.split(',').slice(-1)[0]?.trim() || '';
+    const type = l.split(',').slice(-1)[0]?.trim() || 'Baseline';
     out.push({ vendor: host, url, type });
     if(out.length>=MAX_ENDPOINTS) break;
   }
@@ -100,18 +76,28 @@ function parseEndpoints(){
 }
 
 async function seed(){
-  ensureDomainsAndEndpoints();
+  if(!fs.existsSync('data/domains.csv') || lines('data/domains.csv').length<40){
+    // 兜底：给最小域种子
+    const seeds = [
+      'stripe.com','cloudflare.com','twilio.com','slack.com','zoom.us','box.com','dropbox.com','atlassian.com',
+      'datadoghq.com','pagerduty.com','okta.com','auth0.com','github.com','gitlab.com','vercel.com','netlify.com',
+      'algolia.com','airtable.com','monday.com','sentry.io','notion.so','intercom.com','zendesk.com','freshworks.com'
+    ];
+    ensureFile('data/domains.csv', seeds.join('\n')+'\n');
+  }
+  try{ require('child_process').execSync('node scripts/endpoint_inventory.js', {stdio:'inherit'}); }catch{}
+  if(!fs.existsSync(EP_FILE)) throw new Error('endpoints.csv missing');
+
   const eps = parseEndpoints();
   const q=new Map();
   for(const r of eps){
     if(countToday() >= TARGET_TODAY) break;
-    const used = q.get(r.vendor)||0;
+    const used=q.get(r.vendor)||0;
     if(used >= PER_VENDOR_MAX) continue;
 
     const u=new URL(r.url);
     if(!(await robotsAllowed(u.hostname, u.pathname))) continue;
 
-    // 尝试拿头/体；失败也允许写“基线”（hash=null），但文件名带 URL 指纹确保唯一
     let etag='', last='', body=Buffer.from('');
     try{
       let res = await httpRequest(r.url, {method:'HEAD'}).catch(()=>null);
@@ -132,8 +118,7 @@ async function seed(){
     if(vendorTodayCount(r.vendor) >= PER_VENDOR_MAX) continue;
 
     const obj={ vendor:r.vendor, type:(r.type||'Baseline'), url:r.url,
-      detected_at:new Date().toISOString(),
-      etag: etag||null, last_modified: last||null,
+      detected_at:new Date().toISOString(), etag: etag||null, last_modified: last||null,
       hash: body.length?`sha256:${sha256(body)}`:null };
 
     fs.writeFileSync(path.join(dir,fname), JSON.stringify(obj,null,2),'utf8');
