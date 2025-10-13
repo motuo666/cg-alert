@@ -1,0 +1,21 @@
+name: Git Unignore Evidence (one-shot)
+on: { workflow_dispatch: {} }
+permissions: { contents: write }
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Ensure evidence tracked
+        run: |
+          touch .gitignore
+          # 删除可能存在的忽略规则
+          sed -i.bak '/^evidence\/$/d;/^evidence\/\*\*$/d' .gitignore || true
+          # 反选：强制跟踪 evidence/*
+          grep -q '^!evidence/\*\*$' .gitignore || echo '!evidence/**' >> .gitignore
+          git config user.name "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          git add .gitignore
+          git commit -m "git: ensure evidence/** tracked (unignore)" || echo "no changes"
+          git push
