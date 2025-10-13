@@ -1,69 +1,102 @@
-name: Outreach S1
-
+name: Outreach S1 (regular)
 on:
-  schedule:
-    - cron: "30 17 * * 1-5"
+  schedule: [{ cron: "30 17 * * 1-5" }]  # 工作日 17:30 UTC
   workflow_dispatch:
     inputs:
-      dry:   { description: "Dry run (true/false)", required: true, default: "false" }
-      limit: { description: "Max emails to send",    required: true, default: "20" }
+      dry:
+        description: "DRY run (true/false)"
+        required: false
+        default: "true"
+      limit:
+        description: "Max emails this run"
+        required: false
+        default: "10"
+      window_h:
+        description: "Evidence window hours"
+        required: false
+        default: "48"
 
-concurrency: { group: outreach-s1, cancel-in-progress: false }
+permissions: { contents: write }
 
 jobs:
-  run:
+  s1:
     runs-on: ubuntu-latest
-    env:
-      DRY:   ${{ inputs.dry   || 'false' }}
-      LIMIT: ${{ inputs.limit || '20'  }}
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      MAIL_FROM: ${{ secrets.MAIL_FROM }}
-      IMAP_HOST: ${{ secrets.IMAP_HOST }}
-      IMAP_PORT: ${{ secrets.IMAP_PORT }}
-      IMAP_USER: ${{ secrets.IMAP_USER }}
-      IMAP_PASS: ${{ secrets.IMAP_PASS }}
-      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-      BCC_TO: ${{ secrets.BCC_TO }}
+    concurrency: { group: cg-write, cancel-in-progress: false }
+
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
-        with: { node-version: "20" }
+        with: { node-version: 20 }
+
       - name: Install deps
-        run: npm ci
+        run: npm ci || npm install --no-audit --no-fund
+
+      - name: Untrack caches if previously added
+        run: git rm -r --cached .cache || true
 
       - name: Leads sanity
         run: node scripts/validate_leads.js
 
-      - name: Gate by recent evidence (48h)
+      - name: Gate by recent evidence
         id: gate
-        env: { TRIGGER_WINDOW_H: "48" }
-        run: node scripts/s1_gate.js
+        env:
+          TRIGGER_WINDOW_H: ${{ github.event.inputs.window_h || '48' }}
+        run: |
+          node scripts/s1_gate.js
+          # s1_gate.js 已写 GITHUB_OUTPUT: ok=0/1
 
-      - name: Send S1 (only when gate=1)
+      - name: Send S1 (bulk)
         if: steps.gate.outputs.ok == '1'
-        run: node scripts/send_bulk.js --dry=${DRY} --limit=${LIMIT}
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          BCC_TO:     ${{ secrets.BCC_TO }}
+        run: |
+          DRY="${{ github.event.inputs.dry || 'true' }}"
+          LIMIT="${{ github.event.inputs.limit || '10' }}"
+          node scripts/send_bulk.js --dry=${DRY} --limit=${LIMIT}
+
+      - name: Poll inbox for bounces (optional)
+        if: steps.gate.outputs.ok == '1'
+        env:
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          # 若未设 IMAP_*，脚本会回退/跳过
+        run: node scripts/poll_inbox.js || true
+
+      - name: Commit outreach artifacts
+        run: |
+          git config user.name "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "outreach(s1): leads/bounces/status heartbeat"
+          else
+            echo "No outreach changes."
+          fi
+
+      - name: Safe push with rebase & retry
+        run: |
+          tries=0
+          until [ $tries -ge 3 ]
+          do
+            git pull --rebase --autostash origin main || (git rebase --abort || true)
+            if git push origin HEAD:main; then
+              echo "Push succeeded."
+              exit 0
+            fi
+            tries=$((tries+1))
+            echo "Push failed. Retry #$tries ..."
+            sleep 3
+          done
+          echo "Push failed after retries."; exit 1
 
       - name: Skip note (no fresh evidence)
         if: steps.gate.outputs.ok != '1'
         run: echo "No fresh evidence → skip S1 this run"
-
-      - name: Heartbeat
-        if: always()
-        run: |
-          mkdir -p .heartbeat
-          date -u +"%Y-%m-%dT%H:%M:%SZ gate=${{ steps.gate.outputs.ok }} dry=${DRY} limit=${LIMIT}" > .heartbeat/outreach-s1.txt
-          git config user.name "cg-alert-bot"
-          git config user.email "bot@cg-alert.com"
-          git add .heartbeat/outreach-s1.txt || true
-          git commit -m "heartbeat(outreach-s1): update" || true
-          git push || true
-
-      - name: Slack notify
-        if: always()
-        run: |
-          STATUS="${{ job.status }}"
-          MSG="Outreach S1 • status=${STATUS} • gate=${{ steps.gate.outputs.ok }} • dry=${DRY} • limit=${LIMIT}"
-          curl -sS -X POST -H 'Content-type: application/json' --data "$(jq -n --arg t "$MSG" '{text:$t}')" "$SLACK_WEBHOOK"
