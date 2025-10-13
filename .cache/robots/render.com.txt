@@ -1,5 +1,0 @@
-User-Agent: *
-Disallow: /contact-sales
-Disallow: /newsletters/
-
-Sitemap: https://render.com/sitemap-index.xml

@@ -1,0 +1,10 @@
+{
+  "vendor": "linear.app",
+  "type": "Security",
+  "url": "https://linear.app/.well-known/security.txt",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T09:03:20.279Z",
+  "etag": "W/\"78-199dc5da260\"",
+  "last_modified": "Mon, 13 Oct 2025 06:59:08 GMT",
+  "hash": null
+}
