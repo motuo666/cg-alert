@@ -1,15 +1,16 @@
 name: Weekly Health (Self-Heal)
-
 on:
-  schedule: [{ cron: "0 15 * * 1" }]  # 周一 15:00 UTC
+  schedule:
+    - cron: "0 15 * * 1"  # 周一 15:00 UTC
   workflow_dispatch: {}
-
-permissions: { contents: write }
-
+permissions:
+  contents: write
 jobs:
   health:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write, cancel-in-progress: false }
+    concurrency:
+      group: cg-write-health
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -17,44 +18,28 @@ jobs:
         with: { node-version: 20 }
       - name: Install deps
         run: npm ci || npm install --no-audit --no-fund
-
-      # 低证据时自动补 baseline（不触发外呼），避免 KPI 误红
       - name: Ensure endpoint inventory
-        run: node scripts/endpoint_inventory.js || true
-      - name: Self-heal (seed baseline when low)
+        run: node scripts/endpoint_inventory.js
+      - name: Poll public endpoints (sample)
+        env: { POLL_MAX: "32" }
+        run: node scripts/poll_public_endpoints.js
+      - name: Evidence force seed (baseline)
+        env: { FORCE_LIMIT: "30" }
+        run: node scripts/evidence_force_seed.js
+      - name: SEO inject (idempotent)
+        run: node scripts/seo_inject.js
+      - name: Commit & Safe push
+        id: push
+        run: scripts/_ci_safe_push.sh main "kpi: self-heal (seed + poll + seo)"
+      - name: SMTP/IMAP check & KPI
         env:
-          SEED_TODAY_MIN: "30"          # 今天至少 30 条 baseline（仅文件）
-          SEED_PER_VENDOR_MAX: "2"      # 每 vendor 限 2
-          SEED_MAX_ENDPOINTS: "3000"
-        run: node scripts/evidence_force_seed.js || true
-
-      - name: Build updates & SEO (idempotent)
-        run: |
-          node scripts/build_updates.js  || true
-          node scripts/build_categories.js || true
-          node scripts/build_public_monthly.js || true
-          node scripts/seo_inject.js || true
-
-      - name: Commit artifacts (safe push)
-        run: |
-          chmod +x scripts/_ci_safe_push.sh
-          git add -A || true
-          git diff --quiet || git commit -m "kpi: self-heal (seed + rebuild)"
-          bash scripts/_ci_safe_push.sh main origin 5
-
-      - name: Health Check (KPI + SMTP/IMAP)
-        env:
-          # KPI 阈值（可在仓库 Actions → 此工作流 → Run → 可覆盖）
-          KPI_48H_MIN: "4"
-          KPI_7D_MIN:  "4"
-          # SMTP（未配置则跳过，不拉红）
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           SMTP_REQUIRED: "0"
-          # IMAP（未配置则跳过）
           IMAP_HOST: ${{ secrets.IMAP_HOST }}
           IMAP_PORT: ${{ secrets.IMAP_PORT }}
           IMAP_USER: ${{ secrets.IMAP_USER }}
