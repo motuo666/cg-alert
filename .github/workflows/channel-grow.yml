@@ -1,0 +1,35 @@
+name: Channel Grow (weekly)
+on:
+  schedule: [{ cron: "20 9 * * 1" }]  # 每周一 09:20 UTC
+  workflow_dispatch: {}
+permissions: { contents: write }
+jobs:
+  channel_grow:
+    runs-on: ubuntu-latest
+    concurrency: { group: cg-write, cancel-in-progress: false }
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Install deps
+        run: npm ci
+      - name: Discover channel candidates from vendors' partner pages
+        env:
+          NEW_CHANNELS_LIMIT: "30"   # 每周最多新增 30 个候选域
+        run: node scripts/auto_discover_channels.js
+      - name: Enrich candidates with emails (MX validated) and promote to partners
+        env:
+          CHANNEL_PROMOTE_LIMIT: "10"  # 每周最多加入 10 个到 partners 列表
+        run: node scripts/channel_contact_enrich.js
+      - name: Commit channel growth
+        run: |
+          git config user.name "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "channel: +candidates & +partners (weekly)"
+            git push
+          else
+            echo "No channel changes."
+          fi
