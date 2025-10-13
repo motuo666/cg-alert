@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: { node-version: 18 }
 
       # 统一换行，移除表头、补 status/mx_ok、拆粘连行、去重（在仓库根执行）

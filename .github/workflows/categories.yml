@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4           # ← 改为官方 tag
-      - uses: actions/setup-node@v4         # ← 改为官方 tag
+      - uses: actions/setup-node@v5         # ← 改为官方 tag
         with:
           node-version: '18'
       - name: Build category pages

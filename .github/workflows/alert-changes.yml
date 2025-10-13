@@ -16,7 +16,7 @@ jobs:
         run: |
           git diff --name-only HEAD^ HEAD | tee changed.txt
           echo "Changed:"; cat changed.txt || true
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: { node-version: '18' }
       - name: Run customer alerts
         env:

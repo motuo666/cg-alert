@@ -27,7 +27,7 @@ jobs:
       BCC_TO: ${{ secrets.BCC_TO }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with: { node-version: "20" }
       - name: Install deps
         run: npm ci
