@@ -1,34 +1,36 @@
 name: Domain Grow (daily)
 on:
-  schedule:
-    - cron: "30 8 * * *"   # 每天 08:30 UTC
+  schedule: [ { cron: "20 3 * * *" } ]
   workflow_dispatch: {}
-permissions: { contents: write, pull-requests: write }
+permissions: { contents: write }
 jobs:
   grow:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write-domains, cancel-in-progress: false }
+    concurrency: { group: cg-grow, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Install deps (best effort)
-        run: npm ci || npm install --no-audit --no-fund || true
-      - name: Auto discover new domains
-        env: { GROW_LIMIT: "40" }
-        run: node scripts/auto_discover_domains.js
-      - name: Build endpoint inventory
-        run: node scripts/endpoint_inventory.js
-      - name: Commit & Safe push
-        id: push
-        run: scripts/_ci_safe_push.sh main "grow: +auto discovered domains (daily)"
-      - name: Create PR fallback
-        if: steps.push.outputs.changed == '1' && steps.push.outputs.pushed != '1'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          commit-message: "grow: +auto discovered domains (daily)"
-          title: "Domain Grow (auto PR fallback)"
-          body: "Auto-created because direct push failed."
-          branch: bot/domain-grow
-          base: main
+      - run: npm ci || npm i --no-audit --no-fund || true
+      - name: Safe push helper
+        run: |
+          cat > scripts/_ci_safe_push.sh <<'SH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          git config --local user.name  "${GIT_COMMIT_NAME:-CG Bot}" || true
+          git config --local user.email "${GIT_COMMIT_EMAIL:-bot@cg-alert.com}" || true
+          if git diff --quiet; then exit 0; fi
+          git add -A && git commit -m "grow: +auto discovered domains (daily)"
+          for i in 1 2 3; do
+            git pull --rebase --autostash origin main || (git rebase --abort || true)
+            git push origin HEAD:main && exit 0
+            sleep 3
+          done
+          exit 0
+          SH
+          chmod +x scripts/_ci_safe_push.sh
+      - name: Run grow
+        run: node scripts/auto_domains.js
+      - name: Push
+        run: scripts/_ci_safe_push.sh
