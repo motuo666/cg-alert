@@ -18,26 +18,49 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
 
-      # 该脚本只用内置模块，严格来说无需安装依赖；保留以统一环境
+      # 脚本只用内置模块；保留安装步骤以统一环境（ci失败则退回普通install）
       - name: Install deps
         run: npm ci || npm install --no-audit --no-fund
 
-      - name: Promote intakes -> customers (dedup)
-        run: node scripts/promote-intakes.js
-
-      - name: Commit customers list
+      # 保险：路径/文件存在性与样本统计，方便排障
+      - name: Preflight - list files
         run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "promote: intakes -> customers (dedup)"
+          set -euxo pipefail
+          ls -la
+          ls -la scripts || true
+          mkdir -p data
+          ls -la data || true
+          wc -l data/intakes.csv 2>/dev/null || true
+          wc -l data/customers.csv 2>/dev/null || true
+
+      - name: Promote intakes -> customers (dedup)
+        run: |
+          set -euxo pipefail
+          node scripts/promote-intakes.js
+
+      # 检测是否真的有变更；只有变更才 commit+push
+      - name: Detect changes
+        id: diff
+        run: |
+          if git diff --quiet; then
+            echo "changed=0" >> "$GITHUB_OUTPUT"
           else
-            echo "No changes."
+            echo "changed=1" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Safe push with rebase & retry
+      - name: Commit customers list
+        if: steps.diff.outputs.changed == '1'
         run: |
+          set -euxo pipefail
+          git config user.name "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          git add -A
+          git commit -m "promote: intakes -> customers (dedup)"
+
+      - name: Safe push with rebase & retry
+        if: steps.diff.outputs.changed == '1'
+        run: |
+          set -euxo pipefail
           tries=0
           until [ $tries -ge 3 ]
           do
