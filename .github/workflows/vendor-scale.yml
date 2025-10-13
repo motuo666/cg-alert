@@ -1,30 +1,25 @@
 name: Vendor Scale (skeletons + auto-append)
 on:
-  schedule: [{ cron: "15 2 * * 2" }]  # 每周二 02:15 UTC
+  schedule: [{ cron: "15 2 * * 2" }]
   workflow_dispatch: {}
 permissions: { contents: write }
 jobs:
   scale:
     runs-on: ubuntu-latest
+    concurrency: { group: cg-write, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Expand domain pool (optional helpers)
-        run: |
-          node scripts/auto_append_domains.js || true
-          node scripts/autofill_domains_from_evidence.js || true
-          node scripts/autofill_vendor_tags_pool.js || true
-      - name: Ensure vendor skeleton pages
-        run: node scripts/ensure_vendor_skeletons.js
-      - name: SEO inject + rebuild updates
-        run: |
+      - run: node scripts/auto_append_domains.js || true
+      - run: node scripts/autofill_domains_from_evidence.js || true
+      - run: node scripts/autofill_vendor_tags_pool.js || true
+      - run: node scripts/ensure_vendor_skeletons.js
+      - run: |
           node scripts/build_updates.js
           node scripts/seo_inject.js
-      - name: Commit
+      - name: Safe push
         run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          git add -A
-          git commit -m "scale: vendor skeletons + seo inject" || echo "no changes"
-          git push
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "scale: vendor skeletons + seo inject"
