@@ -1,24 +1,26 @@
 name: Monthly Public Report
 on:
-  schedule:
-    - cron: "10 15 1 * *" # 每月1日 15:10 UTC
+  schedule: [ { cron: "10 15 1 * *" } ]
   workflow_dispatch:
     inputs:
-      month:
-        description: "Month (YYYY-MM)"
-        required: false
+      month: { description: "YYYY-MM (blank = current)", required: false }
 permissions: { contents: write }
 jobs:
-  monthly:
+  report:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write-monthly, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Build monthly public report
-        env: { REPORT_MONTH: ${{ github.event.inputs.month }} }
+      - run: npm ci || npm i --no-audit --no-fund || true
+      - name: Build month
+        env: { REPORT_MONTH: ${{ inputs.month }} }
         run: node scripts/build_public_monthly.js
-      - name: Commit & Safe push
-        run: scripts/_ci_safe_push.sh main "reports: monthly public + rss"
+      - name: Commit & push
+        run: |
+          git config --local user.name "CG Bot"
+          git config --local user.email "bot@cg-alert.com"
+          git add -A && (git diff --cached --quiet || git commit -m "report: public monthly ${{ inputs.month || 'auto' }}")
+          git pull --rebase --autostash origin main || (git rebase --abort || true)
+          git push origin HEAD:main || true
