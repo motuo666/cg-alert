@@ -1,20 +1,24 @@
 name: Channel Grow (weekly)
 on:
-  schedule:
-    - cron: "20 9 * * 1"  # 每周一 09:20 UTC
+  schedule: [ { cron: "10 4 * * 1" } ]
   workflow_dispatch: {}
 permissions: { contents: write }
 jobs:
-  channel_grow:
+  channel:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write-channel, cancel-in-progress: false }
+    concurrency: { group: cg-channel, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Discover channels
-        env: { CHANNEL_LIMIT: "40" }
-        run: node scripts/auto_discover_channels.js
-      - name: Commit & Safe push
-        run: scripts/_ci_safe_push.sh main "channel: +auto discovered (weekly)"
+      - run: npm ci || npm i --no-audit --no-fund || true
+      - name: Run channel discovery
+        run: node scripts/auto_append_domains.js --channel=1 || true
+      - name: Commit & push
+        run: |
+          git config --local user.name "CG Bot"
+          git config --local user.email "bot@cg-alert.com"
+          git add -A && (git diff --cached --quiet || git commit -m "channel: weekly partner targets")
+          git pull --rebase --autostash origin main || (git rebase --abort || true)
+          git push origin HEAD:main || true
