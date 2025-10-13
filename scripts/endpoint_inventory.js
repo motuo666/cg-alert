@@ -1,12 +1,17 @@
 #!/usr/bin/env node
-// 从 data/domains.csv 生成 data/endpoints.csv（幂等）；以 URL 为准，避免 vendor 里逗号干扰
 const fs=require('fs'), path=require('path');
 
 const domFile='data/domains.csv', outFile='data/endpoints.csv';
 if(!fs.existsSync(domFile)) process.exit(0);
 
-const normHost = h => h.replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/+$/,'').toLowerCase();
-const badHost = h => /^(_seed|acme|example)\./i.test(h) || /(^|\.)(example\.com)$/.test(h);
+const normHost = s=>{
+  s=String(s||'').trim().replace(/^"|"$/g,'');
+  s=s.split(',')[0].trim();               // 逗号前
+  s=s.replace(/^https?:\/\//,'').replace(/\/.*$/,'').replace(/^www\./,'').toLowerCase();
+  s=s.replace(/[^a-z0-9\.\-\_]/g,'');
+  return s;
+};
+const badHost = h => /^(_seed|acme|example)\./i.test(h) || h==='example.com';
 
 const PATHS = [
   ['/pricing','Pricing'],['/plans','Pricing'],
@@ -19,10 +24,9 @@ const PATHS = [
   ['/status','Status']
 ];
 
-const domains = fs.readFileSync(domFile,'utf8').split(/\r?\n/).map(s=>normHost(s.trim())).filter(Boolean);
+const domains = fs.readFileSync(domFile,'utf8').split(/\r?\n/).map(normHost).filter(Boolean).filter(h=>!badHost(h));
 const set = new Map();
 for(const host of domains){
-  if(badHost(host)) continue;
   for(const [p,t] of PATHS) set.set(`https://${host}${p}`, t);
   set.set(`https://status.${host}/`, 'Status');
   set.set(`https://status.${host}/api/v2/summary.json`, 'Status');
@@ -30,7 +34,7 @@ for(const host of domains){
 
 let existing=[];
 if(fs.existsSync(outFile)){
-  existing = fs.readFileSync(outFile,'utf8').split(/\r?\n/).filter(Boolean);
+  existing = fs.readFileSync(outFile,'utf8').split(/\r?\n/).filter(Boolean).filter(l=> (l.match(/,/g)||[]).length >= 2);
 }
 
 const lines = [...set.entries()].map(([url,type])=>{
