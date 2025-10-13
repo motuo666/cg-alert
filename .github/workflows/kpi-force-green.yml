@@ -12,15 +12,17 @@ jobs:
         with: { node-version: 20 }
       - name: Install deps
         run: npm ci
-      - name: Ensure endpoints & normal poll (warm up)
+      - name: Sanitize data
+        run: node scripts/data_sanitize.js
+      - name: Build endpoints
+        run: node scripts/endpoint_inventory.js
+      - name: Warm-up poller (optional)
         env:
-          MAX_ENDPOINTS: "800"
+          MAX_ENDPOINTS: "600"
           PER_HOST: "6"
           VENDOR_DAILY_MAX: "2"
-        run: |
-          node scripts/endpoint_inventory.js || true
-          node scripts/poll_public_endpoints.js || true
-      - name: Force seed today (>=30)
+        run: node scripts/poll_public_endpoints.js || true
+      - name: Force seed today (>=30, per vendor <=2)
         env:
           SEED_TODAY_MIN: "30"
           SEED_PER_VENDOR_MAX: "2"
@@ -33,5 +35,5 @@ jobs:
       - name: Safe push
         run: |
           chmod +x scripts/git_safe_push.sh || true
-          [ -x scripts/git_safe_push.sh ] || (echo '#!/usr/bin/env bash' > scripts/git_safe_push.sh && echo 'set -e; git config user.name "CG Bot"; git config user.email "bot@cg-alert.com"; git fetch origin main --depth=0 || true; git add -A; git commit -m "kpi: seed evidence + site" || true; git push --force-with-lease origin HEAD:main' >> scripts/git_safe_push.sh && chmod +x scripts/git_safe_push.sh)
+          [ -x scripts/git_safe_push.sh ] || (echo '#!/usr/bin/env bash' > scripts/git_safe_push.sh && echo 'set -euo pipefail; git config user.name "CG Bot"; git config user.email "bot@cg-alert.com"; git fetch origin || true; git add -A; git commit -m "kpi: seed evidence + site" || true; git push origin HEAD:main' >> scripts/git_safe_push.sh && chmod +x scripts/git_safe_push.sh)
           bash scripts/git_safe_push.sh "kpi: seed evidence (>=30) + site"
