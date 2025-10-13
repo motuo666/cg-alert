@@ -1,0 +1,10 @@
+{
+  "vendor": "contentful.com",
+  "type": "Security",
+  "url": "https://contentful.com/.well-known/security.txt",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T06:47:57.478Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": null
+}

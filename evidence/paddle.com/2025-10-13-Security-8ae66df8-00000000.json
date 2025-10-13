@@ -1,0 +1,10 @@
+{
+  "vendor": "paddle.com",
+  "type": "Security",
+  "url": "https://paddle.com/.well-known/security.txt",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T06:51:43.650Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": null
+}

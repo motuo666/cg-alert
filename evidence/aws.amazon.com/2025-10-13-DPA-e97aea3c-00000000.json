@@ -1,0 +1,10 @@
+{
+  "vendor": "aws.amazon.com",
+  "type": "DPA",
+  "url": "https://aws.amazon.com/legal/dpa",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T06:47:49.240Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": null
+}

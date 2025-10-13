@@ -1,0 +1,10 @@
+{
+  "vendor": "netlify.com",
+  "type": "Security",
+  "url": "https://netlify.com/.well-known/security.txt",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T06:51:37.429Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": null
+}

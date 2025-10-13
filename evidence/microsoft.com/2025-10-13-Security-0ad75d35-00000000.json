@@ -1,0 +1,10 @@
+{
+  "vendor": "microsoft.com",
+  "type": "Security",
+  "url": "https://microsoft.com/.well-known/security.txt",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T06:51:25.938Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": null
+}

@@ -1,0 +1,10 @@
+{
+  "vendor": "status.stripe.com",
+  "type": "Other",
+  "url": "https://status.stripe.com",
+  "kind": "baseline",
+  "detected_at": "2025-10-13T06:55:43.083Z",
+  "etag": "\"b74c2bf89e0b982668a77d715b278d1f\"",
+  "last_modified": null,
+  "hash": null
+}
