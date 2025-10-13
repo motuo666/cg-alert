@@ -1,27 +1,35 @@
-name: Weekly Health (KPI Guard)
+name: Weekly Health Check (Self-Heal)
+
 on:
-  schedule: [{ cron: "0 15 * * 1" }]
+  schedule: [{ cron: "0 15 * * 1" }]   # 周一 15:00 UTC
   workflow_dispatch: {}
+
+permissions:
+  contents: write
+
 jobs:
-  guard:
+  health:
     runs-on: ubuntu-latest
+    concurrency: { group: cg-write, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - name: Install deps
         run: npm ci
-      - name: Check
+      - name: Run KPI self-heal health check
         env:
-          KPI_48H_MIN: "8"
-          KPI_7D_MIN: "25"
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
           IMAP_HOST: ${{ secrets.IMAP_HOST }}
           IMAP_PORT: ${{ secrets.IMAP_PORT }}
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          KPI_EVID_48H: "8"
+          KPI_EVID_7D:  "25"
         run: node scripts/weekly_health_check.js
