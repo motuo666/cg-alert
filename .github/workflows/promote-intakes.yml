@@ -1,21 +1,30 @@
 name: Promote Intakes
+
 on:
-  schedule: [{ cron: "*/15 * * * *" }]
+  schedule: [{ cron: "*/15 * * * *" }]  # 每15分钟
   workflow_dispatch: {}
+
 permissions: { contents: write }
+
 jobs:
   promote:
     runs-on: ubuntu-latest
     concurrency: { group: cg-write, cancel-in-progress: false }
+
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+
+      # 该脚本只用内置模块，严格来说无需安装依赖；保留以统一环境
       - name: Install deps
         run: npm ci || npm install --no-audit --no-fund
-      - name: Promote intakes
+
+      - name: Promote intakes -> customers (dedup)
         run: node scripts/promote-intakes.js
+
       - name: Commit customers list
         run: |
           git config user.name "CG Bot"
@@ -26,6 +35,7 @@ jobs:
           else
             echo "No changes."
           fi
+
       - name: Safe push with rebase & retry
         run: |
           tries=0
