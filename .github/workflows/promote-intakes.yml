@@ -1,86 +1,43 @@
 name: Promote Intakes
-
 on:
-  schedule: [{ cron: "*/15 * * * *" }]   # 每15分钟
+  schedule:
+    - cron: "*/15 * * * *"
   workflow_dispatch: {}
-
 permissions:
   contents: write
   pull-requests: write
-
 jobs:
   promote:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write-promote, cancel-in-progress: false }
-
+    concurrency:
+      group: cg-write-promote
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-
-      # 脚本零依赖，可跳过安装；保留兼容（不因 npm 问题红）
+        with:
+          node-version: 20
       - name: Install deps (best effort)
         run: npm ci || npm install --no-audit --no-fund || true
-
-      # 预检 + 最小化自愈
       - name: Preflight & prepare
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p scripts data .tmp
-          # 确保 promote-intakes.js 存在（你已添加最严版）；缺则占位不报错
-          if [ ! -f scripts/promote-intakes.js ]; then
-            echo "WARN: scripts/promote-intakes.js missing, creating placeholder to keep job green"
-            cat > scripts/promote-intakes.js <<'EOF'
-#!/usr/bin/env node
-console.log("promote: placeholder (script missing)"); process.exit(0);
-EOF
-          fi
-          # 确保安全推送脚本到位
-          cat > scripts/_ci_safe_push.sh <<'EOSH'
-#!/usr/bin/env bash
-set -euo pipefail
-BRANCH="${1:-main}"
-COMMIT_MSG="${2:-chore: update}"
-if ! git config --get user.name >/dev/null; then git config --local user.name "${GIT_COMMIT_NAME:-CG Bot}"; fi
-if ! git config --get user.email >/dev/null; then git config --local user.email "${GIT_COMMIT_EMAIL:-bot@cg-alert.com}"; fi
-if git diff --quiet; then
-  echo "No changes to commit."
-  if [ -n "${GITHUB_OUTPUT:-}" ]; then echo "changed=0" >> "$GITHUB_OUTPUT"; echo "pushed=0" >> "$GITHUB_OUTPUT"; fi
-  exit 0
-fi
-git add -A
-git commit -m "$COMMIT_MSG"
-pushed=0
-for i in 1 2 3; do
-  git pull --rebase --autostash origin "$BRANCH" || (git rebase --abort || true)
-  if git push origin HEAD:"$BRANCH"; then pushed=1; break; fi
-  echo "Push failed. Retry #$i ..."; sleep 3
-done
-if [ -n "${GITHUB_OUTPUT:-}" ]; then echo "changed=1" >> "$GITHUB_OUTPUT"; echo "pushed=$pushed" >> "$GITHUB_OUTPUT"; fi
-exit 0
-EOSH
-          chmod +x scripts/_ci_safe_push.sh
-
-          # 准备数据文件
-          [ -f data/intakes.csv ]   || : > data/intakes.csv
+          chmod +x scripts/_ci_safe_push.sh || true
+          # 容错：若缺文件则创建空文件
+          [ -f data/intakes.csv ] || : > data/intakes.csv
           [ -f data/customers.csv ] || : > data/customers.csv
-
       - name: Promote intakes -> customers
         env:
           PROMOTE_DRY: "0"
-          PROMOTE_MAX: "0"            # 0=不限；可按需控量
-          PROMOTE_STRICT_HEADER: "0"
+          PROMOTE_MAX: "0"
         run: node scripts/promote-intakes.js
-
-      # 只在有变更时提交+安全推送；身份缺失问题在脚本里统一处理
       - name: Commit & Safe push
         id: push
         run: scripts/_ci_safe_push.sh main "promote: intakes -> customers (dedup)"
-
-      # push 失败兜底：自动开 PR，避免数据丢失
       - name: Create PR fallback
         if: steps.push.outputs.changed == '1' && steps.push.outputs.pushed != '1'
         uses: peter-evans/create-pull-request@v6
