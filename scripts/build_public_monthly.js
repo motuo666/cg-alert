@@ -1,59 +1,55 @@
 #!/usr/bin/env node
 /**
- * build_public_monthly.js — generate /reports/<YYYY-MM>/, /reports/index.html, /reports/rss.xml
- * Evidence source: evidence/<vendor>/<YYYY-MM-DD>.json (mtime used as last change time)
- * Idempotent. No external deps.
+ * build_public_monthly.js — 生成 /reports/<YYYY-MM>/ 与 /reports/index.html 和 /reports/rss.xml
+ * source: evidence/<vendor>/<YYYY-MM-DD>*.json (mtime 作为 last changed)
  */
-const fs = require('fs'); const path = require('path');
-const SITE = 'https://www.cg-alert.com'; const ROOT = path.join(__dirname, '..');
-function ensureDir(p){ fs.mkdirSync(p, { recursive: true }); }
-function ymOf(ts){ return ts.toISOString().slice(0,7); }
-function ymd(ts){ return ts.toISOString().slice(0,10); }
-function listEvidence(){ const base = path.join(ROOT, 'evidence'); const out=[];
-  if (!fs.existsSync(base)) return out;
-  for (const vd of fs.readdirSync(base,{withFileTypes:true})) { if (!vd.isDirectory()) continue;
-    const slug = vd.name, dir = path.join(base, slug);
-    for (const f of fs.readdirSync(dir)) { if (!/\.json$/i.test(f)) continue;
-      const p = path.join(dir, f); const st = fs.statSync(p);
-      out.push({ slug, mtime: st.mtime });
+const fs=require('fs'), path=require('path');
+
+function ym(d=new Date()){ return d.toISOString().slice(0,7); }
+function listMonth(ymStr){
+  const base='evidence', items=[];
+  if(!fs.existsSync(base)) return items;
+  for(const d of fs.readdirSync(base,{withFileTypes:true})){
+    if(!d.isDirectory()) continue; const slug=d.name; const dir=path.join(base,slug);
+    for(const f of fs.readdirSync(dir)){
+      const m=f.match(/^([0-9]{4}-[0-9]{2}-[0-9]{2})-(.+)\.json$/i); if(!m) continue;
+      if(m[1].slice(0,7)!==ymStr) continue;
+      const p=path.join(dir,f); const st=fs.statSync(p);
+      items.push({ slug, date: m[1], file:f, ts: st.mtime });
     }
-  } return out.sort((a,b)=>b.mtime-a.mtime);
+  }
+  items.sort((a,b)=> b.ts-a.ts);
+  return items;
 }
-function groupByMonth(items){ const m = new Map(); for(const it of items){ const k=ymOf(it.mtime); if(!m.has(k)) m.set(k, []); m.get(k).push(it);} return m; }
-function htmlEscape(s){return String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));}
-function renderMonthHTML(ym, items){ const byVendor={};
-  for(const it of items){ const k=it.slug; if(!byVendor[k]) byVendor[k]={slug:k, latest:it.mtime}; if(it.mtime>byVendor[k].latest) byVendor[k].latest=it.mtime; }
-  const rows = Object.values(byVendor).sort((a,b)=>b.latest-a.latest).map(g=>`<tr>
-    <td><a href="/vendors/${encodeURIComponent(g.slug)}/">${htmlEscape(g.slug)}</a></td>
-    <td>${ymd(g.latest)}</td>
-  </tr>`).join('\n') || '<tr><td colspan="2">No changes this month.</td></tr>';
-  const title = `Public Changes — ${ym} · CG Alert`, canon = `${SITE}/reports/${ym}/`, desc = `Evidence-backed public changes in ${ym}.`;
-  const ld = {"@context":"https://schema.org","@type":"Report","name":title,"datePublished":`${ym}-01`,"url":canon,"publisher":{"@type":"Organization","name":"CG Alert","url":SITE}};
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title}</title><meta name="description" content="${desc}"><link rel="canonical" href="${canon}">
-<script type="application/ld+json">${JSON.stringify(ld)}</script>
-<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;color:#111}.wrap{max-width:980px;margin:0 auto;padding:28px 16px}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}</style>
-</head><body><div class="wrap"><h1>Public Changes — ${ym}</h1><table><thead><tr><th>Vendor</th><th>Last Update</th></tr></thead><tbody>${rows}</tbody></table></div></body></html>`;
+function ensure(p){ fs.mkdirSync(p,{recursive:true}); }
+function writeMonthPage(ymStr, items){
+  ensure(path.join('reports', ymStr));
+  const list = items.map(it=>`<li>${it.date} · ${it.slug}</li>`).join('\n') || '<li>No items.</li>';
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>CG Alert — ${ymStr}</title>
+<meta name="description" content="Evidence-backed public changes in ${ymStr}.">
+<link rel="canonical" href="https://www.cg-alert.com/reports/${ymStr}/"></head>
+<body><div class="wrap"><h1>Public Changes — ${ymStr}</h1><ul>${list}</ul></div></body></html>`;
+  fs.writeFileSync(path.join('reports', ymStr, 'index.html'), html, 'utf8');
 }
-function renderIndexHTML(latestYM, months){ const links = months.map(m=>`<li><a href="/reports/${m}/">${m}</a></li>`).join('\n');
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reports — CG Alert</title><meta name="description" content="Monthly evidence-backed public changes."><link rel="canonical" href="${SITE}/reports/"><link rel="alternate" type="application/rss+xml" href="${SITE}/reports/rss.xml"></head>
-<body><div class="wrap" style="max-width:720px;margin:0 auto;padding:28px 16px"><h1>Reports</h1><p>Latest: <a href="/reports/${latestYM}/">${latestYM}</a></p><ul>${links}</ul></div></body></html>`;
+function writeIndex(latestYM){
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Reports — CG Alert</title>
+<meta name="description" content="Monthly evidence-backed public changes.">
+<link rel="canonical" href="https://www.cg-alert.com/reports/">
+<link rel="alternate" type="application/rss+xml" title="CG Alert Reports RSS" href="https://www.cg-alert.com/reports/rss.xml"></head>
+<body><div class="wrap"><h1>Reports</h1><p>Latest: <a href="/reports/${latestYM}/">${latestYM}</a></p></div></body></html>`;
+  ensure('reports'); fs.writeFileSync(path.join('reports','index.html'), html, 'utf8');
 }
-function renderRSS(months){ const now = new Date().toUTCString();
-  return `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>
-<title>CG Alert — Monthly Reports</title><link>${SITE}/reports/</link><description>Evidence-backed changes</description><lastBuildDate>${now}</lastBuildDate>
-${months.slice(0,12).map(ym=>`<item><title>${ym}</title><link>${SITE}/reports/${ym}/</link><guid>${SITE}/reports/${ym}/</guid><pubDate>${new Date(ym+'-01').toUTCString()}</pubDate></item>`).join('\n')}
-</channel></rss>`;
+function writeRSS(items){
+  const itemsXml = items.slice(0,50).map(it=>`<item><title>${it.date} · ${it.slug}</title><link>https://www.cg-alert.com/vendors/${encodeURIComponent(it.slug)}/</link></item>`).join('');
+  const rss = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>CG Alert Reports</title><link>https://www.cg-alert.com/reports/</link>${itemsXml}</channel></rss>`;
+  fs.writeFileSync(path.join('reports','rss.xml'), rss, 'utf8');
 }
+
 (function main(){
-  const ROOT = path.join(__dirname, '..'); const outBase = path.join(ROOT, 'reports');
-  const all = listEvidence(); const buckets = groupByMonth(all); const months = [...buckets.keys()].sort().reverse();
-  const targetYM = (process.argv.find(a=>a.startsWith('--month='))||'').split('=')[1] || (months[0] || new Date().toISOString().slice(0,7));
-  const items = buckets.get(targetYM) || []; const dir = path.join(outBase, targetYM); ensureDir(dir);
-  fs.writeFileSync(path.join(dir,'index.html'), renderMonthHTML(targetYM, items));
-  const list = months.length ? months : [targetYM]; ensureDir(outBase);
-  fs.writeFileSync(path.join(outBase,'index.html'), renderIndexHTML(targetYM, list));
-  fs.writeFileSync(path.join(outBase,'rss.xml'), renderRSS(list));
-  console.log(`[reports] built for ${targetYM} (months=${list.length})`);
+  const ymStr = process.env.MONTH || ym();
+  const items = listMonth(ymStr);
+  writeMonthPage(ymStr, items);
+  writeIndex(ymStr);
+  writeRSS(items);
+  console.log('[reports] built', ymStr, 'items=', items.length);
 })();
