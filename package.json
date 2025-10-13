@@ -10,10 +10,10 @@
   "dependencies": {
     "archiver": "6.0.2",
     "csv-parse": "^5.6.0",
-    "imapflow": "1.0.195",
+    "imapflow": "^1.0.199",
     "mailparser": "3.7.5",
     "minimist": "^1.2.8",
-    "nodemailer": "7.0.9"
+    "nodemailer": "^6.10.1"
   },
   "patch": {
     "dependencies": {
