@@ -1,8 +1,9 @@
 name: KPI Force Green (one-shot)
-on: { workflow_dispatch: {} }
+on:
+  workflow_dispatch: {}
 permissions: { contents: write }
 jobs:
-  seed:
+  kpi_green:
     runs-on: ubuntu-latest
     concurrency: { group: cg-write, cancel-in-progress: false }
     steps:
@@ -11,29 +12,36 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - name: Install deps
-        run: npm ci
-      - name: Sanitize data
-        run: node scripts/data_sanitize.js
-      - name: Build endpoints
-        run: node scripts/endpoint_inventory.js
-      - name: Warm-up poller (optional)
-        env:
-          MAX_ENDPOINTS: "600"
-          PER_HOST: "6"
-          VENDOR_DAILY_MAX: "2"
-        run: node scripts/poll_public_endpoints.js || true
-      - name: Force seed today (>=30, per vendor <=2)
-        env:
-          SEED_TODAY_MIN: "30"
-          SEED_PER_VENDOR_MAX: "2"
-          SEED_MAX_ENDPOINTS: "3000"
-        run: node scripts/evidence_force_seed.js
-      - name: Rebuild updates + SEO
+        run: npm ci || npm install --no-audit --no-fund
+      - name: Untrack caches if previously added
+        run: git rm -r --cached .cache || true
+      - name: Force seed & rebuild
         run: |
-          node scripts/build_updates.js || true
-          node scripts/seo_inject.js || true
-      - name: Safe push
+          node scripts/evidence_force_seed.js
+          node scripts/build_updates.js
+          node scripts/seo_inject.js
+      - name: Commit changes
         run: |
-          chmod +x scripts/git_safe_push.sh || true
-          [ -x scripts/git_safe_push.sh ] || (echo '#!/usr/bin/env bash' > scripts/git_safe_push.sh && echo 'set -euo pipefail; git config user.name "CG Bot"; git config user.email "bot@cg-alert.com"; git fetch origin || true; git add -A; git commit -m "kpi: seed evidence + site" || true; git push origin HEAD:main' >> scripts/git_safe_push.sh && chmod +x scripts/git_safe_push.sh)
-          bash scripts/git_safe_push.sh "kpi: seed evidence (>=30) + site"
+          git config user.name "CG Bot"
+          git config user.email "bot@cg-alert.com"
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "kpi: force green (seed+rebuild+seo)"
+          else
+            echo "Nothing to commit."
+          fi
+      - name: Safe push with rebase & retry
+        run: |
+          tries=0
+          until [ $tries -ge 3 ]
+          do
+            git pull --rebase --autostash origin main || (git rebase --abort || true)
+            if git push origin HEAD:main; then
+              echo "Push succeeded."
+              exit 0
+            fi
+            tries=$((tries+1))
+            echo "Push failed. Retry #$tries ..."
+            sleep 3
+          done
+          echo "Push failed after retries."; exit 1
