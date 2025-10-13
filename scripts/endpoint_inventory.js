@@ -1,50 +1,60 @@
 #!/usr/bin/env node
-// endpoint_inventory.js — 基于 domains.csv 生成标准 endpoints.csv（三列：host,url,type）
-const fs=require('fs'), path=require('path');
+// endpoint_inventory.js — 基于 data/domains.csv 生成 data/endpoints.csv（三列：host,url,type）
+// 幂等：合并已有 endpoints.csv；去重；忽略明显的种子/示例域。
+const fs = require('fs');
+const path = require('path');
 
-const domFile='data/domains.csv', outFile='data/endpoints.csv';
-if(!fs.existsSync(domFile)) process.exit(0);
+const DOMAINS = path.join(__dirname, '..', 'data', 'domains.csv');
+const OUT = path.join(__dirname, '..', 'data', 'endpoints.csv');
 
-const normHost = s=>{
-  s=String(s||'').trim().replace(/^"|"$/g,'');
-  s=s.split(/[\s,]+/)[0].trim();
-  s=s.replace(/^https?:\/\//,'').replace(/\/.*/,'').replace(/^www\./,'').toLowerCase();
-  s=s.replace(/[^a-z0-9._-]/g,'');
+if (!fs.existsSync(DOMAINS)) { process.stdout.write('[inventory] no domains.csv → skip\n'); process.exit(0); }
+
+const normHost = (s) => {
+  s = String(s || '').trim().replace(/^"|"$/g,'');
+  s = s.split(/[\s,]+/)[0].trim();
+  s = s.replace(/^https?:\/\//,'').replace(/\/.*/,'').replace(/^www\./,'').toLowerCase();
+  s = s.replace(/[^a-z0-9._-]/g,'');
   return s;
 };
-const badHost = h => /^(_seed|acme|example)\./i.test(h) || h==='example.com';
+const badHost = (h) => !h || /^(_seed|acme|example)\./i.test(h) || /^(_seed|example)$/.test(h);
 
-const PATHS = [
-  ['/pricing','Pricing'],['/plans','Pricing'],
-  ['/terms','ToS'],['/tos','ToS'],['/legal/terms','ToS'],['/terms-of-service','ToS'],
-  ['/privacy','Privacy'],['/privacy-policy','Privacy'],['/legal/privacy','Privacy'],
-  ['/legal/dpa','DPA'],['/dpa','DPA'],['/data-processing-addendum','DPA'],
-  ['/subprocessors','Subprocessors'],['/sub-processors','Subprocessors'],['/legal/subprocessors','Subprocessors'],
-  ['/security','Security'],['/trust','Security'],['/trust-center','Security'],
-  ['/status','Status'],['/status/','Status'],['/api/v2/summary.json','Status']
-];
+const raw = fs.readFileSync(DOMAINS, 'utf8').replace(/^\uFEFF/, '');
+const domains = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(normHost).filter(h => !badHost(h));
+const uniq = Array.from(new Set(domains));
 
-const txt = fs.readFileSync(domFile,'utf8');
-const domains = txt.split(/\r?\n/).map(normHost).filter(Boolean).filter(h=>!badHost(h));
-const set = new Set();
-for(const host of domains){
-  for(const [p,type] of PATHS){
-    const url = (p.endsWith('.json')?`https://status.${host}${p}`:`https://${host}${p}`);
-    try{ new URL(url); set.add(`${url},${type}`);}catch{}
-  }
+function urlsForHost(host){
+  const h = host.toLowerCase();
+  const base = `https://${h}`;
+  const statusHost = `https://status.${h}`;
+  const list = [
+    [ `${base}/pricing`, 'Pricing' ],
+    [ `${base}/plans`, 'Pricing' ],
+    [ `${base}/terms`, 'ToS' ],
+    [ `${base}/tos`, 'ToS' ],
+    [ `${base}/legal/terms`, 'ToS' ],
+    [ `${base}/privacy`, 'Privacy' ],
+    [ `${base}/legal/privacy`, 'Privacy' ],
+    [ `${base}/privacy-policy`, 'Privacy' ],
+    [ `${base}/dpa`, 'DPA' ],
+    [ `${base}/legal/dpa`, 'DPA' ],
+    [ `${base}/data-processing-addendum`, 'DPA' ],
+    [ `${base}/subprocessors`, 'Subprocessors' ],
+    [ `${base}/sub-processors`, 'Subprocessors' ],
+    [ `${base}/.well-known/security.txt`, 'Security' ],
+    [ `${statusHost}/`, 'Status' ],
+    [ `${statusHost}/api/v2/summary.json`, 'StatusAPI' ],
+  ];
+  return list.map(([u,t]) => `${h},${u},${t}`);
 }
 
-let existing=[];
-if(fs.existsSync(outFile)){
-  existing = fs.readFileSync(outFile,'utf8').split(/\r?\n/).filter(Boolean).filter(l=> (l.match(/,/g)||[]).length >= 2);
+let existing = [];
+if (fs.existsSync(OUT)) {
+  existing = fs.readFileSync(OUT,'utf8').split(/\r?\n/).filter(Boolean).filter(l => (l.match(/,/g)||[]).length >= 2);
 }
 
-const lines = [...set.entries()].map(([url,type])=>{
-  const host = new URL(url).hostname.replace(/^www\./,'').toLowerCase();
-  return `${host},${url},${type}`;
-});
+const generated = new Set(existing);
+for (const h of uniq) for (const line of urlsForHost(h)) generated.add(line);
 
-const merged = new Set([ ...existing, ...lines ]);
-fs.mkdirSync('data',{recursive:true});
-fs.writeFileSync(outFile, [...merged].join('\n')+'\n','utf8');
-console.log(`[inventory] endpoints=${merged.size}, domains=${domains.length}`);
+fs.mkdirSync(path.dirname(OUT), { recursive: true });
+fs.writeFileSync(OUT, Array.from(generated).join('\n')+'\n', 'utf8');
+process.stdout.write(`[inventory] endpoints=${generated.size}, domains=${uniq.length}\n`);
