@@ -1,38 +1,31 @@
-name: Weekly Health (Self-Heal)
+name: Weekly Health Check
+
 on:
-  schedule: [ { cron: "0 15 * * 1" } ]
-  workflow_dispatch: {}
+  schedule:
+    - cron: "0 15 * * 1"      # 周一 15:00 UTC
+  workflow_dispatch:
+    inputs:
+      force_green:
+        description: "临时强制绿(1=不失败+自愈)"
+        required: false
+        default: "0"
+
 permissions: { contents: write }
+
+concurrency:
+  group: weekly-health
+  cancel-in-progress: true
+
 jobs:
-  health:
+  check:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-health, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Deps
-        run: npm ci || npm i --no-audit --no-fund || true
-      - name: Safe push helper
-        run: |
-          cat > scripts/_ci_safe_push.sh <<'SH'
-          #!/usr/bin/env bash
-          set -euo pipefail
-          BR="${1:-main}"; MSG="${2:-chore: health}"
-          git config --local user.name  "${GIT_COMMIT_NAME:-CG Bot}" || true
-          git config --local user.email "${GIT_COMMIT_EMAIL:-bot@cg-alert.com}" || true
-          if git diff --quiet; then echo "changed=0" >>"$GITHUB_OUTPUT"; echo "pushed=0" >>"$GITHUB_OUTPUT"; exit 0; fi
-          git add -A && git commit -m "$MSG"
-          for i in 1 2 3; do
-            git pull --rebase --autostash origin "$BR" || (git rebase --abort || true)
-            git push origin HEAD:"$BR" && { echo "changed=1" >>"$GITHUB_OUTPUT"; echo "pushed=1" >>"$GITHUB_OUTPUT"; exit 0; }
-            sleep 3
-          done
-          echo "changed=1" >>"$GITHUB_OUTPUT"; echo "pushed=0" >>"$GITHUB_OUTPUT"
-          SH
-          chmod +x scripts/_ci_safe_push.sh
-      - name: Run health
+      - run: npm ci || npm i --no-audit --no-fund || true
+      - name: Health check
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -44,7 +37,17 @@ jobs:
           IMAP_USER:  ${{ secrets.IMAP_USER }}
           IMAP_PASS:  ${{ secrets.IMAP_PASS }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          KPI_FORCE_GREEN: "1"   # 允许自愈
-        run: node scripts/weekly_health_check.js || true
-      - name: Safe push
-        run: scripts/_ci_safe_push.sh main "kpi: weekly health self-heal"
+          KPI_FORCE_GREEN: ${{ inputs.force_green || '0' }}
+        run: |
+          set -e
+          node scripts/weekly_health_check.js || \
+            if [ "${{ inputs.force_green || '0' }}" = "1" ]; then echo "force green"; else exit 1; fi
+      - name: Commit & Safe Push
+        if: always()
+        run: |
+          git config --local user.name  "CG Bot"
+          git config --local user.email "bot@cg-alert.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "kpi: weekly health"
+          git pull --rebase --autostash origin main || (git rebase --abort || true)
+          git push origin HEAD:main || true
