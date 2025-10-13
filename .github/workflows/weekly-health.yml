@@ -1,69 +1,25 @@
-name: Weekly Health Check
-
+name: Weekly Health (KPI Guard)
 on:
-  schedule:
-    - cron: "0 15 * * 1"   # 每周一 15:00 UTC
+  schedule: [{ cron: "0 15 * * 1" }]
   workflow_dispatch: {}
-
-permissions:
-  contents: read
-
-concurrency:
-  group: weekly-health-check
-  cancel-in-progress: false
-
 jobs:
-  check:
+  guard:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      - name: Install deps
-        run: npm ci || npm i
-
-      - name: Weekly Health Check
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Check
         env:
-          # 站点与业务常量
-          SITE_ORIGIN: https://www.cg-alert.com
-          DOMAIN: cg-alert.com
-          STRIPE_PORTFOLIO_URL: https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801
-          STRIPE_BUSINESS_URL:  https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800
-          FORM_URL: https://forms.gle/TCaom33BRJGbcJ3r5
-
-          # 发件（SMTP）
+          KPI_48H_MIN: "8"
+          KPI_7D_MIN: "25"
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-
-          # 收件（IMAP）→ 显式映射账号，避免缺凭据
           IMAP_HOST: ${{ secrets.IMAP_HOST }}
           IMAP_PORT: ${{ secrets.IMAP_PORT }}
-          IMAP_USER: ${{ secrets.SMTP_USER }}
-          IMAP_PASS: ${{ secrets.SMTP_PASS }}
-          IMAP_SECURE: "true"
-
-          # Slack
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
         run: node scripts/weekly_health_check.js
-
-      - name: Upload report artifacts (on failure)
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: weekly-health-report
-          path: |
-            health-report.json
-            logs/**
-            data/leads.csv
-            data/intakes.csv
-            data/customers.csv
