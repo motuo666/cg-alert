@@ -1,0 +1,9 @@
+{
+  "vendor": "status.okta.com",
+  "type": "Status",
+  "url": "https://status.okta.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T05:59:05.001Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": "sha256:459bf7a907e328b25f374beb4f7f3985260f281a1f56c861f6eec398381dbe42"
+}

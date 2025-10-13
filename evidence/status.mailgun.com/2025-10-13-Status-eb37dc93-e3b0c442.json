@@ -1,0 +1,9 @@
+{
+  "vendor": "status.mailgun.com",
+  "type": "Status",
+  "url": "https://status.mailgun.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:01:45.371Z",
+  "etag": "W/\"27590a9f897bf530cf761e19503b451f\"",
+  "last_modified": null,
+  "hash": null
+}

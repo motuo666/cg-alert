@@ -1,0 +1,9 @@
+{
+  "vendor": "status.auth0.com",
+  "type": "Status",
+  "url": "https://status.auth0.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T05:58:54.622Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": "sha256:45077fe73dc9f45412b2426b94a69a245a0b7709de5ee307b7dbd46bbc665cf3"
+}

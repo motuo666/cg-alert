@@ -1,0 +1,9 @@
+{
+  "vendor": "status.hubspot.com",
+  "type": "Status",
+  "url": "https://status.hubspot.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:00:29.200Z",
+  "etag": "W/\"687a10f5987781b0d78e05c56757c73c\"",
+  "last_modified": null,
+  "hash": null
+}

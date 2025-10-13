@@ -1,0 +1,9 @@
+{
+  "vendor": "status.box.com",
+  "type": "Status",
+  "url": "https://status.box.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:01:12.383Z",
+  "etag": "W/\"8d216a47ad758ba6bcd4da1506cbc2d3\"",
+  "last_modified": null,
+  "hash": null
+}

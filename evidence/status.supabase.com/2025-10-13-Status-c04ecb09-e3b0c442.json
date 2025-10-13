@@ -1,0 +1,9 @@
+{
+  "vendor": "status.supabase.com",
+  "type": "Status",
+  "url": "https://status.supabase.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:01:32.309Z",
+  "etag": "W/\"c07fd6484c01e034efe0dca2d6bcd75d\"",
+  "last_modified": null,
+  "hash": null
+}

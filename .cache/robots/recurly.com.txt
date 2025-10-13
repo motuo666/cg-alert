@@ -1,0 +1,11 @@
+
+User-agent: Screaming Frog SEO Spider
+Allow: /
+User-agent: *
+Sitemap: https://recurly.com/sitemap.xml
+Disallow: /none/
+Disallow: /-/
+
+
+# LLM usage policy
+Sitemap: https://recurly.com/llm.txt

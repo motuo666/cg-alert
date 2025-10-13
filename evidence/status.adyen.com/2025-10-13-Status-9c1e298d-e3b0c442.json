@@ -1,0 +1,9 @@
+{
+  "vendor": "status.adyen.com",
+  "type": "Status",
+  "url": "https://status.adyen.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:00:14.514Z",
+  "etag": "\"992894e8dacb715f8e450e9d9ff41f98-ssl\"",
+  "last_modified": null,
+  "hash": null
+}

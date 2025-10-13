@@ -1,0 +1,9 @@
+{
+  "vendor": "status.zendesk.com",
+  "type": "Status",
+  "url": "https://status.zendesk.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:00:36.529Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": "sha256:b8c03554a54fcd04dde6befa1f0cbaff733c54435021c08cb8a4e3474812d015"
+}

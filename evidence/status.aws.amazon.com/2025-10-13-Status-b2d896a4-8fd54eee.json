@@ -1,0 +1,9 @@
+{
+  "vendor": "status.aws.amazon.com",
+  "type": "Status",
+  "url": "https://status.aws.amazon.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:01:16.553Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": "sha256:8fd54eee4277f1327015cc0bcaed8a878bf44d1804364cd5d93dfab9e2d1a5af"
+}

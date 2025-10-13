@@ -1,0 +1,9 @@
+{
+  "vendor": "status.sentry.io",
+  "type": "Status",
+  "url": "https://status.sentry.io/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:01:26.678Z",
+  "etag": "W/\"1891a942bcb52915340767a9d25fa9d8\"",
+  "last_modified": null,
+  "hash": null
+}

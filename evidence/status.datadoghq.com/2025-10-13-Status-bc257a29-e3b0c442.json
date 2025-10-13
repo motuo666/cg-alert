@@ -1,0 +1,9 @@
+{
+  "vendor": "status.datadoghq.com",
+  "type": "Status",
+  "url": "https://status.datadoghq.com/",
+  "detected_at": "2025-10-13T05:58:50.455Z",
+  "etag": "W/\"5a761cc2b80a29523fbc075c5d473fc7\"",
+  "last_modified": null,
+  "hash": null
+}

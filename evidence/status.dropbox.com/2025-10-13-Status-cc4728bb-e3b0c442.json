@@ -1,0 +1,9 @@
+{
+  "vendor": "status.dropbox.com",
+  "type": "Status",
+  "url": "https://status.dropbox.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:01:10.842Z",
+  "etag": "W/\"ed2beb34b69976922aa5ee97298f782d\"",
+  "last_modified": null,
+  "hash": null
+}

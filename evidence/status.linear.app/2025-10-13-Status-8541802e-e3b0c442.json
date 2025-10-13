@@ -1,0 +1,9 @@
+{
+  "vendor": "status.linear.app",
+  "type": "Status",
+  "url": "https://status.linear.app/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:00:46.372Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": null
+}

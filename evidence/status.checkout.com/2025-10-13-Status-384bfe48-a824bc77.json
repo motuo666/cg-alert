@@ -1,0 +1,9 @@
+{
+  "vendor": "status.checkout.com",
+  "type": "Status",
+  "url": "https://status.checkout.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:00:18.536Z",
+  "etag": null,
+  "last_modified": null,
+  "hash": "sha256:a824bc7739e226e1b40ea0f8c4e4f4c6f796fc3b4abfa6e9abe3bd119a30d938"
+}

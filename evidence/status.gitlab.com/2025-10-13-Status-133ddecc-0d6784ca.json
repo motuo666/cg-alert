@@ -1,0 +1,9 @@
+{
+  "vendor": "status.gitlab.com",
+  "type": "Status",
+  "url": "https://status.gitlab.com/api/v2/summary.json",
+  "detected_at": "2025-10-13T06:00:42.814Z",
+  "etag": "\"886d80a0f6e35e080cb891087dcfe212\"",
+  "last_modified": "Mon, 20 Jun 2016 20:42:32 GMT",
+  "hash": "sha256:0d6784cac055711d5e5e224ed33b8a0668ffe8abbf33ab214f59defc91f6f7ad"
+}

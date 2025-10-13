@@ -1,0 +1,9 @@
+{
+  "vendor": "status.sendgrid.com",
+  "type": "Status",
+  "url": "https://status.sendgrid.com/",
+  "detected_at": "2025-10-13T06:01:41.697Z",
+  "etag": "W/\"876577bd1c37b2c2bdb81e92c7866cc2\"",
+  "last_modified": null,
+  "hash": null
+}
