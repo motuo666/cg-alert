@@ -3,8 +3,8 @@
  * poll_public_endpoints.js — 轮询公开端点变更 -> evidence/*
  * - 只抓公开页；遵守 robots.txt（UA: CGAlertBot）
  * - 先 HEAD(条件请求) 再 GET；If-Modified-Since / If-None-Match
- * - 首次无缓存时，一律生成“基线证据”（baseline），保证门禁能开
- * - 每 vendor 每天最多落一条（防爆量），但会继续更新缓存
+ * - 首次无缓存时，生成“Baseline”证据（保证可开门禁）
+ * - ★ 每 vendor 每天最多落 N 条（VENDOR_DAILY_MAX，默认 2）
  */
 const fs=require('fs'), path=require('path'), crypto=require('crypto'), https=require('https'), http=require('http'), { URL } = require('url');
 
@@ -12,6 +12,7 @@ const EP_FILE='data/endpoints.csv';
 const UA = "CGAlertBot/1.0 (+https://www.cg-alert.com/)";
 const MAX_ENDPOINTS = Number(process.env.MAX_ENDPOINTS||500);
 const PER_HOST = Number(process.env.PER_HOST||5);
+const VENDOR_DAILY_MAX = Math.max(1, Number(process.env.VENDOR_DAILY_MAX||2));
 const TIMEOUT_MS = 15000;
 
 function lines(f){ return fs.existsSync(f)?fs.readFileSync(f,'utf8').split(/\r?\n/).filter(Boolean):[]; }
@@ -42,9 +43,9 @@ async function fetchRobots(host){
 
 function isAllowed(robots, pathname){
   // 简易 robots：读 * 或 cgalertbot 的 Disallow 前缀
-  const lines = robots.split(/\r?\n/);
+  const rows = robots.split(/\r?\n/);
   let ua='*', blocks=[];
-  for(const l of lines){
+  for(const l of rows){
     const s=l.trim(); if(!s || s.startsWith('#')) continue;
     const m1=s.match(/^User-agent:\s*(.+)$/i); if(m1){ ua=m1[1].toLowerCase(); continue; }
     const m2=s.match(/^Disallow:\s*(.*)$/i); if(m2 && (ua==='*'||ua==='cgalertbot')) blocks.push(m2[1]);
@@ -52,14 +53,12 @@ function isAllowed(robots, pathname){
   return !blocks.some(b=>b && pathname.startsWith(b));
 }
 
-function cachePath(host, pathname){
-  return `.cache/http/${host}/${b64(pathname)}.json`;
-}
+function cachePath(host, pathname){ return `.cache/http/${host}/${b64(pathname)}.json`; }
 
-function vendorDailyHas(evDir){
-  const day = new Date().toISOString().slice(0,10);
-  if(!fs.existsSync(evDir)) return false;
-  return fs.readdirSync(evDir).some(f => f.startsWith(day+'-') && f.endsWith('.json'));
+function today(){ return new Date().toISOString().slice(0,10); }
+function vendorTodayCount(evDir){
+  if(!fs.existsSync(evDir)) return 0;
+  const d=today(); return fs.readdirSync(evDir).filter(f=>f.startsWith(d+'-') && f.endsWith('.json')).length;
 }
 
 async function checkOne(vendor, urlStr, type){
@@ -78,7 +77,6 @@ async function checkOne(vendor, urlStr, type){
     }});
   }catch(e){ return { error:e.message }; }
 
-  // 200/304 之外再尝试 GET
   if(!(head.res.statusCode>=200 && head.res.statusCode<400)){
     head = await httpGet(urlStr, { method:'GET' }).catch(()=>head);
   }
@@ -98,14 +96,14 @@ async function checkOne(vendor, urlStr, type){
 
   if(!changed) return { changed:false };
 
-  // 每 vendor 每天最多落一条
+  // ★ 每 vendor 每天最多 N 条
   const evDir = path.join('evidence', vendor);
-  if(vendorDailyHas(evDir)) return { changed:true, coalesced:true };
+  const count = vendorTodayCount(evDir);
+  if(count >= VENDOR_DAILY_MAX) return { changed:true, coalesced:true };
 
   fs.mkdirSync(evDir, {recursive:true});
-  const day = new Date().toISOString().slice(0,10);
   const tag = firstRun ? 'Baseline' : (type||'Public change');
-  const fname = `${day}-${tag}-${hash.slice(0,10)}.json`;
+  const fname = `${today()}-${tag}-${hash.slice(0,10)}.json`;
   const ev = { vendor, type: tag, url: urlStr, detected_at: new Date().toISOString(),
                etag: etag||null, last_modified: last||null, hash: `sha256:${hash}` };
   fs.writeFileSync(path.join(evDir, fname), JSON.stringify(ev, null, 2), 'utf8');
@@ -113,12 +111,11 @@ async function checkOne(vendor, urlStr, type){
 }
 
 function limitPerHost(rows){
-  const perHost=Number(PER_HOST)||5;
   const map=new Map(), out=[];
   for(const r of rows){
     const host = new URL(r.url).hostname;
     const used = map.get(host)||0;
-    if(used<perHost){ out.push(r); map.set(host, used+1); }
+    if(used<PER_HOST){ out.push(r); map.set(host, used+1); }
     if(out.length>=MAX_ENDPOINTS) break;
   }
   return out;
@@ -139,5 +136,5 @@ function limitPerHost(rows){
       else if(t.changed){ changed++; if(t.firstRun) baselines++; if(t.file) console.log('[poll][write]', t.file); }
     }catch(e){ errors++; console.error('[poll][err]', r.url, e.message); }
   }
-  console.log(`[poll] done: batch=${batch.length}, changed=${changed}, baselines=${baselines}, skipped=${skipped}, errors=${errors}`);
+  console.log(`[poll] done: batch=${batch.length}, changed=${changed}, baselines=${baselines}, skipped=${skipped}, errors=${errors}, VENDOR_DAILY_MAX=${VENDOR_DAILY_MAX}`);
 })();
