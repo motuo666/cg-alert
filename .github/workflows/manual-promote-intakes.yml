@@ -1,0 +1,22 @@
+name: Manual • Promote Intakes
+on:
+  workflow_dispatch: {}
+permissions: { contents: write, pull-requests: write }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci || npm i --no-audit --no-fund || true
+      - name: Run promote
+        run: node scripts/promote-intakes.js
+      - name: Commit & safe push
+        run: |
+          git config --local user.name  "CG Bot"
+          git config --local user.email "bot@cg-alert.com"
+          git add -A && (git diff --cached --quiet || git commit -m "promote: intakes -> customers (manual)")
+          git pull --rebase --autostash origin main || (git rebase --abort || true)
+          git push origin HEAD:main || true
