@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const fs=require('fs'), path=require('path'), crypto=require('crypto');
-const https=require('https'), http=require('http');
+const https=require('https'), http=require('http'), zlib=require('zlib');
 
 const EP_FILE='data/endpoints.csv';
 const UA="CGAlertBot/1.0 (+https://www.cg-alert.com/)";
@@ -8,6 +8,7 @@ const MAX_ENDPOINTS=Number(process.env.MAX_ENDPOINTS||500);
 const PER_HOST=Number(process.env.PER_HOST||5);
 const VENDOR_DAILY_MAX=Math.max(1, Number(process.env.VENDOR_DAILY_MAX||2));
 const TIMEOUT_MS=15000;
+const SAVE_BODY = process.env.SAVE_BODY === '1';        // 可选：保存归一化正文到 .cache，便于后续自动扩域
 
 const today = ()=> new Date().toISOString().slice(0,10);
 const sha256 = b => crypto.createHash('sha256').update(b).digest('hex');
@@ -15,7 +16,7 @@ const sha1   = s => crypto.createHash('sha1').update(s).digest('hex');
 const isBadHost = h => /^(_seed|acme|example)\./i.test(h) || h==='example.com' || h.endsWith('.example.com');
 
 function normalizeBody(buf){
-  // 仅做轻量去噪：去掉时间戳/utm/nonce 之类易变片段
+  // 轻量去噪：日期/时间/utm/nonce/动态data-attr
   let s = buf.toString('utf8');
   s = s.replace(/\b20\d{2}-\d{2}-\d{2}\b/g,'{DATE}')
        .replace(/\b\d{1,2}:\d{2}(:\d{2})?\b/g,'{TIME}')
@@ -34,6 +35,7 @@ function parseLine(l){
   const type = l.split(',').slice(-1)[0]?.trim() || 'Baseline';
   return { vendor: host, url, type };
 }
+
 function readEndpoints(){
   if(!fs.existsSync(EP_FILE)) return [];
   const rows = fs.readFileSync(EP_FILE,'utf8').split(/\r?\n/).filter(Boolean);
@@ -46,16 +48,44 @@ function readEndpoints(){
   }
   return out;
 }
+
+function decompress(body, enc){
+  try{
+    if(!body || !body.length || !enc) return body;
+    enc = String(enc).toLowerCase();
+    if(enc.includes('br')) return zlib.brotliDecompressSync(body);
+    if(enc.includes('gzip')) return zlib.gunzipSync(body);
+    if(enc.includes('deflate')) return zlib.inflateSync(body);
+  }catch(e){}
+  return body;
+}
+
 function httpRequest(u, opt={}){
   return new Promise((resolve,reject)=>{
     const mod = u.startsWith('https:')?https:http;
-    const req = mod.request(u, { method: opt.method||'GET', timeout: TIMEOUT_MS,
-      headers: { 'user-agent': UA, 'accept': '*/*', ...(opt.headers||{}) }}, res=>{
-        const bufs=[]; res.on('data',d=>bufs.push(d)); res.on('end',()=>resolve({res, body:Buffer.concat(bufs)}));
+    const req = mod.request(u, {
+      method: opt.method||'GET',
+      timeout: TIMEOUT_MS,
+      headers: {
+        'user-agent': UA,
+        'accept': '*/*',
+        'accept-encoding': 'gzip, br, deflate',
+        ...(opt.headers||{})
+      }
+    }, res=>{
+      const bufs=[]; res.on('data',d=>bufs.push(d));
+      res.on('end',()=>{
+        let body=Buffer.concat(bufs);
+        body = decompress(body, res.headers['content-encoding']);
+        resolve({res, body});
       });
-    req.on('timeout',()=>req.destroy(new Error('timeout'))); req.on('error',reject); req.end();
+    });
+    req.on('timeout',()=>req.destroy(new Error('timeout')));
+    req.on('error',reject);
+    req.end();
   });
 }
+
 async function robotsAllowed(host, pathname){
   const cache = `.cache/robots/${host}.txt`; fs.mkdirSync(path.dirname(cache),{recursive:true});
   if(fs.existsSync(cache) && (Date.now()-fs.statSync(cache).mtimeMs) < 24*3600e3){
@@ -71,6 +101,7 @@ async function robotsAllowed(host, pathname){
   fs.writeFileSync(cache,'');
   return allowed('', pathname);
 }
+
 function allowed(robots, pathname){
   const rows = robots.split(/\r?\n/);
   let ua='*', dis=[];
@@ -81,6 +112,7 @@ function allowed(robots, pathname){
   }
   return !dis.some(p=>p && pathname.startsWith(p));
 }
+
 function vendorTodayCount(v){
   const dir=path.join('evidence',v); if(!fs.existsSync(dir)) return 0;
   return fs.readdirSync(dir).filter(f=>f.startsWith(today()+'-') && f.endsWith('.json')).length;
@@ -90,9 +122,11 @@ async function processOne({vendor, url, type}){
   const u = new URL(url);
   if(!(await robotsAllowed(u.hostname, u.pathname))) return { skipped:true, reason:'robots' };
 
-  const cache=`.cache/http/${u.hostname}/${Buffer.from(u.pathname).toString('base64url')}.json`;
-  fs.mkdirSync(path.dirname(cache),{recursive:true});
-  let c={}; if(fs.existsSync(cache)){ try{ c=JSON.parse(fs.readFileSync(cache,'utf8')); }catch{} }
+  const cacheBase = `.cache/http/${u.hostname}/${Buffer.from(u.pathname).toString('base64url')}`;
+  const cacheJSON = `${cacheBase}.json`;
+  const cacheBODY = `${cacheBase}.body.txt`;
+  fs.mkdirSync(path.dirname(cacheJSON),{recursive:true});
+  let c={}; if(fs.existsSync(cacheJSON)){ try{ c=JSON.parse(fs.readFileSync(cacheJSON,'utf8')); }catch{} }
 
   // HEAD 优先，必要时 GET
   let head; try{
@@ -125,12 +159,17 @@ async function processOne({vendor, url, type}){
   );
 
   // 更新缓存
-  fs.writeFileSync(cache, JSON.stringify({
+  fs.writeFileSync(cacheJSON, JSON.stringify({
     etag: etag || prevEtag || null,
     lastModified: last || prevLast || null,
     hash: bodyHash ? `sha256:${bodyHash}` : (prevHash||null),
     checkedAt: new Date().toISOString()
   }, null, 2));
+
+  // 可选：保存归一化正文（仅 Runner 工作区；<300KB 才存）
+  if(SAVE_BODY && body && body.length && body.length < 300*1024){
+    try{ fs.writeFileSync(cacheBODY, body); }catch(e){}
+  }
 
   if(!changed){
     // 无变化且已有基线就不再写盘
@@ -162,7 +201,7 @@ async function processOne({vendor, url, type}){
   const eps = readEndpoints();
   let changed=0, skipped=0, errors=0;
   for(const r of eps){
-    await new Promise(res=>setTimeout(res,100));
+    await new Promise(res=>setTimeout(res,100)); // 轻节流
     try{
       const t = await processOne(r);
       if(t?.skipped) skipped++;
