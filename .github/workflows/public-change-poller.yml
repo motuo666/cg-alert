@@ -1,40 +1,25 @@
 name: Public Change Poller
 on:
-  schedule:
-    - cron: "5 0,6,12,18 * * 1-5"   # 工作日每 6 小时
+  schedule: [ { cron: "5 0,6,12,18 * * 1-5" } ]
   workflow_dispatch: {}
 permissions: { contents: write }
 jobs:
   poll:
     runs-on: ubuntu-latest
-    concurrency:
-      group: cg-poller
-      cancel-in-progress: false
+    concurrency: { group: cg-write, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci
-      - name: Build endpoint inventory
-        run: node scripts/endpoint_inventory.js
-      - name: Poll public endpoints (robots-aware)
-        env:
-          MAX_ENDPOINTS: "300"
-          PER_HOST: "4"
+      - run: npm ci
+      - run: node scripts/endpoint_inventory.js
+      - env: { MAX_ENDPOINTS: "300", PER_HOST: "4" }
         run: node scripts/poll_public_endpoints.js
-      - name: Build Updates + SEO
-        run: |
+      - run: |
           node scripts/build_updates.js
           node scripts/seo_inject.js
-      - name: Commit changes
+      - name: Safe push
         run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "poller: evidence updates + updates/ + seo"
-            git push
-          else
-            echo "No site changes."
-          fi
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "poller: evidence updates + site"
