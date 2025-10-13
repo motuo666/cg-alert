@@ -1,51 +1,30 @@
 name: Outreach Triggered
+
 on:
-  schedule: [{ cron: "5 16 * * 1-5" }]  # 工作日 16:05 UTC
+  schedule: [{ cron: "5 16 * * 1-5" }]
   workflow_dispatch:
     inputs:
-      dry:
-        description: "DRY run (true/false)"
-        required: false
-        default: "true"
-      limit:
-        description: "Max emails this run"
-        required: false
-        default: "10"
-      window_h:
-        description: "Evidence window hours"
-        required: false
-        default: "48"
-
-permissions: { contents: write }
+      dry:     { description: "DRY run (true/false)", required: false, default: "true" }
+      limit:   { description: "Max emails this run",  required: false, default: "10" }
+      window_h:{ description: "Evidence window hours",required: false, default: "48" }
 
 jobs:
-  s1_triggered:
+  trig:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write, cancel-in-progress: false }
-
+    concurrency: { group: cg-outreach, cancel-in-progress: true }
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-
       - name: Install deps
         run: npm ci || npm install --no-audit --no-fund
 
-      - name: Untrack caches if previously added
-        run: git rm -r --cached .cache || true
-
-      - name: Leads sanity
-        run: node scripts/validate_leads.js
-
-      - name: Gate by recent evidence
+      - name: Gate
         id: gate
-        env:
-          TRIGGER_WINDOW_H: ${{ github.event.inputs.window_h || '48' }}
-        run: |
-          node scripts/s1_gate.js
+        env: { TRIGGER_WINDOW_H: "${{ github.event.inputs.window_h || '48' }}" }
+        run: node scripts/s1_gate.js
 
-      - name: Send Triggered (only changed vendors)
+      - name: Send Triggered
         if: steps.gate.outputs.ok == '1'
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -55,46 +34,11 @@ jobs:
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           BCC_TO:     ${{ secrets.BCC_TO }}
         run: |
-          DRY="${{ github.event.inputs.dry || 'true' }}"
+          DRY="${{ github.event.inputs.dry   || 'true' }}"
           LIMIT="${{ github.event.inputs.limit || '10' }}"
-          node scripts/send_triggered.js --dry=${DRY} --limit=${LIMIT} --window_h=${{ github.event.inputs.window_h || '48' }}
+          WIN="${{ github.event.inputs.window_h || '48' }}"
+          node scripts/send_triggered.js --dry=${DRY} --limit=${LIMIT} --window-h=${WIN}
 
-      - name: Poll inbox for bounces (optional)
-        if: steps.gate.outputs.ok == '1'
-        env:
-          IMAP_HOST: ${{ secrets.IMAP_HOST }}
-          IMAP_PORT: ${{ secrets.IMAP_PORT }}
-          IMAP_USER: ${{ secrets.IMAP_USER }}
-          IMAP_PASS: ${{ secrets.IMAP_PASS }}
-        run: node scripts/poll_inbox.js || true
-
-      - name: Commit outreach artifacts
-        run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "outreach(triggered): bounces/status heartbeat"
-          else
-            echo "No outreach changes."
-          fi
-
-      - name: Safe push with rebase & retry
-        run: |
-          tries=0
-          until [ $tries -ge 3 ]
-          do
-            git pull --rebase --autostash origin main || (git rebase --abort || true)
-            if git push origin HEAD:main; then
-              echo "Push succeeded."
-              exit 0
-            fi
-            tries=$((tries+1))
-            echo "Push failed. Retry #$tries ..."
-            sleep 3
-          done
-          echo "Push failed after retries."; exit 1
-
-      - name: Skip note (no fresh evidence)
+      - name: Skip note
         if: steps.gate.outputs.ok != '1'
-        run: echo "No fresh evidence → skip Triggered this run"
+        run: echo "No fresh evidence → skip triggered outreach"
