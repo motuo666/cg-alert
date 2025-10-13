@@ -1,28 +1,23 @@
-name: Outreach S1 (regular)
+name: Outreach S1
 on:
-  schedule: [{ cron: "30 17 * * 1-5" }]
+  schedule: [ { cron: "30 17 * * 1-5" } ]
   workflow_dispatch:
     inputs:
-      dry:     { description: "DRY run (true/false)", required: false, default: "true" }
-      limit:   { description: "Max emails this run",  required: false, default: "10" }
-      window_h:{ description: "Evidence window hours",required: false, default: "48" }
-
+      dry:   { description: "dry run", default: "true", required: true }
+      limit: { description: "max emails", default: "20", required: true }
+permissions: {}
 jobs:
   s1:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-outreach, cancel-in-progress: true }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm install --no-audit --no-fund
-
-      - name: Gate by recent evidence
+      - run: npm ci || npm i --no-audit --no-fund || true
+      - name: Gate by evidence (48h)
         id: gate
-        env: { TRIGGER_WINDOW_H: "${{ github.event.inputs.window_h || '48' }}" }
+        env: { TRIGGER_WINDOW_H: "48" }
         run: node scripts/s1_gate.js
-
       - name: Send S1
         if: steps.gate.outputs.ok == '1'
         env:
@@ -32,20 +27,7 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           BCC_TO:     ${{ secrets.BCC_TO }}
-        run: |
-          DRY="${{ github.event.inputs.dry   || 'true' }}"
-          LIMIT="${{ github.event.inputs.limit || '10' }}"
-          node scripts/send_bulk.js --dry=${DRY} --limit=${LIMIT}
-
-      - name: Poll inbox for bounces (optional)
-        if: steps.gate.outputs.ok == '1'
-        env:
-          IMAP_HOST: ${{ secrets.IMAP_HOST }}
-          IMAP_PORT: ${{ secrets.IMAP_PORT }}
-          IMAP_USER: ${{ secrets.IMAP_USER }}
-          IMAP_PASS: ${{ secrets.IMAP_PASS }}
-        run: node scripts/poll_inbox.js || true
-
+        run: node scripts/send_bulk.js --dry=${{ inputs.dry }} --limit=${{ inputs.limit }}
       - name: Skip note
         if: steps.gate.outputs.ok != '1'
-        run: echo "No fresh evidence → skip S1 this run"
+        run: echo "No fresh evidence → skip"
