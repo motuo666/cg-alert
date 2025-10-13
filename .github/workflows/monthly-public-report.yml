@@ -1,55 +1,57 @@
 name: Monthly Public Report
-
 on:
-  schedule:
-    - cron: "10 15 1 * *"  # 每月1日 15:10 UTC
+  schedule: [{ cron: "10 15 1 * *" }]  # 每月1日 15:10 UTC
   workflow_dispatch:
     inputs:
       month:
-        description: "YYYY-MM (empty = current month)"
+        description: "Month to build (YYYY-MM). Leave empty for current."
         required: false
         default: ""
-
-permissions:
-  contents: write
-
-concurrency:
-  group: monthly-public-report
-  cancel-in-progress: false
-
+permissions: { contents: write }
 jobs:
-  build:
+  monthly_report:
     runs-on: ubuntu-latest
-    env:
-      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+    concurrency: { group: cg-write, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
+        with: { node-version: 20 }
       - name: Install deps
-        run: npm ci
-
-      - name: Build monthly public artifacts
+        run: npm ci || npm install --no-audit --no-fund
+      - name: Untrack caches if previously added
+        run: git rm -r --cached .cache || true
+      - name: Build monthly public report
+        env:
+          MONTH: ${{ github.event.inputs.month }}
         run: |
-          node scripts/build_public_monthly.js --month="${{ inputs.month }}"
-          node scripts/seo_inject.js
-
-      - name: Commit & push reports (force add even if ignored)
+          if [ -n "$MONTH" ]; then
+            node scripts/build_public_monthly.js "$MONTH"
+          else
+            node scripts/build_public_monthly.js
+          fi
+      - name: Commit reports
         run: |
-          git config user.name "cg-alert-bot"
+          git config user.name "CG Bot"
           git config user.email "bot@cg-alert.com"
-          git add -f reports/ reports/rss.xml || true
-          git commit -m "chore(reports): publish ${{ inputs.month || 'current' }}" || true
-          git push || true
-
-      - name: Slack notify
-        if: always()
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "reports: publish monthly report & rss"
+          else
+            echo "No report changes."
+          fi
+      - name: Safe push with rebase & retry
         run: |
-          STATUS="${{ job.status }}"
-          MSG="Monthly Public Report • status=${STATUS} • month=${{ inputs.month || 'current' }}"
-          curl -sS -X POST -H 'Content-type: application/json' --data "$(jq -n --arg t "$MSG" '{text:$t}')" "$SLACK_WEBHOOK"
+          tries=0
+          until [ $tries -ge 3 ]
+          do
+            git pull --rebase --autostash origin main || (git rebase --abort || true)
+            if git push origin HEAD:main; then
+              echo "Push succeeded."
+              exit 0
+            fi
+            tries=$((tries+1))
+            echo "Push failed. Retry #$tries ..."
+            sleep 3
+          done
+          echo "Push failed after retries."; exit 1
