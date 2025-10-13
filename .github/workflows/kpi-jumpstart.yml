@@ -4,27 +4,26 @@ permissions: { contents: write }
 jobs:
   run:
     runs-on: ubuntu-latest
-    # 所有会写入仓库的任务都放到同一个并发组，避免互相抢 main
     concurrency: { group: cg-write, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }   # 允许 rebase
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - name: Install deps
         run: npm ci
-      - name: Expand domains from pool (+80)
-        run: node scripts/domains_expand_from_pool.js 80
+      - name: Expand domains from pool (+120)
+        run: node scripts/domains_expand_from_pool.js 120
       - name: Build endpoint inventory
         run: node scripts/endpoint_inventory.js
       - name: Poll public endpoints (robots-aware)
-        env: { MAX_ENDPOINTS: "500", PER_HOST: "5" }
+        env: { MAX_ENDPOINTS: "800", PER_HOST: "6" }
         run: node scripts/poll_public_endpoints.js
       - name: Build updates + SEO
         run: |
           node scripts/build_updates.js
           node scripts/seo_inject.js
-      - name: Safe push (rebase & retry)
+      - name: Safe push
         run: |
           chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "kpi: expanded domains, polled endpoints, site updated"
+          bash scripts/git_safe_push.sh "kpi: expand domains + poll + site update"
