@@ -1,4 +1,5 @@
 name: Outreach Triggered
+
 on:
   schedule: [ { cron: "5 16 * * 1-5" } ] # 工作日 16:05 UTC
   workflow_dispatch:
@@ -15,8 +16,10 @@ on:
         description: "evidence window (hours)"
         default: "48"
         required: true
+
 permissions:
   contents: write  # 发送后若写入日志/CSV，需要写权限
+
 concurrency:
   group: outreach-triggered
   cancel-in-progress: true
@@ -25,6 +28,8 @@ jobs:
   trig:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -55,6 +60,8 @@ jobs:
           # 角色定投 / 地域过滤 / Change Pack 注入（脚本中可读取）
           PERSONA_RULES: config/persona_rules.json
           REGION_FILTER: config/region_filter.json
+          # 站点域名（用于拼接 Pack/Updates 链接）
+          SITE_ORIGIN: https://www.cg-alert.com
         run: |
           node scripts/send_triggered.js \
             --dry=${{ inputs.dry }} \
