@@ -1,7 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"><channel>
-  <title>CG Alert · Reports</title>
-  <link>https://www.cg-alert.com/reports/</link>
-  <description>Monthly public changes across monitored vendors</description>
-  <item><title>Public Changes — 2025-</title><link>https://www.cg-alert.com/reports/2025-/</link><guid>https://www.cg-alert.com/reports/2025-/</guid><pubDate>Wed, 01 Jan 2025 00:00:00 GMT</pubDate></item>
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>
+<title>CG Alert · Reports</title><link>https://www.cg-alert.com/reports/</link><description>Monthly public changes across monitored vendors</description><item><title>Public Changes — 2025-10</title><link>https://www.cg-alert.com/reports/2025-10/</link><guid>https://www.cg-alert.com/reports/2025-10/</guid><pubDate>Mon, 13 Oct 2025 00:00:00 GMT</pubDate></item>
 </channel></rss>
