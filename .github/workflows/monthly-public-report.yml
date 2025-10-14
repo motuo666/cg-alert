@@ -1,32 +1,81 @@
 name: Monthly Public Report
+
 on:
   schedule:
-    - cron: "10 15 1 * *"
+    - cron: "10 15 1 * *"   # 每月 1 日 15:10 UTC
   workflow_dispatch:
     inputs:
       month:
         description: "YYYY-MM（空=当前月）"
         required: false
+
 permissions:
   contents: write
+
 concurrency:
   group: monthly-public-report
   cancel-in-progress: true
+
 jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm ci || npm i --no-audit --no-fund || true
-      - name: Build
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps (best effort)
+        run: npm ci || npm i --no-audit --no-fund || true
+
+      - name: Compute month
+        id: month
+        run: |
+          if [ -n "${{ inputs.month }}" ]; then
+            echo "val=${{ inputs.month }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "val=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+          fi
+          echo "month=${{ inputs.month }}"
+          echo "resolved=${{ steps.month.outputs.val }}"
+
+      - name: Build public monthly pages
         env:
-          REPORT_MONTH: ${{ inputs.month }}
+          REPORT_MONTH: ${{ steps.month.outputs.val }}
           SITE_ORIGIN: https://www.cg-alert.com
         run: node scripts/build_public_monthly.js
+
+      - name: Rebuild evidence index (ndx)
+        run: node scripts/build_evidence_index.js
+
+      - name: Monthly prune & create artifact zip
+        run: node scripts/prune_evidence_monthly.js
+
+      - name: Upload Artifact (evidence zip)
+        if: ${{ hashFiles('artifacts/*.zip') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-${{ steps.month.outputs.val }}
+          path: artifacts/*.zip
+          if-no-files-found: ignore
+
+      - name: Create GitHub Release
+        if: ${{ hashFiles('artifacts/*.zip') != '' }}
+        uses: ncipollo/release-action@v1
+        with:
+          tag: evidence-${{ steps.month.outputs.val }}
+          name: Evidence Pack ${{ steps.month.outputs.val }}
+          artifacts: "artifacts/*.zip"
+          artifactErrorsFailBuild: false
+          generateReleaseNotes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Safe Push
         run: |
           chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "report: public monthly ${{ inputs.month || 'auto' }}"
+          bash scripts/git_safe_push.sh "report: public monthly ${{ steps.month.outputs.val }}"
