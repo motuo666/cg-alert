@@ -3,7 +3,9 @@ on:
   schedule: [ { cron: "10 15 1 * *" } ]
   workflow_dispatch:
     inputs:
-      month: { description: "YYYY-MM（空=当前月）", required: false }
+      month:
+        description: "YYYY-MM（空=当前月）"
+        required: false
 permissions: { contents: write }
 concurrency: { group: monthly-public-report, cancel-in-progress: true }
 jobs:
