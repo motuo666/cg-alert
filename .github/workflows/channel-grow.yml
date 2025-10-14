@@ -1,14 +1,14 @@
 name: Channel Grow (weekly)
 on:
-  schedule: [ { cron: "10 4 * * 1" } ]   # 周一 04:10 UTC
+  schedule: [ { cron: "10 4 * * 1" } ]
   workflow_dispatch:
     inputs:
-      limit: { description: "每周新增候选渠道个数", default: "40", required: true }
+      limit: { description: "每周渠道候选上限", default: "40", required: true }
 permissions: { contents: write }
+concurrency: { group: cg-channel, cancel-in-progress: false }
 jobs:
-  channel:
+  grow:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-channel, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -18,7 +18,7 @@ jobs:
       - name: Discover channel candidates
         env: { NEW_CHANNELS_LIMIT: ${{ inputs.limit || 40 }} }
         run: node scripts/auto_discover_channels.js
-      - name: Commit & Safe Push
+      - name: Safe Push
         run: |
           chmod +x scripts/git_safe_push.sh
           bash scripts/git_safe_push.sh "channel: weekly partner targets"
