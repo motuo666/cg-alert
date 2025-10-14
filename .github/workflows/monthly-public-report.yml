@@ -1,24 +1,31 @@
 name: Monthly Public Report
 on:
-  schedule: [ { cron: "10 15 1 * *" } ]  # 仍保留定时
-  workflow_dispatch:                      # 新增手动触发
+  schedule:
+    - cron: "10 15 1 * *"        # 每月 1 日 15:10 UTC
+  workflow_dispatch:
     inputs:
       month:
         description: "YYYY-MM（空=当前月）"
         required: false
-permissions: { contents: write }
-concurrency: { group: monthly-public-report, cancel-in-progress: true }
+permissions:
+  contents: write
+concurrency:
+  group: monthly-public-report
+  cancel-in-progress: true
 jobs:
   report:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with:
+          node-version: 20
       - run: npm ci || npm i --no-audit --no-fund || true
       - name: Build
-        env: { REPORT_MONTH: ${{ inputs.month }} }
+        env:
+          REPORT_MONTH: ${{ inputs.month }}
         run: node scripts/build_public_monthly.js
       - name: Safe Push
         run: |
