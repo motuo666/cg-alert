@@ -1,2 +1,1 @@
-printf "20\n" > .nvmrc
-bash scripts/git_safe_push.sh "chore: align .nvmrc to Node 20"
+20
