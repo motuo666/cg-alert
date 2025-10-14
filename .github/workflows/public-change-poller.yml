@@ -1,41 +1,25 @@
 name: Public Change Poller
 on:
-  schedule: [{ cron: "0 */4 * * *" }]  # 每4小时一次，足够满足P95<24h
+  schedule: [ { cron: "0 */4 * * *" } ]
   workflow_dispatch: {}
 permissions: { contents: write }
+concurrency: { group: public-change-poller, cancel-in-progress: true }
 jobs:
   poll:
     runs-on: ubuntu-latest
-    concurrency: { group: cg-write, cancel-in-progress: false }
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci
-      - name: Sanitize data
-        run: node scripts/data_sanitize.js
-      - name: Build endpoints
-        run: node scripts/endpoint_inventory.js
-      - name: Poll public endpoints
-        env:
-          MAX_ENDPOINTS: "800"      # 保守、低成本
-          PER_HOST: "6"
-          VENDOR_DAILY_MAX: "2"
-        run: node scripts/poll_public_endpoints.js
-      - name: Rebuild updates + SEO
+      - run: npm ci || npm i --no-audit --no-fund || true
+      - name: Poll & Build
         run: |
+          node scripts/endpoint_inventory.js || true
+          node scripts/poll_public_endpoints.js
           node scripts/build_updates.js || true
           node scripts/seo_inject.js || true
-      - name: Commit if changed
+      - name: Safe Push
         run: |
-          git config user.name "CG Bot"
-          git config user.email "bot@cg-alert.com"
-          if ! git diff --quiet; then
-            git add -A
-            git commit -m "poller: public endpoints + site refresh"
-            git push
-          else
-            echo "No changes."
-          fi
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "poller: public endpoints + site refresh"
