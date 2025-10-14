@@ -1,0 +1,24 @@
+name: Discover Public Contacts
+on:
+  schedule: [ { cron: "8 15 * * 1-5" } ]   # 工作日 15:08 UTC
+  workflow_dispatch: {}
+permissions: { contents: write }
+concurrency: { group: "discover-contacts-${{ github.ref }}", cancel-in-progress: true }
+jobs:
+  run:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Discover contacts (public-only)
+        run: node scripts/discover_contacts.js
+      - name: Guard & Validate (9 cols, enums)
+        run: node scripts/validate_leads.js
+      - name: Safe Push
+        run: |
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "leads: discover + validate"
