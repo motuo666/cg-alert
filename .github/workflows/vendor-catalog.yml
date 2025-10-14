@@ -1,24 +1,21 @@
 name: Vendor Catalog
 on:
-  schedule:
-    - cron: '10 15 * * 1'  # 每周一 09:10 MT
-  workflow_dispatch:
+  schedule: [ { cron: "10 15 * * 1" } ]
+  workflow_dispatch: {}
 permissions: { contents: write }
+concurrency: { group: vendor-catalog, cancel-in-progress: true }
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
-        with: { node-version: '18' }
+        with: { node-version: 20 }
       - name: Build vendor catalog
-        env:
-          SITE_ORIGIN: 'https://www.cg-alert.com'
-        run: node scripts/build_vendor_catalog.js
-      - name: Commit artifacts
+        env: { SITE_ORIGIN: 'https://www.cg-alert.com' }
+        run: node scripts/vendor_catalog.js
+      - name: Safe Push
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add vendors/** api/vendors.json sitemap-vendors.xml || true
-          git commit -m "chore(vendors): weekly refresh" || echo "nothing to commit"
-          git push
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "vendors: weekly refresh"
