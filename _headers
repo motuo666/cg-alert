@@ -1,22 +1,11 @@
-/*
-  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-  X-Content-Type-Options: nosniff
-  X-Frame-Options: DENY
-  Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
-  Content-Security-Policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'
-  Cache-Control: public, max-age=600
+/reports/*
+  Cache-Control: public, max-age=900
+  X-Robots-Tag: index, follow
 
-/vendors/*
-  Cache-Control: public, max-age=3600
-
-/categories/*
-  Cache-Control: public, max-age=3600
-
-/updates/rss.xml
-  Content-Type: application/rss+xml; charset=utf-8
-  Cache-Control: public, max-age=120
-
-/api/*.json
-  Content-Type: application/json; charset=utf-8
+/reports/rss.xml
   Cache-Control: public, max-age=300
+  Content-Type: application/rss+xml; charset=utf-8
+
+/sitemap-*.xml
+  Cache-Control: public, max-age=1800
+  Content-Type: application/xml; charset=utf-8
