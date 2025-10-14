@@ -1,21 +1,11 @@
 name: Weekly Health Check
-
 on:
-  schedule:
-    - cron: "0 15 * * 1"      # 周一 15:00 UTC
+  schedule: [ { cron: "0 15 * * 1" } ]
   workflow_dispatch:
     inputs:
-      force_green:
-        description: "临时强制绿(1=不失败+自愈)"
-        required: false
-        default: "0"
-
+      force_green: { description: "临时强制绿(1=不失败+自愈)", required: false, default: "0" }
 permissions: { contents: write }
-
-concurrency:
-  group: weekly-health
-  cancel-in-progress: true
-
+concurrency: { group: weekly-health, cancel-in-progress: true }
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -25,29 +15,24 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm ci || npm i --no-audit --no-fund || true
-      - name: Health check
+      - name: Health
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          IMAP_HOST:  ${{ secrets.IMAP_HOST }}
-          IMAP_PORT:  ${{ secrets.IMAP_PORT }}
-          IMAP_USER:  ${{ secrets.IMAP_USER }}
-          IMAP_PASS:  ${{ secrets.IMAP_PASS }}
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           KPI_FORCE_GREEN: ${{ inputs.force_green || '0' }}
         run: |
           set -e
           node scripts/weekly_health_check.js || \
             if [ "${{ inputs.force_green || '0' }}" = "1" ]; then echo "force green"; else exit 1; fi
-      - name: Commit & Safe Push
+      - name: Safe Push (always)
         if: always()
         run: |
-          git config --local user.name  "CG Bot"
-          git config --local user.email "bot@cg-alert.com"
-          git add -A
-          git diff --cached --quiet || git commit -m "kpi: weekly health"
-          git pull --rebase --autostash origin main || (git rebase --abort || true)
-          git push origin HEAD:main || true
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "kpi: weekly health"
