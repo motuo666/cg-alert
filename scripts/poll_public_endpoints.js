@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// poll_public_endpoints.js — 轻量轮询公开端点，缓存到 .cache/http/<host>/<path>.body.txt
+// poll_public_endpoints.js — 轻量轮询公开端点，缓存到 .cache/http/<host>/<path>.body.txt（只编码文件名，绝不编码目录）
+// 兼容 robots 由 weekly_health_check 负责，本脚本只拉 endpoints.csv 指定的 URL
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -23,6 +24,11 @@ function fetchURL(u){
   });
 }
 
+function encodeFileComponent(s){
+  // 只对文件名做安全编码：/ -> %2F, ? -> %3F, # -> %23, 其它保持
+  return s.replace(/\//g,'%2F').replace(/\?/g,'%3F').replace(/#/g,'%23');
+}
+
 (async function(){
   const lines = fs.readFileSync(IN,'utf8').split(/\r?\n/).filter(Boolean);
   const list = [];
@@ -35,15 +41,18 @@ function fetchURL(u){
     list.push(url);
     if (list.length >= MAX) break;
   }
-  fs.mkdirSync(CACHE_ROOT, { recursive: true });
   let errors=0, changed=0, baselines=0;
   for (const u of list) {
     const res = await fetchURL(u);
-    const host = new URL(u).hostname.replace(/^www\./,'');
-    const key = u.replace(/^https?:\/\//,'');
+    const { hostname, pathname, search } = new URL(u);
+    const host = hostname.replace(/^www\./,'').toLowerCase();
+
     const dir = path.join(CACHE_ROOT, host);
     fs.mkdirSync(dir, { recursive: true });
-    const file = path.join(dir, '/'+key).replace(/\/+/g,'/').replace(/\//g,'%2F') + '.body.txt';
+
+    const rawKey = (pathname || '/') + (search || '');
+    const file = path.join(dir, encodeFileComponent(rawKey) + '.body.txt');
+
     if (res.error) { console.log(`[poll][err] ${u} ${res.error}`); errors++; continue; }
     const body = res.body || '';
     const old = fs.existsSync(file) ? fs.readFileSync(file,'utf8') : '';
