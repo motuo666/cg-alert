@@ -2,25 +2,21 @@ name: SEO Tighten
 on:
   push:
     branches: [ main ]
-    paths:
-      - "vendors/**"
-      - "updates/**"
-      - "evidence/**"
+    paths: [ "vendors/**", "updates/**", "evidence/**" ]
   workflow_dispatch: {}
 permissions: { contents: write }
+concurrency: { group: seo-tighten, cancel-in-progress: true }
 jobs:
   tighten:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm ci || npm i --no-audit --no-fund || true
       - run: node scripts/seo_inject.js
-      - name: Commit
+      - name: Safe Push
         run: |
-          git config --local user.name "CG Bot"
-          git config --local user.email "bot@cg-alert.com"
-          git add -A && (git diff --cached --quiet || git commit -m "seo: inject json-ld/canonical/meta")
-          git pull --rebase --autostash origin main || (git rebase --abort || true)
-          git push origin HEAD:main || true
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "seo: inject json-ld/canonical/meta"
