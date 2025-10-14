@@ -1,25 +1,32 @@
 name: Domain Grow (daily)
 on:
-  schedule: [ { cron: "25 3 * * *" } ]   # 仍保留定时
-  workflow_dispatch:                      # 新增手动触发
+  schedule:
+    - cron: "25 3 * * *"         # 每日 03:25 UTC
+  workflow_dispatch:
     inputs:
       new_domains:
         description: "新增域上限"
         default: "60"
         required: true
-permissions: { contents: write }
-concurrency: { group: cg-domain-grow, cancel-in-progress: false }
+permissions:
+  contents: write
+concurrency:
+  group: cg-domain-grow
+  cancel-in-progress: false
 jobs:
   grow:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with:
+          node-version: 20
       - run: npm ci || npm i --no-audit --no-fund || true
       - name: Discover candidate domains
-        env: { NEW_DOMAINS_LIMIT: ${{ inputs.new_domains || 60 }} }
+        env:
+          NEW_DOMAINS_LIMIT: ${{ inputs.new_domains || 60 }}
         run: node scripts/auto_discover_domains.js
       - name: Append & Rebuild endpoints
         run: |
@@ -28,4 +35,4 @@ jobs:
       - name: Safe Push
         run: |
           chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "grow: +auto discovered domains"
+          bash scripts/git_safe_push.sh "grow: +auto discovered domains (daily)"
