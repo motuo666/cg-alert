@@ -1,0 +1,10 @@
+name: Repo Sanitize (one-shot)
+on: { workflow_dispatch: {} }
+permissions: { contents: write }
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: bash scripts/repo_sanitize.sh
