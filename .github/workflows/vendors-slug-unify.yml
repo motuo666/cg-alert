@@ -1,0 +1,31 @@
+name: Vendors Slug Unify (one-shot)
+on:
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: "试运行(DRY=1，不落地)"
+        required: true
+        default: "false"
+permissions: { contents: write }
+concurrency: { group: vendors-slug-unify, cancel-in-progress: true }
+jobs:
+  unify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Unify vendors/ slugs
+        env:
+          DRY: ${{ inputs.dry == 'true' && '1' || '0' }}
+        run: node scripts/vendors_slug_unify.js
+      - name: Rebuild vendor catalog & SEO
+        run: |
+          node scripts/vendor_catalog.js || node scripts/build_vendor_catalog.js || true
+          node scripts/seo_inject.js || true
+      - name: Safe Push
+        if: ${{ inputs.dry != 'true' }}
+        run: |
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "fix(vendors): unify slugs to vendors/<domain> + refresh"
