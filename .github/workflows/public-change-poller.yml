@@ -29,6 +29,8 @@ jobs:
           node scripts/build_updates.js || true
           # 生成轻索引（供 Change Pack / 外呼 JOIN）
           node scripts/build_evidence_index.js
+          # 生成 Change Pack（按活跃 vendor 输出 /reports/<YYYY-MM>/<vendor>/）
+          node scripts/build_change_pack.js
           # 幂等 SEO 注入（title/description/canonical + JSON-LD）
           node scripts/seo_inject.js || true
 
@@ -36,4 +38,4 @@ jobs:
         if: always()
         run: |
           chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "poller: public endpoints + site refresh + index"
+          bash scripts/git_safe_push.sh "poller: public endpoints + site refresh + index + change-pack"
