@@ -1,0 +1,5 @@
+{
+"allow_roles": ["legal","privacy","procurement","security","risk","compliance"],
+"deny_prefix": ["info@","support@","no-reply@","noreply@","sales@"],
+"min_score": 0.6
+}
