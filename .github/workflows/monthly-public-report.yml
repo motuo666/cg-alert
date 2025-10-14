@@ -1,7 +1,7 @@
 name: Monthly Public Report
 on:
   schedule:
-    - cron: "10 15 1 * *"        # 每月 1 日 15:10 UTC
+    - cron: "10 15 1 * *"
   workflow_dispatch:
     inputs:
       month:
@@ -17,15 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+        with: { node-version: 20 }
       - run: npm ci || npm i --no-audit --no-fund || true
       - name: Build
         env:
           REPORT_MONTH: ${{ inputs.month }}
+          SITE_ORIGIN: https://www.cg-alert.com
         run: node scripts/build_public_monthly.js
       - name: Safe Push
         run: |
