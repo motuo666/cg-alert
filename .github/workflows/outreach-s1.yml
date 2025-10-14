@@ -1,11 +1,12 @@
 name: Outreach S1
 on:
-  schedule: [ { cron: "30 17 * * 1-5" } ]
+  schedule: [ { cron: "30 17 * * 1-5" } ]  # 工作日 17:30 UTC
   workflow_dispatch:
     inputs:
       dry:   { description: "dry run", default: "true", required: true }
-      limit: { description: "max emails", default: "20", required: true }
+      limit: { description: "max emails", default: "20",  required: true }
 permissions: {}
+concurrency: { group: outreach-s1, cancel-in-progress: true }
 jobs:
   s1:
     runs-on: ubuntu-latest
@@ -14,9 +15,11 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm ci || npm i --no-audit --no-fund || true
-      - name: Gate by evidence (48h)
+      - name: Guard & Validate leads
+        run: node scripts/leads_guard.js && node scripts/validate_leads.js
+      - name: Gate (48h evidence)
         id: gate
-        env: { TRIGGER_WINDOW_H: "48" }
+        env: { TRIGGER_WINDOW_H: 48 }
         run: node scripts/s1_gate.js
       - name: Send S1
         if: steps.gate.outputs.ok == '1'
@@ -28,6 +31,6 @@ jobs:
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           BCC_TO:     ${{ secrets.BCC_TO }}
         run: node scripts/send_bulk.js --dry=${{ inputs.dry }} --limit=${{ inputs.limit }}
-      - name: Skip note
+      - name: Skip
         if: steps.gate.outputs.ok != '1'
         run: echo "No fresh evidence → skip"
