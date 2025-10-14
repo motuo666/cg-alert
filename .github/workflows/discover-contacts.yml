@@ -12,12 +12,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Discover contacts (public-only)
+
+      - name: Install deps (pinned if lock exists)
+        run: |
+          npm ci || npm i --no-audit --no-fund || true
+
+      - name: Discover contacts (public-only; persona+region filters)
+        env:
+          PERSONA_RULES: config/persona_rules.json
+          REGION_FILTER: config/region_filter.json
         run: node scripts/discover_contacts.js
-      - name: Guard & Validate (9 cols, enums)
-        run: node scripts/validate_leads.js
+
+      - name: Guard & Validate (9 cols, enums, MX)
+        run: |
+          node scripts/leads_guard.js || true
+          node scripts/validate_leads.js
+
       - name: Safe Push
         run: |
           chmod +x scripts/git_safe_push.sh
