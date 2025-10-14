@@ -135,3 +135,63 @@ vercel.com
 zendesk.com
 zoho.com
 zoom.us
+domain,company
+okta.com,okta
+auth0.com,auth0
+duo.com,duo security
+onelogin.com,onelogin
+stripe.com,stripe
+adyen.com,adyen
+braintreepayments.com,braintree
+checkout.com,checkout.com
+paddle.com,paddle
+recurly.com,recurly
+chargebee.com,chargebee
+salesforce.com,salesforce
+hubspot.com,hubspot
+zoho.com,zoho
+freshworks.com,freshworks
+zendesk.com,zendesk
+intercom.com,intercom
+help scout.com,help scout
+atlassian.com,atlassian
+gitlab.com,gitlab
+github.com,github
+bitbucket.org,bitbucket
+linear.app,linear
+asana.com,asana
+notion.so,notion
+monday.com,monday.com
+slack.com,slack
+zoom.us,zoom
+dropbox.com,dropbox
+box.com,box
+google.com,google workspace
+microsoft.com,microsoft 365
+aws.amazon.com,aws
+cloudflare.com,cloudflare
+fastly.com,fastly
+vercel.com,vercel
+netlify.com,netlify
+datadoghq.com,datadog
+newrelic.com,new relic
+sentry.io,sentry
+segment.com,segment
+snowflake.com,snowflake
+mongodb.com,mongodb atlas
+supabase.com,supabase
+heroku.com,heroku
+render.com,render
+twilio.com,twilio
+sendgrid.com,sendgrid
+mailgun.com,mailgun
+postmarkapp.com,postmark
+algolia.com,algolia
+elastic.co,elastic
+contentful.com,contentful
+sanity.io,sanity
+figma.com,figma
+canva.com,canva
+miro.com,miro
+confluent.io,confluent
+
