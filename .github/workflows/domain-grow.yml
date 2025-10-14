@@ -3,7 +3,10 @@ on:
   schedule: [ { cron: "25 3 * * *" } ]
   workflow_dispatch:
     inputs:
-      new_domains: { description: "新增域上限", default: "60", required: true }
+      new_domains:
+        description: "新增域上限"
+        default: "60"
+        required: true
 permissions: { contents: write }
 concurrency: { group: cg-domain-grow, cancel-in-progress: false }
 jobs:
