@@ -1,7 +1,7 @@
 name: Domain Grow (daily)
 on:
-  schedule: [ { cron: "25 3 * * *" } ]
-  workflow_dispatch:
+  schedule: [ { cron: "25 3 * * *" } ]   # 仍保留定时
+  workflow_dispatch:                      # 新增手动触发
     inputs:
       new_domains:
         description: "新增域上限"
@@ -28,4 +28,4 @@ jobs:
       - name: Safe Push
         run: |
           chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "grow: +auto discovered domains (daily)"
+          bash scripts/git_safe_push.sh "grow: +auto discovered domains"
