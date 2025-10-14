@@ -1,28 +1,71 @@
 name: Outreach Triggered
 on:
-  schedule: [ { cron: "5 16 * * 1-5" } ]
+  schedule: [ { cron: "5 16 * * 1-5" } ] # 工作日 16:05 UTC
   workflow_dispatch:
     inputs:
-      dry:      { description: "dry run", default: "true", required: true }
-      limit:    { description: "max emails", default: "20",   required: true }
-      window_h: { description: "evidence window (hours)", default: "48", required: true }
-permissions: {}
-concurrency: { group: outreach-triggered, cancel-in-progress: true }
+      dry:
+        description: "dry run"
+        default: "true"
+        required: true
+      limit:
+        description: "max emails"
+        default: "20"
+        required: true
+      window_h:
+        description: "evidence window (hours)"
+        default: "48"
+        required: true
+permissions:
+  contents: write  # 发送后若写入日志/CSV，需要写权限
+concurrency:
+  group: outreach-triggered
+  cancel-in-progress: true
+
 jobs:
   trig:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - run: npm ci || npm i --no-audit --no-fund || true
+
+      - name: Install deps
+        run: npm ci || npm i --no-audit --no-fund || true
+
+      - name: Guard & Validate leads (9 cols / enums)
+        run: |
+          if [ -f scripts/leads_guard.js ]; then node scripts/leads_guard.js || true; fi
+          if [ -f scripts/validate_leads.js ]; then node scripts/validate_leads.js || true; fi
+
       - name: Send Triggered
         env:
           TRIGGER_WINDOW_H: ${{ inputs.window_h }}
+          # 邮件
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           BCC_TO:     ${{ secrets.BCC_TO }}
-        run: node scripts/send_triggered.js --dry=${{ inputs.dry }} --limit=${{ inputs.limit }}
+          # 角色定投 / 地域过滤 / Change Pack 注入（脚本中可读取）
+          PERSONA_RULES: config/persona_rules.json
+          REGION_FILTER: config/region_filter.json
+        run: |
+          node scripts/send_triggered.js \
+            --dry=${{ inputs.dry }} \
+            --limit=${{ inputs.limit }} \
+            --pack
+
+      - name: Safe Push (only if changes)
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            chmod +x scripts/git_safe_push.sh || true
+            bash scripts/git_safe_push.sh "outreach: triggered log"
+          else
+            echo "no changes to commit"
+          fi
