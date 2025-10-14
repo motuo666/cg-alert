@@ -1,2 +1,16 @@
 _seed,SaaS
+_seed.com,SaaS
 acme,SaaS
+acme.com,SaaS
+acme.com,acme corp,SaaS
+atlassian.com,atlassian,SaaS
+auth0.com,auth0,SaaS
+cloudflare.com,cloudflare,SaaS
+datadoghq.com,datadog,SaaS
+github.com,github,SaaS
+globex.com,globex,SaaS
+notion.so,notion,SaaS
+slack.com,slack,SaaS
+snowflake.com,snowflake,SaaS
+stripe.com,stripe,Payments
+twilio.com,twilio,SaaS
