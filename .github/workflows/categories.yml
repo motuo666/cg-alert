@@ -1,34 +1,22 @@
 name: Categories Build
 on:
-  schedule:
-    - cron: '12 15 * * 1'   # 每周一 09:12 MT（夏令时）
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
-concurrency:
-  group: "categories-${{ github.ref }}"
-  cancel-in-progress: true
-
+  schedule: [ { cron: "12 15 * * 1" } ]
+  workflow_dispatch: {}
+permissions: { contents: write }
+concurrency: { group: categories, cancel-in-progress: true }
 jobs:
   build:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4           # ← 改为官方 tag
-      - uses: actions/setup-node@v4         # ← 改为官方 tag
-        with:
-          node-version: '18'
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm ci || npm i --no-audit --no-fund || true
       - name: Build category pages
-        env:
-          SITE_ORIGIN: 'https://www.cg-alert.com'
+        env: { SITE_ORIGIN: 'https://www.cg-alert.com' }
         run: node scripts/build_categories.js
-      - name: Commit artifacts
+      - name: Safe Push
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add categories/** sitemap-categories.xml || true
-          git commit -m "chore(categories): weekly refresh" || echo "nothing to commit"
-          git push
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "categories: weekly refresh"
