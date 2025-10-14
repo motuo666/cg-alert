@@ -1,7 +1,9 @@
 name: Channel Grow (weekly)
 on:
-  schedule: [ { cron: "10 4 * * 1" } ]
-  workflow_dispatch: {}
+  schedule: [ { cron: "10 4 * * 1" } ]   # 周一 04:10 UTC
+  workflow_dispatch:
+    inputs:
+      limit: { description: "每周新增候选渠道个数", default: "40", required: true }
 permissions: { contents: write }
 jobs:
   channel:
@@ -13,12 +15,10 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm ci || npm i --no-audit --no-fund || true
-      - name: Run channel discovery
-        run: node scripts/auto_append_domains.js --channel=1 || true
-      - name: Commit & push
+      - name: Discover channel candidates
+        env: { NEW_CHANNELS_LIMIT: ${{ inputs.limit || 40 }} }
+        run: node scripts/auto_discover_channels.js
+      - name: Commit & Safe Push
         run: |
-          git config --local user.name "CG Bot"
-          git config --local user.email "bot@cg-alert.com"
-          git add -A && (git diff --cached --quiet || git commit -m "channel: weekly partner targets")
-          git pull --rebase --autostash origin main || (git rebase --abort || true)
-          git push origin HEAD:main || true
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "channel: weekly partner targets"
