@@ -1,16 +1,9 @@
 name: Promote Intakes
-
 on:
-  schedule:
-    - cron: "*/15 * * * *"   # 保留原来的每15分钟
-  workflow_dispatch: {}       # 恢复按钮
-
+  schedule: [ { cron: "*/15 * * * *" } ]
+  workflow_dispatch: {}
 permissions: { contents: write, pull-requests: write }
-
-concurrency:
-  group: promote-intakes
-  cancel-in-progress: false
-
+concurrency: { group: promote-intakes, cancel-in-progress: false }
 jobs:
   promote:
     runs-on: ubuntu-latest
@@ -20,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm ci || npm i --no-audit --no-fund || true
-      - name: Run promote script
+      - name: Promote
         run: |
           if [ -f scripts/promote-intakes.js ]; then
             node scripts/promote-intakes.js
@@ -29,11 +22,7 @@ jobs:
           else
             echo "promote-intakes script not found"; exit 1
           fi
-      - name: Commit & Safe Push
+      - name: Safe Push
         run: |
-          git config --local user.name  "CG Bot"
-          git config --local user.email "bot@cg-alert.com"
-          git add -A
-          git diff --cached --quiet || git commit -m "promote: intakes -> customers"
-          git pull --rebase --autostash origin main || (git rebase --abort || true)
-          git push origin HEAD:main
+          chmod +x scripts/git_safe_push.sh
+          bash scripts/git_safe_push.sh "promote: intakes -> customers"
