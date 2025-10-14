@@ -4,8 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       dry:      { description: "dry run", default: "true", required: true }
-      limit:    { description: "max emails", default: "20", required: true }
-      window_h: { description: "evidence window(hours)", default: "48", required: true }
+      limit:    { description: "max emails", default: "20",   required: true }
+      window_h: { description: "evidence window (hours)", default: "48", required: true }
+permissions: {}
+concurrency: { group: outreach-triggered, cancel-in-progress: true }
 jobs:
   trig:
     runs-on: ubuntu-latest
