@@ -1,0 +1,20 @@
+name: Run Clean & Cover
+on: { workflow_dispatch: {} }
+permissions: { contents: write }
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Write script
+        run: |
+          mkdir -p tools
+          cat > tools/clean_and_cover.sh <<'EOF'
+          #!/usr/bin/env bash
+          # ↓↓↓ 把我给你的 clean_and_cover.sh 全文粘贴到这里 ↓↓↓
+          # （从第一行 #!/usr/bin/env bash 到最后一行“完成 ✅ ...”）
+          EOF
+          chmod +x tools/clean_and_cover.sh
+      - name: Run
+        run: bash tools/clean_and_cover.sh
