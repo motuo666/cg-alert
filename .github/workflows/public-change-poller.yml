@@ -1,25 +1,39 @@
 name: Public Change Poller
 on:
-  schedule: [ { cron: "0 */4 * * *" } ]
+  schedule: [ { cron: "0 */4 * * *" } ]   # 每 4 小时
   workflow_dispatch: {}
 permissions: { contents: write }
 concurrency: { group: public-change-poller, cancel-in-progress: true }
+
 jobs:
   poll:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
+
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - run: npm ci || npm i --no-audit --no-fund || true
+
+      - name: Install deps
+        run: npm ci || npm i --no-audit --no-fund || true
+
       - name: Poll & Build
         run: |
+          # 端点清单（可能为空，容错）
           node scripts/endpoint_inventory.js || true
+          # 采样公共端点并生成证据
           node scripts/poll_public_endpoints.js
+          # 更新站点 /updates/ 等（容错）
           node scripts/build_updates.js || true
+          # 生成轻索引（供 Change Pack / 外呼 JOIN）
+          node scripts/build_evidence_index.js
+          # 幂等 SEO 注入（title/description/canonical + JSON-LD）
           node scripts/seo_inject.js || true
+
       - name: Safe Push
+        if: always()
         run: |
           chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "poller: public endpoints + site refresh"
+          bash scripts/git_safe_push.sh "poller: public endpoints + site refresh + index"
