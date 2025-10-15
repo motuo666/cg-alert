@@ -1,0 +1,3 @@
+when,email,old_status,new_status,source
+2025-10-15T07:54:47.342Z,procurement@asana.com,sent,unsub,unsubscribes.csv
+2025-10-15T07:54:47.342Z,legal@github.com,new,bounced,bounces.csv

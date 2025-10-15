@@ -1,5 +1,5 @@
 manningtopps@gmail.com,Your Co,gmail.com,Slack,Zoom,Stripe,procurement,sent,1
-procurement@asana.com,Asana,asana.com,Okta,Slack,Zoom,procurement,unsub,1
+procurement@asana.com,Asana,asana.com,Okta,Slack,Zoom,procurement,sent,1
 security@globex.com,globex,globex.com,,,,security,new,1
 compliance@globex.com,globex,globex.com,,,,security,new,1
 privacy@globex.com,globex,globex.com,,,,security,new,1
@@ -52,7 +52,7 @@ info@datadoghq.com,datadog,datadoghq,datadoghq.com,datadog,,,new,1
 security@github.com,github,github,github.com,github,,,sent,1
 compliance@github.com,github,github,github.com,github,,,sent,1
 privacy@github.com,github,github,github.com,github,,,sent,1
-legal@github.com,github,github,github.com,github,,,bounced,0
+legal@github.com,github,github,github.com,github,,,new,1
 cto@github.com,github,github,github.com,github,,,new,1
 ciso@github.com,github,github,github.com,github,,,new,1
 info@github.com,github,github,github.com,github,,,new,1
@@ -84,7 +84,7 @@ legal@stripe.com,stripe,stripe,stripe.com,stripe,,,new,1
 cto@stripe.com,stripe,stripe,stripe.com,stripe,,,new,1
 ciso@stripe.com,stripe,stripe,stripe.com,stripe,,,new,1
 info@stripe.com,stripe,stripe,stripe.com,stripe,,,new,1
-security@twilio.com,twilio,twilio,twilio.com,twilio,,,sent,1
+security@twilio.com,twilio,twilio,twilio.com,twilio,,,new,1
 compliance@twilio.com,twilio,twilio,twilio.com,twilio,,,new,1
 privacy@twilio.com,twilio,twilio,twilio.com,twilio,,,new,1
 legal@twilio.com,twilio,twilio,twilio.com,twilio,,,new,1
