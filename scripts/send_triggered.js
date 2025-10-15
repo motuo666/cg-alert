@@ -1,284 +1,346 @@
 #!/usr/bin/env node
-// send_triggered.js — 触发式：仅在窗口期内有证据才发；三行外呼模板外置；角色/地域过滤（可选）；历史抑制；日上限
-// 依赖（可选）：scripts/outreach_templates.js；若不存在则使用内置默认模板逻辑
+/**
+ * Triggered outreach (robust, diagnosable)
+ * - Filters: status=new, mx_ok=1, persona, region, evidence-in-window vendor match
+ * - Args: --dry=true|false, --limit=N, --pack (embed pack link), --window_h=72 (optional)
+ * - Env: TRIGGER_WINDOW_H, SMTP_*, MAIL_FROM, BCC_TO, PERSONA_RULES, REGION_FILTER, SITE_ORIGIN
+ * - Outputs: append to data/outreach_log.csv; update leads.csv status -> sent
+ */
+
 const fs = require('fs');
 const path = require('path');
 const nodemailer = require('nodemailer');
-const minimist = require('minimist');
 
-// ====== CLI & ENV ======
-const argv = minimist(process.argv.slice(2), {
-  boolean: ['dry'],
-  string: ['limit', 'window-h', 'window_h'],
-  default: { dry: true, limit: '20', 'window-h': '48' }
-});
-const DRY = argv.dry !== false && String(argv.dry) !== 'false';
-const LIMIT = Math.max(1, Number(argv.limit || '20'));
-const WINDOW_H = Number(argv['window-h'] || argv['window_h'] || '48');
+const ROOT = path.join(__dirname, '..');
+const DATA = p => path.join(ROOT, 'data', p);
+const CFG  = p => path.join(ROOT, 'config', p);
 
-const {
-  SMTP_HOST, SMTP_PORT = 587, SMTP_USER, SMTP_PASS, MAIL_FROM, BCC_TO,
-  SITE_ORIGIN = 'https://www.cg-alert.com'
-} = process.env;
+const now = new Date();
+const Y = now.getUTCFullYear();
+const M = String(now.getUTCMonth()+1).padStart(2,'0');
+const CUR = `${Y}-${M}`;
 
-// ====== Helpers ======
-function read(p, def = '') { try { return fs.readFileSync(p, 'utf8'); } catch { return def; } }
-function lines(p) { return read(p).split(/\r?\n/).filter(Boolean); }
-function exists(p) { try { return fs.existsSync(p); } catch { return false; } }
-function join(...a) { return path.join(...a); }
-function isoDate(d = new Date()) { return new Date(d).toISOString().slice(0, 10); }
-function ymFromISO(iso) { return (iso || new Date().toISOString()).slice(0, 7); }
+const argv = require('node:process').argv.join(' ');
+const DRY = /--dry(?:=| )?false/i.test(argv) ? false : true; // 默认 dry=true，只有明确 --dry=false 才发
+const LIM = (() => { const m = argv.match(/--limit(?:=| )(\d+)/); return m ? Math.max(1, +m[1]) : 5; })();
+const PACK = /--pack/i.test(argv);
+const WINH = (() => {
+  const cli = argv.match(/--window_h(?:=| )(\d+)/);
+  if (cli) return Math.max(1, +cli[1]);
+  const env = process.env.TRIGGER_WINDOW_H ? +process.env.TRIGGER_WINDOW_H : 72;
+  return Math.max(1, env);
+})();
 
-// ====== Persona / Region Filters (optional, zero-cost) ======
-function loadJSON(p, fallback) { try { return JSON.parse(read(p)); } catch { return fallback; } }
-const personaRules = loadJSON(join('config', 'persona_rules.json'), {
-  allow_roles: ["legal", "privacy", "procurement", "security", "risk", "compliance"],
-  deny_prefix: ["info@", "support@", "no-reply@", "noreply@", "sales@"],
-  min_score: 0.0
-});
-const regionFilter = loadJSON(join('config', 'region_filter.json'), {
-  exclude_tld: [".eu", ".de", ".fr", ".it", ".es", ".nl", ".se", ".pl"],
-  include_country: ["US", "CA", "AU", "SG", "GB", "IE"],
-  default: "include"
-});
-function emailAllowed(email) {
-  const e = String(email || '').toLowerCase();
-  if (personaRules.deny_prefix.some(p => e.startsWith(p))) return false;
-  return true;
-}
-function personaAllowed(persona) {
-  const p = String(persona || '').toLowerCase();
-  if (!personaRules.allow_roles || personaRules.allow_roles.length === 0) return true;
-  return personaRules.allow_roles.some(r => p.includes(r));
-}
-function regionAllowed(domain) {
-  const d = String(domain || '').toLowerCase();
-  if (regionFilter.exclude_tld.some(tld => d.endsWith(tld))) return false;
-  return true;
+const SITE = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+const PERSONA_FILE = process.env.PERSONA_RULES || CFG('persona_rules.json');
+const REGION_FILE  = process.env.REGION_FILTER  || CFG('region_filter.json');
+
+function readLines(file) {
+  if (!fs.existsSync(file)) return [];
+  return fs.readFileSync(file, 'utf8').split(/\r?\n/).filter(Boolean);
 }
 
-// ====== Leads ======
-function parseLead(row) {
-  // 9列：email,company,domain,vendor1,vendor2,vendor3,persona,status,mx_ok
-  const a = row.split(',');
-  if (a.length < 9) return null;
-  return {
-    email: a[0].trim().toLowerCase(),
-    company: a[1].trim(),
-    domain: a[2].trim().toLowerCase(),
-    vendors: [a[3], a[4], a[5]].map(s => String(s || '').trim()).filter(Boolean),
-    persona: a[6].trim(),
-    status: a[7].trim(),
-    mx_ok: a[8].trim() === '1'
-  };
+function loadPersonaRules() {
+  try { return JSON.parse(fs.readFileSync(PERSONA_FILE,'utf8')); }
+  catch { return { allow_roles: ['legal','privacy','procurement','security','risk','compliance'], deny_prefix:['info@','support@','sales@','noreply@','no-reply@'], min_score:0.35 }; }
 }
-function loadLeads() {
-  const csv = join('data', 'leads.csv');
-  if (!exists(csv)) return [];
-  return lines(csv).map(parseLead).filter(Boolean)
-    .filter(x => x.mx_ok && x.status === 'new')
-    .filter(x => emailAllowed(x.email) && personaAllowed(x.persona) && regionAllowed(x.domain));
+function loadRegionFilter() {
+  try { return JSON.parse(fs.readFileSync(REGION_FILE,'utf8')); }
+  catch { return { exclude_tld: ['.eu','.de','.fr','.it','.es','.nl','.se','.pl'], include_country: ['US','CA','AU','SG','GB','IE'] }; }
 }
 
-// ====== Evidence scanning ======
-const EVD_DIR = 'evidence';
-const FILE_RE = /^(\d{4}-\d{2}-\d{2})-([A-Za-z]+)-([a-f0-9]{6,})\.json$/;
-
-function recentEvidenceMap(windowH) {
-  // 返回 Map<vendorSlug, Array<{dateISO,type,hash,relPath,mtimeMs}>>
-  const out = new Map();
-  if (!exists(EVD_DIR)) return out;
-  const minMs = Date.now() - windowH * 3600e3;
-  for (const d of fs.readdirSync(EVD_DIR, { withFileTypes: true })) {
-    if (!d.isDirectory()) continue;
-    const slug = d.name;
-    const dir = join(EVD_DIR, slug);
-    for (const f of fs.readdirSync(dir)) {
-      if (!FILE_RE.test(f)) continue;
-      const m = f.match(FILE_RE);
-      const dateISO = m[1];
-      const type = m[2];
-      const hash = m[3];
-      const full = join(dir, f);
-      const st = fs.statSync(full);
-      if (st.mtimeMs >= minMs) {
-        const arr = out.get(slug) || [];
-        arr.push({ dateISO, type, hash, relPath: full.replace(/\\/g, '/'), mtimeMs: st.mtimeMs });
-        out.set(slug, arr);
-      }
+function parseLeadsCSV() {
+  const file = DATA('leads.csv');
+  if (!fs.existsSync(file)) return [];
+  const raw = fs.readFileSync(file,'utf8').split(/\r?\n/).filter(Boolean);
+  // 9列：email,company,domain,vendor1,vendor2,vendor3,persona,status,mx_ok  （无表头）
+  const rows = [];
+  for (const line of raw) {
+    const parts = line.split(',');
+    if (parts.length < 9) continue; // 跳过脏行
+    // 若多于9列，合并 company 中的额外逗号（保守做法）
+    if (parts.length > 9) {
+      const [email,...rest] = parts;
+      const tail = rest.slice(-8);
+      const company = rest.slice(0, rest.length-8).join(' ');
+      rows.push([email, company, ...tail]);
+    } else {
+      rows.push(parts);
     }
   }
-  // sort desc by mtime
-  for (const [k, arr] of out) {
-    arr.sort((a, b) => b.mtimeMs - a.mtimeMs);
-    out.set(k, arr);
+  return rows.map(cols => ({
+    email  : cols[0]?.trim(),
+    company: cols[1]?.trim(),
+    domain : cols[2]?.trim(),
+    v1     : cols[3]?.trim(),
+    v2     : cols[4]?.trim(),
+    v3     : cols[5]?.trim(),
+    persona: cols[6]?.trim(),
+    status : cols[7]?.trim(),
+    mx_ok  : cols[8]?.trim(),
+    _raw   : cols
+  }));
+}
+
+function baseDomain(d) {
+  if (!d) return '';
+  const s = d.toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'');
+  // 取最后两段（简化，已足够）
+  const parts = s.split('/');
+  const host = parts[0] || s;
+  const segs = host.split('.');
+  if (segs.length >= 2) return segs.slice(-2).join('.');
+  return host;
+}
+
+function tld(domain) {
+  const b = baseDomain(domain);
+  const i = b.lastIndexOf('.');
+  return i>0 ? b.slice(i) : '';
+}
+
+function normVendorName(x) {
+  if (!x) return '';
+  // 名称 → 比对 token；域名 → 比对 baseDomain
+  const s = x.toLowerCase().trim();
+  if (s.includes('.')) return baseDomain(s);
+  return s.replace(/[^a-z0-9]/g,''); // “sales force”→“salesforce”
+}
+
+function loadEvidenceWindowHours(hours) {
+  const ndxFile = DATA('evidence.ndx');
+  if (!fs.existsSync(ndxFile)) return [];
+  const lines = fs.readFileSync(ndxFile,'utf8').split(/\r?\n/).filter(Boolean);
+  const cutoff = Date.now() - hours*3600*1000;
+  const changed = [];
+  for (const l of lines) {
+    const [date, slug, type, hash, rel] = l.split('\t');
+    if (!date || !slug) continue;
+    const ts = Date.parse(date+'T00:00:00Z');
+    if (isNaN(ts) || ts < cutoff) continue;
+    changed.push({ date, slug: baseDomain(slug), type, hash, rel });
   }
-  return out;
-}
-function latestFor(slug, m) {
-  const arr = m.get(slug) || [];
-  return arr[0] || null;
+  return changed;
 }
 
-// ====== Templates (external module with graceful fallback) ======
-let TPL = null;
-try { TPL = require('./outreach_templates'); } catch (e) { TPL = null; }
-
-function pickTopic(type) {
-  if (TPL && TPL.pickTopic) return TPL.pickTopic(type);
-  const map = { Pricing: 'Pricing', ToS: 'Terms of Service', DPA: 'DPA', Subprocessors: 'Subprocessors', Status: 'Status' };
-  return map[type] || type || 'Public change';
-}
-function toImpact(type) {
-  if (TPL && TPL.toImpact) return TPL.toImpact(type);
-  if (type === 'Pricing') return 'Budget/renewal risk';
-  if (type === 'ToS') return 'Legal/arbitration/termination';
-  if (type === 'DPA') return 'Privacy/processing terms';
-  if (type === 'Subprocessors') return 'Vendor risk/DP addendum';
-  if (type === 'Status') return 'SLA/incident history';
-  return 'Contract/Compliance';
-}
-function resolvePackUrl(vendor, isoYM) {
-  if (TPL && TPL.resolvePackUrl) return TPL.resolvePackUrl(vendor, isoYM);
-  const ym = isoYM || new Date().toISOString().slice(0, 7);
-  const local = join('reports', ym, vendor, 'index.html');
-  if (exists(local)) return `${SITE_ORIGIN}/reports/${ym}/${vendor}/`;
-  return `${SITE_ORIGIN}/updates/?q=${encodeURIComponent(vendor)}`;
-}
-function composeSubject({ vendor, topic, dateISO }) {
-  if (TPL && TPL.composeSubject) return TPL.composeSubject({ vendor, topic, dateISO });
-  // Fallback: read templates/outreach_subject.txt or use default
-  const subjectTplPath = join('templates', 'outreach_subject.txt');
-  const tpl = read(subjectTplPath, '[Evidence] {Vendor} changed {Topic} on {Date}');
-  return tpl
-    .replace(/\{Vendor\}/g, vendor)
-    .replace(/\{Topic\}/g, pickTopic(topic))
-    .replace(/\{Date\}/g, (dateISO || isoDate()));
-}
-function composeBody({ vendor, topic, dateISO, impact, packUrl }) {
-  if (TPL && TPL.composeBody) return TPL.composeBody({ vendor, topic, dateISO, impact, packUrl });
-  const bodyTplPath = join('templates', 'outreach_body.txt');
-  const fallback = [
-    'We detected a public change on {Vendor}: {Topic} ({Date}).',
-    'Impact: {Impact}. Opt-out anytime.',
-    'See verifiable details → {PackUrl}'
-  ].join('\n');
-  const tpl = read(bodyTplPath, fallback);
-  return tpl
-    .replace(/\{Vendor\}/g, vendor)
-    .replace(/\{Topic\}/g, pickTopic(topic))
-    .replace(/\{Date\}/g, (dateISO || isoDate()))
-    .replace(/\{Impact\}/g, (impact || toImpact(topic)))
-    .replace(/\{PackUrl\}/g, (packUrl || resolvePackUrl(vendor, ymFromISO(dateISO))));
+function existsPackFor(vendorSlug) {
+  const p = path.join(ROOT, 'reports', CUR, vendorSlug, 'index.html');
+  return fs.existsSync(p);
 }
 
-// ====== Suppression (7-day per recipient) ======
-const SUPPRESS_FILE = join('data', 'sent_recipients.csv');
-function suppressSet(days = 7) {
-  if (!exists(SUPPRESS_FILE)) return new Set();
-  const min = Date.now() - days * 24 * 3600e3;
-  const S = new Set();
-  for (const l of lines(SUPPRESS_FILE)) {
-    const [email, ts] = l.split(',');
-    if (Number(ts) >= min) S.add(String(email || '').toLowerCase());
-  }
-  return S;
-}
-function appendRecipients(list) {
-  const ts = Date.now();
-  fs.mkdirSync(path.dirname(SUPPRESS_FILE), { recursive: true });
-  fs.appendFileSync(SUPPRESS_FILE, list.map(e => `${e},${ts}`).join('\n') + '\n', 'utf8');
+function packLinkFor(vendorSlug) {
+  if (existsPackFor(vendorSlug)) return `${SITE}/reports/${CUR}/${vendorSlug}/`;
+  // 退回 updates 搜索
+  return `${SITE}/updates/?q=${encodeURIComponent(vendorSlug)}`;
 }
 
-// ====== Optional: Outreach Log ======
-const OUTREACH_LOG = join('data', 'outreach_log.csv');
-function logOutreach({ email, company, domain, vendor, packUrl, status }) {
-  const when = new Date().toISOString();
-  const row = [when, email, company, domain, vendor, 'LI', packUrl, '', status || (DRY ? 'dry' : 'sent')].join(',');
-  fs.mkdirSync(path.dirname(OUTREACH_LOG), { recursive: true });
-  fs.appendFileSync(OUTREACH_LOG, row + '\n', 'utf8');
+function composeMail(vendorSlug, topic, when) {
+  const subj = `[Evidence] ${vendorSlug} changed ${topic} on ${when}`;
+  const body =
+`We detected a public change on ${vendorSlug}: ${topic} (${when}).
+Impact: ${topic==='Pricing' ? 'Budget/renewal risk' : (topic==='ToS' ? 'Contract/Legal' : 'Contract/Compliance')}. Opt-out anytime.
+See verifiable details → ${packLinkFor(vendorSlug)}`;
+  return { subj, body };
 }
 
-// ====== Transport ======
-function makeTransport() {
+async function makeTransport() {
+  const host = process.env.SMTP_HOST, port = +(process.env.SMTP_PORT||587);
+  const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
+  if (!host || !user || !pass) throw new Error('SMTP secrets missing');
   return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT),
-    secure: Number(SMTP_PORT) === 465,
-    auth: (SMTP_USER && SMTP_PASS) ? { user: SMTP_USER, pass: SMTP_PASS } : undefined,
-    pool: true, maxConnections: 2, maxMessages: 50, rateLimit: 120
+    host, port, secure: port===465,
+    auth: { user, pass }
   });
 }
 
-// ====== Main ======
-(async function main() {
-  // 1) 近窗口期有证据的 vendor
-  const recentMap = recentEvidenceMap(WINDOW_H);
-  if (recentMap.size === 0) {
-    console.log('no fresh evidence → skip');
-    process.exit(0);
+function ensureOutreachLogHeader() {
+  const f = DATA('outreach_log.csv');
+  if (!fs.existsSync(f)) {
+    fs.writeFileSync(f, 'when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status\n', 'utf8');
+  }
+}
+
+function appendLog(rec) {
+  ensureOutreachLogHeader();
+  const f = DATA('outreach_log.csv');
+  const line = [
+    rec.when,
+    rec.email,
+    rec.company,
+    rec.domain,
+    rec.vendor,
+    'LI',
+    rec.link,
+    '',
+    rec.status || 'sent'
+  ].join(',') + '\n';
+  fs.appendFileSync(f, line, 'utf8');
+}
+
+function updateLeadsStatus(sentEmails) {
+  if (!sentEmails.size) return;
+  const file = DATA('leads.csv');
+  if (!fs.existsSync(file)) return;
+  const lines = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+  const out = [];
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const cols = line.split(',');
+    if (cols.length < 9) { out.push(line); continue; }
+    const email = cols[0].trim();
+    if (sentEmails.has(email)) {
+      cols[7] = 'sent'; // status 列
+      out.push(cols.join(','));
+    } else {
+      out.push(line);
+    }
+  }
+  fs.writeFileSync(file, out.join('\n')+'\n', 'utf8');
+}
+
+function includesAny(hay, allow) {
+  const s = (hay||'').toLowerCase();
+  return allow.some(k => s.includes(k.toLowerCase()));
+}
+
+(async function main(){
+  const persona = loadPersonaRules();
+  const region  = loadRegionFilter();
+  const leads = parseLeadsCSV();
+  const evid = loadEvidenceWindowHours(WINH);
+
+  // 构建 “近期变更 vendor 集合” 与 “按 vendor 分桶的 first topic + date”
+  const changedSet = new Set(evid.map(e => baseDomain(e.slug)));
+  const byVendor = new Map();
+  for (const e of evid) {
+    const v = baseDomain(e.slug);
+    const arr = byVendor.get(v) || [];
+    arr.push(e);
+    byVendor.set(v, arr);
   }
 
-  // 2) 线索过滤：与 recent vendor 交集 + 抑制 + 角色/地域
-  const allLeads = loadLeads();
-  const sup = suppressSet(7);
-  const eligible = [];
-  for (const l of allLeads) {
-    if (sup.has(l.email)) continue;
-    const hitVendor = l.vendors.find(v => recentMap.has(v));
-    if (!hitVendor) continue;
-    const latest = latestFor(hitVendor, recentMap);
-    if (!latest) continue;
-    eligible.push({ lead: l, vendor: hitVendor, evidence: latest });
-    if (eligible.length >= LIMIT) break;
+  // 逐层计数
+  const total = leads.length;
+  const passStatus = leads.filter(l => l.status === 'new' && l.mx_ok === '1');
+  const passPersona = passStatus.filter(l => {
+    const deny = (persona.deny_prefix||[]).some(p => l.email?.toLowerCase().startsWith(p));
+    if (deny) return false;
+    const src = (l.persona || l.email || '').toLowerCase();
+    const ok = includesAny(src, persona.allow_roles||[]);
+    return ok || (persona.min_score||0) <= 0.35; // 放宽阈值
+  });
+  const passRegion = passPersona.filter(l => {
+    const tl = tld(l.domain);
+    if ((region.exclude_tld||[]).includes(tl)) return false;
+    return true;
+  });
+
+  // Vendor 匹配（v1,v2,v3 -> slug/name 归一，对上 evid changedSet 即通过）
+  function matchVendorForLead(l) {
+    const cand = [l.v1, l.v2, l.v3].map(normVendorName).filter(Boolean);
+    for (const c of cand) {
+      // 名称匹配：salesforce <-> salesforce.com
+      for (const v of changedSet) {
+        const vn = v.replace(/\./g,''); // salesforcecom
+        if (c === v || c === vn || v.includes(c) || c.includes(vn)) {
+          return v;
+        }
+      }
+    }
+    return null;
   }
 
-  if (eligible.length === 0) {
+  const withVendor = [];
+  for (const l of passRegion) {
+    const mv = matchVendorForLead(l);
+    if (mv) withVendor.push({ lead:l, vendor:mv });
+  }
+
+  // 选取要发送的（限制数量）
+  const toSend = withVendor.slice(0, LIM);
+
+  // 诊断日志
+  const diag = {
+    total,
+    'status+mx': passStatus.length,
+    persona: passPersona.length,
+    region: passRegion.length,
+    'vendor-match': withVendor.length,
+    final: toSend.length,
+    window_h: WINH,
+    changed_vendors: changedSet.size
+  };
+  console.log('eligibility:', JSON.stringify(diag));
+
+  // 写到 Step Summary（GitHub Actions）
+  try {
+    if (process.env.GITHUB_STEP_SUMMARY) {
+      const sum = `### Outreach Triggered Summary
+- Leads total: ${total}
+- After status+mx: ${passStatus.length}
+- After persona: ${passPersona.length}
+- After region: ${passRegion.length}
+- Vendors changed in last ${WINH}h: ${changedSet.size}
+- Vendor-matched leads: ${withVendor.length}
+- Will send (limit=${LIM}): ${toSend.length}
+`;
+      fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, sum, 'utf8');
+    }
+  } catch {}
+
+  if (!toSend.length) {
     console.log('no eligible leads');
     process.exit(0);
   }
 
-  // 3) 发信准备
-  const transporter = makeTransport();
-  const sent = [];
-
-  for (const item of eligible) {
-    const { lead, vendor, evidence } = item;
-    const topic = evidence.type || 'Public change';
-    const dateISO = evidence.dateISO || isoDate();
-    const impact = toImpact(topic);
-    const packUrl = resolvePackUrl(vendor, ymFromISO(dateISO));
-
-    const subject = composeSubject({ vendor, topic, dateISO });
-    const text = composeBody({ vendor, topic, dateISO, impact, packUrl });
-
-    const msg = {
-      from: MAIL_FROM,
-      to: lead.email,
-      subject,
-      text, // 纯文本三行
-      headers: {
-        'List-Unsubscribe': `<mailto:${MAIL_FROM}?subject=unsubscribe>`,
-        'Precedence': 'bulk'
-      }
-    };
-    if (BCC_TO) msg.bcc = BCC_TO;
-
-    if (DRY) {
-      console.log(`[dry] to=${lead.email} vendor=${vendor} topic=${topic} date=${dateISO}`);
-      console.log(subject);
-      console.log(text);
-    } else {
-      await transporter.sendMail(msg);
-    }
-
-    sent.push(lead.email);
-    logOutreach({ email: lead.email, company: lead.company, domain: lead.domain, vendor, packUrl, status: DRY ? 'dry' : 'sent' });
+  // 发送（或 dry run）
+  const sentEmails = new Set();
+  let transporter = null;
+  if (!DRY) {
+    transporter = await makeTransport();
   }
 
-  appendRecipients(sent);
-  console.log(`triggered sent=${sent.length}/${LIMIT}, dry=${DRY}`);
-})().catch(err => {
-  console.error('send_triggered error:', err && err.stack || err);
+  for (const item of toSend) {
+    const { lead, vendor } = item;
+    // 选 topic & when：取该 vendor 最近一条证据
+    const arr = (byVendor.get(vendor)||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+    const top = arr[0] || { type:'Change', date:new Date().toISOString().slice(0,10) };
+    const topic = (top.type || 'Change');
+    const when  = top.date || new Date().toISOString().slice(0,10);
+
+    const { subj, body } = composeMail(vendor, topic, when);
+
+    if (DRY) {
+      console.log(`DRY SENT to ${lead.email} subj="${subj}" link="${packLinkFor(vendor)}"`);
+      appendLog({ when: new Date().toISOString(), email: lead.email, company: lead.company, domain: lead.domain, vendor, link: packLinkFor(vendor), status:'dry' });
+      sentEmails.add(lead.email);
+      continue;
+    }
+
+    try {
+      const mail = {
+        from: process.env.MAIL_FROM,
+        to: lead.email,
+        bcc: process.env.BCC_TO || undefined,
+        subject: subj,
+        text: body
+      };
+      await transporter.sendMail(mail);
+      console.log(`SENT to ${lead.email} vendor=${vendor}`);
+      appendLog({ when: new Date().toISOString(), email: lead.email, company: lead.company, domain: lead.domain, vendor, link: packLinkFor(vendor), status:'sent' });
+      sentEmails.add(lead.email);
+    } catch (e) {
+      console.error(`FAIL to ${lead.email}: ${e.message}`);
+      appendLog({ when: new Date().toISOString(), email: lead.email, company: lead.company, domain: lead.domain, vendor, link: packLinkFor(vendor), status:'fail' });
+    }
+  }
+
+  // 标记已发送
+  if (sentEmails.size) updateLeadsStatus(sentEmails);
+
+  console.log(`Send Triggered ${sentEmails.size} emails`);
+  process.exit(0);
+})().catch(e => {
+  console.error(e);
   process.exit(1);
 });
