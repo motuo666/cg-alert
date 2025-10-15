@@ -6,3 +6,11 @@ when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status
 2025-10-15T05:53:32.189Z,"compliance@auth0.com","auth0","auth0","auth0.com",LI,"https://www.cg-alert.com/updates/?q=auth0.com",,dry
 2025-10-15T05:53:32.189Z,"privacy@auth0.com","auth0","auth0","auth0.com",LI,"https://www.cg-alert.com/updates/?q=auth0.com",,dry
 2025-10-15T05:53:32.189Z,"legal@auth0.com","auth0","auth0","auth0.com",LI,"https://www.cg-alert.com/updates/?q=auth0.com",,dry
+2025-10-15T05:54:51.453Z,"security@cloudflare.com","cloudflare","cloudflare","cloudflare.com",LI,"https://www.cg-alert.com/reports/2025-10/cloudflare.com/",,sent
+2025-10-15T05:54:51.940Z,"compliance@cloudflare.com","cloudflare","cloudflare","cloudflare.com",LI,"https://www.cg-alert.com/reports/2025-10/cloudflare.com/",,sent
+2025-10-15T05:54:52.417Z,"privacy@cloudflare.com","cloudflare","cloudflare","cloudflare.com",LI,"https://www.cg-alert.com/reports/2025-10/cloudflare.com/",,sent
+2025-10-15T05:54:52.960Z,"legal@cloudflare.com","cloudflare","cloudflare","cloudflare.com",LI,"https://www.cg-alert.com/reports/2025-10/cloudflare.com/",,sent
+2025-10-15T05:54:53.527Z,"security@datadoghq.com","datadog","datadoghq","datadoghq.com",LI,"https://www.cg-alert.com/reports/2025-10/datadoghq.com/",,sent
+2025-10-15T05:54:54.053Z,"compliance@datadoghq.com","datadog","datadoghq","datadoghq.com",LI,"https://www.cg-alert.com/reports/2025-10/datadoghq.com/",,sent
+2025-10-15T05:54:54.594Z,"privacy@datadoghq.com","datadog","datadoghq","datadoghq.com",LI,"https://www.cg-alert.com/reports/2025-10/datadoghq.com/",,sent
+2025-10-15T05:54:55.123Z,"legal@datadoghq.com","datadog","datadoghq","datadoghq.com",LI,"https://www.cg-alert.com/reports/2025-10/datadoghq.com/",,sent
