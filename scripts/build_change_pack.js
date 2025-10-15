@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * 读取 data/evidence.ndx → 为最近90天活跃 vendor 生成 Change Pack
- * 输出：/reports/<YYYY-MM>/<vendor>/index.html（What/So/Now + 可核证证据表）
+ * 输出：/reports/<YYYY-MM>/<vendor>/index.html（What/So/Now + 可核证证据表 + 首屏可信徽章）
  * 纯静态，无外部依赖
  */
 const fs = require('fs');
@@ -28,12 +28,10 @@ function readNDX() {
       return { date, slug, type, hash, rel };
     });
 }
-
 function daysSince(dateStr) {
   const ms = NOW - new Date(dateStr + 'T00:00:00Z');
   return Math.floor(ms / 86400000);
 }
-
 function pickTopic(type) {
   const map = {
     Pricing: 'Pricing',
@@ -44,22 +42,16 @@ function pickTopic(type) {
   };
   return map[type] || String(type || 'Change');
 }
-
 function changeImpact(type) {
   const t = String(type || '').toLowerCase();
   if (t === 'pricing') return 'Budget/renewal risk';
   if (t === 'tos' || t.includes('term')) return 'Legal/arbitration/termination';
-  if (t === 'dpa' || t.includes('privacy')) return 'Privacy/data processing';
+  if (t === 'dpa' || t.includes('privacy')) return 'Privacy/processing terms';
   if (t.includes('subprocessor')) return 'Vendor risk/DP addendum';
-  if (t === 'status' || t.includes('sla') || t.includes('incident'))
-    return 'SLA/incident history';
+  if (t === 'status' || t.includes('sla') || t.includes('incident')) return 'SLA/incident history';
   return 'Contract/Compliance';
 }
-
-function ensureDir(p) {
-  fs.mkdirSync(p, { recursive: true });
-}
-
+function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 function escapeHtml(s) {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -70,16 +62,15 @@ function escapeHtml(s) {
 function renderPack(vendor, records) {
   // What：按类别聚合；So：影响类别；Now：建议动作
   const buckets = {};
-  for (const r of records) {
-    (buckets[r.type] = buckets[r.type] || []).push(r);
-  }
+  for (const r of records){ (buckets[r.type] = buckets[r.type] || []).push(r); }
+
   const what = Object.entries(buckets)
-    .map(([k, arr]) => `<li><b>${escapeHtml(pickTopic(k))}</b>: ${arr.length} change(s) in last 90 days</li>`)
+    .map(([k,arr]) => `<li><b>${escapeHtml(pickTopic(k))}</b>: ${arr.length} change(s) in last 90 days</li>`)
     .join('');
 
   const so = Object.keys(buckets)
     .map(k => changeImpact(k))
-    .filter((v, i, a) => a.indexOf(v) === i)
+    .filter((v,i,a) => a.indexOf(v) === i)
     .join(' · ');
 
   const nowBullets = [
@@ -94,10 +85,23 @@ function renderPack(vendor, records) {
     return `<tr><td>${escapeHtml(r.date || '')}</td><td>${escapeHtml(pickTopic(r.type))}</td><td><code>${hash8}</code></td><td><a href="${escapeHtml(link)}">evidence</a></td></tr>`;
   }).join('');
 
-  // 准备 JSON-LD 字符串，避免在模板字符串里嵌套模板字符串导致语法错误
+  // 首屏可信徽章：最近变更、证据数、影响标签
+  const lastDate = records.map(r=>r.date).sort().slice(-1)[0] || '';
+  const total = records.length;
+  const impactSet = Object.keys(buckets)
+    .map(k => changeImpact(k))
+    .filter((v,i,a)=>a.indexOf(v)===i);
+  const badges = `
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px">
+  <span style="background:#eef;padding:4px 8px;border-radius:8px">Last change: ${escapeHtml(lastDate||'n/a')}</span>
+  <span style="background:#efe;padding:4px 8px;border-radius:8px">Evidence: ${total}</span>
+  <span style="background:#fee;padding:4px 8px;border-radius:8px">${escapeHtml(impactSet.join(' · ')||'No material impact')}</span>
+</div>`.trim();
+
+  // JSON-LD 准备在外，避免模板嵌套导致语法错误
   const ld = {
-    '@context': 'https://schema.org',
-    '@type': 'Report',
+    '@context':'https://schema.org',
+    '@type':'Report',
     name: `${vendor} Change Pack ${CUR}`,
     datePublished: new Date().toISOString(),
     about: vendor
@@ -121,6 +125,7 @@ function renderPack(vendor, records) {
 </head>
 <body>
 <h1>${escapeHtml(vendor)} — Change Pack (${CUR})</h1>
+${badges}
 <h3>What</h3><ul>${what || '<li>No public changes in last 90 days</li>'}</ul>
 <h3>So What</h3><p>${so || 'No material impact detected'}</p>
 <h3>Now What</h3><ul>${nowBullets.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
@@ -132,31 +137,23 @@ function renderPack(vendor, records) {
   return html;
 }
 
-(function main() {
+(function main(){
   const ndx = readNDX().filter(r => daysSince(r.date) <= 90);
-  if (!ndx.length) {
-    console.log('no recent evidence; skip change pack build');
-    return;
-  }
-  // 按 vendor 汇总
+  if (!ndx.length) { console.log('no recent evidence; skip change pack build'); return; }
+
   const byVendor = new Map();
-  for (const r of ndx) {
-    const arr = byVendor.get(r.slug) || [];
-    arr.push(r);
-    byVendor.set(r.slug, arr);
-  }
+  for (const r of ndx){ const arr = byVendor.get(r.slug) || []; arr.push(r); byVendor.set(r.slug, arr); }
+
   // 选前 50 个活跃度最高的 vendor
-  const top = [...byVendor.entries()]
-    .sort((a, b) => b[1].length - a[1].length)
-    .slice(0, 50);
+  const top = [...byVendor.entries()].sort((a,b)=>b[1].length - a[1].length).slice(0,50);
 
   const base = path.join(REPORT_ROOT, CUR);
   ensureDir(base);
 
-  for (const [vendor, arr] of top) {
+  for (const [vendor, arr] of top){
     const outDir = path.join(base, vendor);
     ensureDir(outDir);
-    const html = renderPack(vendor, arr.sort((a, b) => a.date.localeCompare(b.date)));
+    const html = renderPack(vendor, arr.sort((a,b)=>a.date.localeCompare(b.date)));
     fs.writeFileSync(path.join(outDir, 'index.html'), html, 'utf8');
     console.log('pack:', vendor, arr.length);
   }
