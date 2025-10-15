@@ -2,6 +2,7 @@
 /**
  * Triggered outreach (robust, diagnosable, final)
  * - Filters: status=new, mx_ok=1, persona, region, evidence-in-window vendor match
+ * - Skips vendors with only "baseline" evidence (no real change in window)
  * - Cooldowns: per email (30d), per domain cap (<=4 in 7d), per vendor×company (14d)
  * - Args: --dry=true|false, --limit=N, --pack, --window_h=72
  * - Env: TRIGGER_WINDOW_H, SMTP_*, MAIL_FROM, BCC_TO, PERSONA_RULES, REGION_FILTER, SITE_ORIGIN
@@ -143,6 +144,7 @@ function loadEvidenceWindowHours(hours) {
   return changed;
 }
 
+// —— 邮件内容 —— //
 function composeMail(vendorSlug, topic, when, hash8) {
   const t = String(topic||'').toLowerCase();
   const pretty =
@@ -170,6 +172,7 @@ See verifiable details → ${url}`;
   return { subj, body, url };
 }
 
+// —— SMTP —— //
 async function makeTransport() {
   const host = process.env.SMTP_HOST, port = +(process.env.SMTP_PORT||587);
   const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
@@ -177,6 +180,7 @@ async function makeTransport() {
   return nodemailer.createTransport({ host, port, secure: port===465, auth: { user, pass } });
 }
 
+// —— 日志与状态 —— //
 function ensureOutreachLogHeader() {
   const f = DATA('outreach_log.csv');
   if (!fs.existsSync(f)) fs.writeFileSync(f, 'when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status\n', 'utf8');
@@ -208,7 +212,7 @@ function updateLeadsStatus(sentEmails) {
 }
 function includesAny(hay, allow) { const s = (hay||'').toLowerCase(); return (allow||[]).some(k => s.includes(String(k).toLowerCase())); }
 
-// outreach 历史：冷却 & 限流
+// —— Outreach 历史（冷却 & 限流）—— //
 function loadOutreachHistory(daysBack=30){
   const f = DATA('outreach_log.csv'); if(!fs.existsSync(f)) return [];
   const since = Date.now()-daysBack*86400*1000;
@@ -221,6 +225,21 @@ function sentToEmailWithin(history,email,days){ const since=Date.now()-days*8640
 function sentCountToDomainWithin(history,domain,days){ const since=Date.now()-days*86400*1000; return history.filter(r=>r.domain===domain && r.when>=since && r.status!=='fail').length; }
 function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Date.now()-days*86400*1000; return history.some(r=>r.vendor===vendor && r.company===company && r.when>=since && r.status!=='fail'); }
 
+// —— 基线过滤 —— //
+function isZeroHash(h) { return !h || /^0+$/i.test(String(h)); }
+function vendorOnlyBaseline(arr){
+  // 有任何非零 hash 即不是 baseline-only
+  if (arr.some(e => e.hash && !isZeroHash(e.hash))) return false;
+  // 保险：看一条 JSON 的 kind 字段
+  try {
+    const rel = arr[0]?.rel;
+    if (!rel) return true;
+    const j = JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
+    return String(j.kind || 'baseline').toLowerCase() === 'baseline';
+  } catch { return true; }
+}
+
+// —— 主流程 —— //
 (async function main(){
   const persona = loadPersonaRules();
   const region  = loadRegionFilter();
@@ -276,11 +295,17 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
     if (mv) withVendor.push({ lead:l, vendor:mv });
   }
 
-  // 冷却与域限流
+  // 过滤掉仅 baseline 的 vendor（无真实变更）
+  const withRealChange = withVendor.filter(({vendor}) => {
+    const arr = (byVendor.get(vendor) || []);
+    return arr.length && !vendorOnlyBaseline(arr);
+  });
+
+  // 冷却与域限流（基于 withRealChange）
   const cooled = [];
   const DOMAIN_CAP = 4, DOMAIN_WINDOW_D=7, EMAIL_COOLDOWN_D=30, VENDOR_COMPANY_D=14;
   const domainCnt = {};
-  for (const item of withVendor){
+  for (const item of withRealChange){
     const {lead, vendor} = item;
     if (sentToEmailWithin(hist, lead.email, EMAIL_COOLDOWN_D)) continue;
     if (sentVendorToCompanyWithin(hist, vendor, lead.company, VENDOR_COMPANY_D)) continue;
@@ -300,6 +325,7 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
     persona: passPersona.length,
     region: passRegion.length,
     'vendor-match': withVendor.length,
+    'real-change': withRealChange.length,
     cooled: cooled.length,
     final: toSend.length,
     window_h: WINH,
@@ -316,6 +342,7 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
 - After region: ${passRegion.length}
 - Vendors changed in last ${WINH}h: ${changedSet.size}
 - Vendor-matched: ${withVendor.length}
+- With real change (non-baseline): ${withRealChange.length}
 - After cooldown/domain-cap: ${cooled.length}
 - Will send (limit=${LIM}): ${toSend.length}
 `;
