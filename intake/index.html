@@ -12,9 +12,9 @@
     .map(k => qs.get(k) ? `${k}=${encodeURIComponent(qs.get(k))}` : '')
     .filter(Boolean).join('&');
   // TODO 1: 把下面替换为你的 Google Form “空白表单链接”（不是预填链接）
-  const FORM_BASE = 'https://forms.gle/gj8EiaaCdn63CEd89';
+  const FORM_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform?usp=header';
   // TODO 2: 把下面替换为 Google Form 里“Vendor”输入框的 entry id（用“获取预填链接”拿到，形如 1234567890）
-  const ENTRY_VENDOR = '8453857452859865769';
+  const ENTRY_VENDOR = '718093581';
   const url = `${FORM_BASE}?entry.${ENTRY_VENDOR}=${encodeURIComponent(vendor)}${keep?`&${keep}`:''}`;
   location.replace(url);
 })();
