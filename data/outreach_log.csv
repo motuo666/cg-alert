@@ -39,3 +39,17 @@ when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status
 2025-10-15T10:14:51.636Z,cto@notion.so,notion,notion,notion.so,LI,https://www.cg-alert.com/reports/2025-10/notion.so/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
 2025-10-15T10:14:58.397Z,ciso@notion.so,notion,notion,notion.so,LI,https://www.cg-alert.com/reports/2025-10/notion.so/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
 2025-10-15T10:15:05.417Z,compliance@slack.com,slack,slack,slack.com,LI,https://www.cg-alert.com/updates/?q=slack.com&utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:31:45.294Z,privacy@snowflake.com,snowflake,snowflake,snowflake.com,LI,https://www.cg-alert.com/reports/2025-10/snowflake.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:31:50.932Z,legal@snowflake.com,snowflake,snowflake,snowflake.com,LI,https://www.cg-alert.com/reports/2025-10/snowflake.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:31:58.390Z,cto@snowflake.com,snowflake,snowflake,snowflake.com,LI,https://www.cg-alert.com/reports/2025-10/snowflake.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:32:02.348Z,ciso@snowflake.com,snowflake,snowflake,snowflake.com,LI,https://www.cg-alert.com/reports/2025-10/snowflake.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:32:08.721Z,compliance@stripe.com,stripe,stripe,stripe.com,LI,https://www.cg-alert.com/reports/2025-10/stripe.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:32:17.383Z,privacy@stripe.com,stripe,stripe,stripe.com,LI,https://www.cg-alert.com/reports/2025-10/stripe.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:32:21.301Z,legal@stripe.com,stripe,stripe,stripe.com,LI,https://www.cg-alert.com/reports/2025-10/stripe.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:32:25.088Z,cto@stripe.com,stripe,stripe,stripe.com,LI,https://www.cg-alert.com/reports/2025-10/stripe.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:32:33.575Z,ciso@stripe.com,stripe,stripe,stripe.com,LI,https://www.cg-alert.com/reports/2025-10/stripe.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:32:37.618Z,compliance@twilio.com,twilio,twilio,twilio.com,LI,https://www.cg-alert.com/reports/2025-10/twilio.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:32:44.806Z,privacy@twilio.com,twilio,twilio,twilio.com,LI,https://www.cg-alert.com/reports/2025-10/twilio.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:32:49.389Z,legal@twilio.com,twilio,twilio,twilio.com,LI,https://www.cg-alert.com/reports/2025-10/twilio.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:32:57.451Z,cto@twilio.com,twilio,twilio,twilio.com,LI,https://www.cg-alert.com/reports/2025-10/twilio.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T16:33:03.197Z,ciso@twilio.com,twilio,twilio,twilio.com,LI,https://www.cg-alert.com/reports/2025-10/twilio.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
