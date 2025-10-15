@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * 读取 data/evidence.ndx → 生成 Change Pack
- * 输出：/reports/<YYYY-MM>/<vendor>/index.html（What/So/Now + 可信徽章 + 证据表）
+ * 输出：/reports/<YYYY-MM>/<vendor>/index.html
+ * 增强：首屏徽章 + CTA（Enable alerts / Buy Portfolio / Home），未配置则自动隐藏
  */
 const fs = require('fs');
 const path = require('path');
@@ -14,6 +15,11 @@ const NOW = new Date();
 const Y = NOW.getUTCFullYear();
 const M = String(NOW.getUTCMonth() + 1).padStart(2, '0');
 const CUR = `${Y}-${M}`;
+
+// 外部可配（不配就隐藏相关按钮）
+const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+const INTAKE_FORM_URL = process.env.INTAKE_FORM_URL || '';              // 你的 Google Form 链接
+const STRIPE_LINK_PORTFOLIO = process.env.STRIPE_LINK_PORTFOLIO || '';  // 你的 Stripe Payment Link
 
 function readNDX() {
   if (!fs.existsSync(NDX)) return [];
@@ -44,6 +50,7 @@ function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&l
 function isZeroHash(h) { return !h || /^0+$/i.test(String(h)); }
 
 function renderPack(vendor, records) {
+  // What/So/Now
   const buckets = {};
   for (const r of records) (buckets[r.type] = buckets[r.type] || []).push(r);
 
@@ -60,6 +67,7 @@ function renderPack(vendor, records) {
     'Update internal register & notify stakeholders if material'
   ];
 
+  // 证据表
   const rows = records.slice(0, 200).map(r => {
     const link = '/' + String(r.rel || '').replace(/\\/g, '/');
     const h = String(r.hash || '').toLowerCase();
@@ -67,6 +75,7 @@ function renderPack(vendor, records) {
     return `<tr><td>${escapeHtml(r.date || '')}</td><td>${escapeHtml(pickTopic(r.type))}</td><td>${display}</td><td><a href="${escapeHtml(link)}">evidence</a></td></tr>`;
   }).join('');
 
+  // 徽章
   const lastDate = records.map(r=>r.date).sort().slice(-1)[0] || '';
   const total = records.length;
   const impactSet = Object.keys(buckets).map(k => changeImpact(k)).filter((v,i,a)=>a.indexOf(v)===i);
@@ -77,12 +86,25 @@ function renderPack(vendor, records) {
   <span style="background:#fee;padding:4px 8px;border-radius:8px">${escapeHtml(impactSet.join(' · ')||'No material impact')}</span>
 </div>`.trim();
 
-  const ld = {
-    '@context':'https://schema.org','@type':'Report',
-    name: `${vendor} Change Pack ${CUR}`, datePublished: new Date().toISOString(), about: vendor
-  };
+  // CTA（未配置的自动隐藏）
+  const vParam = encodeURIComponent(vendor);
+  const utm = `utm_source=email&utm_medium=triggered&utm_campaign=cp_${CUR}`;
+  const ctaEnable = INTAKE_FORM_URL
+    ? `<a class="btn primary" href="${escapeHtml(INTAKE_FORM_URL)}?vendor=${vParam}&${utm}">Enable alerts for ${escapeHtml(vendor)}</a>` : '';
+  const ctaBuy = STRIPE_LINK_PORTFOLIO
+    ? `<a class="btn" href="${escapeHtml(STRIPE_LINK_PORTFOLIO)}?${utm}">Buy Portfolio $2,988/yr</a>` : '';
+  const ctaHome = `<a class="btn ghost" href="${ORIGIN}/">Home</a>`;
+  const ctas = `
+<div class="cta">
+  ${ctaEnable}${ctaBuy}${ctaHome}
+</div>`.trim();
+
+  // JSON-LD
+  const ld = { '@context':'https://schema.org','@type':'Report',
+    name: `${vendor} Change Pack ${CUR}`, datePublished: new Date().toISOString(), about: vendor };
   const ldJson = JSON.stringify(ld);
 
+  // HTML
   const html = `<!doctype html>
 <html>
 <head>
@@ -93,6 +115,10 @@ function renderPack(vendor, records) {
 <script type="application/ld+json">${ldJson}</script>
 <style>
   body{font-family:system-ui,Segoe UI,Arial;line-height:1.55;padding:24px;max-width:920px;margin:auto}
+  .cta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0 16px}
+  .btn{display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #ddd;text-decoration:none}
+  .btn.primary{background:#111;color:#fff;border-color:#111}
+  .btn.ghost{background:transparent}
   table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}
   code{background:#f5f5f5;padding:2px 4px;border-radius:4px}
   h1{margin:0 0 8px} h3{margin:20px 0 8px}
@@ -101,26 +127,26 @@ function renderPack(vendor, records) {
 <body>
 <h1>${escapeHtml(vendor)} — Change Pack (${CUR})</h1>
 ${badges}
+${ctas}
 <h3>What</h3><ul>${what || '<li>No public changes in last 90 days</li>'}</ul>
 <h3>So What</h3><p>${so || 'No material impact detected'}</p>
 <h3>Now What</h3><ul>${nowBullets.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
 <h3>Verifiable evidence</h3>
 <table><thead><tr><th>Date</th><th>Type</th><th>Hash</th><th>Link</th></tr></thead><tbody>${rows || '<tr><td colspan="4">No evidence available</td></tr>'}</tbody></table>
-<p><small>All evidence derived from public pages with timestamp+hash (or cached-body fingerprint). Respect robots/sitemap/security.txt.</small></p>
+<p><small>All evidence from public pages; respect robots/sitemap/security.txt. Refund policy and terms as published on site.</small></p>
 </body>
 </html>`;
   return html;
 }
 
 (function main(){
-  const ndx = readNDX().filter(r => daysSince(r.date) <= 90);
-  if (!ndx.length) { console.log('no recent evidence; skip change pack build'); return; }
+  const lines = readNDX().filter(r => daysSince(r.date) <= 90);
+  if (!lines.length) { console.log('no recent evidence; skip'); return; }
 
   const byVendor = new Map();
-  for (const r of ndx) { const arr = byVendor.get(r.slug) || []; arr.push(r); byVendor.set(r.slug, arr); }
+  for (const r of lines) { const arr = byVendor.get(r.slug) || []; arr.push(r); byVendor.set(r.slug, arr); }
 
   const top = [...byVendor.entries()].sort((a,b)=>b[1].length - a[1].length).slice(0,50);
-
   const base = path.join(REPORT_ROOT, CUR);
   ensureDir(base);
 
