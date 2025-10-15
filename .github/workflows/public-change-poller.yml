@@ -1,41 +1,70 @@
 name: Public Change Poller
+
 on:
-  schedule: [ { cron: "0 */4 * * *" } ]   # 每 4 小时
+  schedule:
+    - cron: "0 */4 * * *"   # 每 4 小时
   workflow_dispatch: {}
-permissions: { contents: write }
-concurrency: { group: public-change-poller, cancel-in-progress: true }
+
+permissions:
+  contents: write
+
+concurrency:
+  group: public-change-poller
+  cancel-in-progress: true
 
 jobs:
   poll:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
 
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Install deps
         run: npm ci || npm i --no-audit --no-fund || true
 
+      # ---- 主流程：采样 → 回填指纹 → 索引/Pack/SEO ----
       - name: Poll & Build
         run: |
           # 端点清单（可能为空，容错）
           node scripts/endpoint_inventory.js || true
-          # 采样公共端点并生成证据
+          # 采样公共端点并生成证据（写入 evidence/<slug>/...json）
           node scripts/poll_public_endpoints.js
           # 更新站点 /updates/ 等（容错）
           node scripts/build_updates.js || true
+          # 为 baseline 证据回填 fingerprint/hash（幂等）
+          node scripts/normalize_evidence.js || true
           # 生成轻索引（供 Change Pack / 外呼 JOIN）
           node scripts/build_evidence_index.js
-          # 生成 Change Pack（按活跃 vendor 输出 /reports/<YYYY-MM>/<vendor>/）
+          # 生成 Change Pack（/reports/<YYYY-MM>/<vendor>/）
           node scripts/build_change_pack.js
           # 幂等 SEO 注入（title/description/canonical + JSON-LD）
           node scripts/seo_inject.js || true
 
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          echo "### Public Change Poller" >> "$GITHUB_STEP_SUMMARY"
+          D=$(date -u +%F)
+          YM=$(date -u +%Y-%m)
+          CHG=$(find evidence -type f -name "${D}-*.json" 2>/dev/null | wc -l | tr -d ' ')
+          IDX=$(test -f data/evidence.ndx && wc -l < data/evidence.ndx || echo 0)
+          PACKS=$(find "reports/${YM}" -type f -name "index.html" 2>/dev/null | wc -l | tr -d ' ')
+          echo "- New evidence today: ${CHG}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Index rows: ${IDX}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Change Packs this month: ${PACKS}" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Safe Push
         if: always()
         run: |
-          chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "poller: public endpoints + site refresh + index + change-pack"
+          chmod +x scripts/git_safe_push.sh || true
+          bash scripts/git_safe_push.sh "poller: endpoints + evidence + updates + fingerprint + index + change-pack + seo"
