@@ -14,3 +14,6 @@ when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status
 2025-10-15T05:54:54.053Z,"compliance@datadoghq.com","datadog","datadoghq","datadoghq.com",LI,"https://www.cg-alert.com/reports/2025-10/datadoghq.com/",,sent
 2025-10-15T05:54:54.594Z,"privacy@datadoghq.com","datadog","datadoghq","datadoghq.com",LI,"https://www.cg-alert.com/reports/2025-10/datadoghq.com/",,sent
 2025-10-15T05:54:55.123Z,"legal@datadoghq.com","datadog","datadoghq","datadoghq.com",LI,"https://www.cg-alert.com/reports/2025-10/datadoghq.com/",,sent
+2025-10-15T06:19:55.430Z,cto@cloudflare.com,cloudflare,cloudflare,cloudflare.com,LI,https://www.cg-alert.com/reports/2025-10/cloudflare.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
+2025-10-15T06:19:55.430Z,ciso@cloudflare.com,cloudflare,cloudflare,cloudflare.com,LI,https://www.cg-alert.com/reports/2025-10/cloudflare.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
+2025-10-15T06:19:55.431Z,cto@datadoghq.com,datadog,datadoghq,datadoghq.com,LI,https://www.cg-alert.com/reports/2025-10/datadoghq.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
