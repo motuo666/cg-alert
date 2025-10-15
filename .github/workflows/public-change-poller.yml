@@ -1,70 +1,127 @@
 name: Public Change Poller
 
 on:
+  workflow_dispatch:
+    inputs:
+      refetch:
+        description: 'Force refetch endpoints (optional)'
+        required: false
+        default: 'false'
+      month:
+        description: 'Rebuild packs for which month (YYYY-MM, optional)'
+        required: false
+        default: ''
   schedule:
-    - cron: "0 */4 * * *"   # 每 4 小时
-  workflow_dispatch: {}
-
-permissions:
-  contents: write
+    # 每日 03:40 UTC 跑一遍（你可按需改时间）
+    - cron: '40 3 * * *'
 
 concurrency:
   group: public-change-poller
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
+env:
+  NODE_OPTIONS: --max_old_space_size=4096
+  SITE_ORIGIN: https://www.cg-alert.com
+  # 如果你在仓库 Variables 配置了下两项，按钮会自动显示；没配就自动隐藏
+  INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+  STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+
 jobs:
   poll:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
 
     steps:
-      - name: Checkout
+      - name: 🧰 Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node
+      - name: 🔧 Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20.x'
 
-      - name: Install deps
-        run: npm ci || npm i --no-audit --no-fund || true
-
-      # ---- 主流程：采样 → 回填指纹 → 索引/Pack/SEO ----
-      - name: Poll & Build
+      - name: 📦 Install deps (tolerant)
         run: |
-          # 端点清单（可能为空，容错）
-          node scripts/endpoint_inventory.js || true
-          # 采样公共端点并生成证据（写入 evidence/<slug>/...json）
-          node scripts/poll_public_endpoints.js
-          # 更新站点 /updates/ 等（容错）
-          node scripts/build_updates.js || true
-          # 为 baseline 证据回填 fingerprint/hash（幂等）
-          node scripts/normalize_evidence.js || true
-          # 生成轻索引（供 Change Pack / 外呼 JOIN）
-          node scripts/build_evidence_index.js
-          # 生成 Change Pack（/reports/<YYYY-MM>/<vendor>/）
-          node scripts/build_change_pack.js
-          # 幂等 SEO 注入（title/description/canonical + JSON-LD）
-          node scripts/seo_inject.js || true
+          npm ci || npm i --no-audit --no-fund || true
 
-      - name: Summary
-        if: always()
-        shell: bash
+      - name: 🗂️ Endpoint inventory (tolerant)
+        # 可选：如 inputs.refetch=true 或首次运行，重建端点清单
+        if: ${{ github.event.inputs.refetch == 'true' }}
         run: |
+          if [ -f scripts/endpoint_inventory.js ]; then
+            node scripts/endpoint_inventory.js || true
+          fi
+
+      - name: 🌐 Public Change Poller
+        run: |
+          if [ -f scripts/poll_public_endpoints.js ]; then
+            node scripts/poll_public_endpoints.js
+          else
+            echo "poll_public_endpoints.js not found"; exit 1
+          fi
+
+      # === 关键新增：自动回填 hash（指纹） ===
+      - name: 🔎 Backfill evidence fingerprint (hash)
+        run: |
+          if [ -f scripts/normalize_evidence.js ]; then
+            node scripts/normalize_evidence.js
+          else
+            echo "normalize_evidence.js not found"; exit 1
+          fi
+
+      # 先重建索引，再生成 Packs / Updates / Categories，并注入 SEO
+      - name: 🧱 Rebuild evidence index
+        run: |
+          if [ -f scripts/build_evidence_index.js ]; then
+            node scripts/build_evidence_index.js
+          else
+            echo "build_evidence_index.js not found"; exit 1
+          fi
+
+      - name: 📊 Build Change Packs (current month or input.month)
+        env:
+          INPUT_MONTH: ${{ github.event.inputs.month }}
+        run: |
+          if [ -n "$INPUT_MONTH" ]; then
+            # 可选：指定月份构建（若你的脚本支持 month 参数，可在此传参）
+            node scripts/build_change_pack.js || true
+          else
+            node scripts/build_change_pack.js
+          fi
+
+      - name: 📰 Build /updates & /categories (tolerant)
+        run: |
+          if [ -f scripts/build_updates.js ]; then node scripts/build_updates.js || true; fi
+          if [ -f scripts/build_categories.js ]; then node scripts/build_categories.js || true; fi
+          if [ -f scripts/vendor_catalog.js ]; then node scripts/vendor_catalog.js || true; fi
+
+      - name: 🔎 Inject SEO (idempotent)
+        run: |
+          if [ -f scripts/seo_inject.js ]; then node scripts/seo_inject.js || true; fi
+
+      - name: 📝 Step Summary
+        run: |
+          YM="${{ github.event.inputs.month }}"
+          if [ -z "$YM" ]; then YM=$(date -u +%Y-%m); fi
+          TODAY=$(date -u +%F)
+          CHANGED=$(find evidence -type f -name "${TODAY}-*.json" 2>/dev/null | wc -l)
+          BASELINES=$(find evidence -type f -name "${TODAY}-*00000000.json" 2>/dev/null | wc -l)
+          INDEX_ROWS=$(test -f data/evidence.ndx && wc -l < data/evidence.ndx || echo 0)
+          PACKS=$(find "reports/$YM" -type f -name index.html 2>/dev/null | wc -l)
           echo "### Public Change Poller" >> "$GITHUB_STEP_SUMMARY"
-          D=$(date -u +%F)
-          YM=$(date -u +%Y-%m)
-          CHG=$(find evidence -type f -name "${D}-*.json" 2>/dev/null | wc -l | tr -d ' ')
-          IDX=$(test -f data/evidence.ndx && wc -l < data/evidence.ndx || echo 0)
-          PACKS=$(find "reports/${YM}" -type f -name "index.html" 2>/dev/null | wc -l | tr -d ' ')
-          echo "- New evidence today: ${CHG}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Index rows: ${IDX}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Change Packs this month: ${PACKS}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- New evidence today: $CHANGED" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Baselines today: $BASELINES" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Index rows: $INDEX_ROWS" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Change Packs this month ($YM): $PACKS" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Safe Push
-        if: always()
+      - name: 🔐 Safe push
         run: |
-          chmod +x scripts/git_safe_push.sh || true
-          bash scripts/git_safe_push.sh "poller: endpoints + evidence + updates + fingerprint + index + change-pack + seo"
+          if [ -n "$(git status --porcelain)" ]; then
+            chmod +x scripts/git_safe_push.sh || true
+            bash scripts/git_safe_push.sh "poll: public changes + evidence hash backfill + packs/updates/seo"
+          else
+            echo "no changes to commit"
+          fi
