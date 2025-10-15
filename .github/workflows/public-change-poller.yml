@@ -80,12 +80,13 @@ jobs:
             echo "build_evidence_index.js not found"; exit 1
           fi
 
-        - name: Build change packs
-      env:
-        SITE_ORIGIN: https://www.cg-alert.com
-        INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
-        STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
-      run: node scripts/build_change_pack.js
+      - name: 🗃️ Build change packs
+        env:
+          SITE_ORIGIN: https://www.cg-alert.com
+          INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+          STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+          REBUILD_MONTH: ${{ github.event.inputs.month }}
+        run: node scripts/build_change_pack.js
 
       - name: 📰 Build /updates & /categories (tolerant)
         run: |
@@ -117,7 +118,7 @@ jobs:
       # === 关键发布：确保新文件被纳入提交 ===
       - name: 🚀 Publish public artifacts (stage changes)
         run: |
-          git add -A reports updates updates/rss.xml data/evidence.ndx evidence || true
+          git add -A reports updates data/evidence.ndx evidence || true
 
       - name: 🔐 Safe push
         run: |
