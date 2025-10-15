@@ -1,168 +1,56 @@
-<!doctype html><html lang="en"><head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' https:; connect-src *; frame-src https://buy.stripe.com https://forms.gle; form-action 'self' https://buy.stripe.com https://forms.gle;">
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CG Alert — Evidence-backed vendor change alerts</title>
-<meta name="description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
-
-<link rel="canonical" href="https://www.cg-alert.com/">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="manifest" href="/site.webmanifest">
-<link rel="preconnect" href="https://buy.stripe.com" crossorigin>
-<meta name="theme-color" content="#0b0d12">
-<meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
-<meta property="og:description" content="We watch Pricing, ToS, DPA, Subprocessors, Status and alert only on material changes, with timestamped evidence.">
-<meta property="og:type" content="website"><meta property="og:url" content="https://www.cg-alert.com/">
-<link rel="image_src" href="/og.png">
-<meta property="og:image" content="https://www.cg-alert.com/og.png">
-<link rel="stylesheet" href="/styles.css">
-</head><body>
-<a href="#main" class="skip-link">Skip to content</a>
-<div class="nav" role="navigation" aria-label="Primary">
-  <div class="container nav-inner">
-    <a class="logo" href="/"><div class="logo-badge" aria-hidden="true"><span>CG</span></div><span>CG Alert</span></a>
-    <div class="nav-links">
-      <a href="/#product">Product</a>
-      <a href="/#how">How it works</a>
-      <a href="/#security">Security</a>
-      <a href="/#samples">Samples</a>
-      <a href="/#pricing">Pricing</a>
-      <a href="/reports/">Reports</a>
-      <a href="/privacy.html">Privacy</a>
-      <a href="/terms.html">Terms</a>
-    </div>
-  </div>
+<!doctype html>
+<meta charset="utf-8">
+<title>Enable Alerts</title>
+<meta name="robots" content="noindex">
+<style>
+  body{font-family:system-ui,Segoe UI,Arial;line-height:1.55;padding:24px;max-width:720px;margin:auto}
+  .muted{color:#666} code{background:#f5f5f5;padding:2px 4px;border-radius:4px}
+  .err{background:#ffecec;border:1px solid #f5c2c7;padding:12px;border-radius:8px}
+</style>
+<div id="app">
+  <p>Redirecting to request alerts… <span class="muted">(auto)</span></p>
 </div>
-<main id="main">
-<div class="hero"><div class="container">
-  <span class="badge">Evidence-backed · Public-source only · Low-noise filtering</span>
-  <h1>Enterprise-grade vendor change alerts — with verifiable evidence</h1>
-  <p class="lead">We continuously watch your vendors’ public pages (Pricing, ToS, DPA, Subprocessors, Status) and alert only on material changes. Every alert includes a timestamped evidence card you can use in negotiations.</p>
-  <p class="faint" style="margin-top:8px">Not legal advice — informational risk warnings only.</p>
-  <div class="trust-row" aria-label="Trusted by functions">
-    <div class="trust-pill" aria-label="Procurement">Procurement</div>
-    <div class="trust-pill" aria-label="Legal Operations">Legal Ops</div>
-    <div class="trust-pill" aria-label="Revenue Operations">RevOps</div>
-    <div class="trust-pill" aria-label="Finance">Finance</div>
-    <div class="trust-pill" aria-label="Security">Security</div>
-    <div class="trust-pill" aria-label="IT Asset Management">ITAM</div>
-  </div>
-</div></div>
-
-<div id="product" class="section"><div class="container grid grid-3">
-  <div class="card"><h3>High-signal detection</h3><ul class="clean">
-    <li>Pricing/packaging moves</li><li>ToS/MSA language shifts</li><li>DPA & subprocessor updates</li><li>Status postmortems</li>
-  </ul></div>
-  <div class="card"><h3>Evidence you can use</h3><ul class="clean">
-    <li>Snippet + URL + timestamp</li><li>Two-phase confirm reduces noise</li><li>Diff & excerpt saved for audit</li><li>CSV/JSON exports</li>
-  </ul></div>
-  <div class="card"><h3>Enterprise options</h3><ul class="clean">
-    <li>API / SSO / custom cadence</li><li>200+ vendors</li><li>Slack & Email delivery</li><li>Co-branded digests</li>
-  </ul></div>
-</div></div>
-
-<div id="how" class="section"><div class="container grid grid-2">
-  <div class="card"><h3>How it works</h3><ol class="steps">
-    <li><span class="n">1</span><div><b>Pick vendors</b> — start with your top 25–50.</div></li>
-    <li><span class="n">2</span><div><b>Public monitoring</b> — Pricing/ToS/DPA/Subprocessors/Status only.</div></li>
-    <li><span class="n">3</span><div><b>Two-phase confirm</b> — time-separated checks beat transient noise.</div></li>
-    <li><span class="n">4</span><div><b>Evidence card</b> — snippet + URL + timestamp, ready for renewals.</div></li>
-    <li><span class="n">5</span><div><b>Digest & exports</b> — monthly digest + CSV/JSON.</div></li>
-  </ol></div>
-  <div class="card"><h3>Service levels (SLO)</h3>
-    <table class="table"><tr><th>Metric</th><th>Target</th></tr>
-      <tr><td>P95 alert latency</td><td>&lt; 24 hours</td></tr>
-      <tr><td>False positive rate</td><td>&lt; 10%</td></tr>
-      <tr><td>Opt-out handling</td><td>&le; 72 hours</td></tr>
-    </table>
-    <p class="small">SLOs are aspirational targets, not legal guarantees. See Terms.</p>
-  </div>
-</div></div>
-
-<div id="security" class="section"><div class="container grid grid-2">
-  <div class="card"><h3>Security & Data Handling</h3>
-    <ul class="clean">
-      <li>Public sources only — no credentials, no scraping behind auth.</li>
-      <li>Minimal storage — snippet (≤300 chars), URL, timestamp, diff hash.</li>
-      <li>Transport security — HSTS, TLS, strict CSP, no 3rd-party scripts.</li>
-      <li>Opt-out within 72h — see <a href="/privacy.html">Privacy</a>.</li>
-      <li>Evidence integrity — immutable logs, ISO date, hash for audit.</li>
-    </ul>
-  </div>
-  <div class="card"><h3>Reliability & Compliance posture</h3>
-    <ul class="clean">
-      <li>P95 alert latency &lt; 24h; False positive rate &lt; 10%.</li>
-      <li>Backups — evidence cards stored with daily snapshots.</li>
-      <li>Incident response — <code>/.well-known/security.txt</code> contact.</li>
-      <li>DMARC/SPF/DKIM — enforced for outbound email delivery.</li>
-      <li>Data retention — export & deletion on request.</li>
-    </ul>
-  </div>
-</div></div>
-
-<div id="samples" class="section"><div class="container grid grid-2">
-  <div class="card"><h3>Sample evidence card</h3>
-    <pre class="alert">Vendor: DemoCloud
-Change: Pricing page — "Team $99" → "Team $119"
-Detected: 2025-10-04 09:42 UTC (phase-2 confirm)
-Snippet: "... Team plan now $119 per month ..."
-URL: https://democloud.example/pricing
-Note: Evidence card is for internal negotiation — not legal advice.</pre>
-  </div>
-  <div class="card"><h3>Why this helps renewals</h3><ul class="clean">
-    <li>Walk into QBRs with dated proof</li><li>Catch silent changes before renewal</li><li>Prioritize vendors with risk movement</li><li>Keep Legal/Procurement aligned</li>
-  </ul></div>
-</div></div>
-
-<div id="pricing" class="section"><div class="container">
-  <h2>Pricing</h2><p class="small">Self-serve for small deals. Enterprise & Channel via invoice (ACH/wire).</p>
-  <div class="pricing">
-    <div class="price"><h3>Portfolio</h3><div class="amount">$2,988<span class="small">/yr</span></div>
-      <ul class="clean"><li>Up to 25 vendors</li><li>Email & Slack alerts</li><li>Evidence cards</li><li class="dim">30-day money-back if no material alert.</li></ul>
-      <p><a class="btn" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801" target="_blank" rel="noopener">Buy now — Stripe</a></p></div>
-    <div class="price"><h3>Business</h3><div class="amount">$6,000<span class="small">/yr</span></div>
-      <ul class="clean"><li>Up to 50 vendors</li><li>Priority support</li><li>Evidence export</li><li class="dim">30-day money-back if no material alert.</li></ul>
-      <p><a class="btn" href="https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800" target="_blank" rel="noopener">Buy now — Stripe</a></p></div>
-    <div class="price"><h3>Enterprise</h3><div class="amount">$18,000+<span class="small">/yr</span></div>
-      <ul class="clean"><li>200+ vendors</li><li>API / SSO / custom cadence</li><li>MSA/DPA, custom SLA</li></ul>
-      <p><a class="btn" href="https://forms.gle/TCaom33BRJGbcJ3r5" target="_blank" rel="noopener">Request invoice (ACH)</a></p></div>
-    <div class="price"><h3>Channel</h3><div class="amount">$25,000<span class="small">/yr</span></div>
-      <ul class="clean"><li>Platform integration / resale</li><li>License + revenue share</li><li>Co-branded monthly report</li></ul>
-      <p><a class="btn" href="https://forms.gle/TCaom33BRJGbcJ3r5" target="_blank" rel="noopener">Request invoice (ACH)</a></p></div>
-  </div>
-</div></div>
-
-<!-- FAQ JSON-LD -->
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"FAQPage",
-  "mainEntity":[
-    {"@type":"Question","name":"Is CG Alert legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. We provide informational risk warnings from public sources; consult counsel for legal interpretation."}},
-    {"@type":"Question","name":"What pages do you monitor?","acceptedAnswer":{"@type":"Answer","text":"Pricing, Terms/ToS, DPA, Subprocessors, Status. Vendor-specific pages on request."}},
-    {"@type":"Question","name":"How noisy are alerts?","acceptedAnswer":{"@type":"Answer","text":"Two-phase confirmation and semantic filters target material changes. Our SLO targets false positives < 10%."}}
-  ]
-}
-</script>
-
-</main>
-<div class="footer"><div class="container inner"><hr>
-  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <div>© 2025 CG Alert. All rights reserved.</div>
-    <div><a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a> · <a href="/reports/">Reports</a></div>
-  </div>
-</div></div>
 <script>
 (function(){
-  var links=[].slice.call(document.querySelectorAll('.nav-links a[href^="/#"]'));
-  var map=new Map(links.map(function(a){return [a.getAttribute('href').slice(2),a];}));
-  if(!('IntersectionObserver'in window)) return;
-  var obs=new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      var id=e.target.id, a=map.get(id); if(!a) return;
-      if(e.isIntersecting){ links.forEach(function(el){el.classList.remove('active')}); a.classList.add('active'); }
-    });
-  },{rootMargin:'-45% 0% -45% 0%',threshold:0.1});
-  ['product','how','security','samples','pricing'].forEach(function(id){ var el=document.getElementById(id); if(el) obs.observe(el); });
+  // 已填：空白表单链接（含 ?usp=header 可用）
+  const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform?usp=header";
+  // 已填：Vendor 字段 entry id（纯数字）
+  const ENTRY_VENDOR = "718093581";
+
+  const $ = s => document.querySelector(s);
+  const qs = new URLSearchParams(location.search);
+  const vendor = qs.get("vendor") || "";
+  const keep = ["utm_source","utm_medium","utm_campaign"]
+    .map(k => qs.get(k) ? `${k}=${encodeURIComponent(qs.get(k))}` : "")
+    .filter(Boolean).join("&");
+
+  function showError(msg, tips){
+    $("#app").innerHTML =
+      `<div class="err"><b>配置不完整：</b> ${msg}</div>` +
+      `<p class="muted">${tips}</p>` +
+      `<p class="muted">访问示例：<code>/intake/?vendor=slack.com&utm_source=test</code></p>`;
+  }
+
+  // 自检 1：ENTRY_VENDOR 必须是数字
+  if(!/^\d+$/.test(ENTRY_VENDOR)){
+    return showError(
+      "缺少 Google Form 字段 ID（ENTRY_VENDOR）。",
+      "在表单右上角「更多」→「获取预填链接」，给 Vendor 填 ACME，点「获取链接」，复制链接中形如 entry.1234567890=ACME 的数字部分，把它粘到本页 ENTRY_VENDOR。"
+    );
+  }
+  // 自检 2：必须有 vendor 参数
+  if(!vendor){
+    return showError(
+      "URL 缺少 vendor 参数。",
+      "从邮件点进来会自动携带 vendor。你也可以手动在地址后加 ?vendor=slack.com 进行测试。"
+    );
+  }
+
+  // 构造目标 URL（考虑 FORM_BASE 已含 ? 的情况）
+  const sep = FORM_BASE.includes("?") ? "&" : "?";
+  const url = `${FORM_BASE}${sep}entry.${ENTRY_VENDOR}=${encodeURIComponent(vendor)}${keep?`&${keep}`:''}`;
+
+  // 跳转
+  location.replace(url);
 })();
 </script>
-</body></html>
