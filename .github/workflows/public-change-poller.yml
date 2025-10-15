@@ -12,7 +12,7 @@ on:
         required: false
         default: ''
   schedule:
-    # 每日 03:40 UTC 跑一遍（你可按需改时间）
+    # 每日 03:40 UTC 跑一遍（可按需调整）
     - cron: '40 3 * * *'
 
 concurrency:
@@ -25,7 +25,7 @@ permissions:
 env:
   NODE_OPTIONS: --max_old_space_size=4096
   SITE_ORIGIN: https://www.cg-alert.com
-  # 如果你在仓库 Variables 配置了下两项，按钮会自动显示；没配就自动隐藏
+  # 若在仓库 Variables 配置下两项，Pack 页按钮会自动显示；未配置则自动隐藏
   INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
   STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
 
@@ -63,7 +63,7 @@ jobs:
             echo "poll_public_endpoints.js not found"; exit 1
           fi
 
-      # === 关键新增：自动回填 hash（指纹） ===
+      # === 自动回填 evidence 指纹（hash） ===
       - name: 🔎 Backfill evidence fingerprint (hash)
         run: |
           if [ -f scripts/normalize_evidence.js ]; then
@@ -86,7 +86,7 @@ jobs:
           INPUT_MONTH: ${{ github.event.inputs.month }}
         run: |
           if [ -n "$INPUT_MONTH" ]; then
-            # 可选：指定月份构建（若你的脚本支持 month 参数，可在此传参）
+            # 可选：指定月份构建（若脚本支持 month 参数可在此传参）
             node scripts/build_change_pack.js || true
           else
             node scripts/build_change_pack.js
@@ -111,11 +111,13 @@ jobs:
           BASELINES=$(find evidence -type f -name "${TODAY}-*00000000.json" 2>/dev/null | wc -l)
           INDEX_ROWS=$(test -f data/evidence.ndx && wc -l < data/evidence.ndx || echo 0)
           PACKS=$(find "reports/$YM" -type f -name index.html 2>/dev/null | wc -l)
-          echo "### Public Change Poller" >> "$GITHUB_STEP_SUMMARY"
-          echo "- New evidence today: $CHANGED" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Baselines today: $BASELINES" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Index rows: $INDEX_ROWS" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Change Packs this month ($YM): $PACKS" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### Public Change Poller"
+            echo "- New evidence today: $CHANGED"
+            echo "- Baselines today: $BASELINES"
+            echo "- Index rows: $INDEX_ROWS"
+            echo "- Change Packs this month ($YM): $PACKS"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: 🔐 Safe push
         run: |
