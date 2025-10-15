@@ -6,41 +6,88 @@
   body{font-family:system-ui,Segoe UI,Arial;line-height:1.55;padding:24px;max-width:720px;margin:auto}
   .muted{color:#666} code{background:#f5f5f5;padding:2px 4px;border-radius:4px}
   .err{background:#ffecec;border:1px solid #f5c2c7;padding:12px;border-radius:8px}
+  .ok{background:#ecffef;border:1px solid #b7ebc6;padding:12px;border-radius:8px}
 </style>
 <div id="app">
   <p>Redirecting to request alerts… <span class="muted">(auto)</span></p>
 </div>
 <script>
 (function(){
-  // 别带任何查询参数（不要 ?usp=header）
+  // ===== 任选其一（推荐优先用 FORM_PREFILLED）=====
+  // 1) 推荐：把“获取预填链接”得到的整条 URL 粘在这里（里面自带 entry.<数字>=占位值）
+  //    例如：const FORM_PREFILLED = "https://docs.google.com/forms/d/e/.../viewform?usp=pp_url&entry.718093581=ACME";
+  const FORM_PREFILLED = "";  // ← 先留空也行，填了最稳
+
+  // 2) 备选（你现在的配置）：用空白表单链接 + Vendor 字段的 entry 数字ID
   const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform";
-  const ENTRY_VENDOR = "718093581"; // 你的 Vendor 字段 entry id（纯数字）
+  const ENTRY_VENDOR = "718093581"; // 你提供的数字ID（若填错，Google会丢参）
 
   const $ = s => document.querySelector(s);
   const qs = new URLSearchParams(location.search);
   const vendor = qs.get("vendor") || "";
+  const debug  = qs.get("debug") === "1";
   const keep = ["utm_source","utm_medium","utm_campaign"]
     .map(k => qs.get(k) ? `${k}=${encodeURIComponent(qs.get(k))}` : "")
     .filter(Boolean).join("&");
 
-  function showError(msg, tips){
-    $("#app").innerHTML =
-      `<div class="err"><b>配置不完整：</b> ${msg}</div>` +
-      `<p class="muted">${tips}</p>` +
-      `<p class="muted">示例：<code>/intake/?vendor=slack.com&utm_source=test</code></p>`;
+  function show(type, html){
+    $("#app").innerHTML = `<div class="${type}">${html}</div>`;
   }
 
-  if(!/^\d+$/.test(ENTRY_VENDOR)){
-    return showError("ENTRY_VENDOR 为空或不是数字。", "从表单「获取预填链接」里复制 entry.数字 的数字部分。");
-  }
-  if(!vendor){
-    return showError("URL 缺少 vendor 参数。", "从邮件点进来会自动带上；手测可加 ?vendor=slack.com。");
+  if (!vendor){
+    show("err", `URL 缺少 vendor 参数。<br><span class="muted">示例：<code>/intake/?vendor=slack.com&utm_source=test</code></span>`);
+    return;
   }
 
-  // 使用 canonical 基址 + usp=pp_url，防止 Google 重定向丢参
-  const base = FORM_BASE.split("?")[0];
-  const url = `${base}?usp=pp_url&entry.${ENTRY_VENDOR}=${encodeURIComponent(vendor)}${keep?`&${keep}`:''}`;
+  function buildFromPrefilled(prefilled, vendor, keep){
+    try{
+      const u = new URL(prefilled);
+      const sp = u.searchParams;
+      // 找到第一个 entry.<数字> 参数，替换为 vendor
+      let replaced = false;
+      for (const [k] of sp){
+        if (/^entry\.\d+$/.test(k)){
+          sp.set(k, vendor);
+          replaced = true;
+          break;
+        }
+      }
+      // 没找到就放弃这条方式
+      if (!replaced) return "";
+      // 始终保留 usp=pp_url，避免 Google 丢参
+      sp.set("usp", "pp_url");
+      if (keep){ keep.split("&").filter(Boolean).forEach(pair=>{
+        const [k,v] = pair.split("="); if (k) sp.set(k, decodeURIComponent(v||""));
+      }); }
+      return u.toString();
+    }catch(e){ return ""; }
+  }
 
-  location.replace(url);
+  function buildFromBase(base, entryId, vendor, keep){
+    if (!/^\d+$/.test(entryId)) return "";
+    const canonical = base.split("?")[0];
+    const sep = canonical.includes("?") ? "&" : "?";
+    const url = `${canonical}?usp=pp_url&entry.${entryId}=${encodeURIComponent(vendor)}${keep?`&${keep}`:''}`;
+    return url;
+  }
+
+  // 先尝试“预填链接”方式（最稳），否则退回“base+entryId”
+  let target = "";
+  if (FORM_PREFILLED) target = buildFromPrefilled(FORM_PREFILLED, vendor, keep);
+  if (!target) target = buildFromBase(FORM_BASE, ENTRY_VENDOR, vendor, keep);
+
+  if (!target){
+    show("err", `无法构造目标链接。<br>
+      <span class="muted">请粘贴 Google 表单的“获取预填链接”到 <code>FORM_PREFILLED</code>，或确认 <code>ENTRY_VENDOR</code> 是正确的数字 ID。</span>`);
+    return;
+  }
+
+  if (debug){
+    show("ok", `即将跳转到：<br><code>${target.replace(/&/g,'&amp;')}</code><br>
+      <a href="${target}">手动前往</a>`);
+    return;
+  }
+
+  location.replace(target);
 })();
 </script>
