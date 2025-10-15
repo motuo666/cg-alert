@@ -3,3 +3,6 @@ when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status
 2025-10-15T05:40:49.257Z,manningtopps@gmail.com,Your Co,gmail.com,slack.com,LI,https://www.cg-alert.com/updates/?q=slack.com,,dry
 2025-10-15T05:40:49.258Z,procurement@asana.com,Asana,asana.com,okta.com,LI,https://www.cg-alert.com/reports/2025-10/okta.com/,,dry
 2025-10-15T05:40:49.258Z,security@auth0.com,auth0,auth0,auth0.com,LI,https://www.cg-alert.com/updates/?q=auth0.com,,dry
+2025-10-15T05:53:32.189Z,"compliance@auth0.com","auth0","auth0","auth0.com",LI,"https://www.cg-alert.com/updates/?q=auth0.com",,dry
+2025-10-15T05:53:32.189Z,"privacy@auth0.com","auth0","auth0","auth0.com",LI,"https://www.cg-alert.com/updates/?q=auth0.com",,dry
+2025-10-15T05:53:32.189Z,"legal@auth0.com","auth0","auth0","auth0.com",LI,"https://www.cg-alert.com/updates/?q=auth0.com",,dry
