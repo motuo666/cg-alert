@@ -13,14 +13,12 @@
 </div>
 <script>
 (function(){
-  // ===== 任选其一（推荐优先用 FORM_PREFILLED）=====
-  // 1) 推荐：把“获取预填链接”得到的整条 URL 粘在这里（里面自带 entry.<数字>=占位值）
-  //    例如：const FORM_PREFILLED = "https://docs.google.com/forms/d/e/.../viewform?usp=pp_url&entry.718093581=ACME";
-  const FORM_PREFILLED = "https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform?usp=pp_url&entry.718093581=acme";  // ← 先留空也行，填了最稳
+  // 1) 预填链接（你提供的完整 prefilled URL）——最稳
+  const FORM_PREFILLED = "https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform?usp=pp_url&entry.718093581=acme";
 
-  // 2) 备选（你现在的配置）：用空白表单链接 + Vendor 字段的 entry 数字ID
-  const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform";
-  const ENTRY_VENDOR = "718093581"; // 你提供的数字ID（若填错，Google会丢参）
+  // 2) 兜底：空白表单 + 字段ID（同一表单）
+  const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform?usp=dialog";
+  const ENTRY_VENDOR = "718093581";
 
   const $ = s => document.querySelector(s);
   const qs = new URLSearchParams(location.search);
@@ -52,13 +50,14 @@
           break;
         }
       }
-      // 没找到就放弃这条方式
       if (!replaced) return "";
-      // 始终保留 usp=pp_url，避免 Google 丢参
+      // 保留/统一 usp
       sp.set("usp", "pp_url");
-      if (keep){ keep.split("&").filter(Boolean).forEach(pair=>{
-        const [k,v] = pair.split("="); if (k) sp.set(k, decodeURIComponent(v||""));
-      }); }
+      if (keep){
+        keep.split("&").filter(Boolean).forEach(pair=>{
+          const [k,v] = pair.split("="); if (k) sp.set(k, decodeURIComponent(v||""));
+        });
+      }
       return u.toString();
     }catch(e){ return ""; }
   }
@@ -66,19 +65,18 @@
   function buildFromBase(base, entryId, vendor, keep){
     if (!/^\d+$/.test(entryId)) return "";
     const canonical = base.split("?")[0];
-    const sep = canonical.includes("?") ? "&" : "?";
     const url = `${canonical}?usp=pp_url&entry.${entryId}=${encodeURIComponent(vendor)}${keep?`&${keep}`:''}`;
     return url;
   }
 
-  // 先尝试“预填链接”方式（最稳），否则退回“base+entryId”
+  // 先用预填链接；失败再用 base+entryId
   let target = "";
   if (FORM_PREFILLED) target = buildFromPrefilled(FORM_PREFILLED, vendor, keep);
   if (!target) target = buildFromBase(FORM_BASE, ENTRY_VENDOR, vendor, keep);
 
   if (!target){
     show("err", `无法构造目标链接。<br>
-      <span class="muted">请粘贴 Google 表单的“获取预填链接”到 <code>FORM_PREFILLED</code>，或确认 <code>ENTRY_VENDOR</code> 是正确的数字 ID。</span>`);
+      <span class="muted">请确认上面的 FORM_PREFILLED 与 ENTRY_VENDOR 指向同一表单。</span>`);
     return;
   }
 
