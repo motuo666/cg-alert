@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Triggered outreach (robust, diagnosable, final)
- * - Filters: status=new, mx_ok=1, persona, region, evidence-in-window vendor match
- * - Skips vendors with only "baseline" evidence (no real change in window)
+ * Triggered outreach (final, with baseline filtering)
+ * - 只给“真实变更”的 vendor 发：自动跳过“只有 baseline 的 vendor”
+ * - Filters: status=new, mx_ok=1, persona, region, vendor match
  * - Cooldowns: per email (30d), per domain cap (<=4 in 7d), per vendor×company (14d)
- * - Args: --dry=true|false, --limit=N, --pack, --window_h=72
+ * - Args: --dry=true|false, --limit=N, --window_h=72
  * - Env: TRIGGER_WINDOW_H, SMTP_*, MAIL_FROM, BCC_TO, PERSONA_RULES, REGION_FILTER, SITE_ORIGIN
  * - Outputs: append to data/outreach_log.csv; update leads.csv status -> sent
  * - Diagnostics: prints eligibility counts; writes GitHub Step Summary if available
@@ -23,10 +23,9 @@ const Y = now.getUTCFullYear();
 const M = String(now.getUTCMonth() + 1).padStart(2, '0');
 const CUR = `${Y}-${M}`;
 
-const argvStr = require('node:process').argv.join(' ');
+const argvStr = process.argv.join(' ');
 const DRY = /--dry(?:=| )?false/i.test(argvStr) ? false : true; // 默认 dry=true
 const LIM = (() => { const m = argvStr.match(/--limit(?:=| )(\d+)/); return m ? Math.max(1, +m[1]) : 5; })();
-const PACK = /--pack/i.test(argvStr);
 let WINH = (() => {
   const cli = argvStr.match(/--window_h(?:=| )(\d+)/);
   if (cli) return Math.max(1, +cli[1]);
@@ -48,7 +47,6 @@ function isFreeMailbox(email){
   return m ? FREE_EMAIL_DOMAINS.has(m[1]) : false;
 }
 function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
-function readLines(file) { if (!fs.existsSync(file)) return []; return fs.readFileSync(file,'utf8').split(/\r?\n/).filter(Boolean); }
 
 function loadPersonaRules() {
   try { return JSON.parse(fs.readFileSync(PERSONA_FILE,'utf8')); }
@@ -111,23 +109,6 @@ function normVendorName(x) {
   return s.replace(/[^a-z0-9]/g,'');
 }
 
-// —— URL 相关 ——
-// 返回 Change Pack 或 Updates 搜索页（不带 UTM）
-function existsPackFor(vendorSlug) {
-  const p = path.join(ROOT, 'reports', CUR, vendorSlug, 'index.html');
-  return fs.existsSync(p);
-}
-function packLinkFor(vendorSlug) {
-  return existsPackFor(vendorSlug)
-    ? `${SITE}/reports/${CUR}/${vendorSlug}/`
-    : `${SITE}/updates/?q=${encodeURIComponent(vendorSlug)}`;
-}
-// 按需拼接 UTM（自动决定 ? 或 &）
-function addUTM(baseUrl, when) {
-  const sep = baseUrl.includes('?') ? '&' : '?';
-  return `${baseUrl}${sep}utm_source=email&utm_medium=triggered&utm_campaign=cp_${when.slice(0,7)}`;
-}
-
 function loadEvidenceWindowHours(hours) {
   const ndxFile = DATA('evidence.ndx');
   if (!fs.existsSync(ndxFile)) return [];
@@ -144,7 +125,25 @@ function loadEvidenceWindowHours(hours) {
   return changed;
 }
 
-// —— 邮件内容 —— //
+// —— URL 相关 ——
+// Pack 是否存在（静态）
+function existsPackFor(vendorSlug) {
+  const p = path.join(ROOT, 'reports', CUR, vendorSlug, 'index.html');
+  return fs.existsSync(p);
+}
+// Pack 或 Updates 搜索页（不带 UTM）
+function packLinkFor(vendorSlug) {
+  return existsPackFor(vendorSlug)
+    ? `${SITE}/reports/${CUR}/${vendorSlug}/`
+    : `${SITE}/updates/?q=${encodeURIComponent(vendorSlug)}`;
+}
+// 按需拼接 UTM（自动决定 ? 或 &）
+function addUTM(baseUrl, when) {
+  const sep = baseUrl.includes('?') ? '&' : '?';
+  return `${baseUrl}${sep}utm_source=email&utm_medium=triggered&utm_campaign=cp_${when.slice(0,7)}`;
+}
+
+// 邮件话术（3 行）
 function composeMail(vendorSlug, topic, when, hash8) {
   const t = String(topic||'').toLowerCase();
   const pretty =
@@ -172,7 +171,6 @@ See verifiable details → ${url}`;
   return { subj, body, url };
 }
 
-// —— SMTP —— //
 async function makeTransport() {
   const host = process.env.SMTP_HOST, port = +(process.env.SMTP_PORT||587);
   const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
@@ -180,7 +178,6 @@ async function makeTransport() {
   return nodemailer.createTransport({ host, port, secure: port===465, auth: { user, pass } });
 }
 
-// —— 日志与状态 —— //
 function ensureOutreachLogHeader() {
   const f = DATA('outreach_log.csv');
   if (!fs.existsSync(f)) fs.writeFileSync(f, 'when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status\n', 'utf8');
@@ -212,7 +209,21 @@ function updateLeadsStatus(sentEmails) {
 }
 function includesAny(hay, allow) { const s = (hay||'').toLowerCase(); return (allow||[]).some(k => s.includes(String(k).toLowerCase())); }
 
-// —— Outreach 历史（冷却 & 限流）—— //
+// —— 基线判断（仅发真实变更） ——
+// 若 vendor 的窗口内证据全部无有效 hash（空或 0 串），则视为 baseline-only → 不发
+function isZeroHash(h) { return !h || /^0+$/i.test(String(h)); }
+function vendorOnlyBaseline(arr){
+  if (!arr || !arr.length) return true;
+  // 有任意一条带有效 hash 就不是 baseline
+  if (arr.some(e => e.hash && !isZeroHash(e.hash))) return false;
+  // 兜底：读取一条 JSON 看 kind 值（读不到当 baseline）
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(ROOT, arr[0].rel), 'utf8'));
+    return String(j.kind||'baseline').toLowerCase() === 'baseline';
+  } catch { return true; }
+}
+
+// —— 历史抑制（冷却/限流） ——
 function loadOutreachHistory(daysBack=30){
   const f = DATA('outreach_log.csv'); if(!fs.existsSync(f)) return [];
   const since = Date.now()-daysBack*86400*1000;
@@ -225,21 +236,6 @@ function sentToEmailWithin(history,email,days){ const since=Date.now()-days*8640
 function sentCountToDomainWithin(history,domain,days){ const since=Date.now()-days*86400*1000; return history.filter(r=>r.domain===domain && r.when>=since && r.status!=='fail').length; }
 function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Date.now()-days*86400*1000; return history.some(r=>r.vendor===vendor && r.company===company && r.when>=since && r.status!=='fail'); }
 
-// —— 基线过滤 —— //
-function isZeroHash(h) { return !h || /^0+$/i.test(String(h)); }
-function vendorOnlyBaseline(arr){
-  // 有任何非零 hash 即不是 baseline-only
-  if (arr.some(e => e.hash && !isZeroHash(e.hash))) return false;
-  // 保险：看一条 JSON 的 kind 字段
-  try {
-    const rel = arr[0]?.rel;
-    if (!rel) return true;
-    const j = JSON.parse(fs.readFileSync(path.join(ROOT, rel), 'utf8'));
-    return String(j.kind || 'baseline').toLowerCase() === 'baseline';
-  } catch { return true; }
-}
-
-// —— 主流程 —— //
 (async function main(){
   const persona = loadPersonaRules();
   const region  = loadRegionFilter();
@@ -278,12 +274,12 @@ function vendorOnlyBaseline(arr){
     return true;
   });
 
-  // Vendor 匹配
+  // Vendor 匹配（v1,v2,v3 -> slug/name 归一，对上 evid changedSet 即通过）
   function matchVendorForLead(l) {
     const cand = [l.v1, l.v2, l.v3].map(normVendorName).filter(Boolean);
     for (const c of cand) {
       for (const v of changedSet) {
-        const vn = v.replace(/\./g,'');
+        const vn = v.replace(/\./g,''); // salesforce.com -> salesforcecom
         if (c === v || c === vn || v.includes(c) || c.includes(vn)) return v;
       }
     }
@@ -295,13 +291,13 @@ function vendorOnlyBaseline(arr){
     if (mv) withVendor.push({ lead:l, vendor:mv });
   }
 
-  // 过滤掉仅 baseline 的 vendor（无真实变更）
+  // 只保留“真实变更”的 vendor（过滤 baseline-only）
   const withRealChange = withVendor.filter(({vendor}) => {
     const arr = (byVendor.get(vendor) || []);
     return arr.length && !vendorOnlyBaseline(arr);
   });
 
-  // 冷却与域限流（基于 withRealChange）
+  // 冷却与域限流：email 30d、domain 7d<=4、vendor×company 14d
   const cooled = [];
   const DOMAIN_CAP = 4, DOMAIN_WINDOW_D=7, EMAIL_COOLDOWN_D=30, VENDOR_COMPANY_D=14;
   const domainCnt = {};
@@ -315,21 +311,21 @@ function vendorOnlyBaseline(arr){
     domainCnt[d]++; cooled.push(item);
   }
 
-  // 选取
+  // 选取要发送的（限制数量）
   const toSend = cooled.slice(0, LIM);
 
-  // 诊断 + Summary
+  // 诊断日志 + Step Summary
   const diag = {
     total,
     'status+mx': passStatus.length,
     persona: passPersona.length,
     region: passRegion.length,
     'vendor-match': withVendor.length,
-    'real-change': withRealChange.length,
+    'with-real-change': withRealChange.length,
     cooled: cooled.length,
     final: toSend.length,
     window_h: WINH,
-    changed_vendors: changedSet.size
+    changed_vendors: new Set(withRealChange.map(x=>x.vendor)).size
   };
   console.log('eligibility:', JSON.stringify(diag));
   try {
@@ -340,17 +336,20 @@ function vendorOnlyBaseline(arr){
 - After status+mx: ${passStatus.length}
 - After persona: ${passPersona.length}
 - After region: ${passRegion.length}
-- Vendors changed in last ${WINH}h: ${changedSet.size}
 - Vendor-matched: ${withVendor.length}
-- With real change (non-baseline): ${withRealChange.length}
+- With real change (not baseline): ${withRealChange.length}
 - After cooldown/domain-cap: ${cooled.length}
 - Will send (limit=${LIM}): ${toSend.length}
+- Evidence window: ${WINH}h
 `;
       fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, sum, 'utf8');
     }
   } catch {}
 
-  if (!toSend.length) { console.log('no eligible leads'); process.exit(0); }
+  if (!toSend.length) {
+    console.log('no eligible leads');
+    process.exit(0);
+  }
 
   // 发送
   const sentEmails = new Set();
