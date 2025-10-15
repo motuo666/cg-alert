@@ -31,3 +31,11 @@ when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status
 2025-10-15T10:13:14.487Z,procurement@asana.com,Asana,asana.com,okta.com,LI,https://www.cg-alert.com/reports/2025-10/okta.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
 2025-10-15T10:13:14.487Z,cto@auth0.com,auth0,auth0,auth0.com,LI,https://www.cg-alert.com/updates/?q=auth0.com&utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
 2025-10-15T10:13:14.487Z,ciso@auth0.com,auth0,auth0,auth0.com,LI,https://www.cg-alert.com/updates/?q=auth0.com&utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
+2025-10-15T10:14:17.406Z,procurement@asana.com,Asana,asana.com,okta.com,LI,https://www.cg-alert.com/reports/2025-10/okta.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T10:14:25.586Z,ciso@datadoghq.com,datadog,datadoghq,datadoghq.com,LI,https://www.cg-alert.com/reports/2025-10/datadoghq.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T10:14:30.738Z,cto@github.com,github,github,github.com,LI,https://www.cg-alert.com/updates/?q=github.com&utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T10:14:39.120Z,ciso@github.com,github,github,github.com,LI,https://www.cg-alert.com/updates/?q=github.com&utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T10:14:46.977Z,legal@notion.so,notion,notion,notion.so,LI,https://www.cg-alert.com/reports/2025-10/notion.so/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T10:14:51.636Z,cto@notion.so,notion,notion,notion.so,LI,https://www.cg-alert.com/reports/2025-10/notion.so/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T10:14:58.397Z,ciso@notion.so,notion,notion,notion.so,LI,https://www.cg-alert.com/reports/2025-10/notion.so/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-15T10:15:05.417Z,compliance@slack.com,slack,slack,slack.com,LI,https://www.cg-alert.com/updates/?q=slack.com&utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
