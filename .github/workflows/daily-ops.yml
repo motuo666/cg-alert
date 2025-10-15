@@ -1,0 +1,37 @@
+name: Daily Ops
+
+on:
+  schedule:
+    - cron: "30 16 * * *"   # 每天 16:30 UTC（按需改）
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  ops:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install (best-effort)
+        run: npm ci || npm i --no-audit --no-fund || true
+
+      - name: Fullchain Check
+        env:
+          TARGET_SENT: "8"
+          TARGET_EVID_TODAY: "10"
+        run: |
+          node scripts/fullchain_check.js || true
+
+      - name: Build Daily Ops Report
+        run: node scripts/daily_ops_report.js
+
+      - name: Safe push report
+        run: |
+          chmod +x scripts/git_safe_push.sh || true
+          bash scripts/git_safe_push.sh "chore(ops): daily report $(date -u +%F)"
