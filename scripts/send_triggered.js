@@ -47,11 +47,6 @@ function isFreeMailbox(email){
 }
 function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
 
-function readLines(file) {
-  if (!fs.existsSync(file)) return [];
-  return fs.readFileSync(file, 'utf8').split(/\r?\n/).filter(Boolean);
-}
-
 function loadPersonaRules() {
   try { return JSON.parse(fs.readFileSync(PERSONA_FILE,'utf8')); }
   catch { return { allow_roles: ['legal','privacy','procurement','security','risk','compliance'], deny_prefix:['info@','support@','sales@','noreply@','no-reply@'], min_score:0.35 }; }
@@ -157,9 +152,10 @@ function composeMail(vendorSlug, topic, when, hash8) {
 
   const url = `${packLinkFor(vendorSlug)}?utm_source=email&utm_medium=triggered&utm_campaign=cp_${when.slice(0,7)}`;
   const subj = `[Evidence] ${vendorSlug} changed ${pretty} on ${when}`;
+  const evText = (hash8 && hash8.trim()) ? `#${hash8}` : 'n/a';
   const body =
 `We verified a public change on ${vendorSlug}: ${pretty} (${when}).
-Impact: ${impact}. Evidence: #${hash8 || 'n/a'}.
+Impact: ${impact}. Evidence: ${evText}.
 See verifiable details → ${url}`;
   return { subj, body };
 }
@@ -349,12 +345,13 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
   for (let i=0; i<toSend.length; i++) {
     const { lead, vendor } = toSend[i];
 
-    // 取该 vendor 最近一条证据，抽取 topic/date/hash8
+    // 取该 vendor 最近一条证据，抽取 topic/date/hash8（空或0串 → n/a）
     const arr = (byVendor.get(vendor)||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
     const top = arr[0] || { type:'Change', date:new Date().toISOString().slice(0,10), hash:'' };
     const topic = top.type || 'Change';
     const when  = top.date || new Date().toISOString().slice(0,10);
-    const hash8 = String(top.hash || '').slice(0,8);
+    const rawH  = String(top.hash || '').toLowerCase();
+    const hash8 = (!rawH || /^0+$/i.test(rawH)) ? '' : rawH.slice(0,8);
 
     const { subj, body } = composeMail(vendor, topic, when, hash8);
     const link = packLinkFor(vendor) + `?utm_source=email&utm_medium=triggered&utm_campaign=cp_${when.slice(0,7)}`;
