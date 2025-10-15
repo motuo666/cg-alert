@@ -1,5 +1,5 @@
-manningtopps@gmail.com,Your Co,gmail.com,Slack,Zoom,Stripe,procurement,new,1
-procurement@asana.com,Asana,asana.com,Okta,Slack,Zoom,procurement,new,1
+manningtopps@gmail.com,Your Co,gmail.com,Slack,Zoom,Stripe,procurement,sent,1
+procurement@asana.com,Asana,asana.com,Okta,Slack,Zoom,procurement,sent,1
 security@globex.com,globex,globex.com,,,,security,new,1
 compliance@globex.com,globex,globex.com,,,,security,new,1
 privacy@globex.com,globex,globex.com,,,,security,new,1
@@ -28,7 +28,7 @@ legal@acme.com,acme,acme.com,,,,security,new,1
 cto@acme.com,acme,acme.com,,,,security,new,1
 ciso@acme.com,acme,acme.com,,,,security,new,1
 info@acme.com,acme,acme.com,,,,security,new,1
-security@auth0.com,auth0,auth0,auth0.com,auth0,,,new,1
+security@auth0.com,auth0,auth0,auth0.com,auth0,,,sent,1
 compliance@auth0.com,auth0,auth0,auth0.com,auth0,,,new,1
 privacy@auth0.com,auth0,auth0,auth0.com,auth0,,,new,1
 legal@auth0.com,auth0,auth0,auth0.com,auth0,,,new,1
