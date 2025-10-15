@@ -12,10 +12,9 @@
 </div>
 <script>
 (function(){
-  // 已填：空白表单链接（含 ?usp=header 可用）
-  const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform?usp=header";
-  // 已填：Vendor 字段 entry id（纯数字）
-  const ENTRY_VENDOR = "718093581";
+  // 别带任何查询参数（不要 ?usp=header）
+  const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform";
+  const ENTRY_VENDOR = "718093581"; // 你的 Vendor 字段 entry id（纯数字）
 
   const $ = s => document.querySelector(s);
   const qs = new URLSearchParams(location.search);
@@ -28,29 +27,20 @@
     $("#app").innerHTML =
       `<div class="err"><b>配置不完整：</b> ${msg}</div>` +
       `<p class="muted">${tips}</p>` +
-      `<p class="muted">访问示例：<code>/intake/?vendor=slack.com&utm_source=test</code></p>`;
+      `<p class="muted">示例：<code>/intake/?vendor=slack.com&utm_source=test</code></p>`;
   }
 
-  // 自检 1：ENTRY_VENDOR 必须是数字
   if(!/^\d+$/.test(ENTRY_VENDOR)){
-    return showError(
-      "缺少 Google Form 字段 ID（ENTRY_VENDOR）。",
-      "在表单右上角「更多」→「获取预填链接」，给 Vendor 填 ACME，点「获取链接」，复制链接中形如 entry.1234567890=ACME 的数字部分，把它粘到本页 ENTRY_VENDOR。"
-    );
+    return showError("ENTRY_VENDOR 为空或不是数字。", "从表单「获取预填链接」里复制 entry.数字 的数字部分。");
   }
-  // 自检 2：必须有 vendor 参数
   if(!vendor){
-    return showError(
-      "URL 缺少 vendor 参数。",
-      "从邮件点进来会自动携带 vendor。你也可以手动在地址后加 ?vendor=slack.com 进行测试。"
-    );
+    return showError("URL 缺少 vendor 参数。", "从邮件点进来会自动带上；手测可加 ?vendor=slack.com。");
   }
 
-  // 构造目标 URL（考虑 FORM_BASE 已含 ? 的情况）
-  const sep = FORM_BASE.includes("?") ? "&" : "?";
-  const url = `${FORM_BASE}${sep}entry.${ENTRY_VENDOR}=${encodeURIComponent(vendor)}${keep?`&${keep}`:''}`;
+  // 使用 canonical 基址 + usp=pp_url，防止 Google 重定向丢参
+  const base = FORM_BASE.split("?")[0];
+  const url = `${base}?usp=pp_url&entry.${ENTRY_VENDOR}=${encodeURIComponent(vendor)}${keep?`&${keep}`:''}`;
 
-  // 跳转
   location.replace(url);
 })();
 </script>
