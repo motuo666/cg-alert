@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Unsubscribe — CG Alert</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="/unsubscribe/">
+<style>
+  :root { --fg:#111; --muted:#666; --ok:#0a7a3e; --err:#b00020; --bd:#e5e7eb; --bg:#fff; }
+  *{box-sizing:border-box} body{font-family:system-ui,-apple-system,Segoe UI,Inter,Arial; color:var(--fg); background:var(--bg); margin:0}
+  .wrap{max-width:720px; margin:32px auto; padding:0 16px}
+  h1{margin:0 0 8px}
+  p.lead{color:var(--muted); margin:0 0 16px}
+  form{margin:16px 0 12px; border:1px solid var(--bd); border-radius:12px; padding:16px}
+  label{display:block; font-weight:600; margin:10px 0 6px}
+  input,select,textarea{width:100%; padding:10px 12px; border:1px solid var(--bd); border-radius:10px; font:inherit}
+  .row{display:grid; grid-template-columns:1fr; gap:12px}
+  .actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+  .btn{appearance:none; border:1px solid var(--bd); border-radius:10px; padding:10px 14px; background:#111; color:#fff; cursor:pointer}
+  .btn.ghost{background:transparent; color:var(--fg)}
+  .msg{padding:10px 12px; border-radius:10px; margin:10px 0 0; display:none}
+  .msg.ok{background:#e8f6ed; color:var(--ok); display:block}
+  .msg.err{background:#fde8ea; color:var(--err); display:block}
+  .small{font-size:12px; color:var(--muted)}
+  .hide{display:none}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Unsubscribe</h1>
+    <p class="lead">Stop receiving CG Alert outreach. We’ll remove you within 72 hours.</p>
+
+    <!-- If you use Google Form, set FORM_URL and the entry IDs below. Otherwise mailto fallback is shown. -->
+    <form id="f">
+      <div class="row">
+        <div>
+          <label for="email">Work email <span class="small">(required)</span></label>
+          <input id="email" name="email" type="email" required autocomplete="email" placeholder="you@company.com">
+        </div>
+        <div>
+          <label for="vendor">Vendor (optional)</label>
+          <input id="vendor" name="vendor" type="text" placeholder="e.g., slack.com">
+        </div>
+        <div>
+          <label for="reason">Reason (optional)</label>
+          <select id="reason" name="reason">
+            <option value="">— Select —</option>
+            <option value="not-relevant">Not relevant</option>
+            <option value="not-interested">Not interested</option>
+            <option value="too-frequent">Too frequent</option>
+            <option value="policy">Company policy</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label for="note">Note (optional)</label>
+          <textarea id="note" name="note" rows="3" placeholder="Anything we should know (optional)"></textarea>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="submitBtn" type="submit">Unsubscribe</button>
+        <a class="btn ghost" href="/">Home</a>
+      </div>
+      <div id="ok" class="msg ok">Unsubscribe request received. You’re all set — we’ll stop within 72 hours.</div>
+      <div id="err" class="msg err">Submission failed. Use the email link below to unsubscribe.</div>
+      <p class="small" id="mailtoWrap" style="margin-top:8px;">
+        Or email us: <a id="mailto" href="#">opt-out via email</a>
+      </p>
+      <p class="small">We only process public pages and respect robots.txt/sitemaps/security.txt. Opt-out takes effect within 72 hours.</p>
+    </form>
+  </div>
+
+<script>
+/**
+ * CONFIG (edit these 4 constants to use Google Form or Apps Script)
+ * - FORM_URL: Google Form "formResponse" endpoint OR your Apps Script endpoint.
+ *   Leave empty "" to use mailto fallback only.
+ * - FIELD_*: Map your form fields (Google Form uses entry.xxxxxx IDs).
+ *   For Apps Script, use any names your endpoint expects.
+ */
+const FORM_URL = ""; // e.g. "https://docs.google.com/forms/d/XXXX/formResponse"  (leave "" to disable)
+const FIELD_EMAIL  = "entry.111111";   // replace with your Email field id
+const FIELD_VENDOR = "entry.222222";   // replace with your Vendor field id (optional)
+const FIELD_REASON = "entry.333333";   // replace with your Reason field id (optional)
+const FIELD_NOTE   = "entry.444444";   // replace with your Note field id (optional)
+
+// MAILTO fallback (used when FORM_URL == "")
+const MAILTO_ADDR = "optout@cg-alert.com"; // change to your inbox
+const MAILTO_SUBJ = "Unsubscribe request";
+const MAILTO_BODY = (email, vendor, reason, note) =>
+  `Please unsubscribe me from CG Alert outreach.%0A%0A` +
+  `Email: ${encodeURIComponent(email || "")}%0A` +
+  `Vendor: ${encodeURIComponent(vendor || "")}%0A` +
+  `Reason: ${encodeURIComponent(reason || "")}%0A` +
+  `Note: ${encodeURIComponent(note || "")}%0A` +
+  `Timestamp (UTC): ${encodeURIComponent(new Date().toISOString())}`;
+
+function qs(k){ return new URLSearchParams(location.search).get(k) || ""; }
+function prefill(){
+  const e = qs('email'); if (e) document.getElementById('email').value = e;
+  const v = qs('vendor'); if (v) document.getElementById('vendor').value = v;
+  const r = qs('reason'); if (r) document.getElementById('reason').value = r;
+}
+function setupMailto(){
+  const wrap = document.getElementById('mailtoWrap');
+  const a = document.getElementById('mailto');
+  const email = document.getElementById('email').value || qs('email') || "";
+  const vendor = document.getElementById('vendor').value || qs('vendor') || "";
+  const reason = document.getElementById('reason').value || qs('reason') || "";
+  const note = document.getElementById('note').value || "";
+  a.href = `mailto:${MAILTO_ADDR}?subject=${encodeURIComponent(MAILTO_SUBJ)}&body=${MAILTO_BODY(email,vendor,reason,note)}`;
+  wrap.style.display = 'block';
+}
+
+async function submitForm(ev){
+  ev.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const ok = document.getElementById('ok');
+  const err = document.getElementById('err');
+  ok.style.display = 'none'; err.style.display = 'none';
+
+  const email  = document.getElementById('email').value.trim();
+  const vendor = document.getElementById('vendor').value.trim();
+  const reason = document.getElementById('reason').value;
+  const note   = document.getElementById('note').value.trim();
+  if (!email) { document.getElementById('email').focus(); return; }
+
+  if (!FORM_URL) {
+    setupMailto();
+    err.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  try {
+    const data = new FormData();
+    data.append(FIELD_EMAIL, email);
+    if (FIELD_VENDOR) data.append(FIELD_VENDOR, vendor);
+    if (FIELD_REASON) data.append(FIELD_REASON, reason);
+    if (FIELD_NOTE)   data.append(FIELD_NOTE, note);
+    // For Google Forms, must be no-cors; treat opaque as success
+    await fetch(FORM_URL, { method:'POST', mode:'no-cors', body:data });
+    ok.style.display = 'block';
+    // Optionally redirect home after 2s
+    setTimeout(()=>{ location.href = '/'; }, 2000);
+  } catch(e){
+    setupMailto();
+    err.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('f').addEventListener('submit', submitForm);
+prefill();
+setupMailto();
+</script>
+</body>
+</html>
