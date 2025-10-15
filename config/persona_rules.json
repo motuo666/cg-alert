@@ -1,5 +1,10 @@
 {
-"allow_roles": ["legal","privacy","procurement","security","risk","compliance"],
-"deny_prefix": ["info@","support@","no-reply@","noreply@","sales@"],
-"min_score": 0.6
+  "allow_roles": [
+    "legal","counsel","privacy","dpo","procurement","sourcing","purchasing",
+    "vendor management","vendor manager","third party","tpmm",
+    "security","secops","trust","governance","grc","risk","compliance",
+    "it procurement","it sourcing","legal operations","legal ops","contracts","deal desk"
+  ],
+  "deny_prefix": ["info@","support@","no-reply@","noreply@","sales@"],
+  "min_score": 0.35
 }
