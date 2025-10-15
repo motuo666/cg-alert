@@ -1,99 +1,20 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>Enable Alerts</title>
-<meta name="robots" content="noindex">
+<title>CG Alert</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="canonical" href="https://www.cg-alert.com/">
 <style>
-  body{font-family:system-ui,Segoe UI,Arial;line-height:1.55;padding:24px;max-width:720px;margin:auto}
-  .muted{color:#666} code{background:#f5f5f5;padding:2px 4px;border-radius:4px}
-  .err{background:#ffecec;border:1px solid #f5c2c7;padding:12px;border-radius:8px}
-  .ok{background:#ecffef;border:1px solid #b7ebc6;padding:12px;border-radius:8px}
-  .row{display:flex;gap:8px;align-items:center}
-  input[type=text]{flex:1;padding:8px 10px;border:1px solid #ddd;border-radius:8px}
-  button{padding:8px 12px;border:1px solid #111;border-radius:8px;background:#111;color:#fff;cursor:pointer}
-  .ghost{background:#fff;color:#111}
+  body{font-family:system-ui,Segoe UI,Arial;line-height:1.6;padding:32px;max-width:960px;margin:auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:16px 0}
+  a.btn{display:inline-block;padding:10px 14px;border:1px solid #111;border-radius:10px;text-decoration:none}
+  .muted{color:#666}
 </style>
-<div id="app">
-  <p>Redirecting to request alerts… <span class="muted">(auto)</span></p>
+<h1>CG Alert</h1>
+<p class="muted">供应商公开页面变更预警 + 可核证证据卡（Pricing / ToS / DPA / Subprocessors / Status）</p>
+<div class="grid">
+  <a class="btn" href="/vendors/">Vendors</a>
+  <a class="btn" href="/updates/">Updates</a>
+  <a class="btn" href="/reports/">Reports</a>
+  <a class="btn" href="/intake/">Enable Alerts</a>
 </div>
-<script>
-(function(){
-  // 1) 你提供的预填链接（最稳）
-  const FORM_PREFILLED = "https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform?usp=pp_url&entry.718093581=acme";
-  // 2) 兜底：同一表单的空白链接 + 字段 ID
-  const FORM_BASE = "https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform";
-  const ENTRY_VENDOR = "718093581";
-
-  const $ = s => document.querySelector(s);
-  const qs = new URLSearchParams(location.search);
-  const vendor = (qs.get("vendor") || "").trim();
-  const debug  = qs.get("debug") === "1";
-  const keep = ["utm_source","utm_medium","utm_campaign"]
-    .map(k => qs.get(k) ? `${k}=${encodeURIComponent(qs.get(k))}` : "")
-    .filter(Boolean).join("&");
-
-  function buildFromPrefilled(prefilled, vendor, keep){
-    try{
-      const u = new URL(prefilled);
-      const sp = u.searchParams;
-      let replaced = false;
-      for (const [k] of sp){
-        if (/^entry\.\d+$/.test(k)){ sp.set(k, vendor); replaced = true; break; }
-      }
-      if (!replaced) return "";
-      sp.set("usp","pp_url");
-      if (keep){ keep.split("&").filter(Boolean).forEach(pair=>{
-        const [k,v] = pair.split("="); if (k) sp.set(k, decodeURIComponent(v||""));
-      }); }
-      return u.toString();
-    }catch(e){ return ""; }
-  }
-  function buildFromBase(base, entryId, vendor, keep){
-    if (!/^\d+$/.test(entryId)) return "";
-    const canonical = base.split("?")[0];
-    return `${canonical}?usp=pp_url&entry.${entryId}=${encodeURIComponent(vendor)}${keep?`&${keep}`:''}`;
-  }
-  function targetUrl(v){
-    let t = "";
-    if (FORM_PREFILLED) t = buildFromPrefilled(FORM_PREFILLED, v, keep);
-    if (!t) t = buildFromBase(FORM_BASE, ENTRY_VENDOR, v, keep);
-    return t;
-  }
-
-  // 没有 vendor → 显示输入框（不报错）
-  if (!vendor){
-    document.title = "Enable Alerts — CG Alert";
-    const home = (typeof SITE_ORIGIN !== 'undefined' ? SITE_ORIGIN : "https://www.cg-alert.com");
-    document.getElementById("app").innerHTML = `
-      <h1>Enable Alerts</h1>
-      <p class="muted">输入需要监控的供应商域名，我们将跳转到申请表单（Google Forms）。</p>
-      <div class="row">
-        <input id="v" type="text" placeholder="例如：slack.com">
-        <button id="go">Continue</button>
-        <a class="ghost" href="${home}/" style="text-decoration:none"><button class="ghost">Home</button></a>
-      </div>
-      <p class="muted">也可以从邮件链接直接进入本页，参数会自动带上。</p>
-    `;
-    $("#go").addEventListener("click", ()=>{
-      const v = ($("#v").value||"").trim();
-      if(!v) return;
-      const url = targetUrl(v);
-      location.assign(url);
-    });
-    return;
-  }
-
-  // 有 vendor → 正常跳转（或 debug 展示）
-  const url = targetUrl(vendor);
-  if (!url){
-    document.getElementById("app").innerHTML =
-      `<div class="err"><b>无法构造目标链接。</b> 请检查表单是否可访问，或稍后重试。</div>`;
-    return;
-  }
-  if (debug){
-    document.getElementById("app").innerHTML =
-      `<div class="ok">即将跳转到：<br><code>${url.replace(/&/g,'&amp;')}</code><br><a href="${url}">手动前往</a></div>`;
-    return;
-  }
-  location.replace(url);
-})();
-</script>
+<p class="muted">若你有原始首页，请用 Git 历史恢复覆盖本页。</p>
