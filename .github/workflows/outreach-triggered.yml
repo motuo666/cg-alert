@@ -33,15 +33,27 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with:
+          node-version: 20
 
       - name: Install deps
         run: npm ci || npm i --no-audit --no-fund || true
 
+      # 将退信/退订合并回 leads.csv，避免重复触达（不存在则跳过）
+      - name: Merge suppression into leads
+        run: |
+          if [ -f scripts/merge_suppression.js ]; then
+            node scripts/merge_suppression.js
+          else
+            echo "skip: scripts/merge_suppression.js not found"
+          fi
+
+      # 9列/枚举守护（存在则执行）
       - name: Guard & Validate leads (9 cols / enums)
         run: |
           if [ -f scripts/leads_guard.js ]; then node scripts/leads_guard.js || true; fi
@@ -49,7 +61,7 @@ jobs:
 
       - name: Send Triggered
         env:
-          TRIGGER_WINDOW_H: ${{ inputs.window_h }}
+          TRIGGER_WINDOW_H: ${{ inputs.window_h || '48' }}
           # 邮件
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -57,15 +69,15 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           BCC_TO:     ${{ secrets.BCC_TO }}
-          # 角色定投 / 地域过滤 / Change Pack 注入（脚本中可读取）
+          # 角色定投 / 地域过滤
           PERSONA_RULES: config/persona_rules.json
           REGION_FILTER: config/region_filter.json
           # 站点域名（用于拼接 Pack/Updates 链接）
           SITE_ORIGIN: https://www.cg-alert.com
         run: |
           node scripts/send_triggered.js \
-            --dry=${{ inputs.dry }} \
-            --limit=${{ inputs.limit }} \
+            --dry=${{ inputs.dry || 'false' }} \
+            --limit=${{ inputs.limit || '20' }} \
             --pack
 
       - name: Safe Push (only if changes)
