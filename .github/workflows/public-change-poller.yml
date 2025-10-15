@@ -25,7 +25,7 @@ permissions:
 env:
   NODE_OPTIONS: --max_old_space_size=4096
   SITE_ORIGIN: https://www.cg-alert.com
-  # 若在仓库 Variables 配置下两项，Pack 页按钮会自动显示；未配置则自动隐藏
+  # 如在仓库 Variables 配置下两项，Pack 页按钮会自动显示；未配置则自动隐藏
   INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
   STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
 
@@ -47,8 +47,7 @@ jobs:
         run: |
           npm ci || npm i --no-audit --no-fund || true
 
-      - name: 🗂️ Endpoint inventory (tolerant)
-        # 可选：如 inputs.refetch=true 或首次运行，重建端点清单
+      - name: 🗂️ Endpoint inventory (optional)
         if: ${{ github.event.inputs.refetch == 'true' }}
         run: |
           if [ -f scripts/endpoint_inventory.js ]; then
@@ -85,12 +84,8 @@ jobs:
         env:
           INPUT_MONTH: ${{ github.event.inputs.month }}
         run: |
-          if [ -n "$INPUT_MONTH" ]; then
-            # 可选：指定月份构建（若脚本支持 month 参数可在此传参）
-            node scripts/build_change_pack.js || true
-          else
-            node scripts/build_change_pack.js
-          fi
+          # 如你的脚本支持 month 参数，可在此传参；当前统一构建当月
+          node scripts/build_change_pack.js
 
       - name: 📰 Build /updates & /categories (tolerant)
         run: |
@@ -118,6 +113,11 @@ jobs:
             echo "- Index rows: $INDEX_ROWS"
             echo "- Change Packs this month ($YM): $PACKS"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # === 关键发布：确保新文件被纳入提交 ===
+      - name: 🚀 Publish public artifacts (stage changes)
+        run: |
+          git add -A reports updates updates/rss.xml data/evidence.ndx evidence || true
 
       - name: 🔐 Safe push
         run: |
