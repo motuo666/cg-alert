@@ -41,11 +41,13 @@ const FREE_EMAIL_DOMAINS = new Set([
   'gmail.com','yahoo.com','outlook.com','hotmail.com','aol.com','icloud.com',
   'proton.me','protonmail.com','zoho.com','hey.com'
 ]);
+
 function isFreeMailbox(email){
   const m = String(email || '').toLowerCase().match(/@([^>]+)$/);
   return m ? FREE_EMAIL_DOMAINS.has(m[1]) : false;
 }
 function wait(ms){ return new Promise(r => setTimeout(r, ms)); }
+function readLines(file) { if (!fs.existsSync(file)) return []; return fs.readFileSync(file,'utf8').split(/\r?\n/).filter(Boolean); }
 
 function loadPersonaRules() {
   try { return JSON.parse(fs.readFileSync(PERSONA_FILE,'utf8')); }
@@ -60,12 +62,12 @@ function parseLeadsCSV() {
   const file = DATA('leads.csv');
   if (!fs.existsSync(file)) return [];
   const raw = fs.readFileSync(file,'utf8').split(/\r?\n/).filter(Boolean);
-  // 9列：email,company,domain,vendor1,vendor2,vendor3,persona,status,mx_ok  （无表头）
+  // 9列：email,company,domain,vendor1,vendor2,vendor3,persona,status,mx_ok（无表头）
   const rows = [];
   for (const line of raw) {
     const parts = line.split(',');
-    if (parts.length < 9) continue; // 脏行跳过
-    if (parts.length > 9) { // company 中可能有逗号
+    if (parts.length < 9) continue;
+    if (parts.length > 9) { // company 里含逗号
       const [email, ...rest] = parts;
       const tail = rest.slice(-8);
       const company = rest.slice(0, rest.length - 8).join(' ');
@@ -108,6 +110,23 @@ function normVendorName(x) {
   return s.replace(/[^a-z0-9]/g,'');
 }
 
+// —— URL 相关 ——
+// 返回 Change Pack 或 Updates 搜索页（不带 UTM）
+function existsPackFor(vendorSlug) {
+  const p = path.join(ROOT, 'reports', CUR, vendorSlug, 'index.html');
+  return fs.existsSync(p);
+}
+function packLinkFor(vendorSlug) {
+  return existsPackFor(vendorSlug)
+    ? `${SITE}/reports/${CUR}/${vendorSlug}/`
+    : `${SITE}/updates/?q=${encodeURIComponent(vendorSlug)}`;
+}
+// 按需拼接 UTM（自动决定 ? 或 &）
+function addUTM(baseUrl, when) {
+  const sep = baseUrl.includes('?') ? '&' : '?';
+  return `${baseUrl}${sep}utm_source=email&utm_medium=triggered&utm_campaign=cp_${when.slice(0,7)}`;
+}
+
 function loadEvidenceWindowHours(hours) {
   const ndxFile = DATA('evidence.ndx');
   if (!fs.existsSync(ndxFile)) return [];
@@ -122,15 +141,6 @@ function loadEvidenceWindowHours(hours) {
     changed.push({ date, slug: baseDomain(slug), type, hash, rel });
   }
   return changed;
-}
-
-function existsPackFor(vendorSlug) {
-  const p = path.join(ROOT, 'reports', CUR, vendorSlug, 'index.html');
-  return fs.existsSync(p);
-}
-function packLinkFor(vendorSlug) {
-  const base = existsPackFor(vendorSlug) ? `${SITE}/reports/${CUR}/${vendorSlug}/` : `${SITE}/updates/?q=${encodeURIComponent(vendorSlug)}`;
-  return base; // UTM 在 composeMail 里统一加
 }
 
 function composeMail(vendorSlug, topic, when, hash8) {
@@ -150,45 +160,33 @@ function composeMail(vendorSlug, topic, when, hash8) {
     pretty === 'Subprocessors' ? 'Vendor risk / DP addendum' :
     'Contract / Compliance';
 
-  const url = `${packLinkFor(vendorSlug)}?utm_source=email&utm_medium=triggered&utm_campaign=cp_${when.slice(0,7)}`;
+  const base = packLinkFor(vendorSlug);
+  const url  = addUTM(base, when);
   const subj = `[Evidence] ${vendorSlug} changed ${pretty} on ${when}`;
-  const evText = (hash8 && hash8.trim()) ? `#${hash8}` : 'n/a';
   const body =
 `We verified a public change on ${vendorSlug}: ${pretty} (${when}).
-Impact: ${impact}. Evidence: ${evText}.
+Impact: ${impact}. Evidence: ${hash8 ? '#'+hash8 : 'n/a'}.
 See verifiable details → ${url}`;
-  return { subj, body };
+  return { subj, body, url };
 }
 
 async function makeTransport() {
   const host = process.env.SMTP_HOST, port = +(process.env.SMTP_PORT||587);
   const user = process.env.SMTP_USER, pass = process.env.SMTP_PASS;
   if (!host || !user || !pass) throw new Error('SMTP secrets missing');
-  return nodemailer.createTransport({
-    host, port, secure: port===465,
-    auth: { user, pass }
-  });
+  return nodemailer.createTransport({ host, port, secure: port===465, auth: { user, pass } });
 }
 
 function ensureOutreachLogHeader() {
   const f = DATA('outreach_log.csv');
-  if (!fs.existsSync(f)) {
-    fs.writeFileSync(f, 'when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status\n', 'utf8');
-  }
+  if (!fs.existsSync(f)) fs.writeFileSync(f, 'when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status\n', 'utf8');
 }
 function appendLog(rec) {
   ensureOutreachLogHeader();
   const f = DATA('outreach_log.csv');
   const line = [
-    rec.when,
-    rec.email,
-    rec.company,
-    rec.domain,
-    rec.vendor,
-    'LI',
-    rec.link,
-    rec.optout_at || '',
-    rec.status || 'sent'
+    rec.when, rec.email, rec.company, rec.domain, rec.vendor,
+    'LI', rec.link, rec.optout_at || '', rec.status || 'sent'
   ].join(',') + '\n';
   fs.appendFileSync(f, line, 'utf8');
 }
@@ -203,19 +201,12 @@ function updateLeadsStatus(sentEmails) {
     const cols = line.split(',');
     if (cols.length < 9) { out.push(line); continue; }
     const email = cols[0].trim();
-    if (sentEmails.has(email)) {
-      cols[7] = 'sent'; // status 列
-      out.push(cols.join(','));
-    } else {
-      out.push(line);
-    }
+    if (sentEmails.has(email)) { cols[7] = 'sent'; out.push(cols.join(',')); }
+    else out.push(line);
   }
   fs.writeFileSync(file, out.join('\n')+'\n', 'utf8');
 }
-function includesAny(hay, allow) {
-  const s = (hay||'').toLowerCase();
-  return (allow||[]).some(k => s.includes(String(k).toLowerCase()));
-}
+function includesAny(hay, allow) { const s = (hay||'').toLowerCase(); return (allow||[]).some(k => s.includes(String(k).toLowerCase())); }
 
 // outreach 历史：冷却 & 限流
 function loadOutreachHistory(daysBack=30){
@@ -241,7 +232,7 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
 
   const hist = loadOutreachHistory(30);
 
-  // 构建 “近期变更 vendor 集合” 与 “按 vendor 分桶的证据”
+  // 构建 changed vendor 集合 & 分桶
   const changedSet = new Set(evid.map(e => baseDomain(e.slug)));
   const byVendor = new Map();
   for (const e of evid) {
@@ -255,7 +246,7 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
   const total = leads.length;
   const passStatus = leads.filter(l => l.status === 'new' && l.mx_ok === '1');
   const passPersona = passStatus.filter(l => {
-    if (isFreeMailbox(l.email)) return false; // 屏蔽个人邮箱
+    if (isFreeMailbox(l.email)) return false;
     const deny = (persona.deny_prefix||[]).some(p => l.email?.toLowerCase().startsWith(p));
     if (deny) return false;
     const src = (l.persona || l.email || '').toLowerCase();
@@ -268,12 +259,12 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
     return true;
   });
 
-  // Vendor 匹配（v1,v2,v3 -> slug/name 归一，对上 evid changedSet 即通过）
+  // Vendor 匹配
   function matchVendorForLead(l) {
     const cand = [l.v1, l.v2, l.v3].map(normVendorName).filter(Boolean);
     for (const c of cand) {
       for (const v of changedSet) {
-        const vn = v.replace(/\./g,''); // salesforce.com -> salesforcecom
+        const vn = v.replace(/\./g,'');
         if (c === v || c === vn || v.includes(c) || c.includes(vn)) return v;
       }
     }
@@ -285,7 +276,7 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
     if (mv) withVendor.push({ lead:l, vendor:mv });
   }
 
-  // 冷却与域限流：email 30d、domain 7d<=4、vendor×company 14d
+  // 冷却与域限流
   const cooled = [];
   const DOMAIN_CAP = 4, DOMAIN_WINDOW_D=7, EMAIL_COOLDOWN_D=30, VENDOR_COMPANY_D=14;
   const domainCnt = {};
@@ -299,10 +290,10 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
     domainCnt[d]++; cooled.push(item);
   }
 
-  // 选取要发送的（限制数量）
+  // 选取
   const toSend = cooled.slice(0, LIM);
 
-  // 诊断日志 + Step Summary
+  // 诊断 + Summary
   const diag = {
     total,
     'status+mx': passStatus.length,
@@ -332,10 +323,7 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
     }
   } catch {}
 
-  if (!toSend.length) {
-    console.log('no eligible leads');
-    process.exit(0);
-  }
+  if (!toSend.length) { console.log('no eligible leads'); process.exit(0); }
 
   // 发送
   const sentEmails = new Set();
@@ -345,7 +333,7 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
   for (let i=0; i<toSend.length; i++) {
     const { lead, vendor } = toSend[i];
 
-    // 取该 vendor 最近一条证据，抽取 topic/date/hash8（空或0串 → n/a）
+    // 取该 vendor 最近一条证据
     const arr = (byVendor.get(vendor)||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
     const top = arr[0] || { type:'Change', date:new Date().toISOString().slice(0,10), hash:'' };
     const topic = top.type || 'Change';
@@ -353,12 +341,11 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
     const rawH  = String(top.hash || '').toLowerCase();
     const hash8 = (!rawH || /^0+$/i.test(rawH)) ? '' : rawH.slice(0,8);
 
-    const { subj, body } = composeMail(vendor, topic, when, hash8);
-    const link = packLinkFor(vendor) + `?utm_source=email&utm_medium=triggered&utm_campaign=cp_${when.slice(0,7)}`;
+    const { subj, body, url } = composeMail(vendor, topic, when, hash8);
 
     if (DRY) {
-      console.log(`DRY SENT to ${lead.email} subj="${subj}" link="${link}"`);
-      appendLog({ when: new Date().toISOString(), email: lead.email, company: lead.company, domain: lead.domain, vendor, link, status:'dry' });
+      console.log(`DRY SENT to ${lead.email} subj="${subj}" link="${url}"`);
+      appendLog({ when: new Date().toISOString(), email: lead.email, company: lead.company, domain: lead.domain, vendor, link: url, status:'dry' });
       sentEmails.add(lead.email);
       continue;
     }
@@ -374,21 +361,17 @@ function sentVendorToCompanyWithin(history,vendor,company,days){ const since=Dat
       };
       await transporter.sendMail(mail);
       console.log(`SENT to ${lead.email} vendor=${vendor}`);
-      appendLog({ when: new Date().toISOString(), email: lead.email, company: lead.company, domain: lead.domain, vendor, link, status:'sent' });
+      appendLog({ when: new Date().toISOString(), email: lead.email, company: lead.company, domain: lead.domain, vendor, link: url, status:'sent' });
       sentEmails.add(lead.email);
-      // 轻节流：3–8 秒随机间隔
+      // 轻节流：3–8 秒
       await wait(3000 + Math.floor(Math.random()*5000));
     } catch (e) {
       console.error(`FAIL to ${lead.email}: ${e.message}`);
-      appendLog({ when: new Date().toISOString(), email: lead.email, company: lead.company, domain: lead.domain, vendor, link, status:'fail' });
+      appendLog({ when: new Date().toISOString(), email: lead.email, company: lead.company, domain: lead.domain, vendor, link: url, status:'fail' });
     }
   }
 
   if (sentEmails.size) updateLeadsStatus(sentEmails);
-
   console.log(`Send Triggered ${sentEmails.size} emails`);
   process.exit(0);
-})().catch(e => {
-  console.error(e);
-  process.exit(1);
-});
+})().catch(e => { console.error(e); process.exit(1); });
