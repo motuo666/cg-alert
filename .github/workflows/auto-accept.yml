@@ -1,0 +1,55 @@
+name: Auto Acceptance
+
+on:
+  workflow_run:
+    workflows: ["Public Change Poller", "Outreach Triggered"]
+    types: [completed]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install (best-effort)
+        run: npm ci || npm i --no-audit --no-fund || true
+
+      # 先跑 fullchain_check，生成 artifacts/daily_ops.json
+      # 注意：这里不让它失败（|| true），由 acceptance_check 统一判定通过/失败
+      - name: Fullchain Check
+        env:
+          TARGET_SENT: "8"            # 仅用于 Summary 展示，不阻断
+          TARGET_EVID_TODAY: "10"
+        run: |
+          node scripts/fullchain_check.js || true
+
+      - name: Auto Acceptance Gate (strict)
+        env:
+          TARGET_SENT: ${{ vars.TARGET_SENT || 8 }}
+          TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || 10 }}
+          MIN_HASH_RATIO: ${{ vars.MIN_HASH_RATIO || 0.4 }}
+          REQUIRE_CHANGED_VENDORS: "1"
+        run: node scripts/acceptance_check.js
+
+      - name: Safe push ops report (optional)
+        if: always()
+        run: |
+          node scripts/daily_ops_report.js || true
+          chmod +x scripts/git_safe_push.sh || true
+          bash scripts/git_safe_push.sh "chore(ops): auto-accept summary $(date -u +%F)" || true
+
+      - name: Slack notify on failure (optional)
+        if: failure() && env.SLACK_WEBHOOK != ''
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          msg=$(jq -Rn --arg t "Auto Acceptance FAILED" --arg u "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" '{text: ($t+" — "\+$u)}')
+          curl -X POST -H 'Content-type: application/json' --data "$msg" "$SLACK_WEBHOOK" || true
