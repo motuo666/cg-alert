@@ -17,3 +17,6 @@ when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status
 2025-10-15T06:19:55.430Z,cto@cloudflare.com,cloudflare,cloudflare,cloudflare.com,LI,https://www.cg-alert.com/reports/2025-10/cloudflare.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
 2025-10-15T06:19:55.430Z,ciso@cloudflare.com,cloudflare,cloudflare,cloudflare.com,LI,https://www.cg-alert.com/reports/2025-10/cloudflare.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
 2025-10-15T06:19:55.431Z,cto@datadoghq.com,datadog,datadoghq,datadoghq.com,LI,https://www.cg-alert.com/reports/2025-10/datadoghq.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
+2025-10-15T06:35:15.632Z,security@github.com,github,github,github.com,LI,https://www.cg-alert.com/updates/?q=github.com?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
+2025-10-15T06:35:15.633Z,compliance@github.com,github,github,github.com,LI,https://www.cg-alert.com/updates/?q=github.com?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
+2025-10-15T06:35:15.633Z,privacy@github.com,github,github,github.com,LI,https://www.cg-alert.com/updates/?q=github.com?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry

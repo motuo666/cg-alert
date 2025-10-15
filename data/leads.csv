@@ -49,9 +49,9 @@ legal@datadoghq.com,datadog,datadoghq,datadoghq.com,datadog,,,sent,1
 cto@datadoghq.com,datadog,datadoghq,datadoghq.com,datadog,,,sent,1
 ciso@datadoghq.com,datadog,datadoghq,datadoghq.com,datadog,,,new,1
 info@datadoghq.com,datadog,datadoghq,datadoghq.com,datadog,,,new,1
-security@github.com,github,github,github.com,github,,,new,1
-compliance@github.com,github,github,github.com,github,,,new,1
-privacy@github.com,github,github,github.com,github,,,new,1
+security@github.com,github,github,github.com,github,,,sent,1
+compliance@github.com,github,github,github.com,github,,,sent,1
+privacy@github.com,github,github,github.com,github,,,sent,1
 legal@github.com,github,github,github.com,github,,,new,1
 cto@github.com,github,github,github.com,github,,,new,1
 ciso@github.com,github,github,github.com,github,,,new,1
