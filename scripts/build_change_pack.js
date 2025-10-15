@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 /**
- * 读取 data/evidence.ndx → 为最近90天活跃 vendor 生成 Change Pack
- * 输出：/reports/<YYYY-MM>/<vendor>/index.html（What/So/Now + 可核证证据表 + 首屏可信徽章）
- * 纯静态，无外部依赖
+ * 读取 data/evidence.ndx → 生成 Change Pack
+ * 输出：/reports/<YYYY-MM>/<vendor>/index.html（What/So/Now + 可信徽章 + 证据表）
  */
 const fs = require('fs');
 const path = require('path');
@@ -18,28 +17,17 @@ const CUR = `${Y}-${M}`;
 
 function readNDX() {
   if (!fs.existsSync(NDX)) return [];
-  return fs
-    .readFileSync(NDX, 'utf8')
-    .split(/\n+/)
-    .filter(Boolean)
-    .map(l => {
-      // date \t slug \t type \t hash \t path
-      const [date, slug, type, hash, rel] = l.split('\t');
-      return { date, slug, type, hash, rel };
-    });
+  return fs.readFileSync(NDX, 'utf8').split(/\n+/).filter(Boolean).map(l => {
+    const [date, slug, type, hash, rel] = l.split('\t');
+    return { date, slug, type, hash, rel };
+  });
 }
 function daysSince(dateStr) {
   const ms = NOW - new Date(dateStr + 'T00:00:00Z');
   return Math.floor(ms / 86400000);
 }
 function pickTopic(type) {
-  const map = {
-    Pricing: 'Pricing',
-    ToS: 'Terms of Service',
-    DPA: 'DPA',
-    Subprocessors: 'Subprocessors',
-    Status: 'Status'
-  };
+  const map = { Pricing:'Pricing', ToS:'Terms of Service', DPA:'DPA', Subprocessors:'Subprocessors', Status:'Status' };
   return map[type] || String(type || 'Change');
 }
 function changeImpact(type) {
@@ -52,26 +40,19 @@ function changeImpact(type) {
   return 'Contract/Compliance';
 }
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
-function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-}
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function isZeroHash(h) { return !h || /^0+$/i.test(String(h)); }
 
 function renderPack(vendor, records) {
-  // What：按类别聚合；So：影响类别；Now：建议动作
   const buckets = {};
-  for (const r of records){ (buckets[r.type] = buckets[r.type] || []).push(r); }
+  for (const r of records) (buckets[r.type] = buckets[r.type] || []).push(r);
 
   const what = Object.entries(buckets)
-    .map(([k,arr]) => `<li><b>${escapeHtml(pickTopic(k))}</b>: ${arr.length} change(s) in last 90 days</li>`)
+    .map(([k, arr]) => `<li><b>${escapeHtml(pickTopic(k))}</b>: ${arr.length} change(s) in last 90 days</li>`)
     .join('');
 
-  const so = Object.keys(buckets)
-    .map(k => changeImpact(k))
-    .filter((v,i,a) => a.indexOf(v) === i)
-    .join(' · ');
+  const so = Object.keys(buckets).map(k => changeImpact(k))
+    .filter((v, i, a) => a.indexOf(v) === i).join(' · ');
 
   const nowBullets = [
     'Lock pricing / request grandfathering at renewal',
@@ -81,16 +62,14 @@ function renderPack(vendor, records) {
 
   const rows = records.slice(0, 200).map(r => {
     const link = '/' + String(r.rel || '').replace(/\\/g, '/');
-    const hash8 = String(r.hash || '').slice(0, 8);
-    return `<tr><td>${escapeHtml(r.date || '')}</td><td>${escapeHtml(pickTopic(r.type))}</td><td><code>${hash8}</code></td><td><a href="${escapeHtml(link)}">evidence</a></td></tr>`;
+    const h = String(r.hash || '').toLowerCase();
+    const display = isZeroHash(h) ? '&mdash;' : `<code>${h.slice(0,8)}</code>`;
+    return `<tr><td>${escapeHtml(r.date || '')}</td><td>${escapeHtml(pickTopic(r.type))}</td><td>${display}</td><td><a href="${escapeHtml(link)}">evidence</a></td></tr>`;
   }).join('');
 
-  // 首屏可信徽章：最近变更、证据数、影响标签
   const lastDate = records.map(r=>r.date).sort().slice(-1)[0] || '';
   const total = records.length;
-  const impactSet = Object.keys(buckets)
-    .map(k => changeImpact(k))
-    .filter((v,i,a)=>a.indexOf(v)===i);
+  const impactSet = Object.keys(buckets).map(k => changeImpact(k)).filter((v,i,a)=>a.indexOf(v)===i);
   const badges = `
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px">
   <span style="background:#eef;padding:4px 8px;border-radius:8px">Last change: ${escapeHtml(lastDate||'n/a')}</span>
@@ -98,13 +77,9 @@ function renderPack(vendor, records) {
   <span style="background:#fee;padding:4px 8px;border-radius:8px">${escapeHtml(impactSet.join(' · ')||'No material impact')}</span>
 </div>`.trim();
 
-  // JSON-LD 准备在外，避免模板嵌套导致语法错误
   const ld = {
-    '@context':'https://schema.org',
-    '@type':'Report',
-    name: `${vendor} Change Pack ${CUR}`,
-    datePublished: new Date().toISOString(),
-    about: vendor
+    '@context':'https://schema.org','@type':'Report',
+    name: `${vendor} Change Pack ${CUR}`, datePublished: new Date().toISOString(), about: vendor
   };
   const ldJson = JSON.stringify(ld);
 
@@ -131,7 +106,7 @@ ${badges}
 <h3>Now What</h3><ul>${nowBullets.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
 <h3>Verifiable evidence</h3>
 <table><thead><tr><th>Date</th><th>Type</th><th>Hash</th><th>Link</th></tr></thead><tbody>${rows || '<tr><td colspan="4">No evidence available</td></tr>'}</tbody></table>
-<p><small>All evidence derived from public pages with timestamp+hash. Respect robots/sitemap/security.txt.</small></p>
+<p><small>All evidence derived from public pages with timestamp+hash (or cached-body fingerprint). Respect robots/sitemap/security.txt.</small></p>
 </body>
 </html>`;
   return html;
@@ -142,15 +117,14 @@ ${badges}
   if (!ndx.length) { console.log('no recent evidence; skip change pack build'); return; }
 
   const byVendor = new Map();
-  for (const r of ndx){ const arr = byVendor.get(r.slug) || []; arr.push(r); byVendor.set(r.slug, arr); }
+  for (const r of ndx) { const arr = byVendor.get(r.slug) || []; arr.push(r); byVendor.set(r.slug, arr); }
 
-  // 选前 50 个活跃度最高的 vendor
   const top = [...byVendor.entries()].sort((a,b)=>b[1].length - a[1].length).slice(0,50);
 
   const base = path.join(REPORT_ROOT, CUR);
   ensureDir(base);
 
-  for (const [vendor, arr] of top){
+  for (const [vendor, arr] of top) {
     const outDir = path.join(base, vendor);
     ensureDir(outDir);
     const html = renderPack(vendor, arr.sort((a,b)=>a.date.localeCompare(b.date)));
