@@ -10,48 +10,90 @@ permissions:
   contents: write
   actions: write
 
+# 防止并发跑同一分支导致产物互相覆盖
+concurrency:
+  group: auto-accept-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   gate:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: npm ci || npm i --no-audit --no-fund || true
+        with:
+          fetch-depth: 0
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps (best-effort)
+        run: npm ci || npm i --no-audit --no-fund || true
+
+      # 版本守门：防止回滚到旧的易错脚本
+      - name: Guard scripts version
+        run: |
+          if grep -q "\`Evidence vs target(" scripts/daily_ops_report.js 2>/dev/null; then
+            echo "Old daily_ops_report.js detected (nested backticks). Please push the fixed version." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      # 先归一化抑制日志（补时间戳、老数据早期化）
       - name: Normalize suppression logs
         run: node scripts/normalize_suppression_logs.js || true
 
+      # 产出/刷新 artifacts（evidence_today、sent_today、TTD 等）
       - name: Fullchain Check
         env:
-          TARGET_SENT: ${{ vars.TARGET_SENT || '8' }}
-          TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || '10' }}
+          TARGET_SENT:        ${{ vars.TARGET_SENT        || '8'  }}
+          TARGET_EVID_TODAY:  ${{ vars.TARGET_EVID_TODAY  || '10' }}
         run: node scripts/fullchain_check.js || true
 
+      # 验收门（无变更日 PASS+WARN；有变更日严格卡 KPI）
       - name: Auto Acceptance Gate (strict)
         env:
-          TARGET_SENT:               ${{ vars.TARGET_SENT || '8' }}
-          TARGET_EVID_TODAY:         ${{ vars.TARGET_EVID_TODAY || '10' }}
-          MIN_HASH_RATIO:            ${{ vars.MIN_HASH_RATIO || '0.4' }}
-          REQUIRE_CHANGED_VENDORS:   ${{ vars.REQUIRE_CHANGED_VENDORS || '1' }}
-          MIN_SENT7_FOR_DLVR:        ${{ vars.MIN_SENT7_FOR_DLVR || '100' }}
-          UNSUB_7D_MAX:              ${{ vars.UNSUB_7D_MAX || '0.005' }}
-          COMPLAINT_7D_MAX:          ${{ vars.COMPLAINT_7D_MAX || '0.001' }}
-          BOUNCE_7D_MAX:             ${{ vars.BOUNCE_7D_MAX || '0.08' }}
-          P95_TTD_MAX_HOURS:         ${{ vars.P95_TTD_MAX_HOURS || '24' }}
-          MIN_TTD_SAMPLES:           ${{ vars.MIN_TTD_SAMPLES || '10' }}
-          TTD_LOOKBACK_HOURS:        ${{ vars.TTD_LOOKBACK_HOURS || '72' }}
+          TARGET_SENT:               ${{ vars.TARGET_SENT               || '8'    }}
+          TARGET_EVID_TODAY:         ${{ vars.TARGET_EVID_TODAY         || '10'   }}
+          MIN_HASH_RATIO:            ${{ vars.MIN_HASH_RATIO            || '0.4'  }}
+          REQUIRE_CHANGED_VENDORS:   ${{ vars.REQUIRE_CHANGED_VENDORS   || '1'    }}
+          MIN_SENT7_FOR_DLVR:        ${{ vars.MIN_SENT7_FOR_DLVR        || '100'  }}
+          UNSUB_7D_MAX:              ${{ vars.UNSUB_7D_MAX              || '0.005'}}
+          COMPLAINT_7D_MAX:          ${{ vars.COMPLAINT_7D_MAX          || '0.001'}}
+          BOUNCE_7D_MAX:             ${{ vars.BOUNCE_7D_MAX             || '0.08' }}
+          P95_TTD_MAX_HOURS:         ${{ vars.P95_TTD_MAX_HOURS         || '24'   }}
+          MIN_TTD_SAMPLES:           ${{ vars.MIN_TTD_SAMPLES           || '10'   }}
+          TTD_LOOKBACK_HOURS:        ${{ vars.TTD_LOOKBACK_HOURS        || '72'   }}
         run: node scripts/acceptance_check.js
 
+      # 无论 PASS/FAIL 都生成当日报告（HTML）
       - name: Build Daily Ops Report (always)
         if: always()
         run: node scripts/daily_ops_report.js || true
 
+      # 可选：Slack 通知（设置了 SLACK_WEBHOOK 就会发）
+      - name: Notify Slack (always, optional)
+        if: always()
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          if [ -n "$SLACK_WEBHOOK" ] && [ -f scripts/ops_slack_notify.js ]; then
+            node scripts/ops_slack_notify.js || true
+          else
+            echo "skip slack notify"
+          fi
+
+      # 推送日报/产物（只在有改动时提交）
       - name: Safe push ops report (always)
         if: always()
         run: |
-          chmod +x scripts/git_safe_push.sh || true
-          bash scripts/git_safe_push.sh "chore(ops): auto-accept summary $(date -u +%F)" || true
+          git add -A reports || true
+          if [ -n "$(git status --porcelain)" ]; then
+            chmod +x scripts/git_safe_push.sh || true
+            bash scripts/git_safe_push.sh "chore(ops): auto-accept summary $(date -u +%F)" || true
+          else
+            echo "no changes to commit"
+          fi
