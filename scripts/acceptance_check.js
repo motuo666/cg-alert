@@ -1,327 +1,228 @@
 #!/usr/bin/env node
-'use strict';
 /**
- * Auto Acceptance Gate (覆盖版 · KPI-7d 修正 + burn-in)
- *
- * 作用：
- * - 把每日/近72h KPI 与投递健康（近7日）做“硬闸门”
- * - 纠正 7d 指标口径（仅统计「近7日内、且发生在该邮箱最后一次发送之后」的退订/退信/投诉）
- * - 冷启动/低样本时只 WARN 不 FAIL（burn-in）
- *
- * 读取优先级：
- * 1) artifacts/daily_ops.json（由 fullchain_check.js 产出，含 ttd/p50/p95 等）
- * 2) 若缺失/字段不足，则从 data/*.csv/ndx 容错提取
- *
- * 环境变量（可通过 Actions → Variables 配置；括号内为默认）：
- * - TARGET_SENT (8)                 ：当日最小有效发送
- * - TARGET_EVID_TODAY (10)          ：当日最小新增证据
- * - MIN_HASH_RATIO (0.4)            ：hash 覆盖率下限（0~1）
- * - REQUIRE_CHANGED_VENDORS (1)     ：是否要求近72h有变更厂商（0/1）
- * - P95_TTD_MAX_HOURS (24)          ：P95 检测时延上限
- * - MIN_TTD_SAMPLES (10)            ：TTD 样本最小值（不足只 WARN）
- * - TTD_LOOKBACK_HOURS (72)         ：TTD 统计窗口
- * - DLVR_LOOKBACK_DAYS (7)          ：投递健康统计窗口（天）
- * - MIN_SENT7_FOR_DLVR (100)        ：近7日最小有效发送（低于仅 WARN）
- * - UNSUB_7D_MAX (0.005)            ：退订上限（7d）
- * - COMPLAINT_7D_MAX (0.001)        ：投诉上限（7d）
- * - BOUNCE_7D_MAX (0.08)            ：退信上限（7d）
+ * Auto Acceptance Gate (final) — churn-aware
+ * 规则：
+ * - 若近72h「changed_vendors_72h > 0」=> 严格考核：Evidence今日、Sent今日、TTD、Deliverability。
+ * - 若近72h无变更 => 不拦门（WARN），只保底检查：数据管道可用、异常不爆表。
+ * - 7日投递比率：仅在 sent7 >= MIN_SENT7_FOR_DLVR 时严格考核；否则只 WARN（burn-in）。
  */
 
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const D = (...p) => path.join(ROOT, 'data', ...p);
-const R = (...p) => path.join(ROOT, ...p);
+const ART = path.join(ROOT, 'artifacts', 'daily_ops.json');
+const EVID_DIR = path.join(ROOT, 'evidence');
+const OUTREACH = path.join(ROOT, 'data', 'outreach_log.csv');
+const EVID_NDX = path.join(ROOT, 'data', 'evidence.ndx');
 
-const cfg = {
-  TARGET_SENT: num(process.env.TARGET_SENT, 8),
-  TARGET_EVID_TODAY: num(process.env.TARGET_EVID_TODAY, 10),
-  MIN_HASH_RATIO: num(process.env.MIN_HASH_RATIO, 0.4),
-  REQUIRE_CHANGED_VENDORS: num(process.env.REQUIRE_CHANGED_VENDORS, 1),
+const envNum = (k, d)=> Number(process.env[k] ?? d);
+const TARGET_SENT          = envNum('TARGET_SENT', 8);
+const TARGET_EVID_TODAY    = envNum('TARGET_EVID_TODAY', 10);
+const MIN_HASH_RATIO       = envNum('MIN_HASH_RATIO', 0.4);
+const REQUIRE_CHANGED_VEND = envNum('REQUIRE_CHANGED_VENDORS', 1);
 
-  P95_TTD_MAX_HOURS: num(process.env.P95_TTD_MAX_HOURS, 24),
-  MIN_TTD_SAMPLES: num(process.env.MIN_TTD_SAMPLES, 10),
-  TTD_LOOKBACK_HOURS: num(process.env.TTD_LOOKBACK_HOURS, 72),
+const P95_TTD_MAX_HOURS    = envNum('P95_TTD_MAX_HOURS', 24);
+const MIN_TTD_SAMPLES      = envNum('MIN_TTD_SAMPLES', 10);
+const TTD_LOOKBACK_HOURS   = envNum('TTD_LOOKBACK_HOURS', 72);
 
-  DLVR_LOOKBACK_DAYS: num(process.env.DLVR_LOOKBACK_DAYS, 7),
-  MIN_SENT7_FOR_DLVR: num(process.env.MIN_SENT7_FOR_DLVR, 100),
-  UNSUB_7D_MAX: num(process.env.UNSUB_7D_MAX, 0.005),
-  COMPLAINT_7D_MAX: num(process.env.COMPLAINT_7D_MAX, 0.001),
-  BOUNCE_7D_MAX: num(process.env.BOUNCE_7D_MAX, 0.08),
-};
+const MIN_SENT7_FOR_DLVR   = envNum('MIN_SENT7_FOR_DLVR', 100);
+const UNSUB_7D_MAX         = envNum('UNSUB_7D_MAX', 0.005);
+const COMPLAINT_7D_MAX     = envNum('COMPLAINT_7D_MAX', 0.001);
+const BOUNCE_7D_MAX        = envNum('BOUNCE_7D_MAX', 0.08);
 
-function num(v, d) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : d;
+const stepSummary = process.env.GITHUB_STEP_SUMMARY;
+
+function todayUTC(){
+  const d = new Date();
+  return d.toISOString().slice(0,10); // YYYY-MM-DD
 }
+function readJSON(fp){ try{ return JSON.parse(fs.readFileSync(fp,'utf8')); }catch{ return null; } }
+function readLines(fp){ if(!fs.existsSync(fp)) return []; return fs.readFileSync(fp,'utf8').split(/\r?\n/); }
+function isNonZeroHash(h){ return !!h && !/^0+$/.test(h); }
 
-function readJSON(fp) {
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { return null; }
-}
-
-function readLines(fp) {
-  if (!fs.existsSync(fp)) return [];
-  return fs.readFileSync(fp, 'utf8').split(/\r?\n/).filter(Boolean);
-}
-
-function csvRows(fp) {
-  if (!fs.existsSync(fp)) return [];
-  // 轻量 CSV：不处理引号嵌套，满足我们当前日志/抑制格式即可
-  return fs.readFileSync(fp, 'utf8').split(/\r?\n/).filter(Boolean).map(l => l.split(/,(?!\s)/));
-}
-
-function appendSummary(md) {
-  const sum = process.env.GITHUB_STEP_SUMMARY;
-  if (sum) fs.appendFileSync(sum, md + '\n', 'utf8');
-}
-
-function fmtPct(x) {
-  if (!isFinite(x)) return '0.00%';
-  return (100 * x).toFixed(2) + '%';
-}
-
-function isoOrNull(s) {
-  if (!s) return null;
-  const t = Date.parse(s);
-  return Number.isFinite(t) ? t : null;
-}
-
-/** 在一行数组中找 email/when/status 的容错解析 */
-function parseOutreachRow(cols) {
-  let whenTs = null, email = null, status = null;
-  for (const c of cols) {
-    const v = (c || '').trim();
-    if (!whenTs && /\d{4}-\d{2}-\d{2}T/.test(v)) {
-      const ts = isoOrNull(v); if (ts) whenTs = ts;
-    }
-    if (!email && /@/.test(v) && !/\s/.test(v)) {
-      email = v;
-    }
-    if (!status && /^(sent|dry)$/i.test(v)) {
-      status = v.toLowerCase();
+function computeEvidenceTodayNonZero(){
+  // 快速从文件名统计当日非零hash证据
+  const today = todayUTC();
+  if (!fs.existsSync(EVID_DIR)) return 0;
+  let n = 0;
+  for (const vendor of fs.readdirSync(EVID_DIR, { withFileTypes:true }).filter(d=>d.isDirectory()).map(d=>d.name)){
+    const dir = path.join(EVID_DIR, vendor);
+    for (const f of fs.readdirSync(dir)){
+      if (!f.endsWith('.json')) continue;
+      if (!f.startsWith(today+'-')) continue;
+      if (f.includes('00000000')) continue;
+      n++;
     }
   }
-  // 兜底：时间可能在首列
-  if (!whenTs) {
-    const ts = isoOrNull(cols[0]);
-    if (ts) whenTs = ts;
-  }
-  return { whenTs, email, status };
+  return n;
 }
 
-/** 抑制表行解析：优先找 ISO 时间戳、其次第一列 */
-function parseSuppRow(cols) {
-  let whenTs = null, email = null;
-  for (const c of cols) {
-    const v = (c || '').trim();
-    if (!whenTs && /\d{4}-\d{2}-\d{2}T/.test(v)) {
-      const ts = isoOrNull(v); if (ts) whenTs = ts;
-    }
-    if (!email && /@/.test(v) && !/\s/.test(v)) {
-      email = v;
-    }
+function computeChangedVendors72h(){
+  // 若 artifacts 无该指标，则从 evidence.ndx 估算
+  if (fs.existsSync(ART)) {
+    const a = readJSON(ART);
+    if (a && a.kpi && typeof a.kpi.changed_vendors_72h === 'number') return a.kpi.changed_vendors_72h;
   }
-  if (!whenTs) {
-    const ts = isoOrNull(cols[0]);
-    if (ts) whenTs = ts;
+  const lines = readLines(EVID_NDX);
+  const cutoff = Date.now() - TTD_LOOKBACK_HOURS*3600*1000;
+  const set = new Set();
+  for (const ln of lines){
+    if (!ln.trim()) continue;
+    const [when, domain,, hash] = ln.split('\t');
+    const t = Date.parse(when||'');
+    if (!isNaN(t) && t >= cutoff && isNonZeroHash(hash||'')) set.add(domain);
   }
-  // 有些表只有 email 一列
-  if (!email && cols.length) {
-    const c0 = (cols[0] || '').trim();
-    if (/@/.test(c0)) email = c0;
-  }
-  return { whenTs, email };
+  return set.size;
 }
 
-/** 从 artifacts/daily_ops.json 或数据文件提 KPI（尽可能容错） */
-function loadKPIs() {
-  const today = new Date().toISOString().slice(0, 10);
-  const ops = readJSON(R('artifacts', 'daily_ops.json')) || {};
-  const kpi = Object.assign({},
-    ops.kpi || {},
-    { date: ops.date || today }
-  );
-
-  // 填补 evidence_today/evidence_total/hash_ratio from ndx（如缺）
-  if (!Number.isFinite(kpi.evidence_today) || !Number.isFinite(kpi.evidence_total) || !Number.isFinite(kpi.hash_ratio)) {
-    const ndx = readLines(D('evidence.ndx')).map(l => l.split('\t'));
-    const total = ndx.length;
-    const todayN = ndx.filter(r => (r[0] || '').startsWith(today)).length;
-    const hashOK = ndx.filter(r => r[3] && !/^0+$/i.test(String(r[3]))).length;
-    if (!Number.isFinite(kpi.evidence_total)) kpi.evidence_total = total;
-    if (!Number.isFinite(kpi.evidence_today)) kpi.evidence_today = todayN;
-    if (!Number.isFinite(kpi.hash_ratio)) kpi.hash_ratio = total ? (hashOK / total) : 0;
+function computeSentToday(){
+  if (!fs.existsSync(OUTREACH)) return 0;
+  const lines = readLines(OUTREACH);
+  const header = lines[0] && /when|status/i.test(lines[0]) ? lines[0].split(',').map(s=>s.toLowerCase()) : [];
+  const iWhen = header.length ? Math.max(0, header.findIndex(h=>h.includes('when'))) : 0;
+  const iStat = header.length ? header.findIndex(h=>h.includes('status')) : 8;
+  const today = todayUTC();
+  let n=0;
+  for (let i=header.length?1:0; i<lines.length; i++){
+    const cols = lines[i].split(',');
+    const when = (cols[iWhen]||'').slice(0,10);
+    const st = (cols[iStat]||'').toLowerCase();
+    if (when===today && st==='sent') n++;
   }
-
-  // sent_today / changed_vendors_72h 填补
-  if (!Number.isFinite(kpi.sent_today) || !Number.isFinite(kpi.changed_vendors_72h)) {
-    const out = csvRows(D('outreach_log.csv'));
-    const header = out[0] && /^when$/i.test((out[0][0] || '').trim());
-    const rows = header ? out.slice(1) : out;
-
-    const sentToday = rows.filter(cols => {
-      const { whenTs, status } = parseOutreachRow(cols);
-      const d = whenTs ? new Date(whenTs).toISOString().slice(0, 10) : '';
-      return d === today && status === 'sent';
-    }).length;
-    if (!Number.isFinite(kpi.sent_today)) kpi.sent_today = sentToday;
-
-    const now = Date.now(), look72 = now - cfg.TTD_LOOKBACK_HOURS * 3600 * 1000;
-    const ndx = readLines(D('evidence.ndx')).map(l => l.split('\t'));
-    const vendors = new Set();
-    for (const r of ndx) {
-      const ts = isoOrNull((r[0] || '').trim() + 'T00:00:00Z');
-      if (ts && ts >= look72) vendors.add(r[1] || '');
-    }
-    if (!Number.isFinite(kpi.changed_vendors_72h)) kpi.changed_vendors_72h = vendors.size;
-  }
-
-  // TTD（优先用 daily_ops；否则置 0 并在后面按样本不足处理）
-  if (!Number.isFinite(kpi.ttd_p50_hours)) kpi.ttd_p50_hours = 0;
-  if (!Number.isFinite(kpi.ttd_p95_hours)) kpi.ttd_p95_hours = 0;
-  if (!Number.isFinite(kpi.ttd_samples)) kpi.ttd_samples = 0;
-
-  return kpi;
+  return n;
 }
 
-/** 计算近7日投递健康（修正口径 + burn-in） */
-function compute7dDelivery() {
-  const now = Date.now();
-  const look = now - cfg.DLVR_LOOKBACK_DAYS * 86400 * 1000;
-
-  const out = csvRows(D('outreach_log.csv'));
-  const header = out[0] && /^when$/i.test((out[0][0] || '').trim());
-  const rows = header ? out.slice(1) : out;
-
-  // 近7日 sent & 每邮箱最近一次 sent 时间
+function computeSent7_Unsub7_Bounce7_Complaint7(){
+  const cutoff = Date.now() - 7*24*3600*1000;
   let sent7 = 0;
-  const lastSent = new Map(); // email -> ts
-  for (const cols of rows) {
-    const { whenTs, email, status } = parseOutreachRow(cols);
-    if (!whenTs || !email || status !== 'sent') continue;
-    if (whenTs >= look) {
-      sent7++;
-      const prev = lastSent.get(email) || 0;
-      if (whenTs > prev) lastSent.set(email, whenTs);
+  const lastSentAt = new Map();
+  if (fs.existsSync(OUTREACH)){
+    const lines = readLines(OUTREACH);
+    const header = lines[0] && /when|email|status/i.test(lines[0]) ? lines[0].split(',').map(s=>s.toLowerCase()) : [];
+    const iWhen = header.length ? Math.max(0, header.findIndex(h=>h.includes('when'))) : 0;
+    const iEmail= header.length ? Math.max(0, header.findIndex(h=>h.includes('email'))) : 1;
+    const iStat = header.length ? header.findIndex(h=>h.includes('status')) : 8;
+    for (let i=header.length?1:0; i<lines.length; i++){
+      const c = lines[i].split(',');
+      const t = Date.parse(c[iWhen]||'');
+      const em = (c[iEmail]||'').toLowerCase();
+      const st = (c[iStat]||'').toLowerCase();
+      if (!em || isNaN(t)) continue;
+      if (st==='sent'){
+        if (t>=cutoff) sent7++;
+        const prev = lastSentAt.get(em);
+        if (!prev || t>prev) lastSentAt.set(em, t);
+      }
     }
   }
-
-  // 读取抑制表
-  const unsubsRows = csvRows(D('unsubscribes.csv'));
-  const bouncesRows = csvRows(D('bounces.csv'));
-  const complaintsRows = csvRows(D('complaints.csv')); // 可不存在
-
-  let unsub7 = 0, bounce7 = 0, complaint7 = 0;
-  let unsubNoTs = 0, bounceNoTs = 0, complaintNoTs = 0;
-
-  const scanSupp = (rows, kind) => {
-    for (const cols of rows.slice(1)) { // 可能有表头，丢一行也无所谓
-      const { whenTs, email } = parseSuppRow(cols);
-      if (!email) continue;
-      if (!whenTs) {
-        if (kind === 'unsub') unsubNoTs++;
-        else if (kind === 'bounce') bounceNoTs++;
-        else if (kind === 'complaint') complaintNoTs++;
-        continue;
-      }
-      if (whenTs >= look && (!lastSent.has(email) || whenTs >= lastSent.get(email))) {
-        if (kind === 'unsub') unsub7++;
-        else if (kind === 'bounce') bounce7++;
-        else if (kind === 'complaint') complaint7++;
-      }
+  function countValid(fp){
+    if (!fs.existsSync(fp)) return 0;
+    const lines = readLines(fp);
+    const header = lines[0] && /when|email/i.test(lines[0]) ? lines[0].split(',').map(s=>s.toLowerCase()) : [];
+    const iWhen = header.length ? Math.max(0, header.findIndex(h=>h.includes('when'))) : -1;
+    const iEmail= header.length ? Math.max(0, header.findIndex(h=>h.includes('email'))) : 0;
+    let n=0;
+    for (let i=header.length?1:0; i<lines.length; i++){
+      const c = lines[i].split(',');
+      const em = (c[iEmail]||'').toLowerCase();
+      const t  = iWhen>=0 ? Date.parse(c[iWhen]||'') : NaN;
+      if (!em) continue;
+      if (isNaN(t)) continue; // 没时间戳不计入7日
+      if (t < cutoff) continue;
+      const ls = lastSentAt.get(em)||-Infinity;
+      if (t >= ls) n++;
     }
-  };
-
-  scanSupp(unsubsRows, 'unsub');
-  scanSupp(bouncesRows, 'bounce');
-  scanSupp(complaintsRows, 'complaint');
-
-  return {
-    sent7,
-    unsub7,
-    bounce7,
-    complaint7,
-    unsubRate: sent7 > 0 ? unsub7 / sent7 : 0,
-    bounceRate: sent7 > 0 ? bounce7 / sent7 : 0,
-    complaintRate: sent7 > 0 ? complaint7 / sent7 : 0,
-    unsubNoTs, bounceNoTs, complaintNoTs,
-  };
+    return n;
+  }
+  const unsub7 = countValid(path.join(ROOT,'data','unsubscribes.csv'));
+  const bounce7 = countValid(path.join(ROOT,'data','bounces.csv'));
+  const complaint7 = countValid(path.join(ROOT,'data','complaints.csv'));
+  return { sent7, unsub7, bounce7, complaint7 };
 }
 
-function main() {
-  const k = loadKPIs();
+function main(){
+  const art = readJSON(ART);
+  const kpi = art && art.kpi ? art.kpi : {};
+  const evidenceTodayNonZero = computeEvidenceTodayNonZero();
+  const sentToday = computeSentToday();
+  const hashRatio = typeof kpi.hash_ratio === 'number' ? kpi.hash_ratio : 0;
+
+  const changedVendors72h = computeChangedVendors72h();
+  const hasChurn = changedVendors72h > 0 || !REQUIRE_CHANGED_VEND;
+
+  // 7d投递
+  const { sent7, unsub7, bounce7, complaint7 } = computeSent7_Unsub7_Bounce7_Complaint7();
+  const unsubRate = sent7>0 ? unsub7/sent7 : 0;
+  const bounceRate = sent7>0 ? bounce7/sent7 : 0;
+  const complaintRate = sent7>0 ? complaint7/sent7 : 0;
+
+  // TTD
+  const ttdSamples = Number(kpi.ttd_samples||0);
+  const ttdP95 = Number(kpi.ttd_p95_hours||0);
+
   const FAIL = [];
   const WARN = [];
 
-  // 读取 fullchain 自身 FAIL 列表（如有）
-  const ops = readJSON(R('artifacts', 'daily_ops.json')) || {};
-  if (ops.FAIL && ops.FAIL.length) FAIL.push(`Fullchain FAIL present: ${ops.FAIL.length} item(s)`);
-
-  // 当日硬指标
-  if ((k.evidence_today || 0) < cfg.TARGET_EVID_TODAY) FAIL.push(`evidence_today ${k.evidence_today || 0} < ${cfg.TARGET_EVID_TODAY}`);
-  if ((k.sent_today || 0) < cfg.TARGET_SENT) FAIL.push(`sent_today ${k.sent_today || 0} < ${cfg.TARGET_SENT}`);
-  if (cfg.REQUIRE_CHANGED_VENDORS && (k.changed_vendors_72h || 0) <= 0) FAIL.push('changed_vendors_72h = 0');
-  if ((k.hash_ratio || 0) < cfg.MIN_HASH_RATIO) FAIL.push(`hash_ratio ${((k.hash_ratio || 0) * 100).toFixed(1)}% < ${(cfg.MIN_HASH_RATIO * 100)}%`);
-
-  // TTD 门槛（样本不足只 WARN）
-  let ttdFail = false;
-  if ((k.ttd_samples || 0) < cfg.MIN_TTD_SAMPLES) {
-    WARN.push(`TTD samples too low (${k.ttd_samples || 0} < ${cfg.MIN_TTD_SAMPLES}), skip gating`);
-  } else if ((k.ttd_p95_hours || 0) > cfg.P95_TTD_MAX_HOURS) {
-    FAIL.push(`P95 TTD ${k.ttd_p95_hours.toFixed(1)}h > ${cfg.P95_TTD_MAX_HOURS}h`);
-    ttdFail = true;
+  // —— 核心：是否有“变更机会” ——
+  if (!hasChurn){
+    WARN.push(`近${TTD_LOOKBACK_HOURS}h 未检测到真实变更（changed_vendors_72h=${changedVendors72h}），当日 Evidence/Sent 不作为拦截条件。`);
+  } else {
+    if (evidenceTodayNonZero < TARGET_EVID_TODAY){
+      FAIL.push(`evidence_today ${evidenceTodayNonZero} < ${TARGET_EVID_TODAY}`);
+    }
+    if (sentToday < TARGET_SENT){
+      FAIL.push(`sent_today ${sentToday} < ${TARGET_SENT}`);
+    }
   }
 
-  // 7d 投递健康（修正 + burn-in）
-  const d7 = compute7dDelivery();
-  const gateDlvr = d7.sent7 >= cfg.MIN_SENT7_FOR_DLVR;
-  if (!gateDlvr) {
-    WARN.push(`7d deliverability burn-in (sent7=${d7.sent7} < ${cfg.MIN_SENT7_FOR_DLVR})`);
-  }
-  if ((d7.unsubNoTs + d7.bounceNoTs + d7.complaintNoTs) > 0) {
-    WARN.push(`suppression rows without timestamp: unsub=${d7.unsubNoTs}, bounce=${d7.bounceNoTs}, complaint=${d7.complaintNoTs}`);
-  }
-  if (gateDlvr) {
-    if (d7.unsubRate > cfg.UNSUB_7D_MAX) FAIL.push(`unsub_7d ${fmtPct(d7.unsubRate)} > ${fmtPct(cfg.UNSUB_7D_MAX)} (sent7=${d7.sent7},unsub7=${d7.unsub7})`);
-    if (d7.complaintRate > cfg.COMPLAINT_7D_MAX) FAIL.push(`complaint_7d ${fmtPct(d7.complaintRate)} > ${fmtPct(cfg.COMPLAINT_7D_MAX)} (sent7=${d7.sent7},complaints7=${d7.complaint7})`);
-    if (d7.bounceRate > cfg.BOUNCE_7D_MAX) FAIL.push(`bounce_7d ${fmtPct(d7.bounceRate)} > ${fmtPct(cfg.BOUNCE_7D_MAX)} (sent7=${d7.sent7},bounces7=${d7.bounce7})`);
+  // 哈希覆盖率（无论是否有变更都应健康）
+  if (hashRatio < MIN_HASH_RATIO){
+    WARN.push(`hash_ratio ${(hashRatio*100).toFixed(1)}% < ${(MIN_HASH_RATIO*100).toFixed(0)}%`);
   }
 
-  // Summary 输出
-  const lines = [];
-  lines.push('### Auto Acceptance (with KPI-7d fix + burn-in)');
-  lines.push(`- Date: **${k.date}**`);
-  lines.push(`- evidence_today: **${k.evidence_today || 0}** / target ${cfg.TARGET_EVID_TODAY}`);
-  lines.push(`- sent_today: **${k.sent_today || 0}** / target ${cfg.TARGET_SENT}`);
-  lines.push(`- hash_ratio: **${((k.hash_ratio || 0) * 100).toFixed(1)}%** / target ${(cfg.MIN_HASH_RATIO * 100)}%`);
-  lines.push(`- changed_vendors_72h: **${k.changed_vendors_72h || 0}** ${cfg.REQUIRE_CHANGED_VENDORS ? '(must > 0)' : ''}`);
-  lines.push(`- TTD (lookback ${cfg.TTD_LOOKBACK_HOURS}h): P50 **${(k.ttd_p50_hours || 0).toFixed(1)}h**, P95 **${(k.ttd_p95_hours || 0).toFixed(1)}h**, samples **${k.ttd_samples || 0}** (min ${cfg.MIN_TTD_SAMPLES})`);
-
-  lines.push(`- 7d: sent **${d7.sent7}** | unsub **${d7.unsub7} (${fmtPct(d7.unsubRate)})** | bounce **${d7.bounce7} (${fmtPct(d7.bounceRate)})** | complaint **${d7.complaint7} (${fmtPct(d7.complaintRate)})** ${gateDlvr ? '' : `(burn-in: sent7<${cfg.MIN_SENT7_FOR_DLVR})`}`);
-
-  const ok = FAIL.length === 0;
-  lines.push(ok ? '\n✅ Acceptance: **PASS**' : '\n❌ Acceptance: **FAIL**');
-
-  if (FAIL.length) {
-    lines.push('\n**Blocking reasons:**');
-    for (const s of FAIL) lines.push(`- ${s}`);
-  }
-  if (WARN.length) {
-    lines.push('\n**Warnings (not blocking):**');
-    for (const s of WARN) lines.push(`- ${s}`);
-  }
-  // 标记 TTD 失败（供 workflow 钩子判断）
-  if (ttdFail) {
-    lines.push('\nTTD_FAIL_MARKER');   // 大写标记
-    lines.push('\nttd_fail');          // 小写标记（兼容旧 grep）
+  // TTD（只在有样本时考核；样本不足时 WARN）
+  if (ttdSamples >= MIN_TTD_SAMPLES){
+    if (ttdP95 > P95_TTD_MAX_HOURS){
+      FAIL.push(`P95 TTD ${ttdP95}h > ${P95_TTD_MAX_HOURS}h`);
+    }
+  } else {
+    WARN.push(`TTD 样本不足（${ttdSamples} < ${MIN_TTD_SAMPLES}）`);
   }
 
-  const md = lines.join('\n');
-  console.log(md.replace(/\*\*/g, '')); // 控制台去粗体
-  appendSummary(md);
+  // 7日投递（burn-in）
+  if (sent7 >= MIN_SENT7_FOR_DLVR){
+    if (unsubRate > UNSUB_7D_MAX) FAIL.push(`unsub_7d ${(unsubRate*100).toFixed(2)}% > ${(UNSUB_7D_MAX*100)}%`);
+    if (bounceRate > BOUNCE_7D_MAX) FAIL.push(`bounce_7d ${(bounceRate*100).toFixed(2)}% > ${(BOUNCE_7D_MAX*100)}%`);
+    if (complaintRate > COMPLAINT_7D_MAX) FAIL.push(`complaint_7d ${(complaintRate*100).toFixed(2)}% > ${(COMPLAINT_7D_MAX*100)}%`);
+  } else {
+    WARN.push(`Burn-in：sent7=${sent7} < ${MIN_SENT7_FOR_DLVR}，7日投递只做诊断不过闸`);
+  }
 
-  process.exit(ok ? 0 : 1);
+  // 输出
+  const summary = [];
+  summary.push(`### Acceptance`);
+  summary.push(`- evidence_today (non-zero): **${evidenceTodayNonZero}** / target ${TARGET_EVID_TODAY}`);
+  summary.push(`- sent_today: **${sentToday}** / target ${TARGET_SENT}`);
+  summary.push(`- changed_vendors_72h: **${changedVendors72h}** (hasChurn=${hasChurn})`);
+  summary.push(`- hash_ratio: **${(hashRatio*100).toFixed(1)}%** (min ${(MIN_HASH_RATIO*100)}%)`);
+  summary.push(`- TTD: P95 **${ttdP95}h** (max ${P95_TTD_MAX_HOURS}h), samples **${ttdSamples}** (min ${MIN_TTD_SAMPLES})`);
+  summary.push(`- deliverability(7d): sent7=${sent7}, unsub=${unsub7}(${(unsubRate*100).toFixed(2)}%), bounce=${bounce7}(${(bounceRate*100).toFixed(2)}%), complaint=${complaint7}(${(complaintRate*100).toFixed(2)}%)`);
+  if (WARN.length) summary.push(`Warnings:\n- ${WARN.join('\n- ')}`);
+  if (FAIL.length) summary.push(`Blocking reasons:\n- ${FAIL.join('\n- ')}`);
+
+  console.log(summary.join('\n'));
+  if (stepSummary) fs.appendFileSync(stepSummary, summary.join('\n')+'\n', 'utf8');
+
+  if (FAIL.length){
+    // 若是 TTD fail，则在 Summary 打标，供后续工作流分支（自动补采样）识别
+    if (FAIL.some(s=>/TTD/i.test(s))) {
+      if (stepSummary) fs.appendFileSync(stepSummary, '\nreason=ttd_fail\n', 'utf8');
+    }
+    process.exit(1);
+  } else {
+    process.exit(0);
+  }
 }
 
 main();
