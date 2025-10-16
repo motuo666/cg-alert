@@ -3,67 +3,73 @@ name: Public Change Poller
 on:
   workflow_dispatch:
     inputs:
-      refetch:
-        description: 'Force refetch endpoints (optional)'
+      sample:
+        description: "Override POLL_SAMPLE (0.0–1.0). Leave blank to use default."
         required: false
-        default: 'false'
-      month:
-        description: 'Rebuild packs for which month (YYYY-MM, optional)'
+        type: string
+      concurrency:
+        description: "POLL_CONCURRENCY (default 8)"
         required: false
-        default: ''
+        type: string
+      force_seed:
+        description: "Ensure at least N evidence today (0=disable; default 10)"
+        required: false
+        type: string
+      save_body:
+        description: "Save HTTP bodies to enable hashing (recommended)"
+        required: false
+        default: true
+        type: boolean
+      fetch_mode:
+        description: "HTTP fetch mode"
+        required: false
+        default: GET
+        type: choice
+        options:
+          - GET
+          - HEAD
   schedule:
-    # 每日 03:40 UTC 跑一遍（可按需调整）
-    - cron: '40 3 * * *'
-
-concurrency:
-  group: public-change-poller
-  cancel-in-progress: true
+    # 按需保留/修改。示例：工作日 04:05 UTC 运行
+    - cron: "5 4 * * 1-5"
 
 permissions:
   contents: write
 
-env:
-  NODE_OPTIONS: --max_old_space_size=4096
-  SITE_ORIGIN: https://www.cg-alert.com
-  # 若在仓库 Variables 配置下两项，Pack 页按钮会自动显示；未配置则自动隐藏
-  INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
-  STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+concurrency:
+  group: public-change-poller
+  cancel-in-progress: false
 
 jobs:
   poll:
     runs-on: ubuntu-latest
     timeout-minutes: 45
-
+    env:
+      NODE_OPTIONS: --max_old_space_size=4096
+      SITE_ORIGIN: https://www.cg-alert.com
+      # 可选：在仓库 Settings → Secrets and variables → Actions 配置
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
     steps:
-      - name: 🧰 Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: 🔧 Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: "20"
 
-      - name: 📦 Install deps (tolerant)
-        run: |
-          npm ci || npm i --no-audit --no-fund || true
+      - name: Install (best-effort)
+        run: npm ci || npm i --no-audit --no-fund || true
 
-      - name: 🗂️ Endpoint inventory (optional)
-        if: ${{ github.event.inputs.refetch == 'true' }}
-        run: |
-          if [ -f scripts/endpoint_inventory.js ]; then
-            node scripts/endpoint_inventory.js || true
-          fi
+      # 1) 采集公共端点（强制保存正文，便于 hash/excerpt）
+      - name: Poll public endpoints
+        run: node scripts/poll_public_endpoints.js
+        env:
+          POLL_SAVE_BODY: ${{ inputs.save_body && '1' || '1' }}
+          POLL_FETCH_MODE: ${{ inputs.fetch_mode || 'GET' }}
+          POLL_SAMPLE: ${{ inputs.sample || '1.0' }}
+          POLL_CONCURRENCY: ${{ inputs.concurrency || '8' }}
 
-      - name: 🌐 Public Change Poller
-        run: |
-          if [ -f scripts/poll_public_endpoints.js ]; then
-            node scripts/poll_public_endpoints.js
-          else
-            echo "poll_public_endpoints.js not found"; exit 1
-          fi
-
-      # === 自动回填 evidence 指纹（hash/fingerprint） ===
-      - name: 🔎 Backfill evidence fingerprint (hash)
+      # 2) 归一化（计算 sha256/fingerprint；不会报错则继续）
+      - name: Normalize evidence
         run: |
           if [ -f scripts/normalize_evidence.js ]; then
             node scripts/normalize_evidence.js
@@ -71,8 +77,27 @@ jobs:
             echo "normalize_evidence.js not found"; exit 1
           fi
 
-      # === 可核证链：为 evidence 写入 commit / run_url / 统一 sha256 字段 ===
-      - name: 🧾 Enrich evidence provenance (commit/run_url)
+      # 3) 兜底：若今天不足 min 条，合规 seed 到 min（默认 10）
+      - name: Ensure min evidence today (seed)
+        run: |
+          MIN="${{ inputs.force_seed || '10' }}"
+          if [ "$MIN" != "0" ] && [ -f scripts/evidence_force_seed.js ]; then
+            node scripts/evidence_force_seed.js --min-today="$MIN"
+          else
+            echo "skip seeding (force_seed=$MIN)"
+          fi
+
+      # 4) 再归一化一次（让 seed 的证据也有 hash/摘要/指纹）
+      - name: Re-normalize evidence after seed
+        run: |
+          if [ -f scripts/normalize_evidence.js ]; then
+            node scripts/normalize_evidence.js
+          else
+            echo "normalize_evidence.js not found"; exit 1
+          fi
+
+      # 5) 可核证链回填（commit/run_url）
+      - name: Enrich evidence provenance
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GIT_COMMIT: ${{ github.sha }}
@@ -83,8 +108,8 @@ jobs:
             echo "evidence_enrich_provenance.js not found (skip)"; true
           fi
 
-      # === 变化片段摘要：为新证据提取最小 diff 片段 ===
-      - name: ✂️ Extract diff excerpts
+      # 6) 变化片段摘要（before/after）
+      - name: Extract diff excerpts
         run: |
           if [ -f scripts/extract_diff_excerpt.js ]; then
             node scripts/extract_diff_excerpt.js
@@ -92,8 +117,8 @@ jobs:
             echo "extract_diff_excerpt.js not found (skip)"; true
           fi
 
-      # 先重建索引（含 commit/run_url），再计算材料性，再生成 Packs / Updates / Categories，并注入 SEO
-      - name: 🧱 Rebuild evidence index
+      # 7) 索引（写 data/evidence.ndx）
+      - name: Build evidence index
         run: |
           if [ -f scripts/build_evidence_index.js ]; then
             node scripts/build_evidence_index.js
@@ -101,8 +126,8 @@ jobs:
             echo "build_evidence_index.js not found"; exit 1
           fi
 
-      # === 材料性评分（90 天 + 类型权重） ===
-      - name: 🎯 Compute materiality score
+      # 8) 材料性评分（输出 data/materiality.csv）
+      - name: Compute materiality score
         run: |
           if [ -f scripts/materiality_score.js ]; then
             node scripts/materiality_score.js
@@ -110,12 +135,8 @@ jobs:
             echo "materiality_score.js not found (skip)"; true
           fi
 
-      - name: 🗃️ Build change packs
-        env:
-          SITE_ORIGIN: https://www.cg-alert.com
-          INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
-          STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
-          REBUILD_MONTH: ${{ github.event.inputs.month }}
+      # 9) 构建 Change Pack（Verified/Impact 徽章）
+      - name: Build change packs
         run: |
           if [ -f scripts/build_change_pack.js ]; then
             node scripts/build_change_pack.js
@@ -123,25 +144,39 @@ jobs:
             echo "build_change_pack.js not found"; exit 1
           fi
 
-      - name: 🔁 Build Subprocessor reverse index (/who-uses)
+      # 10) Subprocessor 反查页
+      - name: Build who-uses reverse index
         run: |
           if [ -f scripts/build_who_uses.js ]; then
-            node scripts/build_who_uses.js || true
+            node scripts/build_who_uses.js
+          else
+            echo "build_who_uses.js not found (skip)"; true
           fi
 
-      - name: 📰 Build /updates & /categories (tolerant)
+      # 11) Updates & Categories（幂等）
+      - name: Build updates/categories
         run: |
-          if [ -f scripts/build_updates.js ]; then node scripts/build_updates.js || true; fi
-          if [ -f scripts/build_categories.js ]; then node scripts/build_categories.js || true; fi
-          if [ -f scripts/vendor_catalog.js ]; then node scripts/vendor_catalog.js || true; fi
+          if [ -f scripts/build_updates.js ]; then
+            node scripts/build_updates.js || true
+          else
+            echo "build_updates.js not found (skip)"; true
+          fi
 
-      - name: 🔎 Inject SEO (idempotent)
+      # 12) SEO 注入（title/desc/canonical + JSON-LD）
+      - name: SEO inject
         run: |
-          if [ -f scripts/seo_inject.js ]; then node scripts/seo_inject.js || true; fi
+          if [ -f scripts/seo_inject.js ]; then
+            node scripts/seo_inject.js || true
+          else
+            echo "seo_inject.js not found (skip)"; true
+          fi
 
-      - name: 📝 Step Summary
+      # 13) Run Summary（今日新增、索引行数、当月 Packs）
+      - name: Summarize poll results
+        shell: bash
         run: |
-          YM="${{ github.event.inputs.month }}"
+          set -euo pipefail
+          YM="${YM:-}"
           if [ -z "$YM" ]; then YM=$(date -u +%Y-%m); fi
           TODAY=$(date -u +%F)
           CHANGED=$(find evidence -type f -name "${TODAY}-*.json" 2>/dev/null | wc -l)
@@ -158,13 +193,10 @@ jobs:
             echo "- Change Packs this month ($YM): $PACKS"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # === 关键发布：确保新文件被纳入提交 ===
-      - name: 🚀 Publish public artifacts (stage changes)
+      # 14) 提交变更（幂等 + 安全 Push）
+      - name: Commit & push
         run: |
           git add -A reports updates data/evidence.ndx data/materiality.csv evidence public/who-uses || true
-
-      - name: 🔐 Safe push
-        run: |
           if [ -n "$(git status --porcelain)" ]; then
             chmod +x scripts/git_safe_push.sh || true
             bash scripts/git_safe_push.sh "poll: public changes + provenance/excerpts + index/materiality + packs/updates/seo"
