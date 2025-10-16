@@ -41,22 +41,49 @@ jobs:
       # 注意：这里不让它失败（|| true），由 acceptance_check 统一判定通过/失败
       - name: Fullchain Check
         env:
-          TARGET_SENT: ${{ vars.TARGET_SENT || '8' }}          # 仅用于 Summary 展示，不阻断
+          TARGET_SENT: ${{ vars.TARGET_SENT || '8' }}             # 仅用于 Summary 展示，不阻断
           TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || '10' }}
         run: |
           node scripts/fullchain_check.js || true
 
       - name: Auto Acceptance Gate (strict)
         env:
-          # 严格阈值（不配则走默认）
-          TARGET_SENT: ${{ vars.TARGET_SENT || '8' }}
-          TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || '10' }}
-          MIN_HASH_RATIO: ${{ vars.MIN_HASH_RATIO || '0.4' }}
-          REQUIRE_CHANGED_VENDORS: ${{ vars.REQUIRE_CHANGED_VENDORS || '1' }}
-          # 可选：把近7日退订/投诉纳入门禁（acceptance_check.js 支持）
-          UNSUB_7D_MAX: ${{ vars.UNSUB_7D_MAX || '0.005' }}
-          COMPLAINT_7D_MAX: ${{ vars.COMPLAINT_7D_MAX || '0.001' }}
+          # 基础硬门槛（不配则走默认）
+          TARGET_SENT:               ${{ vars.TARGET_SENT || '8' }}
+          TARGET_EVID_TODAY:         ${{ vars.TARGET_EVID_TODAY || '10' }}
+          MIN_HASH_RATIO:            ${{ vars.MIN_HASH_RATIO || '0.4' }}
+          REQUIRE_CHANGED_VENDORS:   ${{ vars.REQUIRE_CHANGED_VENDORS || '1' }}
+          # 近 7 日健康阈值（可选）
+          UNSUB_7D_MAX:              ${{ vars.UNSUB_7D_MAX || '0.005' }}
+          COMPLAINT_7D_MAX:          ${{ vars.COMPLAINT_7D_MAX || '0.001' }}
+          # TTD（Time-to-Detect）硬门槛（可选但推荐）
+          P95_TTD_MAX_HOURS:         ${{ vars.P95_TTD_MAX_HOURS || '24' }}
+          MIN_TTD_SAMPLES:           ${{ vars.MIN_TTD_SAMPLES || '10' }}
+          TTD_LOOKBACK_HOURS:        ${{ vars.TTD_LOOKBACK_HOURS || '72' }}
         run: node scripts/acceptance_check.js
+
+      # 根据 daily_ops.json 与阈值判断是否因 TTD 触发失败（供后续自动补救用）
+      - name: Detect failure cause (TTD or others)
+        if: always()
+        id: cause
+        env:
+          P95_TTD_MAX_HOURS:   ${{ vars.P95_TTD_MAX_HOURS || '24' }}
+          MIN_TTD_SAMPLES:     ${{ vars.MIN_TTD_SAMPLES   || '10' }}
+        run: |
+          echo "ttd_fail=false" >> "$GITHUB_OUTPUT"
+          if [ -f artifacts/daily_ops.json ]; then
+            P95=$(jq -r '.kpi.ttd_p95_hours // 0' artifacts/daily_ops.json)
+            SAMPLES=$(jq -r '.kpi.ttd_samples // 0'    artifacts/daily_ops.json)
+            # 当样本数达标且 P95 超阈值，则标记为 TTD 失败
+            awk -v p95="$P95" -v max="$P95_TTD_MAX_HOURS" -v n="$SAMPLES" -v min="$MIN_TTD_SAMPLES" '
+              BEGIN {
+                if (n>=min && p95>max) exit 0; else exit 1;
+              }
+            ' && {
+              echo "ttd_fail=true" >> "$GITHUB_OUTPUT"
+              echo "Detected TTD breach: P95=${P95}h (threshold ${P95_TTD_MAX_HOURS}h), samples=${SAMPLES}" >> "$GITHUB_STEP_SUMMARY"
+            } || true
+          fi
 
       - name: Build Daily Ops Report (always)
         if: always()
@@ -78,6 +105,20 @@ jobs:
             reports/ops/**/index.html
           if-no-files-found: ignore
           retention-days: 7
+
+      # 若为 TTD 失败，自动触发一次 Public Change Poller 以补采样
+      - name: Auto-run Public Change Poller on TTD fail
+        if: failure() && steps.cause.outputs.ttd_fail == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO:     ${{ github.repository }}
+        run: |
+          curl -sS -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/actions/workflows/public-change-poller.yml/dispatches" \
+            -d '{"ref":"main"}' || true
+          echo "Triggered Public Change Poller due to TTD breach" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Slack notify on failure (optional)
         if: failure() && env.SLACK_WEBHOOK != ''
