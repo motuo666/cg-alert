@@ -1,21 +1,41 @@
 name: Weekly Health Check
+
 on:
-  schedule: [ { cron: "0 15 * * 1" } ]
+  schedule:
+    - cron: "0 15 * * 1"   # 每周一 15:00 UTC
   workflow_dispatch:
     inputs:
-      force_green: { description: "临时强制绿(1=不失败+自愈)", required: false, default: "0" }
-permissions: { contents: write }
-concurrency: { group: weekly-health, cancel-in-progress: true }
+      force_green:
+        description: "临时强制绿(1=不失败+自愈)"
+        required: false
+        default: "0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-health
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm ci || npm i --no-audit --no-fund || true
-      - name: Health
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps (best-effort)
+        run: npm ci || npm i --no-audit --no-fund || true
+
+      - name: Weekly Health
+        id: health
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -30,9 +50,34 @@ jobs:
         run: |
           set -e
           node scripts/weekly_health_check.js || \
-            if [ "${{ inputs.force_green || '0' }}" = "1" ]; then echo "force green"; else exit 1; fi
+            if [ "${{ inputs.force_green || '0' }}" = "1" ]; then
+              echo "force green"; 
+            else 
+              exit 1; 
+            fi
+
+      # 可选：保证当月 Pack 覆盖（存在脚本才执行）
+      - name: Coverage guard (packs >= 50)
+        if: hashFiles('scripts/coverage_guard.js') != ''
+        run: node scripts/coverage_guard.js || true
+
+      # 生成一次自检摘要与可视化快照（不阻断）
+      - name: Fullchain Check & Daily Ops snapshot
+        run: |
+          node scripts/fullchain_check.js || true
+          node scripts/daily_ops_report.js || true
+
       - name: Safe Push (always)
         if: always()
         run: |
-          chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "kpi: weekly health"
+          chmod +x scripts/git_safe_push.sh || true
+          bash scripts/git_safe_push.sh "kpi: weekly health $(date -u +%F)"
+
+      - name: Slack notify on failure (optional)
+        if: failure() && env.SLACK_WEBHOOK != ''
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"Weekly Health FAILED — ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" \
+            "$SLACK_WEBHOOK" || true
