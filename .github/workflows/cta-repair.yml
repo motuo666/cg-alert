@@ -1,0 +1,56 @@
+name: CTA Repair (one-shot)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Inject CTA & SEO (idempotent)
+        run: node ./seo_inject.js
+
+      - name: Assert CTA markers exist
+        run: |
+          n=$(git grep -n "CG-CTA-INJECT" -- vendors updates | wc -l || true)
+          echo "CTA markers: $n"
+          if [ "$n" -eq 0 ]; then
+            echo "::error::CTA markers not found in repo after inject"; exit 1; fi
+
+      - name: Commit & push CTA changes
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A vendors updates _headers
+          if git diff --cached --quiet; then
+            echo "no changes to commit (already present)"; exit 0;
+          fi
+          git commit -m "CTA repair: inject CTA + headers"
+          git push
+
+      - name: Post-deploy check (soft)
+        if: ${{ always() }}
+        run: |
+          PAGES="${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}"
+          for P in "/vendors/zendesk.com/" "/updates/"; do
+            echo "check $PAGES$P"
+            curl -fsSL "$PAGES$P?v=${{ github.sha }}" | grep -q "CG-CTA-INJECT" \
+              && echo "ok: CTA visible on $PAGES$P" \
+              || echo "::warning::CTA not visible on $PAGES$P (likely caching/deploy lag)"
+          done
