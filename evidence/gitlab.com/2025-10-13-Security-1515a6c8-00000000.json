@@ -6,5 +6,7 @@
   "detected_at": "2025-10-13T07:04:48.876Z",
   "etag": "W/\"2a137445830c4527af7dea76247ce771\"",
   "last_modified": null,
-  "hash": null
+  "hash": null,
+  "commit": "55dd75d",
+  "run_url": "https://github.com/motuo666/cg-alert/actions/runs/18555840866"
 }

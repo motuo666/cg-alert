@@ -5,5 +5,8 @@
   "url": "https://example.com/pricing",
   "snippet": "Updated pricing: Pro $59 → $69 on Oct 12, 2025.",
   "hash": "sha256:demo-123456",
-  "ts": "2025-10-12T09:00:00Z"
+  "ts": "2025-10-12T09:00:00Z",
+  "sha256": "sha256:demo-123456",
+  "commit": "55dd75d",
+  "run_url": "https://github.com/motuo666/cg-alert/actions/runs/18555840866"
 }

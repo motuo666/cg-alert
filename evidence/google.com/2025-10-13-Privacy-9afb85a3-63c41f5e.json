@@ -6,5 +6,8 @@
   "detected_at": "2025-10-13T07:07:52.174Z",
   "etag": null,
   "last_modified": null,
-  "hash": "sha256:63c41f5e23a13e3431256c160bc96587dc8d7d10910aec4e2d871d0bc24ebbf2"
+  "hash": "sha256:63c41f5e23a13e3431256c160bc96587dc8d7d10910aec4e2d871d0bc24ebbf2",
+  "sha256": "sha256:63c41f5e23a13e3431256c160bc96587dc8d7d10910aec4e2d871d0bc24ebbf2",
+  "commit": "55dd75d",
+  "run_url": "https://github.com/motuo666/cg-alert/actions/runs/18555840866"
 }
