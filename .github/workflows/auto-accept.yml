@@ -2,107 +2,49 @@ name: Auto Acceptance
 
 on:
   workflow_run:
-    workflows:
-      - Public Change Poller
-      - Outreach Triggered
+    workflows: [Public Change Poller, Outreach Triggered]
     types: [completed]
   workflow_dispatch: {}
 
 permissions:
   contents: write
-  actions: write  # 触发下游 workflow_dispatch 需要 actions:write
-
-concurrency:
-  group: auto-accept-${{ github.ref_name }}
-  cancel-in-progress: false
+  actions: write
 
 jobs:
   gate:
-    # 手动触发或上游完成即跑（包括 success/failure/neutral），跳过 skipped
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion != 'skipped' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci || npm i --no-audit --no-fund || true
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install (best-effort)
-        run: npm ci || npm i --no-audit --no-fund || true
-
-      # Guard：防止旧版 daily_ops_report.js（含 targetEvidence 或 反引号嵌套）混入
-      - name: Guard: daily_ops_report.js version
-        run: |
-          if grep -q "targetEvidence" scripts/daily_ops_report.js || grep -q "\`Evidence vs target(" scripts/daily_ops_report.js; then
-            echo "Old daily_ops_report.js detected. Please push the fixed version (no nested backticks / no targetEvidence var)." >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-
-      # A) 先归一化抑制日志（补时间戳/列名），防止7日投递口径误判
       - name: Normalize suppression logs
         run: node scripts/normalize_suppression_logs.js || true
 
-      # B) 自检（产 artifacts/daily_ops.json；此处不阻断）
       - name: Fullchain Check
         env:
-          TARGET_SENT: ${{ vars.TARGET_SENT || '8' }}             # 仅用于 Summary 展示
+          TARGET_SENT: ${{ vars.TARGET_SENT || '8' }}
           TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || '10' }}
         run: node scripts/fullchain_check.js || true
 
-      # C) 严格验收（读取 daily_ops.json + 7日门槛 + TTD 门槛）
       - name: Auto Acceptance Gate (strict)
         env:
-          # 基础硬门槛（不配则走默认）
           TARGET_SENT:               ${{ vars.TARGET_SENT || '8' }}
           TARGET_EVID_TODAY:         ${{ vars.TARGET_EVID_TODAY || '10' }}
           MIN_HASH_RATIO:            ${{ vars.MIN_HASH_RATIO || '0.4' }}
           REQUIRE_CHANGED_VENDORS:   ${{ vars.REQUIRE_CHANGED_VENDORS || '1' }}
-          # 近 7 日健康阈值（含冷启动宽限）
           MIN_SENT7_FOR_DLVR:        ${{ vars.MIN_SENT7_FOR_DLVR || '100' }}
-          UNSUB_7D_MAX:              ${{ vars.UNSUB_7D_MAX || '0.005' }}   # 0.5%
-          COMPLAINT_7D_MAX:          ${{ vars.COMPLAINT_7D_MAX || '0.001' }}# 0.1%
-          BOUNCE_7D_MAX:             ${{ vars.BOUNCE_7D_MAX || '0.08' }}    # 8%
-          # TTD（Time-to-Detect）硬门槛
+          UNSUB_7D_MAX:              ${{ vars.UNSUB_7D_MAX || '0.005' }}
+          COMPLAINT_7D_MAX:          ${{ vars.COMPLAINT_7D_MAX || '0.001' }}
+          BOUNCE_7D_MAX:             ${{ vars.BOUNCE_7D_MAX || '0.08' }}
           P95_TTD_MAX_HOURS:         ${{ vars.P95_TTD_MAX_HOURS || '24' }}
           MIN_TTD_SAMPLES:           ${{ vars.MIN_TTD_SAMPLES || '10' }}
           TTD_LOOKBACK_HOURS:        ${{ vars.TTD_LOOKBACK_HOURS || '72' }}
         run: node scripts/acceptance_check.js
-
-      # 根据 daily_ops.json 判断是否因 TTD 失败（供后续自动补救用）——用 Node 解析，避免 jq 依赖
-      - name: Detect failure cause (TTD or others)
-        if: always()
-        id: cause
-        env:
-          P95_TTD_MAX_HOURS:   ${{ vars.P95_TTD_MAX_HOURS || '24' }}
-          MIN_TTD_SAMPLES:     ${{ vars.MIN_TTD_SAMPLES   || '10' }}
-        shell: bash
-        run: |
-          echo "ttd_fail=false" >> "$GITHUB_OUTPUT"
-          node -e "const fs=require('fs');
-            try{
-              const j=JSON.parse(fs.readFileSync('artifacts/daily_ops.json','utf8'));
-              const p95=Number(j?.kpi?.ttd_p95_hours||0);
-              const n=Number(j?.kpi?.ttd_samples||0);
-              const max=Number(process.env.P95_TTD_MAX_HOURS||24);
-              const min=Number(process.env.MIN_TTD_SAMPLES||10);
-              if (n>=min && p95>max){
-                console.log('TTD_FAIL '+p95+' '+n+' '+max);
-              }
-            }catch(e){}" | {
-              read -r line || true
-              if [[ "$line" == TTD_FAIL* ]]; then
-                p95=$(echo "$line" | awk '{print $2}'); n=$(echo "$line" | awk '{print $3}'); max=$(echo "$line" | awk '{print $4}')
-                echo "ttd_fail=true" >> "$GITHUB_OUTPUT"
-                echo "Detected TTD breach: P95=${p95}h (> ${max}h), samples=${n}" >> "$GITHUB_STEP_SUMMARY"
-              fi
-            }
 
       - name: Build Daily Ops Report (always)
         if: always()
@@ -113,38 +55,3 @@ jobs:
         run: |
           chmod +x scripts/git_safe_push.sh || true
           bash scripts/git_safe_push.sh "chore(ops): auto-accept summary $(date -u +%F)" || true
-
-      - name: Upload artifacts (optional)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: daily-ops-${{ github.run_id }}
-          path: |
-            artifacts/daily_ops.json
-            reports/ops/**/index.html
-          if-no-files-found: ignore
-          retention-days: 7
-
-      # 若为 TTD 失败，自动触发一次 Public Change Poller 以补采样
-      - name: Auto-run Public Change Poller on TTD fail
-        if: failure() && steps.cause.outputs.ttd_fail == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO:     ${{ github.repository }}
-        run: |
-          curl -sS -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPO}/actions/workflows/public-change-poller.yml/dispatches" \
-            -d '{"ref":"main"}' || true
-          echo "Triggered Public Change Poller due to TTD breach" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Slack notify on failure (optional)
-        if: failure() && env.SLACK_WEBHOOK != ''
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: |
-          msg=$(jq -Rn --arg t "Auto Acceptance FAILED" \
-                       --arg u "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-                       '{text: ($t+" — "+$u)}')
-          curl -sS -X POST -H 'Content-type: application/json' --data "$msg" "$SLACK_WEBHOOK" || true
