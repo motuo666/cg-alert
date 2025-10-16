@@ -55,6 +55,43 @@ jobs:
             echo "endpoint_inventory.js not found (skip)"
           fi
 
+      # 0.5) 低波动自愈（若近72h无真实变更，自动扩大端点覆盖后再 Poll）
+      - name: Expand endpoints on low-churn
+        run: |
+          CHG=$(
+            node -e "const fs=require('fs');
+            let n=0;
+            try{
+              const a=JSON.parse(fs.readFileSync('artifacts/daily_ops.json','utf8'));
+              n=(a&&a.kpi&&typeof a.kpi.changed_vendors_72h==='number')?a.kpi.changed_vendors_72h:0;
+            }catch{}
+            if(!n){
+              try{
+                const L=fs.readFileSync('data/evidence.ndx','utf8').trim().split(/\n/);
+                const cutoff=Date.now()-72*3600*1000;
+                const s=new Set();
+                for(const ln of L){
+                  if(!ln.trim()) continue;
+                  const [when,domain,,hash]=ln.split('\t');
+                  const t=Date.parse(when||'');
+                  if(hash && !/^0+$/.test(hash) && !isNaN(t) && t>=cutoff) s.add(domain);
+                }
+                n=s.size;
+              }catch{}
+            }
+            console.log(n);"
+          )
+          echo "changed_vendors_72h=${CHG}"
+          if [ "${CHG}" -eq 0 ]; then
+            echo "Low churn detected. Expanding endpoints..."
+            if [ -f scripts/endpoint_inventory.js ]; then
+              # 若脚本不支持参数，第二个命令会回退为默认构建
+              node scripts/endpoint_inventory.js --expand --topk=200 || node scripts/endpoint_inventory.js
+            fi
+          else
+            echo "Churn present. Skip expansion."
+          fi
+
       # 1) Poll（关键：保存正文，才能计算 hash）
       - name: Poll public endpoints
         env:
