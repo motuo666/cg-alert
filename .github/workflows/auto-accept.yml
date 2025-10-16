@@ -10,7 +10,7 @@ on:
 
 permissions:
   contents: write
-  actions: write   # 触发下游 workflow_dispatch 需要 actions:write
+  actions: write  # 触发下游 workflow_dispatch 需要 actions:write
 
 concurrency:
   group: auto-accept-${{ github.ref_name }}
@@ -36,6 +36,14 @@ jobs:
 
       - name: Install (best-effort)
         run: npm ci || npm i --no-audit --no-fund || true
+
+      # Guard：防止旧版 daily_ops_report.js（含 targetEvidence 或 反引号嵌套）混入
+      - name: Guard: daily_ops_report.js version
+        run: |
+          if grep -q "targetEvidence" scripts/daily_ops_report.js || grep -q "\`Evidence vs target(" scripts/daily_ops_report.js; then
+            echo "Old daily_ops_report.js detected. Please push the fixed version (no nested backticks / no targetEvidence var)." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
 
       # A) 先归一化抑制日志（补时间戳/列名），防止7日投递口径误判
       - name: Normalize suppression logs
@@ -67,26 +75,34 @@ jobs:
           TTD_LOOKBACK_HOURS:        ${{ vars.TTD_LOOKBACK_HOURS || '72' }}
         run: node scripts/acceptance_check.js
 
-      # 根据 daily_ops.json 与阈值判断是否因 TTD 触发失败（供后续自动补救用）
+      # 根据 daily_ops.json 判断是否因 TTD 失败（供后续自动补救用）——用 Node 解析，避免 jq 依赖
       - name: Detect failure cause (TTD or others)
         if: always()
         id: cause
         env:
           P95_TTD_MAX_HOURS:   ${{ vars.P95_TTD_MAX_HOURS || '24' }}
           MIN_TTD_SAMPLES:     ${{ vars.MIN_TTD_SAMPLES   || '10' }}
+        shell: bash
         run: |
           echo "ttd_fail=false" >> "$GITHUB_OUTPUT"
-          if [ -f artifacts/daily_ops.json ]; then
-            P95=$(jq -r '.kpi.ttd_p95_hours // 0' artifacts/daily_ops.json)
-            SAMPLES=$(jq -r '.kpi.ttd_samples // 0'    artifacts/daily_ops.json)
-            # 当样本数达标且 P95 超阈值，则标记为 TTD 失败
-            awk -v p95="$P95" -v max="$P95_TTD_MAX_HOURS" -v n="$SAMPLES" -v min="$MIN_TTD_SAMPLES" '
-              BEGIN { if (n>=min && p95>max) exit 0; else exit 1; }
-            ' && {
-              echo "ttd_fail=true" >> "$GITHUB_OUTPUT"
-              echo "Detected TTD breach: P95=${P95}h (threshold ${P95_TTD_MAX_HOURS}h), samples=${SAMPLES}" >> "$GITHUB_STEP_SUMMARY"
-            } || true
-          fi
+          node -e "const fs=require('fs');
+            try{
+              const j=JSON.parse(fs.readFileSync('artifacts/daily_ops.json','utf8'));
+              const p95=Number(j?.kpi?.ttd_p95_hours||0);
+              const n=Number(j?.kpi?.ttd_samples||0);
+              const max=Number(process.env.P95_TTD_MAX_HOURS||24);
+              const min=Number(process.env.MIN_TTD_SAMPLES||10);
+              if (n>=min && p95>max){
+                console.log('TTD_FAIL '+p95+' '+n+' '+max);
+              }
+            }catch(e){}" | {
+              read -r line || true
+              if [[ "$line" == TTD_FAIL* ]]; then
+                p95=$(echo "$line" | awk '{print $2}'); n=$(echo "$line" | awk '{print $3}'); max=$(echo "$line" | awk '{print $4}')
+                echo "ttd_fail=true" >> "$GITHUB_OUTPUT"
+                echo "Detected TTD breach: P95=${p95}h (> ${max}h), samples=${n}" >> "$GITHUB_STEP_SUMMARY"
+              fi
+            }
 
       - name: Build Daily Ops Report (always)
         if: always()
