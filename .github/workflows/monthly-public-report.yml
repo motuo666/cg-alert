@@ -19,6 +19,8 @@ concurrency:
 jobs:
   report:
     runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,6 +31,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
 
       - name: Install deps (best effort)
         run: npm ci || npm i --no-audit --no-fund || true
@@ -37,30 +40,57 @@ jobs:
         id: month
         run: |
           if [ -n "${{ inputs.month }}" ]; then
-            echo "val=${{ inputs.month }}" >> "$GITHUB_OUTPUT"
+            VAL="${{ inputs.month }}"
           else
-            echo "val=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+            VAL="$(date -u +%Y-%m)"
           fi
-          echo "month=${{ inputs.month }}"
-          echo "resolved-will-be=${{ steps.month.outputs.val }}"
+          # Guard: YYYY-MM 格式
+          if ! echo "$VAL" | grep -Eq '^[0-9]{4}-[0-9]{2}$'; then
+            echo "Bad month format: $VAL" >&2
+            exit 1
+          fi
+          echo "val=$VAL" >> "$GITHUB_OUTPUT"
+          echo "resolved=$VAL"
 
       - name: Build public monthly pages
         env:
           REPORT_MONTH: ${{ steps.month.outputs.val }}
-          SITE_ORIGIN: https://www.cg-alert.com
-        run: node scripts/build_public_monthly.js
+          SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
+        run: |
+          if [ -f scripts/build_public_monthly.js ]; then
+            node scripts/build_public_monthly.js
+          else
+            echo "scripts/build_public_monthly.js not found"; exit 1
+          fi
 
       - name: Rebuild evidence index (ndx)
-        run: node scripts/build_evidence_index.js
+        run: |
+          if [ -f scripts/build_evidence_index.js ]; then
+            node scripts/build_evidence_index.js
+          else
+            echo "scripts/build_evidence_index.js not found"; exit 1
+          fi
 
       - name: Monthly prune & create artifact zip
-        run: node scripts/prune_evidence_monthly.js
+        env:
+          REPORT_MONTH: ${{ steps.month.outputs.val }}
+        run: |
+          if [ -f scripts/prune_evidence_monthly.js ]; then
+            node scripts/prune_evidence_monthly.js
+          else
+            echo "scripts/prune_evidence_monthly.js not found"; exit 1
+          fi
 
-      # —— 新增：发布当月 checksum（对当月 evidence.ndx 行做 sha256，输出 reports/<YYYY-MM>/checksum.txt）
+      # —— 发布当月 checksum（对当月 evidence.ndx 行做 sha256，输出 reports/<YYYY-MM>/checksum.txt）
       - name: Publish monthly checksum
         env:
           REPORT_MONTH: ${{ steps.month.outputs.val }}
-        run: node scripts/monthly_checksum.js
+        run: |
+          if [ -f scripts/monthly_checksum.js ]; then
+            node scripts/monthly_checksum.js
+          else
+            echo "scripts/monthly_checksum.js not found"; exit 1
+          fi
 
       - name: Upload Artifact (evidence zip)
         if: ${{ hashFiles('artifacts/*.zip') != '' }}
@@ -80,6 +110,32 @@ jobs:
           artifactErrorsFailBuild: false
           generateReleaseNotes: true
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      # —— 免费补丁：Sitemap Ping，加速收录 /reports/
+      - name: Ping sitemaps
+        run: |
+          set -e
+          echo "Pinging sitemaps for ${SITE_ORIGIN}"
+          curl -s "https://www.google.com/ping?sitemap=${SITE_ORIGIN}/sitemap.xml" || true
+          curl -s "https://www.bing.com/ping?sitemap=${SITE_ORIGIN}/sitemap.xml" || true
+
+      # —— Run Summary（可视化产出指标）
+      - name: Summarize
+        env:
+          REPORT_MONTH: ${{ steps.month.outputs.val }}
+        run: |
+          YM="${REPORT_MONTH}"
+          PAGES=$(find "reports/${YM}" -type f -name index.html 2>/dev/null | wc -l | tr -d ' ')
+          NDX_ROWS=$(test -f data/evidence.ndx && awk -F'\t' -v ym="$YM" '$1 ~ ym {c++} END{print c+0}' data/evidence.ndx || echo 0)
+          ZIP_OK=$(ls -1 artifacts/*.zip 2>/dev/null | wc -l | tr -d ' ')
+          {
+            echo "### Monthly Public Report"
+            echo "- Month: ${YM}"
+            echo "- Report pages: ${PAGES}"
+            echo "- evidence.ndx rows for ${YM}: ${NDX_ROWS}"
+            echo "- Artifact zip(s): ${ZIP_OK}"
+            echo "- Checksum: reports/${YM}/checksum.txt"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Safe Push
         run: |
