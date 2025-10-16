@@ -1,188 +1,171 @@
 #!/usr/bin/env node
 /**
- * 生成每日可视化报告：
- *   - /reports/ops/<YYYY-MM-DD>/index.html
- *   - /reports/ops/index.html（最近10天索引）
- *
- * 数据来源：
- *   - artifacts/daily_ops.json   （fullchain_check.js 产物，含 KPI / PASS / WARN / FAIL）
- *   - reports/ops/ttd.json       （可选，build_ttd_report.js 产物，含 TTD P50/P95）
- *
- * 说明：
- *   - 仅使用仓库内数据；Open/Click/Unsub/Spam 需在 SMTP 后台查看。
- *   - 脚本可在本地或 Actions Runner 上运行。
+ * Daily Ops Report
+ * - 读取 artifacts/daily_ops.json 生成 /reports/ops/<YYYY-MM-DD>/index.html
+ * - 若 artifacts 缺失，做轻量兜底计算（evidence_today/sent_today/hash_ratio）
+ * - 避免在模板字符串中嵌套反引号，全部标签用普通引号
  */
-
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const OUTBASE = path.join(ROOT, 'reports', 'ops');
 const ART = path.join(ROOT, 'artifacts', 'daily_ops.json');
-const TTD_JSON = path.join(OUTBASE, 'ttd.json');
+const EVID_NDX = path.join(ROOT, 'data', 'evidence.ndx');
+const OUTREACH = path.join(ROOT, 'data', 'outreach_log.csv');
 
-function readJSON(fp) {
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); }
-  catch { return null; }
+const TARGET_EVIDENCE = Number(process.env.TARGET_EVID_TODAY || 10);
+const TARGET_SENT = Number(process.env.TARGET_SENT || 8);
+
+function ensureDir(p){ fs.mkdirSync(p, { recursive: true }); }
+function todayStrUTC(){
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth()+1).padStart(2,'0');
+  const day = String(d.getUTCDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 }
+function readJSON(fp){ try{ return JSON.parse(fs.readFileSync(fp,'utf8')); }catch{ return null; } }
+function readLines(fp){ if(!fs.existsSync(fp)) return []; return fs.readFileSync(fp,'utf8').split(/\r?\n/); }
+function isRealHash(h){ return !!h && !/^0+$/.test(h); }
 
-function ensureDir(p) {
-  fs.mkdirSync(p, { recursive: true });
-}
-
-function escapeHtml(s='') {
-  return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
-}
-
-function pct(v, max) {
-  if (!max || max <= 0) return 0;
-  const p = Math.round(100 * (v / max));
-  return Math.max(0, Math.min(100, p));
-}
-
-function badge(label, value) {
-  return `<div class="badge">${escapeHtml(label)}: <b>${escapeHtml(String(value))}</b></div>`;
-}
-
-function bar(current, target, label) {
-  const width = pct(current || 0, target || 0);
-  return `<div class="bar"><div class="bar-label">${escapeHtml(label)}: <b>${current||0}</b> / ${target||'-'}</div><div class="bar-rail"><div class="bar-fill" style="width:${width}%"></div></div></div>`;
-}
-
-function listBlock(title, arr, cls) {
-  if (!arr || !arr.length) return '';
-  const items = arr.map(x => `<li>${escapeHtml(String(x))}</li>`).join('');
-  return `<div class="card ${cls||''}">
-    <h3>${escapeHtml(title)} <small>(${arr.length})</small></h3>
-    <ul class="list">${items}</ul>
-  </div>`;
-}
-
-function renderPage(data, ttd) {
-  const { date, kpi = {}, PASS = [], WARN = [], FAIL = [] } = data || {};
-  const hashRatioPct = ((kpi.hash_ratio || 0) * 100).toFixed(1);
-
-  // 可选 TTD
-  const ttdP50 = ttd && typeof ttd.p50_hours === 'number' ? ttd.p50_hours : null;
-  const ttdP95 = ttd && typeof ttd.p95_hours === 'number' ? ttd.p95_hours : null;
-
-  const targetEvidence = Number(process.env.TARGET_EVID_TODAY || 10);
-  const targetSent     = Number(process.env.TARGET_SENT || 16);
-  const targetHashPct  = Number(process.env.TARGET_HASH_PCT || 40);
-
-  const styles = `
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:24px;max-width:980px;margin:auto;line-height:1.6;background:#fff;color:#111}
-  h1{margin:0 0 12px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;margin:10px 0;box-shadow:0 1px 2px rgba(0,0,0,.03);background:#fff}
-  .badges{display:flex;flex-wrap:wrap;gap:8px}
-  .badge{display:inline-block;background:#f3f4f6;border-radius:999px;padding:4px 10px}
-  .kv{display:flex;justify-content:space-between;border-bottom:1px dashed #eee;padding:6px 0}
-  .bar{margin:8px 0}
-  .bar-rail{height:8px;background:#eee;border-radius:6px}
-  .bar-fill{height:8px;background:#222;border-radius:6px}
-  .muted{color:#6b7280}
-  .list{padding-left:18px;margin:6px 0}
-  .ok{color:#065f46}
-  .warn{color:#92400e}
-  .fail{color:#991b1b}
-  .footer{margin-top:20px;color:#6b7280;font-size:12px}
-  a{color:#111}
-  `;
-
-  const ttdBlock = (ttdP50!=null || ttdP95!=null) ? `
-    <div class="kv"><div>TTD P50 (hours)</div><div><b>${ttdP50!=null ? ttdP50 : '-'}</b></div></div>
-    <div class="kv"><div>TTD P95 (hours)</div><div><b>${ttdP95!=null ? ttdP95 : '-'}</b></div></div>
-  ` : `<div class="kv"><div>TTD</div><div class="muted">no data</div></div>`;
-
-  const hashBar = bar(Number((kpi.hash_ratio||0)*100).toFixed(1), targetHashPct, 'Hash coverage (%)');
-
-  return `<!doctype html><html><head><meta charset="utf-8">
-<title>Daily Ops - ${escapeHtml(date||'')}</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>${styles}</style></head>
-<body>
-  <h1>Daily Ops — ${escapeHtml(date||'')}</h1>
-
-  <div class="card">
-    <div class="badges">
-      ${badge('Evidence today', kpi.evidence_today||0)}
-      ${badge('Packs this month', kpi.packs_month||0)}
-      ${badge('Changed vendors (72h)', kpi.changed_vendors_72h||0)}
-      ${badge('Sent today', kpi.sent_today||0)}
-      ${badge('Hash coverage', `${hashRatioPct}%`)}
-    </div>
-  </div>
-
-  <div class="grid">
-    <div class="card">
-      <h3>Progress</h3>
-      ${bar(kpi.evidence_today||0, targetEvidence, \`Evidence vs target(${targetEvidence})\`)}
-      ${bar(kpi.sent_today||0, targetSent, \`Sent vs target(${targetSent})\`)}
-      ${hashBar}
-    </div>
-    <div class="card">
-      <h3>Metrics</h3>
-      <div class="kv"><div>Evidence total</div><div>${kpi.evidence_total||0}</div></div>
-      <div class="kv"><div>Dry today</div><div>${kpi.dry_today||0}</div></div>
-      ${ttdBlock}
-      <div class="kv"><div>Reports index</div><div><a href="../">ops index</a></div></div>
-    </div>
-  </div>
-
-  ${listBlock('Warnings', WARN, 'warn')}
-  ${listBlock('Failures (blocking)', FAIL, 'fail')}
-
-  <div class="card">
-    <h3>What to do next</h3>
-    <ul class="list">
-      <li>若 <b>Evidence today</b> = 0：手动跑 Public Change Poller；仍 0 → 明天扩大窗口</li>
-      <li>若 <b>Sent today</b> &lt; ${targetSent>8?targetSent:8}：Outreach Triggered 再跑一次，<code>window_h=168</code></li>
-      <li>日终在 SMTP 后台看 Open/Click；退订 ≤ 0.5%，投诉 ≤ 0.1%</li>
-    </ul>
-    <p class="muted">Open/Click/Unsub/Spam 由 SMTP 控制台提供，本页不展示。</p>
-  </div>
-
-  <div class="footer">Generated from <code>artifacts/daily_ops.json</code>${ttd ? ' & <code>reports/ops/ttd.json</code>' : ''}</div>
-</body></html>`;
-}
-
-(function main(){
-  const data = readJSON(ART);
-  if (!data) {
-    console.error('missing artifacts/daily_ops.json, run fullchain_check first');
-    process.exit(1);
+function fallbackKPI(){
+  // evidence_today / hash_ratio
+  let evidence_today = 0, hash_ok = 0, total = 0;
+  const today = todayStrUTC();
+  if (fs.existsSync(EVID_NDX)){
+    const L = readLines(EVID_NDX);
+    for (const ln of L){
+      if(!ln.trim()) continue;
+      const parts = ln.split('\t'); // [when, domain, type, hash, ...]（按你的现有格式）
+      const when = (parts[0]||'').slice(0,10);
+      const hash = parts[3] || '';
+      if (when === today){
+        evidence_today++;
+        if (isRealHash(hash)) hash_ok++;
+      }
+      if (parts[0]) total++;
+    }
   }
-  const ttd = readJSON(TTD_JSON);
+  const hash_ratio = total>0 ? (hash_ok/Math.max(1,total)) : 0;
 
-  ensureDir(OUTBASE);
+  // sent_today
+  let sent_today = 0;
+  if (fs.existsSync(OUTREACH)){
+    const lines = readLines(OUTREACH);
+    const header = lines[0] && /when|status/i.test(lines[0]) ? lines[0].split(',') : [];
+    const start = header.length ? 1 : 0;
+    // 猜测列：when(0), status(8)；若有表头则做一次匹配
+    let idxWhen = 0, idxStatus = 8;
+    if (header.length){
+      const lower = header.map(h => h.toLowerCase());
+      idxWhen = Math.max(0, lower.findIndex(h => h.includes('when')));
+      const iStat = lower.findIndex(h => h.includes('status'));
+      if (iStat >= 0) idxStatus = iStat;
+    }
+    for (let i=start; i<lines.length; i++){
+      const row = lines[i]; if(!row || !row.trim()) continue;
+      const cols = row.split(',');
+      const w = (cols[idxWhen]||'');
+      const st = (cols[idxStatus]||'').toLowerCase();
+      if (w.slice(0,10)===today && st==='sent') sent_today++;
+    }
+  }
 
-  const date = data.date || new Date().toISOString().slice(0,10);
-  const dir = path.join(OUTBASE, date);
-  ensureDir(dir);
+  return {
+    date: today,
+    kpi: {
+      evidence_today,
+      sent_today,
+      hash_ratio,
+      ttd_p50_hours: null,
+      ttd_p95_hours: null,
+      ttd_samples: 0
+    },
+    WARN: [],
+    FAIL: []
+  };
+}
 
-  // 写入当日页
-  const html = renderPage(data, ttd);
-  fs.writeFileSync(path.join(dir, 'index.html'), html, 'utf8');
+function bar(current, target, label){
+  const cur = Number(current||0);
+  const tgt = Math.max(1, Number(target||0));
+  const pct = Math.max(0, Math.min(100, Math.round(cur/tgt*100)));
+  return `
+<div class="kpi">
+  <div class="kpi-head">${label}: <strong>${cur}</strong> / ${tgt}</div>
+  <div class="kpi-outer"><div class="kpi-inner" style="width:${pct}%"></div></div>
+</div>`;
+}
 
-  // 更新索引页（最近10天）
-  const days = fs.readdirSync(OUTBASE, { withFileTypes: true })
-    .filter(d => d.isDirectory() && /^\d{4}-\d{2}-\d{2}$/.test(d.name))
-    .map(d => d.name).sort().slice(-10).reverse();
+function pill(text, tone){ return `<span class="pill ${tone||''}">${text}</span>`; }
 
-  const links = days.map(d => `<li><a href="./${d}/">${d}</a></li>`).join('');
-  const idx = `<!doctype html><html><head><meta charset="utf-8"><title>Daily Ops</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;padding:24px;max-width:700px;margin:auto} li{margin:6px 0}</style></head>
-  <body><h1>Daily Ops</h1><ol>${links}</ol>${
-    fs.existsSync(TTD_JSON) ? `<p><a href="./ttd.html">TTD Report</a></p>` : ''
-  }</body></html>`;
-  fs.writeFileSync(path.join(OUTBASE, 'index.html'), idx, 'utf8');
+function main(){
+  const data = readJSON(ART) || fallbackKPI();
+  const kpi = data.kpi || {};
+  const date = data.date || todayStrUTC();
 
-  console.log(`daily ops report -> reports/ops/${date}/index.html`);
-})();
+  const hashPct = ((kpi.hash_ratio||0)*100).toFixed(1) + '%';
+  const ttdP50 = (kpi.ttd_p50_hours==null) ? '—' : `${Number(kpi.ttd_p50_hours).toFixed(1)}h`;
+  const ttdP95 = (kpi.ttd_p95_hours==null) ? '—' : `${Number(kpi.ttd_p95_hours).toFixed(1)}h`;
+  const ttdSamples = kpi.ttd_samples||0;
+
+  const html = `<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Daily Ops - ${date}</title>
+<style>
+body{font-family:system-ui,Arial,sans-serif;margin:24px;line-height:1.6;color:#111827;max-width:960px}
+h1{font-size:22px;margin:0 0 12px}
+.kpis{display:grid;grid-template-columns:1fr;gap:16px}
+.kpi-head{font-size:14px;margin-bottom:6px}
+.kpi-outer{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.kpi-inner{height:10px;background:#2563eb}
+.meta{margin-top:16px;font-size:14px;color:#374151}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#F3F4F6;border:1px solid #E5E7EB;margin-right:6px}
+.pill.good{background:#ECFDF5;border-color:#10B981;color:#065F46}
+.pill.warn{background:#FEF3C7;border-color:#F59E0B;color:#92400E}
+.pill.bad{background:#FEE2E2;border-color:#EF4444;color:#991B1B}
+.small{font-size:12px;color:#6B7280}
+.section{margin-top:20px}
+</style>
+</head>
+<body>
+<h1>Daily Ops — ${date}</h1>
+
+<div class="kpis">
+  ${bar(kpi.evidence_today||0, ${TARGET_EVIDENCE}, 'Evidence vs target (${TARGET_EVIDENCE})')}
+  ${bar(kpi.sent_today||0, ${TARGET_SENT}, 'Sent vs target (${TARGET_SENT})')}
+</div>
+
+<div class="section meta">
+  ${pill('Hash coverage: '+hashPct, (kpi.hash_ratio>=0.4?'good':(kpi.hash_ratio>=0.2?'warn':'bad')))}
+  ${pill('TTD P50: '+ttdP50, (kpi.ttd_p50_hours!=null && kpi.ttd_p50_hours<=12?'good':'warn'))}
+  ${pill('TTD P95: '+ttdP95, (kpi.ttd_p95_hours!=null && kpi.ttd_p95_hours<=24?'good':'bad'))}
+  ${pill('TTD samples: '+ttdSamples, (ttdSamples>=10?'good':'warn'))}
+</div>
+
+<div class="section small">
+  <div>Notes: Evidence/ Sent 目标来自环境变量 TARGET_EVID_TODAY(${TARGET_EVIDENCE}) / TARGET_SENT(${TARGET_SENT})；若 artifacts 缺失，本页使用兜底估算。</div>
+</div>
+
+</body></html>`;
+
+  const outDir = path.join(ROOT, 'reports', 'ops', date);
+  ensureDir(outDir);
+  fs.writeFileSync(path.join(outDir, 'index.html'), html, 'utf8');
+
+  // Step summary（便于在 Actions 里一眼看到）
+  const sum = [];
+  sum.push('### Daily Ops');
+  sum.push(`- date: **${date}**`);
+  sum.push(`- evidence_today: **${kpi.evidence_today||0}** / target ${TARGET_EVIDENCE}`);
+  sum.push(`- sent_today: **${kpi.sent_today||0}** / target ${TARGET_SENT}`);
+  sum.push(`- hash_coverage: **${hashPct}**`);
+  sum.push(`- TTD: P50 **${ttdP50}**, P95 **${ttdP95}**, samples **${ttdSamples}**`);
+  if (process.env.GITHUB_STEP_SUMMARY){
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, sum.join('\n')+'\n', 'utf8');
+  }
+  console.log(sum.join('\n'));
+}
+
+main();
