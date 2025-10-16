@@ -1,7 +1,11 @@
 name: Outreach Triggered
 
 on:
-  schedule: [ { cron: "5 16 * * 1-5" } ] # 工作日 16:05 UTC
+  # 分三档时区批次：APAC / EMEA / AMER（工作日）
+  schedule:
+    - cron: "5 1 * * 1-5"   # 01:05 UTC（APAC 工作时段）
+    - cron: "5 9 * * 1-5"   # 09:05 UTC（EMEA 工作时段）
+    - cron: "5 16 * * 1-5"  # 16:05 UTC（AMER 工作时段）
   workflow_dispatch:
     inputs:
       dry:
@@ -9,16 +13,16 @@ on:
         default: "true"
         required: true
       limit:
-        description: "max emails"
+        description: "max emails (manual run)"
         default: "20"
         required: true
       window_h:
-        description: "evidence window (hours)"
+        description: "evidence window (hours, manual run)"
         default: "48"
         required: true
 
 permissions:
-  contents: write  # 发送后若写入日志/CSV，需要写权限
+  contents: write   # 发送后写入日志/CSV 需要写权限
 
 concurrency:
   group: outreach-triggered
@@ -28,7 +32,7 @@ jobs:
   trig:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -44,7 +48,16 @@ jobs:
       - name: Install deps
         run: npm ci || npm i --no-audit --no-fund || true
 
-      # 将退信/退订合并回 leads.csv，避免重复触达（不存在则跳过）
+      # A3) 变更热度优先级（有脚本则生成优先表，send_triggered.js 将自动读取排序）
+      - name: Build vendor priority (optional)
+        run: |
+          if [ -f scripts/prioritize_vendors.js ]; then
+            node scripts/prioritize_vendors.js || true
+          else
+            echo "skip: scripts/prioritize_vendors.js not found"
+          fi
+
+      # 退信/退订抑制合并（避免重复触达）
       - name: Merge suppression into leads
         run: |
           if [ -f scripts/merge_suppression.js ]; then
@@ -53,15 +66,23 @@ jobs:
             echo "skip: scripts/merge_suppression.js not found"
           fi
 
-      # 9列/枚举守护（存在则执行）
+      # 9 列/枚举守护
       - name: Guard & Validate leads (9 cols / enums)
         run: |
           if [ -f scripts/leads_guard.js ]; then node scripts/leads_guard.js || true; fi
           if [ -f scripts/validate_leads.js ]; then node scripts/validate_leads.js || true; fi
 
+      # A1 + C1) 自动调参 + 动态节流（脚本输出 window_h/limit/原因；仅 schedule 事件启用）
+      - name: Auto tune (window/limit & throttle)
+        id: tune
+        if: github.event_name == 'schedule'
+        run: node scripts/auto_tune_triggered.js
+
+      # 发送（schedule 场景走自动调参；手动触发走 inputs）
       - name: Send Triggered
         env:
-          TRIGGER_WINDOW_H: ${{ inputs.window_h || '48' }}
+          # ——窗口：优先用 auto_tune 的结果；否则用手动输入/默认 48h
+          TRIGGER_WINDOW_H: ${{ github.event_name == 'schedule' && steps.tune.outputs.window_h || inputs.window_h || '48' }}
           # 邮件
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -69,16 +90,30 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
           BCC_TO:     ${{ secrets.BCC_TO }}
-          # 角色定投 / 地域过滤
+          # 角色/地域过滤
           PERSONA_RULES: config/persona_rules.json
           REGION_FILTER: config/region_filter.json
           # 站点域名（用于拼接 Pack/Updates 链接）
           SITE_ORIGIN: https://www.cg-alert.com
         run: |
           node scripts/send_triggered.js \
-            --dry=${{ inputs.dry || 'false' }} \
-            --limit=${{ inputs.limit || '20' }} \
+            --dry=${{ github.event_name == 'schedule' && 'false' || inputs.dry || 'true' }} \
+            --limit=${{ github.event_name == 'schedule' && steps.tune.outputs.limit || inputs.limit || '20' }} \
             --pack
+
+      # 汇总（可选）
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### Outreach Triggered Summary";
+            echo "- Event: **${{ github.event_name }}**";
+            echo "- Window_h: **${{ env.TRIGGER_WINDOW_H }}**";
+            echo "- Limit: **${{ github.event_name == 'schedule' && steps.tune.outputs.limit || inputs.limit || '20' }}**";
+            if [ "${{ steps.tune.outputs.reason }}" != "" ]; then
+              echo "- Auto tune reason: **${{ steps.tune.outputs.reason }}**";
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Safe Push (only if changes)
         run: |
