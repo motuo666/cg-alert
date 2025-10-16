@@ -1,11 +1,14 @@
+/index.html
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
+/vendors/*
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
+/updates/*
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
+/categories/*
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
 /reports/*
-  Cache-Control: public, max-age=900
-  X-Robots-Tag: index, follow
-
-/reports/rss.xml
-  Cache-Control: public, max-age=300
-  Content-Type: application/rss+xml; charset=utf-8
-
-/sitemap-*.xml
-  Cache-Control: public, max-age=1800
-  Content-Type: application/xml; charset=utf-8
+  Cache-Control: no-cache, must-revalidate, max-age=0
