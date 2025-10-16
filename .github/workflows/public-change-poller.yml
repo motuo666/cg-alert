@@ -62,7 +62,7 @@ jobs:
             echo "poll_public_endpoints.js not found"; exit 1
           fi
 
-      # === 自动回填 evidence 指纹（hash） ===
+      # === 自动回填 evidence 指纹（hash/fingerprint） ===
       - name: 🔎 Backfill evidence fingerprint (hash)
         run: |
           if [ -f scripts/normalize_evidence.js ]; then
@@ -71,7 +71,28 @@ jobs:
             echo "normalize_evidence.js not found"; exit 1
           fi
 
-      # 先重建索引，再生成 Packs / Updates / Categories，并注入 SEO
+      # === 可核证链：为 evidence 写入 commit / run_url / 统一 sha256 字段 ===
+      - name: 🧾 Enrich evidence provenance (commit/run_url)
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          GIT_COMMIT: ${{ github.sha }}
+        run: |
+          if [ -f scripts/evidence_enrich_provenance.js ]; then
+            node scripts/evidence_enrich_provenance.js
+          else
+            echo "evidence_enrich_provenance.js not found (skip)"; true
+          fi
+
+      # === 变化片段摘要：为新证据提取最小 diff 片段 ===
+      - name: ✂️ Extract diff excerpts
+        run: |
+          if [ -f scripts/extract_diff_excerpt.js ]; then
+            node scripts/extract_diff_excerpt.js
+          else
+            echo "extract_diff_excerpt.js not found (skip)"; true
+          fi
+
+      # 先重建索引（含 commit/run_url），再计算材料性，再生成 Packs / Updates / Categories，并注入 SEO
       - name: 🧱 Rebuild evidence index
         run: |
           if [ -f scripts/build_evidence_index.js ]; then
@@ -80,13 +101,33 @@ jobs:
             echo "build_evidence_index.js not found"; exit 1
           fi
 
+      # === 材料性评分（90 天 + 类型权重） ===
+      - name: 🎯 Compute materiality score
+        run: |
+          if [ -f scripts/materiality_score.js ]; then
+            node scripts/materiality_score.js
+          else
+            echo "materiality_score.js not found (skip)"; true
+          fi
+
       - name: 🗃️ Build change packs
         env:
           SITE_ORIGIN: https://www.cg-alert.com
           INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
           STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
           REBUILD_MONTH: ${{ github.event.inputs.month }}
-        run: node scripts/build_change_pack.js
+        run: |
+          if [ -f scripts/build_change_pack.js ]; then
+            node scripts/build_change_pack.js
+          else
+            echo "build_change_pack.js not found"; exit 1
+          fi
+
+      - name: 🔁 Build Subprocessor reverse index (/who-uses)
+        run: |
+          if [ -f scripts/build_who_uses.js ]; then
+            node scripts/build_who_uses.js || true
+          fi
 
       - name: 📰 Build /updates & /categories (tolerant)
         run: |
@@ -107,24 +148,26 @@ jobs:
           BASELINES=$(find evidence -type f -name "${TODAY}-*00000000.json" 2>/dev/null | wc -l)
           INDEX_ROWS=$(test -f data/evidence.ndx && wc -l < data/evidence.ndx || echo 0)
           PACKS=$(find "reports/$YM" -type f -name index.html 2>/dev/null | wc -l)
+          HASH_OK=$(awk -F'\t' '($4!="") && $4!~/^0+$/ {ok++} END{print ok+0}' data/evidence.ndx 2>/dev/null || echo 0)
           {
             echo "### Public Change Poller"
             echo "- New evidence today: $CHANGED"
             echo "- Baselines today: $BASELINES"
             echo "- Index rows: $INDEX_ROWS"
+            echo "- Hash (non-zero) rows: $HASH_OK"
             echo "- Change Packs this month ($YM): $PACKS"
           } >> "$GITHUB_STEP_SUMMARY"
 
       # === 关键发布：确保新文件被纳入提交 ===
       - name: 🚀 Publish public artifacts (stage changes)
         run: |
-          git add -A reports updates data/evidence.ndx evidence || true
+          git add -A reports updates data/evidence.ndx data/materiality.csv evidence public/who-uses || true
 
       - name: 🔐 Safe push
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             chmod +x scripts/git_safe_push.sh || true
-            bash scripts/git_safe_push.sh "poll: public changes + evidence hash backfill + packs/updates/seo"
+            bash scripts/git_safe_push.sh "poll: public changes + provenance/excerpts + index/materiality + packs/updates/seo"
           else
             echo "no changes to commit"
           fi
