@@ -2,20 +2,35 @@ name: Auto Acceptance
 
 on:
   workflow_run:
-    workflows: ["Public Change Poller", "Outreach Triggered"]
+    workflows:
+      - Public Change Poller
+      - Outreach Triggered
     types: [completed]
   workflow_dispatch: {}
 
 permissions:
   contents: write
+  actions: read
+
+concurrency:
+  group: auto-accept-${{ github.ref_name }}
+  cancel-in-progress: false
 
 jobs:
   gate:
+    # 手动触发或上游完成即跑（包括 success/failure/neutral），跳过 skipped
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion != 'skipped' }}
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    timeout-minutes: 15
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
@@ -26,30 +41,50 @@ jobs:
       # 注意：这里不让它失败（|| true），由 acceptance_check 统一判定通过/失败
       - name: Fullchain Check
         env:
-          TARGET_SENT: "8"            # 仅用于 Summary 展示，不阻断
-          TARGET_EVID_TODAY: "10"
+          TARGET_SENT: ${{ vars.TARGET_SENT || '8' }}          # 仅用于 Summary 展示，不阻断
+          TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || '10' }}
         run: |
           node scripts/fullchain_check.js || true
 
       - name: Auto Acceptance Gate (strict)
         env:
-          TARGET_SENT: ${{ vars.TARGET_SENT || 8 }}
-          TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || 10 }}
-          MIN_HASH_RATIO: ${{ vars.MIN_HASH_RATIO || 0.4 }}
-          REQUIRE_CHANGED_VENDORS: "1"
+          # 严格阈值（不配则走默认）
+          TARGET_SENT: ${{ vars.TARGET_SENT || '8' }}
+          TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || '10' }}
+          MIN_HASH_RATIO: ${{ vars.MIN_HASH_RATIO || '0.4' }}
+          REQUIRE_CHANGED_VENDORS: ${{ vars.REQUIRE_CHANGED_VENDORS || '1' }}
+          # 可选：把近7日退订/投诉纳入门禁（acceptance_check.js 支持）
+          UNSUB_7D_MAX: ${{ vars.UNSUB_7D_MAX || '0.005' }}
+          COMPLAINT_7D_MAX: ${{ vars.COMPLAINT_7D_MAX || '0.001' }}
         run: node scripts/acceptance_check.js
 
-      - name: Safe push ops report (optional)
+      - name: Build Daily Ops Report (always)
+        if: always()
+        run: node scripts/daily_ops_report.js || true
+
+      - name: Safe push ops report (always)
         if: always()
         run: |
-          node scripts/daily_ops_report.js || true
           chmod +x scripts/git_safe_push.sh || true
           bash scripts/git_safe_push.sh "chore(ops): auto-accept summary $(date -u +%F)" || true
+
+      - name: Upload artifacts (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-ops-${{ github.run_id }}
+          path: |
+            artifacts/daily_ops.json
+            reports/ops/**/index.html
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Slack notify on failure (optional)
         if: failure() && env.SLACK_WEBHOOK != ''
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
         run: |
-          msg=$(jq -Rn --arg t "Auto Acceptance FAILED" --arg u "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" '{text: ($t+" — "\+$u)}')
-          curl -X POST -H 'Content-type: application/json' --data "$msg" "$SLACK_WEBHOOK" || true
+          msg=$(jq -Rn --arg t "Auto Acceptance FAILED" \
+                       --arg u "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                       '{text: ($t+" — "+$u)}')
+          curl -sS -X POST -H 'Content-type: application/json' --data "$msg" "$SLACK_WEBHOOK" || true
