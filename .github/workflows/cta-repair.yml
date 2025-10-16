@@ -1,4 +1,4 @@
-name: CTA Repair (one-shot)
+name: CTA Repair (self-contained)
 
 on:
   workflow_dispatch:
@@ -22,9 +22,116 @@ jobs:
         with:
           node-version: 18
 
-      - name: Inject CTA & SEO (idempotent)
-        run: node ./seo_inject.js
+      # 1) 若仓库无 seo_inject.js，则写入覆盖版（有也会覆盖到最新）
+      - name: Write seo_inject.js (latest)
+        run: |
+          cat > seo_inject.js <<'JS'
+          #!/usr/bin/env node
+          const fs = require('fs');
+          const path = require('path');
+          const ROOT = process.cwd();
+          const TARGETS = [
+            { dir: 'vendors', file: 'index.html', deep: true },
+            { dir: 'updates', file: 'index.html', deep: false },
+          ];
+          const INTAKE = process.env.INTAKE_FORM_URL || '';
+          const STRIPE = process.env.STRIPE_LINK_PORTFOLIO || '';
+          let seoFiles = 0, seoInjected = 0, ctaFiles = 0, ctaInjected = 0;
 
+          function walk(dir, deep){
+            const abs = path.join(ROOT, dir);
+            if(!fs.existsSync(abs)) return [];
+            const out = [];
+            const entries = fs.readdirSync(abs, { withFileTypes: true });
+            for(const ent of entries){
+              const p = path.join(abs, ent.name);
+              if(ent.isDirectory()){ if(deep) out.push(...walk(path.join(dir, ent.name), deep)); }
+              else if(ent.isFile() && ent.name === 'index.html'){ out.push(p); }
+            }
+            return out;
+          }
+
+          function ensureSeo(html, filePath){
+            let changed = false;
+            if (!/<head[^>]*>/i.test(html) || !/<\/head>/i.test(html)) return { html, changed };
+            if (!/rel=["']canonical["']/i.test(html)) {
+              const rel = path.relative(ROOT, filePath).replace(/\\/g,'/'); // vendors/foo/index.html
+              const pagePath = '/' + rel.replace(/index\.html$/i,'');
+              const origin = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+              html = html.replace(/<\/head>/i, `  <link rel="canonical" href="${origin}${pagePath}">\n</head>`);
+              changed = true;
+            }
+            if (!/application\/ld\+json/i.test(html)) {
+              const origin = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+              const jsonld = {"@context":"https://schema.org","@type":"WebPage","name":"CG Alert — Evidence-backed vendor change alerts","url":origin,"description":"Monitor vendor public pages (Pricing/ToS/DPA/Subprocessors/Status) and get verifiable evidence."};
+              html = html.replace(/<\/head>/i, `  <script type="application/ld+json">${JSON.stringify(jsonld)}</script>\n</head>`);
+              changed = true;
+            }
+            if (!/name=["']description["']/i.test(html)) {
+              html = html.replace(/<\/head>/i, `  <meta name="description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals & compliance.">\n</head>`);
+              changed = true;
+            }
+            return { html, changed };
+          }
+
+          function buildCtaBlock(){
+            const btns = [];
+            if (INTAKE) btns.push(`<a id="cg-enable-alerts" class="btn" rel="nofollow" href="${INTAKE}">Enable alerts</a>`);
+            if (STRIPE) btns.push(`<a id="cg-buy-portfolio" class="btn secondary" rel="nofollow" href="${STRIPE}">Buy Portfolio</a>`);
+            if (!btns.length) return '';
+            const js = `<script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-enable-alerts","cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>`;
+            return ['<!-- CG-CTA-INJECT START -->',
+                    `<div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">`,
+                    btns.join('\n'),
+                    `</div>`,
+                    js,
+                    '<!-- CG-CTA-INJECT END -->'].join('\n');
+          }
+
+          function ensureCta(html){
+            if (/CG-CTA-INJECT START/.test(html)) return { html, changed:false };
+            const block = buildCtaBlock(); if(!block) return { html, changed:false };
+            if (/<h1[^>]*>/i.test(html)) { html = html.replace(/(<h1[^>]*>[\s\S]*?<\/h1>)/i, `$1\n${block}`); return { html, changed:true }; }
+            if (/<main[^>]*>/i.test(html)) { html = html.replace(/<main[^>]*>/i, (m)=>`${m}\n${block}\n`); return { html, changed:true }; }
+            if (/<body[^>]*>/i.test(html)) { html = html.replace(/<body[^>]*>/i, (m)=>`${m}\n${block}\n`); return { html, changed:true }; }
+            return { html, changed:false };
+          }
+
+          function processFile(p){
+            let html = fs.readFileSync(p,'utf8');
+            seoFiles++; const s1 = ensureSeo(html, p); if(s1.changed){ seoInjected++; html = s1.html; }
+            ctaFiles++; const s2 = ensureCta(html); if(s2.changed){ ctaInjected++; html = s2.html; }
+            if (s1.changed || s2.changed) fs.writeFileSync(p, html.endsWith('\n')?html:html+'\n', 'utf8');
+          }
+
+          let files=[]; for(const t of TARGETS){ files = files.concat(walk(t.dir, t.deep)); }
+          files.forEach(processFile);
+          console.log(`SEO Inject - files: ${seoFiles} / injected: ${seoInjected}`);
+          console.log(`CTA Inject - files: ${ctaFiles} / injected: ${ctaInjected}`);
+          JS
+          chmod +x seo_inject.js
+
+      # 2) 写入 _headers（确保 HTML 不被缓存）
+      - name: Write _headers (no-cache for HTML)
+        run: |
+          cat > _headers <<'H'
+          /index.html
+            Cache-Control: no-cache, must-revalidate, max-age=0
+          /vendors/*
+            Cache-Control: no-cache, must-revalidate, max-age=0
+          /updates/*
+            Cache-Control: no-cache, must-revalidate, max-age=0
+          /categories/*
+            Cache-Control: no-cache, must-revalidate, max-age=0
+          /reports/*
+            Cache-Control: no-cache, must-revalidate, max-age=0
+          H
+
+      # 3) 注入 & 打印
+      - name: Inject CTA & SEO
+        run: node ./seo_inject.js | tee /tmp/inject.log
+
+      # 4) 断言仓库文件已有标记
       - name: Assert CTA markers exist
         run: |
           n=$(git grep -n "CG-CTA-INJECT" -- vendors updates | wc -l || true)
@@ -32,25 +139,31 @@ jobs:
           if [ "$n" -eq 0 ]; then
             echo "::error::CTA markers not found in repo after inject"; exit 1; fi
 
-      - name: Commit & push CTA changes
+      # 5) 提交并推送到 main
+      - name: Commit & push changes
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
           git add -A vendors updates _headers
           if git diff --cached --quiet; then
-            echo "no changes to commit (already present)"; exit 0;
+            echo "no changes to commit"
+          else
+            git commit -m "CTA repair: inject CTA + headers"
+            git pull --rebase --autostash || true
+            git push
           fi
-          git commit -m "CTA repair: inject CTA + headers"
-          git push
 
+      # 6) 软校验（提示缓存/部署滞后，不失败）
       - name: Post-deploy check (soft)
         if: ${{ always() }}
         run: |
           PAGES="${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}"
           for P in "/vendors/zendesk.com/" "/updates/"; do
             echo "check $PAGES$P"
-            curl -fsSL "$PAGES$P?v=${{ github.sha }}" | grep -q "CG-CTA-INJECT" \
-              && echo "ok: CTA visible on $PAGES$P" \
-              || echo "::warning::CTA not visible on $PAGES$P (likely caching/deploy lag)"
+            if curl -fsSL "$PAGES$P?v=${{ github.sha }}" | grep -q "CG-CTA-INJECT"; then
+              echo "ok: CTA visible on $PAGES$P"
+            else
+              echo "::warning::CTA not visible on $PAGES$P (likely caching/deploy lag)"
+            fi
           done
