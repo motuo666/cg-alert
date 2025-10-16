@@ -1,7 +1,7 @@
 name: Outreach Triggered
 
 on:
-  # 分三档时区批次：APAC / EMEA / AMER（工作日）
+  # 分三档时区批次：APAC / EMEA / AMER（仅工作日）
   schedule:
     - cron: "5 1 * * 1-5"   # 01:05 UTC（APAC 工作时段）
     - cron: "5 9 * * 1-5"   # 09:05 UTC（EMEA 工作时段）
@@ -72,7 +72,7 @@ jobs:
           if [ -f scripts/leads_guard.js ]; then node scripts/leads_guard.js || true; fi
           if [ -f scripts/validate_leads.js ]; then node scripts/validate_leads.js || true; fi
 
-      # A1 + C1) 自动调参 + 动态节流（脚本输出 window_h/limit/原因；仅 schedule 事件启用）
+      # A1 + C1) 自动调参 + 动态节流（脚本输出 window_h/limit/reason；仅 schedule 事件启用）
       - name: Auto tune (window/limit & throttle)
         id: tune
         if: github.event_name == 'schedule'
@@ -101,16 +101,16 @@ jobs:
             --limit=${{ github.event_name == 'schedule' && steps.tune.outputs.limit || inputs.limit || '20' }} \
             --pack
 
-      # 汇总（可选）
+      # 汇总（将关键参数写入 Run Summary；不要依赖上一步的 env 变量范围）
       - name: Summary
         if: always()
         run: |
           {
             echo "### Outreach Triggered Summary";
             echo "- Event: **${{ github.event_name }}**";
-            echo "- Window_h: **${{ env.TRIGGER_WINDOW_H }}**";
+            echo "- Window_h: **${{ github.event_name == 'schedule' && steps.tune.outputs.window_h || inputs.window_h || '48' }}**";
             echo "- Limit: **${{ github.event_name == 'schedule' && steps.tune.outputs.limit || inputs.limit || '20' }}**";
-            if [ "${{ steps.tune.outputs.reason }}" != "" ]; then
+            if [ "${{ github.event_name }}" = "schedule" ] && [ -n "${{ steps.tune.outputs.reason }}" ]; then
               echo "- Auto tune reason: **${{ steps.tune.outputs.reason }}**";
             fi
           } >> "$GITHUB_STEP_SUMMARY"
