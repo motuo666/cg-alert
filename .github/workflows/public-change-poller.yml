@@ -21,7 +21,6 @@ on:
 permissions:
   contents: write
 
-# 防止同分支并发冲突（不强制取消在跑中的任务）
 concurrency:
   group: public-change-poller-${{ github.ref }}
   cancel-in-progress: false
@@ -47,7 +46,7 @@ jobs:
       - name: Install deps (best-effort)
         run: npm ci || npm i --no-audit --no-fund || true
 
-      # 0) Endpoint inventory（可选，若脚本存在）
+      # 0) Endpoint inventory（可选）
       - name: Endpoint Inventory
         run: |
           if [ -f scripts/endpoint_inventory.js ]; then
@@ -59,7 +58,7 @@ jobs:
       # 1) Poll（关键：保存正文，才能计算 hash）
       - name: Poll public endpoints
         env:
-          POLL_SAVE_BODY: '1'                    # 必开：保存 .cache/http/... .body.txt
+          POLL_SAVE_BODY: '1'                    # 保存 .cache/http/... .body.txt
           POLL_FETCH_MODE: 'GET'                 # 避免只 HEAD（拿不到正文）
           POLL_SAMPLE: ${{ inputs.sample || '1.0' }}
           POLL_CONCURRENCY: ${{ inputs.concurrency || '8' }}
@@ -71,7 +70,7 @@ jobs:
             echo "poll_public_endpoints.js not found"; exit 1
           fi
 
-      # 2) 规范化/补指纹（hash、fingerprint、excerpt 等）
+      # 2) 规范化/补指纹（hash、excerpt 等）
       - name: Normalize evidence
         run: |
           if [ -f scripts/normalize_evidence.js ]; then
