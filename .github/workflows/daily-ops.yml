@@ -2,36 +2,77 @@ name: Daily Ops
 
 on:
   schedule:
-    - cron: "30 16 * * *"   # 每天 16:30 UTC（按需改）
-  workflow_dispatch: {}
+    - cron: "30 16 * * *"   # 每天 16:30 UTC
+  workflow_dispatch:
+    inputs:
+      target_sent:
+        description: "目标：Sent today（默认 8）"
+        required: false
+        default: "8"
+      target_evid_today:
+        description: "目标：Evidence today（默认 10）"
+        required: false
+        default: "10"
 
 permissions:
   contents: write
 
+concurrency:
+  group: daily-ops-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   ops:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install (best-effort)
         run: npm ci || npm i --no-audit --no-fund || true
 
+      # 自检：生成 artifacts/daily_ops.json 并写入 Step Summary
       - name: Fullchain Check
         env:
-          TARGET_SENT: "8"
-          TARGET_EVID_TODAY: "10"
+          # 优先顺序：手动输入 > 仓库 Variables > 默认
+          TARGET_SENT: ${{ inputs.target_sent || vars.TARGET_SENT || '8' }}
+          TARGET_EVID_TODAY: ${{ inputs.target_evid_today || vars.TARGET_EVID_TODAY || '10' }}
         run: |
           node scripts/fullchain_check.js || true
 
+      # 可选：生成 TTD 报告（P50/P95）
+      - name: Build TTD Report
+        run: node scripts/build_ttd_report.js || true
+
+      # 生成当天可视化页：/reports/ops/<YYYY-MM-DD>/index.html
       - name: Build Daily Ops Report
         run: node scripts/daily_ops_report.js
 
+      # 安全推送（无变更则跳过）
       - name: Safe push report
         run: |
           chmod +x scripts/git_safe_push.sh || true
           bash scripts/git_safe_push.sh "chore(ops): daily report $(date -u +%F)"
+
+      # 可选：在 Summary 里放快捷入口（依赖 SITE_ORIGIN 变量，未配置则仅打印本地路径）
+      - name: Quick Links (optional)
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+        run: |
+          TODAY="$(date -u +%F)"
+          if [ -n "$SITE_ORIGIN" ]; then
+            echo "### Quick Links" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Ops Dashboard: **$SITE_ORIGIN/reports/ops/$TODAY/**" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Ops Index: **$SITE_ORIGIN/reports/ops/**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Quick Links" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Ops Dashboard (repo path): reports/ops/$TODAY/index.html" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Ops Index (repo path): reports/ops/index.html" >> "$GITHUB_STEP_SUMMARY"
+          fi
