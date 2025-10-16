@@ -1,22 +1,74 @@
 name: SEO Tighten
+
 on:
   push:
     branches: [ main ]
-    paths: [ "vendors/**", "updates/**", "evidence/**" ]
+    paths:
+      - "vendors/**"
+      - "updates/**"
+      - "evidence/**"
   workflow_dispatch: {}
-permissions: { contents: write }
-concurrency: { group: seo-tighten, cancel-in-progress: true }
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seo-tighten-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   tighten:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm ci || npm i --no-audit --no-fund || true
-      - run: node scripts/seo_inject.js
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install deps (best-effort)
+        run: npm ci || npm i --no-audit --no-fund || true
+
+      # 注入 SEO（JSON-LD / canonical / meta）
+      - name: SEO inject
+        run: |
+          if [ -f scripts/seo_inject.js ]; then
+            node scripts/seo_inject.js
+          else
+            echo "scripts/seo_inject.js not found"; exit 1
+          fi
+
+      # 注入 CTA 双入口（Enable alerts / Buy Portfolio），自动带 UTM，幂等
+      - name: Inject CTA (Enable alerts / Buy Portfolio)
+        env:
+          INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+          STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+        run: |
+          if [ -f scripts/cta_inject.js ]; then
+            node scripts/cta_inject.js
+          else
+            echo "scripts/cta_inject.js not found (skip)"
+          fi
+
+      # 摘要
+      - name: Summarize
+        run: |
+          CHANGED=$(git diff --name-only | wc -l || echo 0)
+          {
+            echo "### SEO Tighten"
+            echo "- files changed (not yet committed): $CHANGED"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # 安全提交（确保把 vendors / updates / reports 的注入改动提交）
       - name: Safe Push
         run: |
-          chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "seo: inject json-ld/canonical/meta"
+          git add -A vendors updates reports || true
+          if [ -n "$(git status --porcelain)" ]; then
+            chmod +x scripts/git_safe_push.sh || true
+            bash scripts/git_safe_push.sh "seo: inject json-ld/canonical/meta + dual CTA"
+          else
+            echo "no changes to commit"
+          fi
