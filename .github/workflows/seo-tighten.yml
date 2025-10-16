@@ -1,40 +1,69 @@
 name: SEO Tighten
 
 on:
+  workflow_dispatch:
   push:
     paths:
-      - 'vendors/**'
-      - 'updates/**'
-      - 'evidence/**'
-  workflow_dispatch: {}
+      - "vendors/**"
+      - "updates/**"
+      - "seo_inject.js"
 
-permissions: { contents: write }
+permissions:
+  contents: write
 
 jobs:
-  seo:
+  tighten:
     runs-on: ubuntu-latest
     env:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL || secrets.INTAKE_FORM_URL || '' }}
-      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO || '' }}
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: npm ci || npm i --no-audit --no-fund || true
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Inject SEO
-        run: node scripts/seo_inject.js || true
+      - name: Use Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-      - name: Inject CTA (Enable alerts / Buy Portfolio)
-        run: node scripts/cta_inject.js
-
-      - name: Safe push
+      - name: Run SEO & CTA inject (idempotent)
         run: |
-          git add -A vendors updates reports || true
-          if [ -n "$(git status --porcelain)" ]; then
-            chmod +x scripts/git_safe_push.sh || true
-            bash scripts/git_safe_push.sh "seo tighten + CTA inject"
-          else
+          node ./seo_inject.js | tee /tmp/seo_inject.log
+          echo "-----"
+          cat /tmp/seo_inject.log
+
+      - name: Safe push (include vendors/updates/reports & indices)
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A vendors reports updates data/evidence.ndx data/materiality.csv data/vendor_catalog.csv evidence public/who-uses || true
+          if git diff --cached --quiet; then
             echo "no changes to commit"
+          else
+            git commit -m "SEO Tighten: inject SEO + CTA [skip ci]"
+            chmod +x ./git_safe_push.sh || true
+            if [ -f ./git_safe_push.sh ]; then
+              ./git_safe_push.sh
+            else
+              # 兜底直推（仅当仓库策略允许）
+              git pull --rebase --autostash || true
+              git push
+            fi
           fi
+
+      # 可选：部署后校验（命中 CDN 缓存时，只告警不失败）
+      - name: Post-deploy check (optional)
+        if: ${{ always() }}
+        run: |
+          set -e
+          PAGES="${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}"
+          for P in "/vendors/zendesk.com/" "/updates/"; do
+            echo "check $PAGES$P"
+            if curl -fsSL "$PAGES$P?v=${{ github.sha }}" | grep -q "CG-CTA-INJECT"; then
+              echo "ok: CTA visible on $PAGES$P"
+            else
+              echo "::warning::CTA not visible on $PAGES$P (likely caching/deploy lag)"
+            fi
+          done
