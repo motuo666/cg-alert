@@ -1,0 +1,20 @@
+{
+  "weights": {
+    "Pricing": 3,
+    "DPA": 3,
+    "ToS": 2,
+    "Privacy": 2,
+    "Subprocessors": 2,
+    "Status": 1,
+    "Other": 1
+  },
+  "recent_days": 90,
+  "thresholds": {
+    "high": 8,
+    "medium": 4
+  },
+  "decay": {
+    "enabled": true,
+    "half_life_days": 45
+  }
+}
