@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
- * Daily Ops Report
+ * Daily Ops Report（覆盖版）
  * - 读取 artifacts/daily_ops.json 生成 /reports/ops/<YYYY-MM-DD>/index.html
- * - 若 artifacts 缺失，做轻量兜底计算（evidence_today/sent_today/hash_ratio）
- * - 避免在模板字符串中嵌套反引号，全部标签用普通引号
+ * - 若 artifacts 缺失，做兜底估算（evidence_today / sent_today / hash_ratio）
+ * - 彻底移除模板字符串中的嵌套反引号；标签文本用普通引号或字符串拼接
  */
+
 const fs = require('fs');
 const path = require('path');
 
@@ -24,8 +25,14 @@ function todayStrUTC(){
   const day = String(d.getUTCDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
-function readJSON(fp){ try{ return JSON.parse(fs.readFileSync(fp,'utf8')); }catch{ return null; } }
-function readLines(fp){ if(!fs.existsSync(fp)) return []; return fs.readFileSync(fp,'utf8').split(/\r?\n/); }
+function readJSON(fp){
+  try{ return JSON.parse(fs.readFileSync(fp,'utf8')); }
+  catch{ return null; }
+}
+function readLines(fp){
+  if(!fs.existsSync(fp)) return [];
+  return fs.readFileSync(fp,'utf8').split(/\r?\n/);
+}
 function isRealHash(h){ return !!h && !/^0+$/.test(h); }
 
 function fallbackKPI(){
@@ -35,8 +42,8 @@ function fallbackKPI(){
   if (fs.existsSync(EVID_NDX)){
     const L = readLines(EVID_NDX);
     for (const ln of L){
-      if(!ln.trim()) continue;
-      const parts = ln.split('\t'); // [when, domain, type, hash, ...]（按你的现有格式）
+      if(!ln || !ln.trim()) continue;
+      const parts = ln.split('\t'); // [when, domain, type, hash, ...]
       const when = (parts[0]||'').slice(0,10);
       const hash = parts[3] || '';
       if (when === today){
@@ -52,22 +59,27 @@ function fallbackKPI(){
   let sent_today = 0;
   if (fs.existsSync(OUTREACH)){
     const lines = readLines(OUTREACH);
-    const header = lines[0] && /when|status/i.test(lines[0]) ? lines[0].split(',') : [];
-    const start = header.length ? 1 : 0;
-    // 猜测列：when(0), status(8)；若有表头则做一次匹配
-    let idxWhen = 0, idxStatus = 8;
-    if (header.length){
-      const lower = header.map(h => h.toLowerCase());
-      idxWhen = Math.max(0, lower.findIndex(h => h.includes('when')));
-      const iStat = lower.findIndex(h => h.includes('status'));
-      if (iStat >= 0) idxStatus = iStat;
-    }
-    for (let i=start; i<lines.length; i++){
-      const row = lines[i]; if(!row || !row.trim()) continue;
-      const cols = row.split(',');
-      const w = (cols[idxWhen]||'');
-      const st = (cols[idxStatus]||'').toLowerCase();
-      if (w.slice(0,10)===today && st==='sent') sent_today++;
+    if (lines.length){
+      const header = /when|status/i.test(lines[0]||'') ? lines[0].split(',') : [];
+      const start = header.length ? 1 : 0;
+      // 猜测列：when(0), status(8)；若有表头则匹配
+      let idxWhen = 0, idxStatus = 8;
+      if (header.length){
+        const lower = header.map(h => (h||'').toLowerCase());
+        const iWhen = lower.findIndex(h => h.includes('when'));
+        const iStat = lower.findIndex(h => h.includes('status'));
+        if (iWhen >= 0) idxWhen = iWhen;
+        if (iStat >= 0) idxStatus = iStat;
+      }
+      const today = todayStrUTC();
+      for (let i=start; i<lines.length; i++){
+        const row = lines[i];
+        if(!row || !row.trim()) continue;
+        const cols = row.split(',');
+        const w = (cols[idxWhen]||'');
+        const st = (cols[idxStatus]||'').toLowerCase();
+        if (w.slice(0,10)===today && st==='sent') sent_today++;
+      }
     }
   }
 
@@ -90,11 +102,12 @@ function bar(current, target, label){
   const cur = Number(current||0);
   const tgt = Math.max(1, Number(target||0));
   const pct = Math.max(0, Math.min(100, Math.round(cur/tgt*100)));
-  return `
-<div class="kpi">
+  return (
+`<div class="kpi">
   <div class="kpi-head">${label}: <strong>${cur}</strong> / ${tgt}</div>
   <div class="kpi-outer"><div class="kpi-inner" style="width:${pct}%"></div></div>
-</div>`;
+</div>`
+  );
 }
 
 function pill(text, tone){ return `<span class="pill ${tone||''}">${text}</span>`; }
@@ -109,7 +122,8 @@ function main(){
   const ttdP95 = (kpi.ttd_p95_hours==null) ? '—' : `${Number(kpi.ttd_p95_hours).toFixed(1)}h`;
   const ttdSamples = kpi.ttd_samples||0;
 
-  const html = `<!doctype html>
+  const html =
+`<!doctype html>
 <html><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Daily Ops - ${date}</title>
@@ -133,8 +147,8 @@ h1{font-size:22px;margin:0 0 12px}
 <h1>Daily Ops — ${date}</h1>
 
 <div class="kpis">
-  ${bar(kpi.evidence_today||0, ${TARGET_EVIDENCE}, 'Evidence vs target (${TARGET_EVIDENCE})')}
-  ${bar(kpi.sent_today||0, ${TARGET_SENT}, 'Sent vs target (${TARGET_SENT})')}
+  ${bar(kpi.evidence_today||0, TARGET_EVIDENCE, 'Evidence vs target (' + TARGET_EVIDENCE + ')')}
+  ${bar(kpi.sent_today||0, TARGET_SENT, 'Sent vs target (' + TARGET_SENT + ')')}
 </div>
 
 <div class="section meta">
@@ -145,7 +159,7 @@ h1{font-size:22px;margin:0 0 12px}
 </div>
 
 <div class="section small">
-  <div>Notes: Evidence/ Sent 目标来自环境变量 TARGET_EVID_TODAY(${TARGET_EVIDENCE}) / TARGET_SENT(${TARGET_SENT})；若 artifacts 缺失，本页使用兜底估算。</div>
+  <div>Notes: Evidence / Sent 目标来自环境变量 TARGET_EVID_TODAY(${TARGET_EVIDENCE}) / TARGET_SENT(${TARGET_SENT})；若 artifacts 缺失，本页使用兜底估算。</div>
 </div>
 
 </body></html>`;
@@ -154,7 +168,7 @@ h1{font-size:22px;margin:0 0 12px}
   ensureDir(outDir);
   fs.writeFileSync(path.join(outDir, 'index.html'), html, 'utf8');
 
-  // Step summary（便于在 Actions 里一眼看到）
+  // Step summary（在 Actions 里展示关键数）
   const sum = [];
   sum.push('### Daily Ops');
   sum.push(`- date: **${date}**`);
