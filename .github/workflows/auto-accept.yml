@@ -10,7 +10,7 @@ on:
 
 permissions:
   contents: write
-  actions: read
+  actions: write   # 需要 write 才能触发下游 workflow_dispatch
 
 concurrency:
   group: auto-accept-${{ github.ref_name }}
@@ -76,9 +76,7 @@ jobs:
             SAMPLES=$(jq -r '.kpi.ttd_samples // 0'    artifacts/daily_ops.json)
             # 当样本数达标且 P95 超阈值，则标记为 TTD 失败
             awk -v p95="$P95" -v max="$P95_TTD_MAX_HOURS" -v n="$SAMPLES" -v min="$MIN_TTD_SAMPLES" '
-              BEGIN {
-                if (n>=min && p95>max) exit 0; else exit 1;
-              }
+              BEGIN { if (n>=min && p95>max) exit 0; else exit 1; }
             ' && {
               echo "ttd_fail=true" >> "$GITHUB_OUTPUT"
               echo "Detected TTD breach: P95=${P95}h (threshold ${P95_TTD_MAX_HOURS}h), samples=${SAMPLES}" >> "$GITHUB_STEP_SUMMARY"
