@@ -1,0 +1,1267 @@
+{
+  "generated_at": "2025-10-16T08:56:12.503Z",
+  "month": "2025-10",
+  "lookback_h": 72,
+  "rows": [
+    {
+      "vendor": "google.com",
+      "score": 37,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.75,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "newrelic.com",
+      "score": 37,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.75,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "duo.com",
+      "score": 35,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.625,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "stripe.com",
+      "score": 35,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.625,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "box.com",
+      "score": 30,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.375,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "checkout.com",
+      "score": 30,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.375,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "helpscout.com",
+      "score": 30,
+      "recent_changes": 0,
+      "hv_changes": 5,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "mailgun.com",
+      "score": 30,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.375,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "gitlab.com",
+      "score": 28,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 7,
+      "hash_ratio": 0.286,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "adyen.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "algolia.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "atlassian.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "aws.amazon.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "braintreepayments.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "canva.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "chargebee.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "cloudflare.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "confluent.io",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "contentful.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "domain",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "dropbox.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "elastic.co",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "fastly.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "figma.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "freshworks.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "globex.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "heroku.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "hubspot.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "intercom.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "linear.app",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "microsoft.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "mongodb.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "netlify.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "notion.so",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "okta.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "onelogin.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "paddle.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "recurly.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "salesforce.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "sanity.io",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "sentry.io",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "snowflake.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "twilio.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "vercel.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "zendesk.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "zoho.com",
+      "score": 27,
+      "recent_changes": 0,
+      "hv_changes": 4,
+      "total_changes": 8,
+      "hash_ratio": 0.25,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "bitbucket.org",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 3,
+      "total_changes": 6,
+      "hash_ratio": 0.333,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "github.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "monday.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.asana.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.atlassian.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.box.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.chargebee.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.datadoghq.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.dropbox.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.duo.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.elastic.co",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.figma.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.helpscout.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.hubspot.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.mailgun.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.monday.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.mongodb.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.newrelic.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.postmarkapp.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.render.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.segment.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.sendgrid.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.sentry.io",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.snowflake.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.supabase.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.twilio.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.zoho.com",
+      "score": 26,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "datadoghq.com",
+      "score": 25,
+      "recent_changes": 0,
+      "hv_changes": 3,
+      "total_changes": 7,
+      "hash_ratio": 0.286,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "miro.com",
+      "score": 25,
+      "recent_changes": 0,
+      "hv_changes": 3,
+      "total_changes": 7,
+      "hash_ratio": 0.286,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "supabase.com",
+      "score": 25,
+      "recent_changes": 0,
+      "hv_changes": 3,
+      "total_changes": 7,
+      "hash_ratio": 0.286,
+      "has_pack": 1,
+      "recency_h": 81
+    },
+    {
+      "vendor": "sendgrid.com",
+      "score": 24,
+      "recent_changes": 0,
+      "hv_changes": 3,
+      "total_changes": 4,
+      "hash_ratio": 0.75,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "_seed.com",
+      "score": 23,
+      "recent_changes": 0,
+      "hv_changes": 1,
+      "total_changes": 1,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "acme.com",
+      "score": 23,
+      "recent_changes": 0,
+      "hv_changes": 1,
+      "total_changes": 1,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "help",
+      "score": 23,
+      "recent_changes": 0,
+      "hv_changes": 1,
+      "total_changes": 2,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.help",
+      "score": 23,
+      "recent_changes": 0,
+      "hv_changes": 1,
+      "total_changes": 1,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "acme",
+      "score": 23,
+      "recent_changes": 0,
+      "hv_changes": 1,
+      "total_changes": 1,
+      "hash_ratio": 1,
+      "has_pack": 0,
+      "recency_h": 105
+    },
+    {
+      "vendor": "render.com",
+      "score": 22,
+      "recent_changes": 0,
+      "hv_changes": 3,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "asana.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 3,
+      "total_changes": 4,
+      "hash_ratio": 0.5,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "auth0.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 3,
+      "total_changes": 4,
+      "hash_ratio": 0.5,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "slack.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 3,
+      "total_changes": 4,
+      "hash_ratio": 0.5,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.adyen.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.algolia.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.auth0.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.aws.amazon.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.bitbucket.org",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.braintreepayments.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.canva.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.checkout.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.cloudflare.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.confluent.io",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.contentful.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.domain",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.fastly.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.freshworks.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.github.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.gitlab.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.globex.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.google.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.heroku.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.intercom.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.linear.app",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.microsoft.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.miro.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.netlify.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.notion.so",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.okta.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.onelogin.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.paddle.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.recurly.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.salesforce.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.sanity.io",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.slack.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.stripe.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.vercel.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.zendesk.com",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.zoom.us",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "zoom.us",
+      "score": 19,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 3,
+      "hash_ratio": 0.667,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "postmarkapp.com",
+      "score": 16,
+      "recent_changes": 0,
+      "hv_changes": 2,
+      "total_changes": 4,
+      "hash_ratio": 0.5,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "segment.com",
+      "score": 16,
+      "recent_changes": 0,
+      "hv_changes": 3,
+      "total_changes": 6,
+      "hash_ratio": 0.333,
+      "has_pack": 0,
+      "recency_h": 81
+    },
+    {
+      "vendor": "status.acme.com",
+      "score": 0,
+      "recent_changes": 0,
+      "hv_changes": 0,
+      "total_changes": 1,
+      "hash_ratio": 0,
+      "has_pack": 0,
+      "recency_h": 81
+    }
+  ]
+}
