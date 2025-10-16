@@ -28,7 +28,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20"
 
       - name: Install deps (best effort)
         run: npm ci || npm i --no-audit --no-fund || true
@@ -42,7 +42,7 @@ jobs:
             echo "val=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
           fi
           echo "month=${{ inputs.month }}"
-          echo "resolved=${{ steps.month.outputs.val }}"
+          echo "resolved-will-be=${{ steps.month.outputs.val }}"
 
       - name: Build public monthly pages
         env:
@@ -55,6 +55,12 @@ jobs:
 
       - name: Monthly prune & create artifact zip
         run: node scripts/prune_evidence_monthly.js
+
+      # —— 新增：发布当月 checksum（对当月 evidence.ndx 行做 sha256，输出 reports/<YYYY-MM>/checksum.txt）
+      - name: Publish monthly checksum
+        env:
+          REPORT_MONTH: ${{ steps.month.outputs.val }}
+        run: node scripts/monthly_checksum.js
 
       - name: Upload Artifact (evidence zip)
         if: ${{ hashFiles('artifacts/*.zip') != '' }}
@@ -77,5 +83,5 @@ jobs:
 
       - name: Safe Push
         run: |
-          chmod +x scripts/git_safe_push.sh
+          chmod +x scripts/git_safe_push.sh || true
           bash scripts/git_safe_push.sh "report: public monthly ${{ steps.month.outputs.val }}"
