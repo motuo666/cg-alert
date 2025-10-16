@@ -21,6 +21,11 @@ on:
 permissions:
   contents: write
 
+# 防止同分支并发冲突（不强制取消在跑中的任务）
+concurrency:
+  group: public-change-poller-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   poll:
     runs-on: ubuntu-latest
@@ -31,10 +36,13 @@ jobs:
       STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install deps (best-effort)
         run: npm ci || npm i --no-audit --no-fund || true
@@ -55,6 +63,7 @@ jobs:
           POLL_FETCH_MODE: 'GET'                 # 避免只 HEAD（拿不到正文）
           POLL_SAMPLE: ${{ inputs.sample || '1.0' }}
           POLL_CONCURRENCY: ${{ inputs.concurrency || '8' }}
+          POLL_RESPECT_ROBOTS: '1'               # 合规：尊重 robots.txt
         run: |
           if [ -f scripts/poll_public_endpoints.js ]; then
             node scripts/poll_public_endpoints.js
@@ -101,7 +110,7 @@ jobs:
             echo "extract_diff_excerpt.js not found (skip)"
           fi
 
-      # 5) 证据索引
+      # 5) 证据索引（必须成功）
       - name: Build evidence index
         run: |
           if [ -f scripts/build_evidence_index.js ]; then
@@ -128,7 +137,7 @@ jobs:
             echo "build_change_pack.js not found"; exit 1
           fi
 
-      # 8) Subprocessor 反查
+      # 8) Subprocessor 反查（可选）
       - name: Build subprocessor reverse index
         run: |
           if [ -f scripts/build_who_uses.js ]; then
@@ -137,13 +146,13 @@ jobs:
             echo "build_who_uses.js not found (skip)"
           fi
 
-      # 9) Updates & Categories
+      # 9) Updates & Categories（可选）
       - name: Build updates & categories
         run: |
           if [ -f scripts/build_updates.js ]; then node scripts/build_updates.js || true; fi
           if [ -f scripts/build_categories.js ]; then node scripts/build_categories.js || true; fi
 
-      # 10) Vendor Catalog（已换稳健解析版）
+      # 10) Vendor Catalog（稳健解析版；失败不阻断）
       - name: Build vendor catalog
         run: |
           if [ -f scripts/build_vendor_catalog.js ]; then
@@ -152,7 +161,7 @@ jobs:
             echo "build_vendor_catalog.js not found (skip)"
           fi
 
-      # 11) SEO 注入（JSON-LD/Meta）
+      # 11) SEO 注入（JSON-LD/Meta，失败不阻断）
       - name: Inject SEO
         run: |
           if [ -f scripts/seo_inject.js ]; then
@@ -161,13 +170,12 @@ jobs:
             echo "seo_inject.js not found (skip)"
           fi
 
-      # 12) Run Summary
+      # 12) Run Summary（只统计“非 0000… hash”的当日证据）
       - name: Summarize
         run: |
           YM=$(date -u +%Y-%m)
           TODAY=$(date -u +%F)
-          # 仅统计“非 0000... hash”的当日证据
-          CHANGED=$(find evidence -type f -name "${TODAY}-*.json" 2>/dev/null | grep -v "00000000" | wc -l)
+          CHANGED=$(find evidence -type f -name "${TODAY}-*.json" ! -name "*00000000.json" 2>/dev/null | wc -l)
           BASELINES=$(find evidence -type f -name "${TODAY}-*00000000.json" 2>/dev/null | wc -l)
           INDEX_ROWS=$(test -f data/evidence.ndx && wc -l < data/evidence.ndx || echo 0)
           PACKS=$(find "reports/$YM" -type f -name index.html 2>/dev/null | wc -l)
@@ -181,7 +189,7 @@ jobs:
             echo "- Change Packs this month ($YM): $PACKS"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # 13) Safe push
+      # 13) Safe push（只提交有变化的产物）
       - name: Safe push changes
         run: |
           git add -A reports updates data/evidence.ndx data/materiality.csv data/vendor_catalog.csv evidence public/who-uses || true
