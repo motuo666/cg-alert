@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+'use strict';
 /**
  * Auto Acceptance Gate (覆盖版 · KPI-7d 修正 + burn-in)
  *
@@ -65,7 +66,9 @@ function readLines(fp) {
 }
 
 function csvRows(fp) {
-  return readLines(fp).map(l => l.split(/,(?!\s)/)); // 容错分割
+  if (!fs.existsSync(fp)) return [];
+  // 轻量 CSV：不处理引号嵌套，满足我们当前日志/抑制格式即可
+  return fs.readFileSync(fp, 'utf8').split(/\r?\n/).filter(Boolean).map(l => l.split(/,(?!\s)/));
 }
 
 function appendSummary(md) {
@@ -151,11 +154,12 @@ function loadKPIs() {
     if (!Number.isFinite(kpi.hash_ratio)) kpi.hash_ratio = total ? (hashOK / total) : 0;
   }
 
+  // sent_today / changed_vendors_72h 填补
   if (!Number.isFinite(kpi.sent_today) || !Number.isFinite(kpi.changed_vendors_72h)) {
-    // sent_today 从 outreach_log 估；changed_vendors_72h 简化为 ndx 最近72h的 vendor 数
     const out = csvRows(D('outreach_log.csv'));
     const header = out[0] && /^when$/i.test((out[0][0] || '').trim());
     const rows = header ? out.slice(1) : out;
+
     const sentToday = rows.filter(cols => {
       const { whenTs, status } = parseOutreachRow(cols);
       const d = whenTs ? new Date(whenTs).toISOString().slice(0, 10) : '';
@@ -211,26 +215,29 @@ function compute7dDelivery() {
   let unsub7 = 0, bounce7 = 0, complaint7 = 0;
   let unsubNoTs = 0, bounceNoTs = 0, complaintNoTs = 0;
 
-  for (const cols of unsubsRows.slice(1)) { // 可能有表头，丢一行也无所谓
-    const { whenTs, email } = parseSuppRow(cols);
-    if (!email) continue;
-    if (!whenTs) { unsubNoTs++; continue; }
-    if (whenTs >= look && (!lastSent.has(email) || whenTs >= lastSent.get(email))) unsub7++;
-  }
-  for (const cols of bouncesRows.slice(1)) {
-    const { whenTs, email } = parseSuppRow(cols);
-    if (!email) continue;
-    if (!whenTs) { bounceNoTs++; continue; }
-    if (whenTs >= look && (!lastSent.has(email) || whenTs >= lastSent.get(email))) bounce7++;
-  }
-  for (const cols of complaintsRows.slice(1)) {
-    const { whenTs, email } = parseSuppRow(cols);
-    if (!email) continue;
-    if (!whenTs) { complaintNoTs++; continue; }
-    if (whenTs >= look && (!lastSent.has(email) || whenTs >= lastSent.get(email))) complaint7++;
-  }
+  const scanSupp = (rows, kind) => {
+    for (const cols of rows.slice(1)) { // 可能有表头，丢一行也无所谓
+      const { whenTs, email } = parseSuppRow(cols);
+      if (!email) continue;
+      if (!whenTs) {
+        if (kind === 'unsub') unsubNoTs++;
+        else if (kind === 'bounce') bounceNoTs++;
+        else if (kind === 'complaint') complaintNoTs++;
+        continue;
+      }
+      if (whenTs >= look && (!lastSent.has(email) || whenTs >= lastSent.get(email))) {
+        if (kind === 'unsub') unsub7++;
+        else if (kind === 'bounce') bounce7++;
+        else if (kind === 'complaint') complaint7++;
+      }
+    }
+  };
 
-  const result = {
+  scanSupp(unsubsRows, 'unsub');
+  scanSupp(bouncesRows, 'bounce');
+  scanSupp(complaintsRows, 'complaint');
+
+  return {
     sent7,
     unsub7,
     bounce7,
@@ -240,7 +247,6 @@ function compute7dDelivery() {
     complaintRate: sent7 > 0 ? complaint7 / sent7 : 0,
     unsubNoTs, bounceNoTs, complaintNoTs,
   };
-  return result;
 }
 
 function main() {
@@ -291,10 +297,12 @@ function main() {
   lines.push(`- hash_ratio: **${((k.hash_ratio || 0) * 100).toFixed(1)}%** / target ${(cfg.MIN_HASH_RATIO * 100)}%`);
   lines.push(`- changed_vendors_72h: **${k.changed_vendors_72h || 0}** ${cfg.REQUIRE_CHANGED_VENDORS ? '(must > 0)' : ''}`);
   lines.push(`- TTD (lookback ${cfg.TTD_LOOKBACK_HOURS}h): P50 **${(k.ttd_p50_hours || 0).toFixed(1)}h**, P95 **${(k.ttd_p95_hours || 0).toFixed(1)}h**, samples **${k.ttd_samples || 0}** (min ${cfg.MIN_TTD_SAMPLES})`);
+
   lines.push(`- 7d: sent **${d7.sent7}** | unsub **${d7.unsub7} (${fmtPct(d7.unsubRate)})** | bounce **${d7.bounce7} (${fmtPct(d7.bounceRate)})** | complaint **${d7.complaint7} (${fmtPct(d7.complaintRate)})** ${gateDlvr ? '' : `(burn-in: sent7<${cfg.MIN_SENT7_FOR_DLVR})`}`);
 
   const ok = FAIL.length === 0;
   lines.push(ok ? '\n✅ Acceptance: **PASS**' : '\n❌ Acceptance: **FAIL**');
+
   if (FAIL.length) {
     lines.push('\n**Blocking reasons:**');
     for (const s of FAIL) lines.push(`- ${s}`);
@@ -304,7 +312,10 @@ function main() {
     for (const s of WARN) lines.push(`- ${s}`);
   }
   // 标记 TTD 失败（供 workflow 钩子判断）
-  if (ttdFail) lines.push('\n`TTD_FAIL_MARKER`');
+  if (ttdFail) {
+    lines.push('\nTTD_FAIL_MARKER');   // 大写标记
+    lines.push('\nttd_fail');          // 小写标记（兼容旧 grep）
+  }
 
   const md = lines.join('\n');
   console.log(md.replace(/\*\*/g, '')); // 控制台去粗体
