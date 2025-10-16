@@ -1,13 +1,12 @@
 #!/usr/bin/env node
-/**
- * CTA Injector (idempotent)
- * - 在 reports/**/index.html、vendors/**/index.html、updates/index.html 注入双入口 CTA：
- *   [Enable alerts] -> INTAKE_FORM_URL
- *   [Buy Portfolio] -> STRIPE_LINK_PORTFOLIO
- * - 保留 UTM：把当前页面的 utm_* 参数追加到按钮外链
- * - 幂等：带标记，不重复注入
- * - 不改页面主题配色（极简内联样式）
- */
+// CTA Injector (idempotent)
+// - 在 reports/.../index.html、vendors/.../index.html、updates/index.html 注入双入口 CTA：
+//   [Enable alerts] -> INTAKE_FORM_URL
+//   [Buy Portfolio] -> STRIPE_LINK_PORTFOLIO
+// - 保留 UTM：把当前页面的 utm_* 参数追加到按钮外链
+// - 幂等：带标记，不重复注入
+// - 不改页面主题配色（极简内联样式）
+
 const fs = require('fs');
 const path = require('path');
 
@@ -20,8 +19,8 @@ const TARGETS = [
 const MARK_START = '<!-- CG-CTA-INJECT START -->';
 const MARK_END = '<!-- CG-CTA-INJECT END -->';
 
-const INTAKE = process.env.INTAKE_FORM_URL || '';            // e.g. Google Form
-const STRIPE = process.env.STRIPE_LINK_PORTFOLIO || '';       // e.g. Stripe Payment Link
+const INTAKE = process.env.INTAKE_FORM_URL || '';      // e.g. Google Form
+const STRIPE = process.env.STRIPE_LINK_PORTFOLIO || ''; // e.g. Stripe Payment Link
 
 if (!INTAKE && !STRIPE) {
   console.log('cta_inject: no INTAKE_FORM_URL / STRIPE_LINK_PORTFOLIO provided, skip.');
@@ -119,7 +118,7 @@ function injectInto(html, block) {
       return html.slice(0,pos) + '\n' + block + '\n' + html.slice(pos);
     }
   }
-  // 否则加到末尾（不理想，但保证不丢）
+  // 否则加到末尾
   return html + '\n' + block + '\n';
 }
 
