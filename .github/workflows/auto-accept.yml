@@ -10,7 +10,7 @@ on:
 
 permissions:
   contents: write
-  actions: write   # 需要 write 才能触发下游 workflow_dispatch
+  actions: write   # 触发下游 workflow_dispatch 需要 actions:write
 
 concurrency:
   group: auto-accept-${{ github.ref_name }}
@@ -37,15 +37,18 @@ jobs:
       - name: Install (best-effort)
         run: npm ci || npm i --no-audit --no-fund || true
 
-      # 先跑 fullchain_check，生成 artifacts/daily_ops.json
-      # 注意：这里不让它失败（|| true），由 acceptance_check 统一判定通过/失败
+      # A) 先归一化抑制日志（补时间戳/列名），防止7日投递口径误判
+      - name: Normalize suppression logs
+        run: node scripts/normalize_suppression_logs.js || true
+
+      # B) 自检（产 artifacts/daily_ops.json；此处不阻断）
       - name: Fullchain Check
         env:
-          TARGET_SENT: ${{ vars.TARGET_SENT || '8' }}             # 仅用于 Summary 展示，不阻断
+          TARGET_SENT: ${{ vars.TARGET_SENT || '8' }}             # 仅用于 Summary 展示
           TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || '10' }}
-        run: |
-          node scripts/fullchain_check.js || true
+        run: node scripts/fullchain_check.js || true
 
+      # C) 严格验收（读取 daily_ops.json + 7日门槛 + TTD 门槛）
       - name: Auto Acceptance Gate (strict)
         env:
           # 基础硬门槛（不配则走默认）
@@ -53,10 +56,12 @@ jobs:
           TARGET_EVID_TODAY:         ${{ vars.TARGET_EVID_TODAY || '10' }}
           MIN_HASH_RATIO:            ${{ vars.MIN_HASH_RATIO || '0.4' }}
           REQUIRE_CHANGED_VENDORS:   ${{ vars.REQUIRE_CHANGED_VENDORS || '1' }}
-          # 近 7 日健康阈值（可选）
-          UNSUB_7D_MAX:              ${{ vars.UNSUB_7D_MAX || '0.005' }}
-          COMPLAINT_7D_MAX:          ${{ vars.COMPLAINT_7D_MAX || '0.001' }}
-          # TTD（Time-to-Detect）硬门槛（可选但推荐）
+          # 近 7 日健康阈值（含冷启动宽限）
+          MIN_SENT7_FOR_DLVR:        ${{ vars.MIN_SENT7_FOR_DLVR || '100' }}
+          UNSUB_7D_MAX:              ${{ vars.UNSUB_7D_MAX || '0.005' }}   # 0.5%
+          COMPLAINT_7D_MAX:          ${{ vars.COMPLAINT_7D_MAX || '0.001' }}# 0.1%
+          BOUNCE_7D_MAX:             ${{ vars.BOUNCE_7D_MAX || '0.08' }}    # 8%
+          # TTD（Time-to-Detect）硬门槛
           P95_TTD_MAX_HOURS:         ${{ vars.P95_TTD_MAX_HOURS || '24' }}
           MIN_TTD_SAMPLES:           ${{ vars.MIN_TTD_SAMPLES || '10' }}
           TTD_LOOKBACK_HOURS:        ${{ vars.TTD_LOOKBACK_HOURS || '72' }}
