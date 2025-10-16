@@ -21,216 +21,89 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: public-change-poller-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   poll:
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: --max_old_space_size=4096
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
-      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+      # 关键：支持 vars 或 secrets 任一来源
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL || secrets.INTAKE_FORM_URL || '' }}
+      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO || '' }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+        with: { node-version: '20' }
 
       - name: Install deps (best-effort)
         run: npm ci || npm i --no-audit --no-fund || true
 
-      # -1) 版本守门：防旧脚本回流导致语法/时间戳错误
-      - name: Guard scripts version
-        run: |
-          # daily_ops_report.js 旧版包含反引号模板
-          (grep -q "\`Evidence vs target(" scripts/daily_ops_report.js 2>/dev/null && { echo "Old daily_ops_report.js detected"; exit 1; }) || true
-          # vendor_catalog 旧版直接 toISOString 爆 RangeError 的路径特征（宽松检测）
-          (grep -q "new Date(it.timestamp||it.ts" scripts/build_vendor_catalog.js 2>/dev/null && grep -q "toISOString()" scripts/build_vendor_catalog.js 2>/dev/null && { echo "Old build_vendor_catalog.js detected"; exit 1; }) || true
-
-      # 0) Endpoint inventory（可选）
       - name: Endpoint Inventory
         run: |
-          if [ -f scripts/endpoint_inventory.js ]; then
-            node scripts/endpoint_inventory.js
-          else
-            echo "endpoint_inventory.js not found (skip)"
-          fi
+          if [ -f scripts/endpoint_inventory.js ]; then node scripts/endpoint_inventory.js; else echo "skip"; fi
 
-      # 0.5) 低波动自愈（若近72h无真实变更，自动扩大端点覆盖后再 Poll）
-      - name: Expand endpoints on low-churn
-        run: |
-          CHG=$(
-            node -e "const fs=require('fs');
-            let n=0;
-            try{
-              const a=JSON.parse(fs.readFileSync('artifacts/daily_ops.json','utf8'));
-              n=(a&&a.kpi&&typeof a.kpi.changed_vendors_72h==='number')?a.kpi.changed_vendors_72h:0;
-            }catch{}
-            if(!n){
-              try{
-                const L=fs.readFileSync('data/evidence.ndx','utf8').trim().split(/\n/);
-                const cutoff=Date.now()-72*3600*1000;
-                const s=new Set();
-                for(const ln of L){
-                  if(!ln.trim()) continue;
-                  const [when,domain,,hash]=ln.split('\t');
-                  const t=Date.parse(when||'');
-                  if(hash && !/^0+$/.test(hash) && !isNaN(t) && t>=cutoff) s.add(domain);
-                }
-                n=s.size;
-              }catch{}
-            }
-            console.log(n);"
-          )
-          echo "changed_vendors_72h=${CHG}"
-          if [ "${CHG}" -eq 0 ]; then
-            echo "Low churn detected. Expanding endpoints..."
-            if [ -f scripts/endpoint_inventory.js ]; then
-              node scripts/endpoint_inventory.js --expand --topk=200 || node scripts/endpoint_inventory.js
-            fi
-          else
-            echo "Churn present. Skip expansion."
-          fi
-
-      # 1) Poll（关键：保存正文，才能计算 hash）
       - name: Poll public endpoints
         env:
-          POLL_SAVE_BODY: '1'                    # 保存 .cache/http/... .body.txt
-          POLL_FETCH_MODE: 'GET'                 # 避免只 HEAD（拿不到正文）
+          POLL_SAVE_BODY: '1'
+          POLL_FETCH_MODE: 'GET'
           POLL_SAMPLE: ${{ inputs.sample || '1.0' }}
           POLL_CONCURRENCY: ${{ inputs.concurrency || '8' }}
-          POLL_RESPECT_ROBOTS: '1'               # 合规：尊重 robots.txt
-        run: |
-          if [ -f scripts/poll_public_endpoints.js ]; then
-            node scripts/poll_public_endpoints.js
-          else
-            echo "poll_public_endpoints.js not found"; exit 1
-          fi
+        run: node scripts/poll_public_endpoints.js
 
-      # 2) 规范化/补指纹（hash、excerpt 等）
       - name: Normalize evidence
-        run: |
-          if [ -f scripts/normalize_evidence.js ]; then
-            node scripts/normalize_evidence.js
-          else
-            echo "normalize_evidence.js not found"; exit 1
-          fi
+        run: node scripts/normalize_evidence.js
 
-      # 2.1) 兜底：当日不足 N 条→合规则 seed 至 N（保证 evidence_today ≥ N）
       - name: Ensure min evidence today
         run: |
-          if [ -f scripts/evidence_force_seed.js ]; then
-            node scripts/evidence_force_seed.js --min-today=${{ inputs.force_seed || '10' }}
-          else
-            echo "evidence_force_seed.js not found (skip)"
-          fi
+          if [ -f scripts/evidence_force_seed.js ]; then node scripts/evidence_force_seed.js --min-today=${{ inputs.force_seed || '10' }}; fi
 
-      # 3) 可核证链（commit/run_url）回填
       - name: Enrich evidence provenance
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GIT_COMMIT: ${{ github.sha }}
-        run: |
-          if [ -f scripts/evidence_enrich_provenance.js ]; then
-            node scripts/evidence_enrich_provenance.js
-          else
-            echo "evidence_enrich_provenance.js not found (skip)"
-          fi
+        run: node scripts/evidence_enrich_provenance.js
 
-      # 4) 变化片段摘要（diff excerpt）
       - name: Extract diff excerpts
         run: |
-          if [ -f scripts/extract_diff_excerpt.js ]; then
-            node scripts/extract_diff_excerpt.js
-          else
-            echo "extract_diff_excerpt.js not found (skip)"
-          fi
+          if [ -f scripts/extract_diff_excerpt.js ]; then node scripts/extract_diff_excerpt.js; fi
 
-      # 5) 证据索引（必须成功）
       - name: Build evidence index
-        run: |
-          if [ -f scripts/build_evidence_index.js ]; then
-            node scripts/build_evidence_index.js
-          else
-            echo "build_evidence_index.js not found"; exit 1
-          fi
+        run: node scripts/build_evidence_index.js
 
-      # 6) 材料性评分
       - name: Compute materiality score
         run: |
-          if [ -f scripts/materiality_score.js ]; then
-            node scripts/materiality_score.js
-          else
-            echo "materiality_score.js not found (skip)"
-          fi
+          if [ -f scripts/materiality_score.js ]; then node scripts/materiality_score.js; fi
 
-      # 7) 生成 Change Pack（含 Verified/Impact 徽章）
       - name: Build Change Packs
-        run: |
-          if [ -f scripts/build_change_pack.js ]; then
-            node scripts/build_change_pack.js
-          else
-            echo "build_change_pack.js not found"; exit 1
-          fi
+        run: node scripts/build_change_pack.js
 
-      # 8) Subprocessor 反查（可选）
       - name: Build subprocessor reverse index
         run: |
-          if [ -f scripts/build_who_uses.js ]; then
-            node scripts/build_who_uses.js
-          else
-            echo "build_who_uses.js not found (skip)"
-          fi
+          if [ -f scripts/build_who_uses.js ]; then node scripts/build_who_uses.js; fi
 
-      # 9) Updates & Categories（可选）
       - name: Build updates & categories
         run: |
           if [ -f scripts/build_updates.js ]; then node scripts/build_updates.js || true; fi
           if [ -f scripts/build_categories.js ]; then node scripts/build_categories.js || true; fi
 
-      # 10) Vendor Catalog（稳健解析版；失败不阻断）
       - name: Build vendor catalog
         run: |
-          if [ -f scripts/build_vendor_catalog.js ]; then
-            node scripts/build_vendor_catalog.js || true
-          else
-            echo "build_vendor_catalog.js not found (skip)"
-          fi
+          if [ -f scripts/build_vendor_catalog.js ]; then node scripts/build_vendor_catalog.js || true; fi
 
-      # 11) SEO 注入（JSON-LD/Meta，失败不阻断）
       - name: Inject SEO
         run: |
-          if [ -f scripts/seo_inject.js ]; then
-            node scripts/seo_inject.js || true
-          else
-            echo "seo_inject.js not found (skip)"
-          fi
+          if [ -f scripts/seo_inject.js ]; then node scripts/seo_inject.js || true; fi
 
-      # 11.5) CTA 注入（Enable alerts / Buy Portfolio，带 UTM 透传）
+      # 关键：CTA 注入（双按钮，携带 UTM）
       - name: Inject CTA (Enable alerts / Buy Portfolio)
-        env:
-          INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
-          STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
-        run: |
-          if [ -f scripts/cta_inject.js ]; then
-            node scripts/cta_inject.js
-          else
-            echo "cta_inject.js not found (skip)"
-          fi
+        run: node scripts/cta_inject.js
 
-      # 12) Run Summary（只统计“非 0000… hash”的当日证据）
       - name: Summarize
         run: |
           YM=$(date -u +%Y-%m)
           TODAY=$(date -u +%F)
-          CHANGED=$(find evidence -type f -name "${TODAY}-*.json" ! -name "*00000000.json" 2>/dev/null | wc -l)
+          CHANGED=$(find evidence -type f -name "${TODAY}-*.json" 2>/dev/null | grep -v "00000000" | wc -l)
           BASELINES=$(find evidence -type f -name "${TODAY}-*00000000.json" 2>/dev/null | wc -l)
           INDEX_ROWS=$(test -f data/evidence.ndx && wc -l < data/evidence.ndx || echo 0)
           PACKS=$(find "reports/$YM" -type f -name index.html 2>/dev/null | wc -l)
@@ -244,13 +117,12 @@ jobs:
             echo "- Change Packs this month ($YM): $PACKS"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      # 13) Safe push（只提交有变化的产物）
       - name: Safe push changes
         run: |
           git add -A vendors reports updates data/evidence.ndx data/materiality.csv data/vendor_catalog.csv evidence public/who-uses || true
           if [ -n "$(git status --porcelain)" ]; then
             chmod +x scripts/git_safe_push.sh || true
-            bash scripts/git_safe_push.sh "poll: public changes + provenance/excerpts + index/materiality + packs/updates/seo+cta"
+            bash scripts/git_safe_push.sh "poll: packs/updates/seo + CTA inject"
           else
             echo "no changes to commit"
           fi
