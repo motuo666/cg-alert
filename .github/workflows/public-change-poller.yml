@@ -46,6 +46,14 @@ jobs:
       - name: Install deps (best-effort)
         run: npm ci || npm i --no-audit --no-fund || true
 
+      # -1) 版本守门：防旧脚本回流导致语法/时间戳错误
+      - name: Guard scripts version
+        run: |
+          # daily_ops_report.js 旧版包含反引号模板
+          (grep -q "\`Evidence vs target(" scripts/daily_ops_report.js 2>/dev/null && { echo "Old daily_ops_report.js detected"; exit 1; }) || true
+          # vendor_catalog 旧版直接 toISOString 爆 RangeError 的路径特征（宽松检测）
+          (grep -q "new Date(it.timestamp||it.ts" scripts/build_vendor_catalog.js 2>/dev/null && grep -q "toISOString()" scripts/build_vendor_catalog.js 2>/dev/null && { echo "Old build_vendor_catalog.js detected"; exit 1; }) || true
+
       # 0) Endpoint inventory（可选）
       - name: Endpoint Inventory
         run: |
@@ -85,7 +93,6 @@ jobs:
           if [ "${CHG}" -eq 0 ]; then
             echo "Low churn detected. Expanding endpoints..."
             if [ -f scripts/endpoint_inventory.js ]; then
-              # 若脚本不支持参数，第二个命令会回退为默认构建
               node scripts/endpoint_inventory.js --expand --topk=200 || node scripts/endpoint_inventory.js
             fi
           else
@@ -206,6 +213,18 @@ jobs:
             echo "seo_inject.js not found (skip)"
           fi
 
+      # 11.5) CTA 注入（Enable alerts / Buy Portfolio，带 UTM 透传）
+      - name: Inject CTA (Enable alerts / Buy Portfolio)
+        env:
+          INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+          STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+        run: |
+          if [ -f scripts/cta_inject.js ]; then
+            node scripts/cta_inject.js
+          else
+            echo "cta_inject.js not found (skip)"
+          fi
+
       # 12) Run Summary（只统计“非 0000… hash”的当日证据）
       - name: Summarize
         run: |
@@ -228,10 +247,10 @@ jobs:
       # 13) Safe push（只提交有变化的产物）
       - name: Safe push changes
         run: |
-          git add -A reports updates data/evidence.ndx data/materiality.csv data/vendor_catalog.csv evidence public/who-uses || true
+          git add -A vendors reports updates data/evidence.ndx data/materiality.csv data/vendor_catalog.csv evidence public/who-uses || true
           if [ -n "$(git status --porcelain)" ]; then
             chmod +x scripts/git_safe_push.sh || true
-            bash scripts/git_safe_push.sh "poll: public changes + provenance/excerpts + index/materiality + packs/updates/seo"
+            bash scripts/git_safe_push.sh "poll: public changes + provenance/excerpts + index/materiality + packs/updates/seo+cta"
           else
             echo "no changes to commit"
           fi
