@@ -1,0 +1,53 @@
+name: Diagnose 7-Day Deliverability
+
+on:
+  workflow_dispatch:
+    inputs:
+      fix:
+        description: "Normalize suppression logs (add missing timestamps) before diagnosing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install (best-effort)
+        run: npm ci || npm i --no-audit --no-fund || true
+
+      - name: (Optional) Normalize suppression logs
+        if: ${{ inputs.fix }}
+        run: |
+          if [ -f scripts/normalize_suppression_logs.js ]; then
+            node scripts/normalize_suppression_logs.js
+            chmod +x scripts/git_safe_push.sh || true
+            bash scripts/git_safe_push.sh "fix(diag): normalize suppression logs (timestamps)"
+          else
+            echo "normalize_suppression_logs.js not found; skip."
+          fi
+
+      - name: Diagnose 7-day metrics
+        env:
+          MIN_SENT7_FOR_DLVR: ${{ vars.MIN_SENT7_FOR_DLVR || 100 }}
+          UNSUB_7D_MAX:       ${{ vars.UNSUB_7D_MAX || 0.005 }}
+          COMPLAINT_7D_MAX:   ${{ vars.COMPLAINT_7D_MAX || 0.001 }}
+          BOUNCE_7D_MAX:      ${{ vars.BOUNCE_7D_MAX || 0.08 }}
+        run: node scripts/diag_7d_report.js
+
+      - name: Safe push diag report
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            chmod +x scripts/git_safe_push.sh || true
+            bash scripts/git_safe_push.sh "chore(diag): 7d deliverability report"
+          else
+            echo "no changes to commit"
+          fi
