@@ -1,5 +1,5 @@
 // scripts/append_sent_from_log.js
-// Node.js 20+, 无第三方依赖
+// Node 20，无第三方依赖
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -15,7 +15,7 @@ if (!logPath) {
 const csvPath = path.join(__dirname, '..', 'data', 'sent_log.csv');
 fs.mkdirSync(path.dirname(csvPath), { recursive: true });
 
-function ensureHeader(p) {
+function ensureHeader(p){
   if (!fs.existsSync(p) || fs.statSync(p).size === 0) {
     fs.writeFileSync(p, 'ts,email,subject,link\n');
   }
@@ -24,25 +24,20 @@ ensureHeader(csvPath);
 
 const raw = fs.readFileSync(logPath, 'utf8');
 const lines = raw.split(/\r?\n/);
-const out = [];
+let appended = 0;
 
 for (const line of lines) {
-  // 形如：SENT to user@x.com subj="..." link="https://..."
-  const m = line.match(/^SENT to\s+(\S+)\s+subj="([^"]*)"\s+link="([^"]*)"/);
+  // 只认真实发送的 SENT 行，忽略 DRY
+  // 例：SENT to user@x.com subj="..." link="https://..."
+  const m = line.match(/^SENT\s+to\s+(\S+)\s+subj="([^"]*)"(?:\s+link="([^"]*)")?/);
   if (!m) continue;
   const email = m[1];
-  const subject = m[2];
-  const link = m[3];
-  const ts = new Date().toISOString(); // 严格 UTC
-
-  // 简单 CSV 转义
-  const esc = (s) => `"${String(s).replace(/"/g, '""')}"`;
-  out.push(`${ts},${esc(email)},${esc(subject)},${esc(link)}`);
+  const subj  = m[2] ?? '';
+  const link  = m[3] ?? '';
+  const ts = new Date().toISOString(); // UTC
+  const esc = (s) => `"${String(s).replace(/"/g,'""')}"`;
+  fs.appendFileSync(csvPath, `${ts},${esc(email)},${esc(subj)},${esc(link)}\n`);
+  appended++;
 }
 
-if (out.length) {
-  fs.appendFileSync(csvPath, out.join('\n') + '\n');
-  console.log(`append_sent_from_log: appended=${out.length} file=${csvPath}`);
-} else {
-  console.log('append_sent_from_log: no SENT lines found in', logPath);
-}
+console.log(`append_sent_from_log: appended=${appended}, file=${csvPath}`);
