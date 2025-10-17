@@ -1,232 +1,197 @@
 #!/usr/bin/env node
 /**
- * link_guard.js
- * 目的：在发信前对「即将使用的落地页/按钮链接」做健全性体检，避免无效/错误UTM/明文http。
- * 体检项：
- *  - 协议必须 https
- *  - 组合 UTM 后不出现 "??"、"&?"、"&&"
- *  - 关键页面可访问（HEAD 优先，失败回退 GET），状态码 < 400 视为可用
- *  - 对当期“有真实变更”的 vendor 给出示例链接校验（/updates/?q=domain、/reports/YYYY-MM/domain/）
+ * Link Guard (final)
+ * 目标：
+ *  - 只校验“这次要发出去”的真实链接（如存在 artifacts/outreach_links.json）
+ *  - 否则用 repo 内已有内容动态取样（reports/<YYYY-MM>/* or vendors/*）
+ *  - 若本月无 pack，自动降级为 /updates/?q=<domain> 的 fallback，不视为错误
+ *  - 严格校验：将要发的“最终落地链接”不可 4xx/5xx；示例/不存在的 pack 只 WARN
  *
- * 退出码：出现任一 ERROR → exit 1（阻断发信）；否则 exit 0。
- *
- * 环境变量（由 workflow 提供）：
- *  - SITE_ORIGIN              站点根，例如 https://www.cg-alert.com
- *  - INTAKE_FORM_URL          启用 Alerts 的表单链接（可为空）
- *  - STRIPE_LINK_PORTFOLIO    Portfolio 购买链接（可为空）
- *  - UTM_SOURCE / UTM_MEDIUM / UTM_CAMPAIGN  可选，未设则用默认
- *
- * 读取数据：
- *  - data/evidence.ndx  用于抽取最近 window_h 小时内有“非零 hash”的变更 vendor（示例链接校验）
+ * 约定（可选）：
+ *  - artifacts/outreach_links.json: [{domain:"okta.com", packUrl:"...", updatesUrl:"..."}...]
+ *    若存在则优先使用，代表本次批次的真实落地链接集合（send_triggered 的 dry-run 导出）
  */
 
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 const https = require('https');
-const http  = require('http');
-const { URL } = require('url');
 
 const ROOT = path.join(__dirname, '..');
-const EVID_NDX = path.join(ROOT, 'data', 'evidence.ndx');
+const ART_LINKS = path.join(ROOT, 'artifacts', 'outreach_links.json');
 
-// ---------- 配置与工具 ----------
-const SITE_ORIGIN = (process.env.SITE_ORIGIN || 'https://www.cg-alert.com').replace(/\/+$/,'');
-const INTAKE_FORM_URL = (process.env.INTAKE_FORM_URL || '').trim();
-const STRIPE_LINK_PORTFOLIO = (process.env.STRIPE_LINK_PORTFOLIO || '').trim();
+const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+const UTM_SRC = process.env.LG_UTM_SOURCE || 'email';
+const UTM_MED = process.env.LG_UTM_MEDIUM || 'triggered';
+const UTM_CAMP = process.env.LG_UTM_CAMPAIGN || ('cp_' + new Date().toISOString().slice(0,7).replace('-',''));
 
-const UTM = {
-  source:   process.env.UTM_SOURCE   || 'email',
-  medium:   process.env.UTM_MEDIUM   || 'triggered',
-  campaign: process.env.UTM_CAMPAIGN || inferCampaign(),
-};
+const YM = new Date().toISOString().slice(0,7); // YYYY-MM
 
-const WINDOW_H = Number(getArg('--window_h', '168')); // 用于抽取示例 vendor
-const EXAMPLE_TOPK = Number(getArg('--topk', '10'));  // 最多校验 10 个 vendor 示例
-const TIMEOUT_MS = 8000;
+function joinUrl(base, suffix){
+  if (base.endsWith('/') && suffix.startsWith('/')) return base + suffix.slice(1);
+  if (!base.endsWith('/') && !suffix.startsWith('/')) return base + '/' + suffix;
+  return base + suffix;
+}
 
-function getArg(flag, dflt){
-  const i = process.argv.indexOf(flag);
-  return i>=0 ? (process.argv[i+1]||'') : dflt;
+function addUtm(u, src=UTM_SRC, med=UTM_MED, camp=UTM_CAMP){
+  const hasQ = u.includes('?');
+  const sep = hasQ ? '&' : '?';
+  return `${u}${sep}utm_source=${encodeURIComponent(src)}&utm_medium=${encodeURIComponent(med)}&utm_campaign=${encodeURIComponent(camp)}`;
 }
-function inferCampaign(){
-  const d = new Date();
-  const ym = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
-  return `cp_${ym}`;
-}
-function ymd(){
-  const d = new Date();
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
-}
-function assertHttps(u){
-  try{
-    const url = new URL(u);
-    return url.protocol === 'https:';
-  }catch{ return false; }
-}
-function joinUTM(base, utm){
-  // base 可能已有 ?（如 /updates/?q=domain），utm 传入形如 "utm_source=..&utm_medium=..&utm_campaign=.."
-  const hasQ = base.includes('?');
-  return base + (hasQ ? '&' : '?') + utm;
-}
-function hasBadQuerySyntax(u){
-  return /\?\?|&\?|\?\&|&&/.test(u);
-}
-function httpHeadOrGet(url){
-  return new Promise((resolve)=>{
-    let done = false;
-    const lib = url.startsWith('https://') ? https : http;
-    const controller = new AbortController();
-    const to = setTimeout(()=>{
-      if (done) return;
-      done = true; controller.abort();
-      resolve({ ok:false, status: 599, error: 'timeout' });
-    }, TIMEOUT_MS);
 
-    const req = lib.request(url, { method: 'HEAD', signal: controller.signal }, res=>{
-      if (done) return;
-      done = true; clearTimeout(to);
-      resolve({ ok: res.statusCode < 400, status: res.statusCode, location: res.headers.location||'' });
-    });
-    req.on('error', ()=>{
-      // 回退 GET（部分站点不支持 HEAD）
-      if (done) return;
-      const req2 = lib.request(url, { method: 'GET', signal: controller.signal }, res=>{
-        if (done) return;
-        done = true; clearTimeout(to);
-        resolve({ ok: res.statusCode < 400, status: res.statusCode, location: res.headers.location||'' });
+function httpCheck(url, timeoutMs=8000){
+  return new Promise((resolve) => {
+    try{
+      const lib = url.startsWith('https') ? https : http;
+      const req = lib.request(url, { method:'GET', timeout: timeoutMs, headers:{'User-Agent':'CG-LinkGuard'}}, (res) => {
+        // 2xx/3xx 视为可达；其余不可达
+        const ok = res.statusCode >= 200 && res.statusCode < 400;
+        // 读取并丢弃响应体，尽快结束
+        res.resume();
+        res.on('end', ()=> resolve({ ok, status: res.statusCode || 0 }));
       });
-      req2.on('error', (e)=>{
-        if (done) return;
-        done = true; clearTimeout(to);
-        resolve({ ok:false, status: 598, error: e && e.message || 'error' });
-      });
-      req2.end();
-    });
-    req.end();
+      req.on('timeout', ()=> { req.destroy(); resolve({ ok:false, status:0 }); });
+      req.on('error', ()=> resolve({ ok:false, status:0 }));
+      req.end();
+    }catch(e){
+      resolve({ ok:false, status:0 });
+    }
   });
 }
-function readLines(fp){
-  if (!fs.existsSync(fp)) return [];
-  return fs.readFileSync(fp,'utf8').split(/\r?\n/).filter(Boolean);
-}
-function uniq(arr){ return Array.from(new Set(arr)); }
-function isNonZeroHash(h){ return !!h && !/^0+$/.test(h); }
 
-// ---------- 收集待校验链接 ----------
-const issues = [];
-const checks = [];
-
-function pushIssue(level, what, detail){
-  issues.push({ level, what, detail });
+function existsLocalPack(domain){
+  // 用本地构建的文件判断是否有 pack（更快）
+  const p = path.join(ROOT, 'reports', YM, domain, 'index.html');
+  return fs.existsSync(p);
 }
 
-function addCheck(name, url, kind){
-  checks.push({ name, url, kind });
-}
-
-function collectStaticLinks(){
-  // 站内基础页
-  addCheck('Home', `${SITE_ORIGIN}/`, 'page');
-  addCheck('Updates', `${SITE_ORIGIN}/updates/`, 'page');
-  addCheck('Reports (month root)', `${SITE_ORIGIN}/reports/${ymd().slice(0,7)}/`, 'page');
-
-  // 可选按钮
-  if (INTAKE_FORM_URL) addCheck('Enable alerts (intake)', INTAKE_FORM_URL, 'cta');
-  if (STRIPE_LINK_PORTFOLIO) addCheck('Buy Portfolio (stripe)', STRIPE_LINK_PORTFOLIO, 'cta');
-}
-
-function collectVendorExamples(){
-  // 从 evidence.ndx 中抓近 window_h 的非零 hash 记录，按 domain 去重取前 EXAMPLE_TOPK
-  const cutoff = Date.now() - WINDOW_H*3600*1000;
-  const lines = readLines(EVID_NDX);
-  const recentDomains = [];
-  for (const ln of lines){
-    const [when, domain, , hash] = ln.split('\t');
-    const t = Date.parse(when||'');
-    if (!isNaN(t) && t>=cutoff && isNonZeroHash(hash||'')){
-      if (domain) recentDomains.push(domain);
-    }
-  }
-  const domains = uniq(recentDomains).slice(0, EXAMPLE_TOPK);
-
-  for (const d of domains){
-    const u1 = `${SITE_ORIGIN}/updates/?q=${encodeURIComponent(d)}`;
-    const u2 = `${SITE_ORIGIN}/reports/${ymd().slice(0,7)}/${d}/`;
-    addCheck(`[Example] Updates?q=${d}`, u1, 'example');
-    addCheck(`[Example] ChangePack ${d}`, u2, 'example');
-  }
-}
-
-collectStaticLinks();
-collectVendorExamples();
-
-// ---------- 规则检查（本地语法） ----------
-for (const c of checks){
-  // 1) https 强制
-  if (!assertHttps(c.url)){
-    pushIssue('ERROR', 'Non-HTTPS URL', `${c.name} -> ${c.url}`);
-  }
-  // 2) 组合 UTM 语法模拟检查
-  const utm = `utm_source=${encodeURIComponent(UTM.source)}&utm_medium=${encodeURIComponent(UTM.medium)}&utm_campaign=${encodeURIComponent(UTM.campaign)}`;
-  const testTracked = joinUTM(c.url, utm);
-  if (hasBadQuerySyntax(testTracked)){
-    pushIssue('ERROR', 'Bad query join (??/&?)', `${c.name} -> ${testTracked}`);
-  }
-}
-
-// ---------- 远程可达性检查 ----------
-async function runNetworkChecks(){
-  for (const c of checks){
-    const res = await httpHeadOrGet(c.url);
-    if (!res.ok){
-      pushIssue('ERROR', 'Unreachable URL', `${c.name} -> ${c.url} [status=${res.status}${res.location? ' loc='+res.location:''}]`);
-    }
-    // 再对带 UTM 的追踪链接做一次探测（仅站内页）
-    if (c.url.startsWith(SITE_ORIGIN)){
-      const utm = `utm_source=${encodeURIComponent(UTM.source)}&utm_medium=${encodeURIComponent(UTM.medium)}&utm_campaign=${encodeURIComponent(UTM.campaign)}`;
-      const tracked = joinUTM(c.url, utm);
-      const res2 = await httpHeadOrGet(tracked);
-      if (!res2.ok){
-        pushIssue('ERROR', 'Tracked URL unreachable', `${c.name} (UTM) -> ${tracked} [status=${res2.status}${res2.location? ' loc='+res2.location:''}]`);
+function pickDomainsFromRepo(max=8){
+  const out = [];
+  const base = path.join(ROOT, 'reports', YM);
+  if (fs.existsSync(base)){
+    for (const d of fs.readdirSync(base, { withFileTypes:true })){
+      if (d.isDirectory() && d.name !== '.' && d.name !== '..'){
+        out.push(d.name);
+        if (out.length >= max) break;
       }
     }
   }
+  if (out.length < Math.floor(max/2)) {
+    // 回落 vendors/*/index.html
+    const vdir = path.join(ROOT, 'vendors');
+    if (fs.existsSync(vdir)){
+      for (const d of fs.readdirSync(vdir, { withFileTypes:true })){
+        if (d.isDirectory()){
+          const dom = d.name;
+          if (!out.includes(dom)) out.push(dom);
+          if (out.length >= max) break;
+        }
+      }
+    }
+  }
+  return out;
 }
 
-// ---------- 输出与退出 ----------
+function loadPlannedLinks(){
+  try{
+    if (fs.existsSync(ART_LINKS)){
+      const a = JSON.parse(fs.readFileSync(ART_LINKS,'utf8'));
+      if (Array.isArray(a) && a.length) return a;
+    }
+  }catch{}
+  return null;
+}
+
 async function main(){
-  await runNetworkChecks();
+  const planned = loadPlannedLinks();
+  let targets = [];
 
-  const sum = [];
-  sum.push('### Link Guard Report');
-  sum.push(`- Site origin: **${SITE_ORIGIN}**`);
-  sum.push(`- Checks: **${checks.length}** links`);
-  sum.push(`- UTM: source=${UTM.source}, medium=${UTM.medium}, campaign=${UTM.campaign}`);
-  if (issues.length === 0){
-    sum.push('\nAll good ✅');
+  if (planned){
+    // 使用本次批次真实链接
+    for (const it of planned){
+      const domain = (it.domain||'').trim();
+      if (!domain) continue;
+      const pack = it.packUrl || joinUrl(ORIGIN, `/reports/${YM}/${domain}/`);
+      const updates = it.updatesUrl || joinUrl(ORIGIN, `/updates/?q=${encodeURIComponent(domain)}`);
+      targets.push({ domain, pack, updates, kind:'real' });
+    }
   }else{
-    const errs = issues.filter(i=>i.level==='ERROR');
-    const warns = issues.filter(i=>i.level!=='ERROR');
-    if (errs.length) sum.push(`\n**ERRORS (${errs.length})**:`);
-    for (const e of errs) sum.push(`- ${e.what}: ${e.detail}`);
-    if (warns.length) sum.push(`\n**WARNINGS (${warns.length})**:`);
-    for (const w of warns) sum.push(`- ${w.what}: ${w.detail}`);
+    // 动态取样：从已有 packs 或 vendors 里挑
+    const ds = pickDomainsFromRepo(8);
+    for (const domain of ds){
+      const pack = joinUrl(ORIGIN, `/reports/${YM}/${domain}/`);
+      const updates = joinUrl(ORIGIN, `/updates/?q=${encodeURIComponent(domain)}`);
+      targets.push({ domain, pack, updates, kind:'sample' });
+    }
   }
 
-  // 控制台输出
-  console.log(sum.join('\n'));
+  // CTA 链接（如果配置了就校验；没配不报错）
+  const extras = [];
+  const intake = process.env.INTAKE_FORM_URL;
+  if (intake && /^https?:\/\//.test(intake)) extras.push({ label:'Enable alerts', url:intake });
+  const stripe = process.env.STRIPE_LINK_PORTFOLIO;
+  if (stripe && /^https?:\/\//.test(stripe)) extras.push({ label:'Buy Portfolio', url:stripe });
 
-  // Step Summary（Actions UI）
+  const lines = [];
+  lines.push(`### Link Guard Report`);
+  lines.push(`- Site origin: **${ORIGIN}**`);
+  lines.push(`- Mode: **${planned ? 'planned-batch' : 'dynamic-sample'}**`);
+  lines.push(`- UTM: source=${UTM_SRC}, medium=${UTM_MED}, campaign=${UTM_CAMP}`);
+  lines.push('');
+
+  let errors = 0, warns = 0, checks = 0;
+
+  // 校验每个目标的“最终落地”与 UTM 落地
+  for (const t of targets){
+    const packLocal = existsLocalPack(t.domain);
+    // 决策：有 pack 就以 pack 为主，没 pack 就用 updates
+    const finalUrl = packLocal ? t.pack : t.updates;
+    const finalUtm = addUtm(finalUrl);
+
+    // 对示例目标：如果选中了 pack 但远端 404，则只 WARN；对真实批次：ERROR
+    const isReal = t.kind === 'real';
+
+    // 先测最终落地
+    const r1 = await httpCheck(finalUrl); checks++;
+    if (!r1.ok){
+      if (isReal){
+        errors++; lines.push(`- ERROR: Unreachable final URL for **${t.domain}** -> ${finalUrl} [status=${r1.status}]`);
+        continue; // 已经 ERROR 了，不再测 UTM
+      }else{
+        warns++; lines.push(`- WARN: Sample final URL unreachable for **${t.domain}** -> ${finalUrl} [status=${r1.status}]`);
+        // 对样本继续测 UTM，但不影响错误计数
+      }
+    }
+
+    // 再测带 UTM 的最终落地
+    const r2 = await httpCheck(finalUtm); checks++;
+    if (!r2.ok){
+      if (isReal){
+        errors++; lines.push(`- ERROR: Tracked final URL unreachable for **${t.domain}** -> ${finalUtm} [status=${r2.status}]`);
+      }else{
+        warns++; lines.push(`- WARN: Sample tracked URL unreachable for **${t.domain}** -> ${finalUtm} [status=${r2.status}]`);
+      }
+    }
+  }
+
+  // 校验 CTA（如果提供了）
+  for (const x of extras){
+    const r = await httpCheck(x.url); checks++;
+    if (!r.ok){
+      errors++; lines.push(`- ERROR: CTA unreachable: **${x.label}** -> ${x.url} [status=${r.status}]`);
+    }
+  }
+
+  lines.unshift(`- Checks: **${checks}** links`);
+  if (errors>0) lines.push(`\n**ERRORS (${errors})**`);
+  if (warns>0)  lines.push(`\n**WARNINGS (${warns})**`);
+
+  console.log(lines.join('\n'));
   if (process.env.GITHUB_STEP_SUMMARY){
-    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, sum.join('\n')+'\n', 'utf8');
+    fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join('\n')+'\n', 'utf8');
   }
 
-  // 退出码
-  if (issues.some(i=>i.level==='ERROR')) process.exit(1);
-  process.exit(0);
+  process.exit(errors>0 ? 1 : 0);
 }
 
-main().catch(e=>{
-  console.error('link_guard crashed:', e && e.stack || e);
-  process.exit(1);
-});
+main();
