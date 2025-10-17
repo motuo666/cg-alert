@@ -1,8 +1,28 @@
 {
-  "generated_at": "2025-10-16T10:43:13.844Z",
+  "generated_at": "2025-10-17T07:17:10.531Z",
   "month": "2025-10",
   "lookback_h": 72,
   "rows": [
+    {
+      "vendor": "adyen.com",
+      "score": 100,
+      "recent_changes": 23,
+      "hv_changes": 19,
+      "total_changes": 31,
+      "hash_ratio": 0.065,
+      "has_pack": 1,
+      "recency_h": 7
+    },
+    {
+      "vendor": "algolia.com",
+      "score": 75,
+      "recent_changes": 7,
+      "hv_changes": 7,
+      "total_changes": 15,
+      "hash_ratio": 0.133,
+      "has_pack": 1,
+      "recency_h": 7
+    },
     {
       "vendor": "google.com",
       "score": 37,
@@ -11,7 +31,7 @@
       "total_changes": 8,
       "hash_ratio": 0.75,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "newrelic.com",
@@ -21,7 +41,7 @@
       "total_changes": 8,
       "hash_ratio": 0.75,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "duo.com",
@@ -31,7 +51,7 @@
       "total_changes": 8,
       "hash_ratio": 0.625,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "stripe.com",
@@ -41,7 +61,7 @@
       "total_changes": 8,
       "hash_ratio": 0.625,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "box.com",
@@ -51,7 +71,7 @@
       "total_changes": 8,
       "hash_ratio": 0.375,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "checkout.com",
@@ -61,7 +81,7 @@
       "total_changes": 8,
       "hash_ratio": 0.375,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "helpscout.com",
@@ -71,7 +91,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "mailgun.com",
@@ -81,7 +101,7 @@
       "total_changes": 8,
       "hash_ratio": 0.375,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "gitlab.com",
@@ -91,27 +111,7 @@
       "total_changes": 7,
       "hash_ratio": 0.286,
       "has_pack": 1,
-      "recency_h": 83
-    },
-    {
-      "vendor": "adyen.com",
-      "score": 27,
-      "recent_changes": 0,
-      "hv_changes": 4,
-      "total_changes": 8,
-      "hash_ratio": 0.25,
-      "has_pack": 1,
-      "recency_h": 83
-    },
-    {
-      "vendor": "algolia.com",
-      "score": 27,
-      "recent_changes": 0,
-      "hv_changes": 4,
-      "total_changes": 8,
-      "hash_ratio": 0.25,
-      "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "atlassian.com",
@@ -121,7 +121,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "aws.amazon.com",
@@ -131,7 +131,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "braintreepayments.com",
@@ -141,7 +141,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "canva.com",
@@ -151,7 +151,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "chargebee.com",
@@ -161,7 +161,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "cloudflare.com",
@@ -171,7 +171,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "confluent.io",
@@ -181,7 +181,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "contentful.com",
@@ -191,7 +191,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "domain",
@@ -201,7 +201,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "dropbox.com",
@@ -211,7 +211,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "elastic.co",
@@ -221,7 +221,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "fastly.com",
@@ -231,7 +231,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "figma.com",
@@ -241,7 +241,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "freshworks.com",
@@ -251,7 +251,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "globex.com",
@@ -261,7 +261,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "heroku.com",
@@ -271,7 +271,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "hubspot.com",
@@ -281,7 +281,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "intercom.com",
@@ -291,7 +291,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "linear.app",
@@ -301,7 +301,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "microsoft.com",
@@ -311,7 +311,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "mongodb.com",
@@ -321,7 +321,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "netlify.com",
@@ -331,7 +331,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "notion.so",
@@ -341,7 +341,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "okta.com",
@@ -351,7 +351,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "onelogin.com",
@@ -361,7 +361,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "paddle.com",
@@ -371,7 +371,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "recurly.com",
@@ -381,7 +381,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "salesforce.com",
@@ -391,7 +391,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "sanity.io",
@@ -401,7 +401,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "sentry.io",
@@ -411,7 +411,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "snowflake.com",
@@ -421,7 +421,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "twilio.com",
@@ -431,7 +431,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "vercel.com",
@@ -441,7 +441,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "zendesk.com",
@@ -451,7 +451,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "zoho.com",
@@ -461,7 +461,7 @@
       "total_changes": 8,
       "hash_ratio": 0.25,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "bitbucket.org",
@@ -471,7 +471,7 @@
       "total_changes": 6,
       "hash_ratio": 0.333,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "github.com",
@@ -481,7 +481,7 @@
       "total_changes": 3,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "monday.com",
@@ -491,7 +491,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.asana.com",
@@ -501,7 +501,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.atlassian.com",
@@ -511,7 +511,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.box.com",
@@ -521,7 +521,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.chargebee.com",
@@ -531,7 +531,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.datadoghq.com",
@@ -541,7 +541,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.dropbox.com",
@@ -551,7 +551,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.duo.com",
@@ -561,7 +561,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.elastic.co",
@@ -571,7 +571,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.figma.com",
@@ -581,7 +581,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.helpscout.com",
@@ -591,7 +591,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.hubspot.com",
@@ -601,7 +601,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.mailgun.com",
@@ -611,7 +611,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.monday.com",
@@ -621,7 +621,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.mongodb.com",
@@ -631,7 +631,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.newrelic.com",
@@ -641,7 +641,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.postmarkapp.com",
@@ -651,7 +651,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.render.com",
@@ -661,7 +661,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.segment.com",
@@ -671,7 +671,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.sendgrid.com",
@@ -681,7 +681,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.sentry.io",
@@ -691,7 +691,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.snowflake.com",
@@ -701,7 +701,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.supabase.com",
@@ -711,7 +711,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.twilio.com",
@@ -721,7 +721,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.zoho.com",
@@ -731,7 +731,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "datadoghq.com",
@@ -741,7 +741,7 @@
       "total_changes": 7,
       "hash_ratio": 0.286,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "miro.com",
@@ -751,7 +751,7 @@
       "total_changes": 7,
       "hash_ratio": 0.286,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "supabase.com",
@@ -761,7 +761,7 @@
       "total_changes": 7,
       "hash_ratio": 0.286,
       "has_pack": 1,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "sendgrid.com",
@@ -771,7 +771,7 @@
       "total_changes": 4,
       "hash_ratio": 0.75,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "_seed.com",
@@ -781,7 +781,7 @@
       "total_changes": 1,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "acme.com",
@@ -791,7 +791,7 @@
       "total_changes": 1,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "help",
@@ -801,7 +801,7 @@
       "total_changes": 2,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.help",
@@ -811,7 +811,7 @@
       "total_changes": 1,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "acme",
@@ -821,7 +821,7 @@
       "total_changes": 1,
       "hash_ratio": 1,
       "has_pack": 0,
-      "recency_h": 107
+      "recency_h": 127
     },
     {
       "vendor": "render.com",
@@ -831,7 +831,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "asana.com",
@@ -841,7 +841,7 @@
       "total_changes": 4,
       "hash_ratio": 0.5,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "auth0.com",
@@ -851,7 +851,7 @@
       "total_changes": 4,
       "hash_ratio": 0.5,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "slack.com",
@@ -861,7 +861,7 @@
       "total_changes": 4,
       "hash_ratio": 0.5,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.adyen.com",
@@ -871,7 +871,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.algolia.com",
@@ -881,7 +881,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.auth0.com",
@@ -891,7 +891,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.aws.amazon.com",
@@ -901,7 +901,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.bitbucket.org",
@@ -911,7 +911,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.braintreepayments.com",
@@ -921,7 +921,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.canva.com",
@@ -931,7 +931,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.checkout.com",
@@ -941,7 +941,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.cloudflare.com",
@@ -951,7 +951,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.confluent.io",
@@ -961,7 +961,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.contentful.com",
@@ -971,7 +971,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.domain",
@@ -981,7 +981,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.fastly.com",
@@ -991,7 +991,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.freshworks.com",
@@ -1001,7 +1001,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.github.com",
@@ -1011,7 +1011,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.gitlab.com",
@@ -1021,7 +1021,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.globex.com",
@@ -1031,7 +1031,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.google.com",
@@ -1041,7 +1041,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.heroku.com",
@@ -1051,7 +1051,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.intercom.com",
@@ -1061,7 +1061,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.linear.app",
@@ -1071,7 +1071,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.microsoft.com",
@@ -1081,7 +1081,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.miro.com",
@@ -1091,7 +1091,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.netlify.com",
@@ -1101,7 +1101,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.notion.so",
@@ -1111,7 +1111,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.okta.com",
@@ -1121,7 +1121,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.onelogin.com",
@@ -1131,7 +1131,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.paddle.com",
@@ -1141,7 +1141,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.recurly.com",
@@ -1151,7 +1151,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.salesforce.com",
@@ -1161,7 +1161,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.sanity.io",
@@ -1171,7 +1171,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.slack.com",
@@ -1181,7 +1181,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.stripe.com",
@@ -1191,7 +1191,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.vercel.com",
@@ -1201,7 +1201,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.zendesk.com",
@@ -1211,7 +1211,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.zoom.us",
@@ -1221,7 +1221,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "zoom.us",
@@ -1231,7 +1231,7 @@
       "total_changes": 3,
       "hash_ratio": 0.667,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "postmarkapp.com",
@@ -1241,7 +1241,7 @@
       "total_changes": 4,
       "hash_ratio": 0.5,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "segment.com",
@@ -1251,7 +1251,7 @@
       "total_changes": 6,
       "hash_ratio": 0.333,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     },
     {
       "vendor": "status.acme.com",
@@ -1261,7 +1261,7 @@
       "total_changes": 1,
       "hash_ratio": 0,
       "has_pack": 0,
-      "recency_h": 83
+      "recency_h": 103
     }
   ]
 }
