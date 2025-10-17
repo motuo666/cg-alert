@@ -1,14 +1,10 @@
 /index.html
   Cache-Control: no-cache, must-revalidate, max-age=0
-
 /vendors/*
   Cache-Control: no-cache, must-revalidate, max-age=0
-
 /updates/*
   Cache-Control: no-cache, must-revalidate, max-age=0
-
 /categories/*
   Cache-Control: no-cache, must-revalidate, max-age=0
-
 /reports/*
   Cache-Control: no-cache, must-revalidate, max-age=0
