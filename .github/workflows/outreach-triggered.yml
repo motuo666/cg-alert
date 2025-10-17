@@ -10,17 +10,15 @@ on:
       window_h:
         description: "Primary change lookback window (hours)"
         required: false
-        default: "168"   # 第一次尝试窗口
+        default: "168"   # 第一次尝试的窗口
       boost:
-        description: "Auto-boost until final>=8 (discover->widen->relax->caps)"
+        description: "Auto-boost until final>=8 (discover->widen->relax)"
         required: false
         default: "true"
       dry:
         description: "Dry run first?"
         required: false
         default: "true"
-  schedule:
-    - cron: "05 16 * * 1-5" # 工作日 16:05 UTC
 
 permissions:
   contents: write
@@ -57,20 +55,19 @@ jobs:
       - name: Install deps (best-effort)
         run: npm ci || npm i --no-audit --no-fund || true
 
-      # 0) 可选：前置送达风控，超阈值自动降频
+      # 0) 前置送达风控，超阈值自动降频
       - name: Preflight deliverability gate
         id: gate
         run: |
           node scripts/diag_7d_report.js > diag.txt || true
           echo '### 7D Diagnosis' >> "$GITHUB_STEP_SUMMARY"
           cat diag.txt >> "$GITHUB_STEP_SUMMARY" || true
-          # 若 sent7>=100 且退订/退信/投诉超阈，自动把 limit 降到 8
           L=${{ inputs.limit }}
           if grep -q "sent7:" diag.txt; then
             S7=$(grep -E "^- sent7:" diag.txt | awk '{print $3+0}')
-            UR=$(grep -E "\| Unsub \|" diag.txt | awk -F'|' '{gsub(/ /,"");print $3+0}')
-            BR=$(grep -E "\| Bounce \|" diag.txt | awk -F'|' '{gsub(/ /,"");print $3+0}')
-            CR=$(grep -E "\| Complaint \|" diag.txt | awk -F'|' '{gsub(/ /,"");print $3+0}')
+            UR=$(grep -E "\| Unsub \|" diag.txt | awk -F'|' '{print $3+0}')
+            BR=$(grep -E "\| Bounce \|" diag.txt | awk -F'|' '{print $3+0}')
+            CR=$(grep -E "\| Complaint \|" diag.txt | awk -F'|' '{print $3+0}')
             if [ "$S7" -ge "${UNSUB_SENT7_MIN:-100}" ] && awk "BEGIN{exit !($UR > ${UNSUB_7D_MAX:-0.5})}"; then L=8; fi
             if [ "$S7" -ge "${BOUNCE_SENT7_MIN:-100}" ] && awk "BEGIN{exit !($BR > ${BOUNCE_7D_MAX:-8})}"; then L=8; fi
             if [ "$S7" -ge "${COMPL_SENT7_MIN:-100}" ] && awk "BEGIN{exit !($CR > ${COMPLAINT_7D_MAX:-0.1})}"; then L=8; fi
@@ -78,7 +75,7 @@ jobs:
           echo "OUT_LIMIT=$L" >> $GITHUB_ENV
           echo "- send limit this run: $L" >> "$GITHUB_STEP_SUMMARY"
 
-      # 1) 别名轻量归一（不改代码、就地修 leads.csv 的 vendor1/2/3）
+      # 1) 别名轻量归一（不改仓库文件，就地修 leads 的 vendor1/2/3）
       - name: Normalize vendor aliases (inline)
         run: |
           cat > /tmp/vendor_aliases.json <<'JSON'
@@ -112,7 +109,7 @@ jobs:
       - name: Link guard
         run: node scripts/link_guard.js
 
-      # 3) Try A：168h 窗口 DRY
+      # 3) Pass A：168h 窗口 DRY
       - name: Dry run (168h)
         id: dry1
         env:
@@ -120,18 +117,16 @@ jobs:
         run: |
           node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack | tee dry1.log
           echo "elig=$(grep -oE '\{.*\"final\":[0-9]+.*\}' -m1 dry1.log)" >> $GITHUB_OUTPUT || true
-          F=$(grep -oE '"final":\s*[0-9]+' dry1.log | tail -1 | awk -F: '{print $2+0}');
-          echo "final=$F" >> $GITHUB_OUTPUT
+          F=$(grep -oE '"final":\s*[0-9]+' dry1.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try A (168h) → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
-      # 3b) A 成功→ 真发
       - name: Send (168h)
         if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) >= 8
         env:
           TRIGGER_WINDOW_H: ${{ inputs.window_h }}
         run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack
 
-      # 4) Try B：不足 8 → 先补池，再 336h 窗口 DRY
+      # 4) Pass B：不足 8 → 先补池，再 336h 窗口 DRY
       - name: Discover Contacts (boost)
         if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8
         run: |
@@ -147,8 +142,7 @@ jobs:
           TRIGGER_WINDOW_H: 336
         run: |
           node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack | tee dry2.log
-          F=$(grep -oE '"final":\s*[0-9]+' dry2.log | tail -1 | awk -F: '{print $2+0}');
-          echo "final=$F" >> $GITHUB_OUTPUT
+          F=$(grep -oE '"final":\s*[0-9]+' dry2.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try B (336h + discovered) → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Send (336h)
@@ -157,7 +151,7 @@ jobs:
           TRIGGER_WINDOW_H: 336
         run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack
 
-      # 5) Try C：仍不足 8 → 放宽 persona（一次）
+      # 5) Pass C：仍不足 8 → 放宽 persona 一次（仍是安全/法务/采买岗位）
       - name: Relax persona (once)
         if: steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) < 8
         run: |
@@ -174,8 +168,7 @@ jobs:
           TRIGGER_WINDOW_H: 336
         run: |
           node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack | tee dry3.log
-          F=$(grep -oE '"final":\s*[0-9]+' dry3.log | tail -1 | awk -F: '{print $2+0}');
-          echo "final=$F" >> $GITHUB_OUTPUT
+          F=$(grep -oE '"final":\s*[0-9]+' dry3.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try C (336h + relaxed persona) → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Send (336h + relaxed persona)
@@ -184,12 +177,14 @@ jobs:
           TRIGGER_WINDOW_H: 336
         run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack
 
-      # 6) Try D（Pass D）：仍不足 8 → 放宽 caps（单公司上限 + 冷却天数）一次
+      # 6) Pass D：仍不足 8 → 放宽 cap/cooldown 一次（正确变量名 + CLI 覆盖，确保生效）
       - name: Relax caps (once)
         if: steps.dry3.outputs.final && fromJSON(steps.dry3.outputs.final) < 8
         run: |
-          echo "DOMAIN_CAP=4" >> $GITHUB_ENV     # 当日对同一公司最多 4 封（默认多为 1）
-          echo "COOLDOWN_DAYS=7" >> $GITHUB_ENV  # 冷却期 7 天（默认多为 14~21）
+          echo "DOMAIN_CAP=4" >> $GITHUB_ENV
+          echo "DOMAIN_WINDOW_DAYS=7" >> $GITHUB_ENV
+          echo "EMAIL_COOLDOWN_DAYS=7" >> $GITHUB_ENV
+          echo "VENDOR_COMPANY_COOLDOWN_DAYS=7" >> $GITHUB_ENV
           echo "caps=relaxed" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Dry run (336h + relaxed persona + caps)
@@ -198,18 +193,23 @@ jobs:
         env:
           TRIGGER_WINDOW_H: 336
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack | tee dry4.log
-          F=$(grep -oE '"final":\s*[0-9]+' dry4.log | tail -1 | awk -F: '{print $2+0}');
-          echo "final=$F" >> $GITHUB_OUTPUT
+          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack \
+            --domain_cap=${DOMAIN_CAP:-4} --domain_window_d=${DOMAIN_WINDOW_DAYS:-7} \
+            --email_cooldown_d=${EMAIL_COOLDOWN_DAYS:-7} --vendor_company_d=${VENDOR_COMPANY_COOLDOWN_DAYS:-7} \
+            | tee dry4.log
+          F=$(grep -oE '"final":\s*[0-9]+' dry4.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try D (336h + relaxed persona + caps) → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Send (336h + relaxed persona + caps)
         if: steps.dry4.outputs.final && fromJSON(steps.dry4.outputs.final) >= 8
         env:
           TRIGGER_WINDOW_H: 336
-        run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack
+        run: |
+          node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack \
+            --domain_cap=${DOMAIN_CAP:-4} --domain_window_d=${DOMAIN_WINDOW_DAYS:-7} \
+            --email_cooldown_d=${EMAIL_COOLDOWN_DAYS:-7} --vendor_company_d=${VENDOR_COMPANY_COOLDOWN_DAYS:-7}
 
-      # 7) 仍不足 → 给出清晰原因，便于后续处理
+      # 7) 仍不足 → 给出清晰原因
       - name: Summarize failure cause
         if: |
           (steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8) &&
@@ -218,15 +218,15 @@ jobs:
           (steps.dry4.outputs.final == '' || fromJSON(steps.dry4.outputs.final) < 8)
         run: |
           echo "### Boost not enough (final still < 8)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Likely causes: small pool, vendor-match miss, suppression (cooldown/domain-cap) still tight." >> "$GITHUB_STEP_SUMMARY"
-          echo "- Try next: Run 'Discover Contacts' manually (twice), widen 'domains.csv', or temporarily raise DOMAIN_CAP/COOLDOWN_DAYS a bit more." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Likely causes: small pool, vendor-match miss, or heavy suppression." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Try next: Run 'Discover Contacts' manually, then re-run; and widen domains.csv this week." >> "$GITHUB_STEP_SUMMARY"
 
-      # 8) Safe push（若有日志/小改）
+      # 8) Safe push
       - name: Safe push changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             chmod +x scripts/git_safe_push.sh || true
-            bash scripts/git_safe_push.sh "outreach: triggered boost (with Pass D)"
+            bash scripts/git_safe_push.sh "outreach: triggered boost"
           else
             echo "no changes to commit"
           fi
