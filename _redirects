@@ -1,5 +1,6 @@
-/buy/portfolio   https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801  301
-/buy/business    https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800  301
-/enterprise      https://forms.gle/TCaom33BRJGbcJ3r5              302
-/channel         https://forms.gle/TCaom33BRJGbcJ3r5              302
-/feed            /updates/rss.xml                                 301
+/intake         https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform?usp=sf_link&utm_source=cg-alert&utm_medium=site&utm_campaign=intake 302
+/buy/portfolio  https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801?utm_source=cg-alert&utm_medium=site&utm_campaign=portfolio 302
+/buy/business   https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800?utm_source=cg-alert&utm_medium=site&utm_campaign=business 302
+/enterprise     https://forms.gle/TCaom33BRJGbcJ3r5?utm_source=cg-alert&utm_medium=site&utm_campaign=enterprise 302
+/channel        https://forms.gle/TCaom33BRJGbcJ3r5?utm_source=cg-alert&utm_medium=site&utm_campaign=channel 302
+/feed           /updates/rss.xml 301
