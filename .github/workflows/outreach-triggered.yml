@@ -1,34 +1,22 @@
-name: Outreach Triggered (Boost+30d Fallback)
+name: Outreach Triggered (Boost+30d)
 
 on:
   workflow_dispatch:
     inputs:
       limit:
-        description: "Max emails"
+        description: "Max emails to send this run"
         required: false
         default: "12"
       window_h:
-        description: "Primary window (h)"
+        description: "Primary change lookback window (hours)"
         required: false
         default: "168"
       dry:
         description: "Dry run first?"
         required: false
         default: "true"
-  workflow_call:
-    inputs:
-      limit:
-        type: string
-        required: false
-        default: "12"
-      window_h:
-        type: string
-        required: false
-        default: "168"
-      dry:
-        type: string
-        required: false
-        default: "true"
+  schedule:
+    - cron: "05 16 * * 1-5"  # 工作日 16:05 UTC
 
 permissions:
   contents: write
@@ -51,11 +39,9 @@ jobs:
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
       MAIL_FROM: ${{ secrets.MAIL_FROM }}
       BCC_TO: ${{ secrets.BCC_TO }}
-
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        with: { fetch-depth: 0 }
 
       - uses: actions/setup-node@v4
         with:
@@ -63,17 +49,15 @@ jobs:
           cache: 'npm'
 
       - name: Install deps (best-effort)
-        run: |
-          npm ci || npm i --no-audit --no-fund || true
+        run: npm ci || npm i --no-audit --no-fund || true
 
+      # 0) 送达风控（Burn-in 仅诊断；达线后才降频）
       - name: Preflight deliverability gate
         id: gate
-        shell: bash
         run: |
           node scripts/diag_7d_report.js > diag.txt || true
-          echo '### 7D Diagnosis' >> "$GITHUB_STEP_SUMMARY"
-          cat diag.txt >> "$GITHUB_STEP_SUMMARY" || true
-          L="${{ inputs.limit }}"
+          echo '### 7D Diagnosis' >> "$GITHUB_STEP_SUMMARY"; cat diag.txt >> "$GITHUB_STEP_SUMMARY" || true
+          L=${{ inputs.limit }}
           if grep -q "sent7:" diag.txt; then
             S7=$(grep -E "^- sent7:" diag.txt | awk '{print $3+0}')
             UR=$(grep -E "\| Unsub \|" diag.txt | awk -F'|' '{print $3+0}')
@@ -86,30 +70,38 @@ jobs:
           echo "OUT_LIMIT=$L" >> $GITHUB_ENV
           echo "- send limit this run: $L" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Normalize vendor aliases (file-based)
+      # 1) 别名归一（轻量内联，不改你的数据结构）
+      - name: Normalize vendor aliases (inline)
         run: |
+          cat > /tmp/vendor_aliases.json <<'JSON'
+          { "google":"google.com","google cloud":"google.com","gcp":"google.com","cloud.google.com":"google.com",
+            "aws":"aws.amazon.com","amazon web services":"aws.amazon.com","amazonaws.com":"aws.amazon.com",
+            "okta inc":"okta.com","auth0":"okta.com",
+            "atlassian":"atlassian.com","jira":"atlassian.com","confluence":"atlassian.com",
+            "microsoft":"microsoft.com","azure":"microsoft.com",
+            "salesforce":"salesforce.com","zendesk":"zendesk.com","twilio":"twilio.com","stripe":"stripe.com",
+            "box":"box.com","dropbox":"dropbox.com","new relic":"newrelic.com","algolia":"algolia.com",
+            "sentry":"sentry.io","vercel":"vercel.com","figma":"figma.com","mailgun":"mailgun.com",
+            "helpscout":"helpscout.com","checkout":"checkout.com","duo security":"duo.com",
+            "cloudflare":"cloudflare.com","snowflake":"snowflake.com","notion":"notion.so" }
+          JSON
           node -e '
-            const fs=require("fs");
-            const map=Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync("config/vendor_aliases.json","utf8"))).map(([k,v])=>[k.toLowerCase(),v]));
-            const p="data/leads.csv";
+            const fs=require("fs"),p="data/leads.csv";
             if(!fs.existsSync(p)) process.exit(0);
+            const map=Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync("/tmp/vendor_aliases.json","utf8"))).map(([k,v])=>[k.toLowerCase(),v]));
             const out=fs.readFileSync(p,"utf8").split(/\r?\n/).map(ln=>{
               if(!ln.trim()) return ln;
-              const c=ln.split(",");
-              for(let j=3;j<=5;j++){
-                const s=(c[j]||"").trim().toLowerCase();
-                if(!s) continue;
-                c[j]=map[s]||map[s].replace(/^www\./,"")||c[j];
-              }
+              const c=ln.split(","); for(let j=3;j<=5;j++){ const s=(c[j]||"").trim().toLowerCase(); if(s) c[j]=map[s]||map[s.replace(/^www\./,"")]||c[j]; }
               return c.join(",");
             }).join("\n");
-            fs.writeFileSync(p,out);
-            console.log("leads.csv normalized");
+            fs.writeFileSync(p,out); console.log("leads.csv normalized");
           '
 
+      # 2) Link Guard（坏链拦截）
       - name: Link guard
         run: node scripts/link_guard.js
 
+      # 3) Echo 当前抑制参数（验证是否生效）
       - name: Echo caps before send
         run: |
           echo "ENV.DOMAIN_CAP=${DOMAIN_CAP:-<empty>}"
@@ -117,27 +109,25 @@ jobs:
           echo "ENV.EMAIL_COOLDOWN_DAYS=${EMAIL_COOLDOWN_DAYS:-<empty>}"
           echo "ENV.VENDOR_COMPANY_COOLDOWN_DAYS=${VENDOR_COMPANY_COOLDOWN_DAYS:-<empty>}"
 
-      # Try A
+      # —— Try A：168h 正常 persona（DRY→Send）——
       - name: Dry run (A: 168h)
         id: dry1
-        env:
-          TRIGGER_WINDOW_H: ${{ inputs.window_h }}
+        env: { TRIGGER_WINDOW_H: ${{ inputs.window_h }} }
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry1.log
-          F=$(grep -oE '"final":\s*[0-9]+' dry1.log | tail -1 | awk -F: '{print $2+0}')
-          echo "final=$F" >> $GITHUB_OUTPUT
+          node scripts/send_triggered.js --dry=true  --limit=${{ env.OUT_LIMIT }} --pack \
+            --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry1.log
+          F=$(grep -oE '"final":\s*[0-9]+' dry1.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try A → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Send (A)
-        if: ${{ steps.dry1.outputs.final != '' && steps.dry1.outputs.final >= 8 }}
-        env:
-          TRIGGER_WINDOW_H: ${{ inputs.window_h }}
-        run: |
-          node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14
+        if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) >= 8
+        env: { TRIGGER_WINDOW_H: ${{ inputs.window_h }} }
+        run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack \
+             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14
 
-      # Try B
+      # —— Try B：补池 + 336h（DRY→Send）——
       - name: Discover Contacts (boost)
-        if: ${{ steps.dry1.outputs.final == '' || steps.dry1.outputs.final < 8 }}
+        if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8
         run: |
           node scripts/discover_contacts.js || true
           node scripts/validate_leads.js || true
@@ -146,37 +136,49 @@ jobs:
 
       - name: Dry run (B: 336h)
         id: dry2
-        if: ${{ steps.dry1.outputs.final == '' || steps.dry1.outputs.final < 8 }}
-        env:
-          TRIGGER_WINDOW_H: 336
+        if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8
+        env: { TRIGGER_WINDOW_H: 336 }
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry2.log
-          F=$(grep -oE '"final":\s*[0-9]+' dry2.log | tail -1 | awk -F: '{print $2+0}')
-          echo "final=$F" >> $GITHUB_OUTPUT
+          node scripts/send_triggered.js --dry=true  --limit=${{ env.OUT_LIMIT }} --pack \
+            --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry2.log
+          F=$(grep -oE '"final":\s*[0-9]+' dry2.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try B → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
-      # Try C
+      - name: Send (B)
+        if: steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) >= 8
+        env: { TRIGGER_WINDOW_H: 336 }
+        run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack \
+             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14
+
+      # —— Try C：放宽 persona（DRY→Send）——
       - name: Relax persona (once)
-        if: ${{ steps.dry2.outputs.final == '' || steps.dry2.outputs.final < 8 }}
+        if: steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) < 8
         run: |
-          echo '["security","trust","privacy","legal","procurement","sourcing","vendor","thirdparty","compliance","risk","dpo","gdpr"]' > /tmp/persona_relaxed.json
+          cat > /tmp/persona_relaxed.json <<'JSON'
+          ["security","trust","privacy","legal","procurement","sourcing","vendor","thirdparty","compliance","risk","dpo","gdpr"]
+          JSON
           echo "PERSONA_RULES=/tmp/persona_relaxed.json" >> $GITHUB_ENV
           echo "persona=relaxed" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Dry run (C: 336h + relaxed persona)
         id: dry3
-        if: ${{ steps.dry2.outputs.final == '' || steps.dry2.outputs.final < 8 }}
-        env:
-          TRIGGER_WINDOW_H: 336
+        if: steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) < 8
+        env: { TRIGGER_WINDOW_H: 336 }
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry3.log
-          F=$(grep -oE '"final":\s*[0-9]+' dry3.log | tail -1 | awk -F: '{print $2+0}')
-          echo "final=$F" >> $GITHUB_OUTPUT
+          node scripts/send_triggered.js --dry=true  --limit=${{ env.OUT_LIMIT }} --pack \
+            --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry3.log
+          F=$(grep -oE '"final":\s*[0-9]+' dry3.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try C → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
-      # Try D
+      - name: Send (C)
+        if: steps.dry3.outputs.final && fromJSON(steps.dry3.outputs.final) >= 8
+        env: { TRIGGER_WINDOW_H: 336 }
+        run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack \
+             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14
+
+      # —— Try D：放宽 cap/cooldown 一次（DRY→Send）——
       - name: Relax caps (once)
-        if: ${{ steps.dry3.outputs.final == '' || steps.dry3.outputs.final < 8 }}
+        if: steps.dry3.outputs.final && fromJSON(steps.dry3.outputs.final) < 8
         run: |
           echo "DOMAIN_CAP=4" >> $GITHUB_ENV
           echo "DOMAIN_WINDOW_DAYS=7" >> $GITHUB_ENV
@@ -186,41 +188,53 @@ jobs:
 
       - name: Dry run (D: 336h + caps)
         id: dry4
-        if: ${{ steps.dry3.outputs.final == '' || steps.dry3.outputs.final < 8 }}
-        env:
-          TRIGGER_WINDOW_H: 336
+        if: steps.dry3.outputs.final && fromJSON(steps.dry3.outputs.final) < 8
+        env: { TRIGGER_WINDOW_H: 336 }
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee dry4.log
-          F=$(grep -oE '"final":\s*[0-9]+' dry4.log | tail -1 | awk -F: '{print $2+0}')
-          echo "final=$F" >> $GITHUB_OUTPUT
+          node scripts/send_triggered.js --dry=true  --limit=${{ env.OUT_LIMIT }} --pack \
+            --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee dry4.log
+          F=$(grep -oE '"final":\s*[0-9]+' dry4.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try D → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
-      # Try E: 30d fallback
+      - name: Send (D)
+        if: steps.dry4.outputs.final && fromJSON(steps.dry4.outputs.final) >= 8
+        env: { TRIGGER_WINDOW_H: 336 }
+        run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack \
+             --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7
+
+      # —— Try E：近30天兜底（仍真实变更；DRY→Send）——
       - name: Dry run (E: 720h 30d fallback)
         id: dry5
-        if: ${{ (steps.dry1.outputs.final == '' || steps.dry1.outputs.final < 8) && (steps.dry2.outputs.final == '' || steps.dry2.outputs.final < 8) && (steps.dry3.outputs.final == '' || steps.dry3.outputs.final < 8) && (steps.dry4.outputs.final == '' || steps.dry4.outputs.final < 8) }}
-        env:
-          TRIGGER_WINDOW_H: 720
-          FALLBACK_30D: "1"
+        if: |
+          (steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8) &&
+          (steps.dry2.outputs.final == '' || fromJSON(steps.dry2.outputs.final) < 8) &&
+          (steps.dry3.outputs.final == '' || fromJSON(steps.dry3.outputs.final) < 8) &&
+          (steps.dry4.outputs.final == '' || fromJSON(steps.dry4.outputs.final) < 8)
+        env: { TRIGGER_WINDOW_H: 720, FALLBACK_30D: "1" }
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee dry5.log
-          F=$(grep -oE '"final":\s*[0-9]+' dry5.log | tail -1 | awk -F: '{print $2+0}')
-          echo "final=$F" >> $GITHUB_OUTPUT
+          node scripts/send_triggered.js --dry=true  --limit=${{ env.OUT_LIMIT }} --pack \
+            --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee dry5.log
+          F=$(grep -oE '"final":\s*[0-9]+' dry5.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try E (30d) → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Send (E)
-        if: ${{ steps.dry5.outputs.final != '' && steps.dry5.outputs.final >= 8 }}
-        env:
-          TRIGGER_WINDOW_H: 720
-          FALLBACK_30D: "1"
-        run: |
-          node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7
+      - name: Send (E: 30d)
+        if: steps.dry5.outputs.final && fromJSON(steps.dry5.outputs.final) >= 8
+        env: { TRIGGER_WINDOW_H: 720, FALLBACK_30D: "1" }
+        run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack \
+             --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7
 
+      # —— 仍不足：给出明确原因 —— 
       - name: Summarize failure cause
-        if: ${{ (steps.dry1.outputs.final == '' || steps.dry1.outputs.final < 8) && (steps.dry2.outputs.final == '' || steps.dry2.outputs.final < 8) && (steps.dry3.outputs.final == '' || steps.dry3.outputs.final < 8) && (steps.dry4.outputs.final == '' || steps.dry4.outputs.final < 8) && (steps.dry5.outputs.final == '' || steps.dry5.outputs.final < 8) }}
+        if: |
+          (steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8) &&
+          (steps.dry2.outputs.final == '' || fromJSON(steps.dry2.outputs.final) < 8) &&
+          (steps.dry3.outputs.final == '' || fromJSON(steps.dry3.outputs.final) < 8) &&
+          (steps.dry4.outputs.final == '' || fromJSON(steps.dry4.outputs.final) < 8) &&
+          (steps.dry5.outputs.final == '' || fromJSON(steps.dry5.outputs.final) < 8)
         run: |
           echo "### Boost not enough (final still < 8)" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Likely: vendor columns missing / evidence window empty / script still ignores caps." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Likely: pool small, vendor-match miss, evidence window empty, or suppression still tight." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Next: widen domains.csv weekly; run Discover Contacts; keep Try D/E CLI in place." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Safe push changes
         run: |
