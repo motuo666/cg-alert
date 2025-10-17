@@ -135,9 +135,9 @@ jobs:
 
           if [ "${SENT7:-0}" -ge "${MIN_SENT7_FOR_DLVR}" ]; then
             # 超阈值则降频/停发（按最严格项决定）
-            awk "BEGIN{exit !(${UR:-0} > (${UNSUB_7D_MAX}*100))}" && { LIMIT=8; REASON="high_unsub"; }
-            awk "BEGIN{exit !(${BR:-0} > (${BOUNCE_7D_MAX}*100))}" && { LIMIT=8; REASON="high_bounce"; }
-            awk "BEGIN{exit !(${CR:-0} > (${COMPLAINT_7D_MAX}*100))}" && { STOP=1; REASON="high_complaint"; }
+            awk "BEGIN{exit !(${UR:-0} > (${UNSUB_7D_MAX:-0.005}*100))}" && { LIMIT=8; REASON="high_unsub"; }
+            awk "BEGIN{exit !(${BR:-0} > (${BOUNCE_7D_MAX:-0.08}*100))}" && { LIMIT=8; REASON="high_bounce"; }
+            awk "BEGIN{exit !(${CR:-0} > (${COMPLAINT_7D_MAX:-0.001}*100))}" && { STOP=1; REASON="high_complaint"; }
           fi
 
           echo "SENT7=${SENT7:-0}" >> $GITHUB_OUTPUT
@@ -148,14 +148,32 @@ jobs:
           echo "STOP=${STOP}" >> $GITHUB_OUTPUT
           echo "REASON=${REASON}" >> $GITHUB_OUTPUT
 
-      # 链接健康守门（可选，脚本不存在则跳过）
-      - name: Link guard (optional)
+      # 预跑（dry）导出“本次要发”的真实落地链接 → Link Guard 只校验这批真实链接
+      - name: Prepare outreach links (dry-run export)
+        if: steps.gate.outputs.STOP != '1'
+        env:
+          TRIGGER_WINDOW_H: ${{ steps.eff.outputs.WINDOW }}
+          PERSONA_RULES: config/persona_rules.json
+          REGION_FILTER: config/region_filter.json
+          SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
         run: |
-          if [ -f scripts/link_guard.js ]; then
-            node scripts/link_guard.js
-          else
-            echo "skip: scripts/link_guard.js not found"
-          fi
+          node scripts/send_triggered.js \
+            --dry=true \
+            --limit=${{ steps.gate.outputs.LIMIT || steps.eff.outputs.LIMIT_BASE || '20' }} \
+            --pack \
+            --dump-links=artifacts/outreach_links.json
+
+      # 链接健康守门（严格：真实链接 4xx/5xx 即阻断；样本只 WARN）
+      - name: Link guard
+        if: steps.gate.outputs.STOP != '1'
+        env:
+          SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
+          LG_UTM_SOURCE: email
+          LG_UTM_MEDIUM: triggered
+          LG_UTM_CAMPAIGN: cp_${{ github.event.workflow_run.run_started_at || github.run_id }}
+          INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+          STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+        run: node scripts/link_guard.js
 
       # 发送（若 STOP=1 则跳过）
       - name: Send Triggered
