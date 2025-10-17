@@ -1,5 +1,4 @@
 {
-"exclude_tld": [".eu", ".de", ".fr", ".it", ".es", ".nl", ".se", ".pl"],
-"include_country": ["US","CA","AU","SG","GB","IE"],
-"default": "include"
+  "allow": ["*"],
+  "deny": []
 }
