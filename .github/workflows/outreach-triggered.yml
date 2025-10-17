@@ -17,9 +17,18 @@ on:
         default: "true"
   workflow_call:
     inputs:
-      limit:      { type: string, required: false, default: "12" }
-      window_h:   { type: string, required: false, default: "168" }
-      dry:        { type: string, required: false, default: "true" }
+      limit:
+        type: string
+        required: false
+        default: "12"
+      window_h:
+        type: string
+        required: false
+        default: "168"
+      dry:
+        type: string
+        required: false
+        default: "true"
 
 permissions:
   contents: write
@@ -59,6 +68,7 @@ jobs:
 
       - name: Preflight deliverability gate
         id: gate
+        shell: bash
         run: |
           node scripts/diag_7d_report.js > diag.txt || true
           echo '### 7D Diagnosis' >> "$GITHUB_STEP_SUMMARY"
@@ -113,23 +123,21 @@ jobs:
         env:
           TRIGGER_WINDOW_H: ${{ inputs.window_h }}
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack \
-            --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry1.log
+          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry1.log
           F=$(grep -oE '"final":\s*[0-9]+' dry1.log | tail -1 | awk -F: '{print $2+0}')
           echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try A → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Send (A)
-        if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) >= 8
+        if: ${{ steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) >= 8 }}
         env:
           TRIGGER_WINDOW_H: ${{ inputs.window_h }}
         run: |
-          node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack \
-            --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14
+          node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14
 
       # Try B
       - name: Discover Contacts (boost)
-        if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8
+        if: ${{ steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8 }}
         run: |
           node scripts/discover_contacts.js || true
           node scripts/validate_leads.js || true
@@ -138,19 +146,18 @@ jobs:
 
       - name: Dry run (B: 336h)
         id: dry2
-        if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8
+        if: ${{ steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8 }}
         env:
           TRIGGER_WINDOW_H: 336
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack \
-            --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry2.log
+          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry2.log
           F=$(grep -oE '"final":\s*[0-9]+' dry2.log | tail -1 | awk -F: '{print $2+0}')
           echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try B → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
       # Try C
       - name: Relax persona (once)
-        if: steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) < 8
+        if: ${{ steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) < 8 }}
         run: |
           echo '["security","trust","privacy","legal","procurement","sourcing","vendor","thirdparty","compliance","risk","dpo","gdpr"]' > /tmp/persona_relaxed.json
           echo "PERSONA_RULES=/tmp/persona_relaxed.json" >> $GITHUB_ENV
@@ -158,19 +165,18 @@ jobs:
 
       - name: Dry run (C: 336h + relaxed persona)
         id: dry3
-        if: steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) < 8
+        if: ${{ steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) < 8 }}
         env:
           TRIGGER_WINDOW_H: 336
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack \
-            --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry3.log
+          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14 | tee dry3.log
           F=$(grep -oE '"final":\s*[0-9]+' dry3.log | tail -1 | awk -F: '{print $2+0}')
           echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try C → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
       # Try D
       - name: Relax caps (once)
-        if: steps.dry3.outputs.final && fromJSON(steps.dry3.outputs.final) < 8
+        if: ${{ steps.dry3.outputs.final && fromJSON(steps.dry3.outputs.final) < 8 }}
         run: |
           echo "DOMAIN_CAP=4" >> $GITHUB_ENV
           echo "DOMAIN_WINDOW_DAYS=7" >> $GITHUB_ENV
@@ -180,50 +186,38 @@ jobs:
 
       - name: Dry run (D: 336h + caps)
         id: dry4
-        if: steps.dry3.outputs.final && fromJSON(steps.dry3.outputs.final) < 8
+        if: ${{ steps.dry3.outputs.final && fromJSON(steps.dry3.outputs.final) < 8 }}
         env:
           TRIGGER_WINDOW_H: 336
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack \
-            --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee dry4.log
+          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee dry4.log
           F=$(grep -oE '"final":\s*[0-9]+' dry4.log | tail -1 | awk -F: '{print $2+0}')
           echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try D → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
-      # Try E: 30d 兜底
+      # Try E: 30d fallback
       - name: Dry run (E: 720h 30d fallback)
         id: dry5
-        if: |
-          (steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8) &&
-          (steps.dry2.outputs.final == '' || fromJSON(steps.dry2.outputs.final) < 8) &&
-          (steps.dry3.outputs.final == '' || fromJSON(steps.dry3.outputs.final) < 8) &&
-          (steps.dry4.outputs.final == '' || fromJSON(steps.dry4.outputs.final) < 8)
+        if: ${{ fromJSON(steps.dry1.outputs.final) < 8 && (steps.dry2.outputs.final == '' || fromJSON(steps.dry2.outputs.final) < 8) && (steps.dry3.outputs.final == '' || fromJSON(steps.dry3.outputs.final) < 8) && (steps.dry4.outputs.final == '' || fromJSON(steps.dry4.outputs.final) < 8) }}
         env:
           TRIGGER_WINDOW_H: 720
           FALLBACK_30D: "1"
         run: |
-          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack \
-            --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee dry5.log
+          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee dry5.log
           F=$(grep -oE '"final":\s*[0-9]+' dry5.log | tail -1 | awk -F: '{print $2+0}')
           echo "final=$F" >> $GITHUB_OUTPUT
           echo "### Try E (30d) → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Send (E)
-        if: steps.dry5.outputs.final && fromJSON(steps.dry5.outputs.final) >= 8
+        if: ${{ steps.dry5.outputs.final && fromJSON(steps.dry5.outputs.final) >= 8 }}
         env:
           TRIGGER_WINDOW_H: 720
           FALLBACK_30D: "1"
         run: |
-          node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack \
-            --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7
+          node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack             --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7
 
       - name: Summarize failure cause
-        if: |
-          (steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8) &&
-          (steps.dry2.outputs.final == '' || fromJSON(steps.dry2.outputs.final) < 8) &&
-          (steps.dry3.outputs.final == '' || fromJSON(steps.dry3.outputs.final) < 8) &&
-          (steps.dry4.outputs.final == '' || fromJSON(steps.dry4.outputs.final) < 8) &&
-          (steps.dry5.outputs.final == '' || fromJSON(steps.dry5.outputs.final) < 8)
+        if: ${{ fromJSON(steps.dry1.outputs.final) < 8 && (steps.dry2.outputs.final == '' || fromJSON(steps.dry2.outputs.final) < 8) && (steps.dry3.outputs.final == '' || fromJSON(steps.dry3.outputs.final) < 8) && (steps.dry4.outputs.final == '' || fromJSON(steps.dry4.outputs.final) < 8) && (steps.dry5.outputs.final == '' || fromJSON(steps.dry5.outputs.final) < 8) }}
         run: |
           echo "### Boost not enough (final still < 8)" >> "$GITHUB_STEP_SUMMARY"
           echo "- Likely: vendor columns missing / evidence window empty / script still ignores caps." >> "$GITHUB_STEP_SUMMARY"
