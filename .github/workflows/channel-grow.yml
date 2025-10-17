@@ -1,24 +1,73 @@
 name: Channel Grow (weekly)
+
 on:
-  schedule: [ { cron: "10 4 * * 1" } ]
+  schedule:
+    - cron: "10 4 * * 1"
   workflow_dispatch:
     inputs:
-      limit: { description: "每周渠道候选上限", default: "40", required: true }
-permissions: { contents: write }
-concurrency: { group: cg-channel, cancel-in-progress: false }
+      limit:
+        description: "每周渠道候选上限"
+        default: "40"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cg-channel
+  cancel-in-progress: false
+
 jobs:
   grow:
     runs-on: ubuntu-latest
+    # 统一在 job 级 env 计算默认值：手动触发用 inputs.limit；定时触发回落到 '40'
+    env:
+      NEW_CHANNELS_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '40' }}
+
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm ci || npm i --no-audit --no-fund || true
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        shell: bash
+        run: |
+          set -e
+          npm ci || npm i --no-audit --no-fund
+
+      - name: Validate inputs & summarize
+        shell: bash
+        run: |
+          set -euo pipefail
+          re='^[0-9]+$'
+          if [[ ! "${NEW_CHANNELS_LIMIT}" =~ ${re} ]]; then
+            echo "::warning::NEW_CHANNELS_LIMIT is not a number; fallback to 40"
+            NEW_LIMIT=40
+          else
+            NEW_LIMIT="${NEW_CHANNELS_LIMIT}"
+          fi
+
+          # 传递给后续步骤
+          echo "NEW_CHANNELS_LIMIT=${NEW_LIMIT}" >> "$GITHUB_ENV"
+
+          {
+            echo "## Channel Grow (weekly)"
+            echo "- event: ${{ github.event_name }}"
+            echo "- NEW_CHANNELS_LIMIT: ${NEW_LIMIT}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Discover channel candidates
-        env: { NEW_CHANNELS_LIMIT: ${{ inputs.limit || 40 }} }
+        env:
+          NEW_CHANNELS_LIMIT: ${{ env.NEW_CHANNELS_LIMIT }}
         run: node scripts/auto_discover_channels.js
+
       - name: Safe Push
+        shell: bash
         run: |
           chmod +x scripts/git_safe_push.sh
           bash scripts/git_safe_push.sh "channel: weekly partner targets"
