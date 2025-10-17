@@ -1,34 +1,48 @@
 #!/usr/bin/env node
-// scripts/leads_guard.js — 9列 & 去表头残片
-const fs = require('fs'); const path = require('path');
-const CSV = path.join(__dirname,'..','data','leads.csv');
+/**
+ * leads_guard.js — final
+ * 把 unsub/bounce/complaint 同步到 leads.csv 的 status 字段（new -> unsub|bounced|complaint）
+ * 并保持 mx_ok 原值。
+ */
 
-function read(fp){
-  if(!fs.existsSync(fp)) return [];
-  const raw=fs.readFileSync(fp,'utf8').trim();
-  if(!raw) return [];
-  return raw.split(/\r?\n/).filter(Boolean);
+const fs = require('fs');
+
+const leadsP = 'data/leads.csv';
+const unsubP = 'data/unsubscribes.csv';
+const bounceP= 'data/bounces.csv';
+const complP = 'data/complaints.csv';
+
+function readCSV(p){
+  try{ return fs.readFileSync(p,'utf8').split(/\r?\n/).filter(Boolean).map(x=>x.split(',')); }
+  catch{ return []; }
 }
-function write(fp, lines){ fs.writeFileSync(fp, lines.join('\n')+'\n', 'utf8'); }
-
-const lines = read(CSV);
-const out = [];
-const okStatus = new Set(['','new','sent','bounced','unsub','invalid','bad-mx']);
-
-for (const line of lines){
-  const lower = line.toLowerCase();
-  // 丢弃任何“包含 email,company,domain”的表头/残片
-  if (lower.includes('email,company,domain')) continue;
-
-  const v = line.split(',').map(s=>s.trim());
-  // 固定 9 列
-  const c = v.slice(0,9); while(c.length<9) c.push('');
-
-  // 只接受 status 合法值
-  if (!okStatus.has((c[7]||'').toLowerCase())) c[7]='new';
-
-  out.push(c.join(','));
+function writeCSV(p, rows){
+  fs.writeFileSync(p, rows.map(r=>r.join(',')).join('\n'), 'utf8');
 }
 
-write(CSV, out);
-console.log(`leads_guard: in=${lines.length} out=${out.length}`);
+const leads = readCSV(leadsP);
+const unsub = new Set(readCSV(unsubP).map(r=>r[0]?.toLowerCase()).filter(Boolean));
+const bounc = new Set(readCSV(bounceP).map(r=>r[0]?.toLowerCase()).filter(Boolean));
+const compl = new Set(readCSV(complP).map(r=>r[0]?.toLowerCase()).filter(Boolean));
+
+let inN=0, outN=0;
+const out = leads.map(r=>{
+  if(!r || r.length<9) return r;
+  const email = (r[0]||'').toLowerCase();
+  let status = (r[7]||'new').toLowerCase();
+  const mxok = r[8]||'1';
+
+  const before=status;
+  if(compl.has(email)) status='complaint';
+  else if(bounc.has(email)) status='bounced';
+  else if(unsub.has(email)) status='unsub';
+
+  if(status!==before) outN++;
+  inN++;
+  r[7]=status; // status
+  r[8]=mxok;   // mx_ok 保持
+  return r;
+});
+
+writeCSV(leadsP, out);
+console.log(`leads_guard: in=${inN} updated=${outN}`);
