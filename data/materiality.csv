@@ -1,6 +1,7 @@
 vendor,score,impact
 adyen.com,30.52,High
-algolia.com,14.52,High
+algolia.com,30.52,High
+asana.com,17.76,High
 atlassian.com,7.52,Medium
 aws.amazon.com,7.52,Medium
 box.com,7.52,Medium
@@ -50,7 +51,6 @@ miro.com,6.58,Medium
 supabase.com,6.58,Medium
 bitbucket.org,5.64,Medium
 segment.com,5.64,Medium
-asana.com,3.76,Low
 auth0.com,3.76,Low
 postmarkapp.com,3.76,Low
 sendgrid.com,3.76,Low
