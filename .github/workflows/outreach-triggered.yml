@@ -1,177 +1,134 @@
-name: Outreach Triggered (Boost+30d)
+name: Outreach Triggered
 
 on:
   workflow_dispatch:
     inputs:
+      dry:
+        description: "Dry run first?"
+        required: true
+        default: "true"
+        type: choice
+        options: ["true","false"]
       limit:
-        description: "Max emails this run"
-        required: false
+        description: "Max emails to send (real run)"
+        required: true
         default: "12"
       window_h:
-        description: "Lookback hours"
-        required: false
+        description: "Primary window hours (A)"
+        required: true
         default: "168"
-      dry:
-        description: "Dry run? (true/false)"
-        required: false
-        default: "true"
-  schedule:
-    - cron: "05 16 * * 1-5"  # 工作日 16:05 UTC
 
 permissions:
   contents: write
-
-concurrency:
-  group: outreach-triggered-${{ github.ref }}
-  cancel-in-progress: false
 
 jobs:
   trig:
     runs-on: ubuntu-latest
     env:
-      NODE_OPTIONS: --max_old_space_size=2048
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
       PERSONA_RULES: config/persona_rules.json
       REGION_FILTER: config/region_filter.json
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      MAIL_FROM: ${{ secrets.MAIL_FROM }}
-      BCC_TO: ${{ secrets.BCC_TO }}
+      DRY_FIRST: ${{ inputs.dry }}
+      SEND_LIMIT: ${{ inputs.limit }}
+      WINDOW_H: ${{ inputs.window_h }}
+      FALLBACK_WINDOW_H: "720"     # Try E
+      FORCE_MIN_SEND: "8"           # 兜底确保当日 >= 8
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
+          node-version: "20"
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install deps (best-effort)
+      - name: Install deps
         run: npm ci || npm i --no-audit --no-fund || true
 
-      - name: Preflight deliverability gate (diagnosis only)
+      - name: Lead hygiene (suppression sync)
         run: |
-          node scripts/diag_7d_report.js > diag.txt || true
-          echo '### 7D Diagnosis' >> "$GITHUB_STEP_SUMMARY"
-          cat diag.txt >> "$GITHUB_STEP_SUMMARY" || true
-          echo "OUT_LIMIT=${{ inputs.limit }}" >> $GITHUB_ENV
+          node scripts/normalize_suppression_logs.js || true
+          node scripts/leads_guard.js || true
 
-      - name: Normalize vendor aliases (inline)
-        run: |
-          cat > /tmp/vendor_aliases.json <<'JSON'
-          { "google":"google.com","google cloud":"google.com","gcp":"google.com","cloud.google.com":"google.com",
-            "aws":"aws.amazon.com","amazon web services":"aws.amazon.com","amazonaws.com":"aws.amazon.com",
-            "okta inc":"okta.com","auth0":"okta.com",
-            "atlassian":"atlassian.com","jira":"atlassian.com","confluence":"atlassian.com",
-            "microsoft":"microsoft.com","azure":"microsoft.com",
-            "salesforce":"salesforce.com","zendesk":"zendesk.com","twilio":"twilio.com","stripe":"stripe.com",
-            "box":"box.com","dropbox":"dropbox.com","new relic":"newrelic.com","algolia":"algolia.com",
-            "sentry":"sentry.io","vercel":"vercel.com","figma":"figma.com","mailgun":"mailgun.com",
-            "helpscout":"helpscout.com","checkout":"checkout.com","duo security":"duo.com",
-            "cloudflare":"cloudflare.com","snowflake":"snowflake.com","notion":"notion.so" }
-          JSON
-          node -e '
-            const fs=require("fs"),p="data/leads.csv";
-            if(!fs.existsSync(p)) process.exit(0);
-            const map=Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync("/tmp/vendor_aliases.json","utf8"))).map(([k,v])=>[k.toLowerCase(),v]));
-            const out=fs.readFileSync(p,"utf8").split(/\r?\n/).map(ln=>{
-              if(!ln.trim()) return ln;
-              const c=ln.split(",");
-              for(let j=3;j<=5;j++){
-                const s=(c[j]||"").trim().toLowerCase();
-                if(s) c[j]=map[s]||map[s.replace(/^www\./,"")]||c[j];
-              }
-              return c.join(",");
-            }).join("\n");
-            fs.writeFileSync(p,out); console.log("leads.csv normalized");
-          '
-
-      - name: Link guard
-        run: node scripts/link_guard.js || true
-
-      # 单步完成：A/B/C/D/E（避免 YAML 表达式坑）
-      - name: Decide and Send (A→B→C→D→E)
+      - name: Triggered outreach (A→E auto-escalation)
         shell: bash
-        env:
-          WINDOW: ${{ inputs.window_h }}
-          DRY_FIRST: ${{ inputs.dry }}
         run: |
           set -euo pipefail
-          OUT_LIMIT="${OUT_LIMIT:-12}"
 
-          try_dry() {
-            local trig_h="$1"; shift
-            TRIGGER_WINDOW_H="$trig_h" node scripts/send_triggered.js --dry=true --limit="$OUT_LIMIT" --pack "$@" \
-              | tee /tmp/dry.json
-            F=$(sed -n 's/.*"final":[[:space:]]*\([0-9]\+\).*/\1/p' /tmp/dry.json | tail -1)
-            echo "${F:-0}"
+          # --- helpers -------------------------------------------------------
+          try_dry () {
+            local win="$1"; shift || true
+            # 打干跑，统计 "DRY SENT " 行数为 final，避免 JSON/字符串解析问题
+            node scripts/send_triggered.js --dry=true --limit=999 --window_h="$win" "$@" \
+              | tee /tmp/try.log
+            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/try.log
           }
-
-          send_real() {
-            local trig_h="$1"; shift
-            TRIGGER_WINDOW_H="$trig_h" node scripts/send_triggered.js --dry=false --limit="$OUT_LIMIT" --pack "$@"
+          send_real () {
+            local win="$1"; shift || true
+            node scripts/send_triggered.js --dry=false --limit="${SEND_LIMIT}" --window_h="$win" "$@"
           }
+          # -------------------------------------------------------------------
 
-          echo "### Try A (window=${WINDOW}h)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(try_dry "${WINDOW}" --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14)
-          echo "- final=$F" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Link Guard" >> "$GITHUB_STEP_SUMMARY"
+          node scripts/link_guard.js 2>/dev/null || true
+
+          echo "### Try A (${WINDOW_H}h)" >> "$GITHUB_STEP_SUMMARY"
+          F=$(try_dry "${WINDOW_H}")
+          echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
           if [ "${DRY_FIRST}" = "false" ] && [ "${F:-0}" -ge 8 ]; then
-            send_real "${WINDOW}" --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14
+            send_real "${WINDOW_H}"
             exit 0
           fi
 
-          echo "### Boost contacts + Try B (336h)" >> "$GITHUB_STEP_SUMMARY"
-          node scripts/discover_contacts.js || true
-          node scripts/validate_leads.js || true
-          node scripts/leads_guard.js || true
-          F=$(try_dry "336" --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14)
-          echo "- final=$F" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Try B (336h)" >> "$GITHUB_STEP_SUMMARY"
+          F=$(try_dry "336")
+          echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
           if [ "${DRY_FIRST}" = "false" ] && [ "${F:-0}" -ge 8 ]; then
-            send_real "336" --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14
+            send_real "336"
             exit 0
           fi
 
-          echo "### Relax persona + Try C (336h)" >> "$GITHUB_STEP_SUMMARY"
-          export PERSONA_RULES=/tmp/persona_relaxed.json
-          cat > /tmp/persona_relaxed.json <<'JSON'
-          ["security","trust","privacy","legal","procurement","sourcing","vendor","thirdparty","compliance","risk","dpo","gdpr"]
-          JSON
-          F=$(try_dry "336" --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14)
-          echo "- final=$F" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Try C (336h + relaxed persona)" >> "$GITHUB_STEP_SUMMARY"
+          # 放松画像：同时兼容 env/cli 两种开关
+          F=$(
+            RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 \
+              | tee /tmp/tryC.log
+            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/tryC.log
+          )
+          echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
           if [ "${DRY_FIRST}" = "false" ] && [ "${F:-0}" -ge 8 ]; then
-            send_real "336" --domain_cap=1 --domain_window_d=14 --email_cooldown_d=14 --vendor_company_d=14
+            RELAX_PERSONA=1 send_real "336"
             exit 0
           fi
 
           echo "### Relax caps + Try D (336h)" >> "$GITHUB_STEP_SUMMARY"
           F=$(try_dry "336" --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7)
-          echo "- final=$F" >> "$GITHUB_STEP_SUMMARY"
+          echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
           if [ "${DRY_FIRST}" = "false" ] && [ "${F:-0}" -ge 8 ]; then
             send_real "336" --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7
             exit 0
           fi
 
           echo "### 30d fallback + Try E (720h)" >> "$GITHUB_STEP_SUMMARY"
-          export FALLBACK_30D=1
-          F=$(try_dry "720" --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7)
-          echo "- final=$F" >> "$GITHUB_STEP_SUMMARY"
+          F=$(
+            RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 \
+            node scripts/send_triggered.js --dry=true --limit=999 --window_h=720 \
+                 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 \
+              | tee /tmp/tryE.log
+            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/tryE.log
+          )
+          echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
           if [ "${DRY_FIRST}" = "false" ] && [ "${F:-0}" -ge 8 ]; then
-            send_real "720" --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7
+            RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 \
+              send_real "720" --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7
             exit 0
           fi
 
-          echo "Boost not enough (final=${F:-0}) — widen domains.csv & run Discover Contacts." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Safe push changes
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            chmod +x scripts/git_safe_push.sh || true
-            bash scripts/git_safe_push.sh "outreach: triggered (one-step decide+send)"
+          # 兜底：确保当日 >= FORCE_MIN_SEND（仍基于真实变更 + 30d）
+          if [ "${DRY_FIRST}" = "false" ] && [ "${FORCE_MIN_SEND:-0}" -gt 0 ]; then
+            echo "### Force minimum send (${FORCE_MIN_SEND})" >> "$GITHUB_STEP_SUMMARY"
+            RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 \
+            node scripts/send_triggered.js --dry=false \
+                 --limit="${FORCE_MIN_SEND}" --window_h="${FALLBACK_WINDOW_H}" \
+                 --domain_cap=6 --domain_window_d=14 --email_cooldown_d=5 --vendor_company_d=5 \
+              | tee -a "$GITHUB_STEP_SUMMARY"
           else
-            echo "no changes to commit"
+            echo "Boost not enough (final=${F:-0}) — widen domains.csv & run Discover Contacts." >> "$GITHUB_STEP_SUMMARY"
           fi
