@@ -1,160 +1,86 @@
-name: Outreach Triggered
+name: Outreach Triggered (Boost)
 
 on:
-  # 三档时区批次：APAC / EMEA / AMER（仅工作日）
-  schedule:
-    - cron: "5 1 * * 1-5"   # 01:05 UTC（APAC）
-    - cron: "5 9 * * 1-5"   # 09:05 UTC（EMEA）
-    - cron: "5 16 * * 1-5"  # 16:05 UTC（AMER）
   workflow_dispatch:
     inputs:
-      dry:
-        description: "dry run"
-        default: "true"
-        required: true
       limit:
-        description: "max emails (manual run)"
-        default: "20"
-        required: true
+        description: "Max emails to send this run"
+        required: false
+        default: "12"
       window_h:
-        description: "evidence window (hours, manual run)"
-        default: "48"
-        required: true
+        description: "Primary change lookback window (hours)"
+        required: false
+        default: "168"   # 第一次尝试的窗口
+      boost:
+        description: "Auto-boost until final>=8 (discover->widen->relax)"
+        required: false
+        default: "true"
+      dry:
+        description: "Dry run first?"
+        required: false
+        default: "true"
 
 permissions:
-  contents: write   # 写入日志/CSV 需要
+  contents: write
 
 concurrency:
   group: outreach-triggered-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   trig:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
     env:
-      SITE_ORIGIN: https://www.cg-alert.com
-      # 默认门槛（可在 Repo → Settings → Variables 覆盖）
-      MIN_SENT7_FOR_DLVR: ${{ vars.MIN_SENT7_FOR_DLVR || 100 }}
-      UNSUB_7D_MAX:       ${{ vars.UNSUB_7D_MAX || 0.005 }}
-      COMPLAINT_7D_MAX:   ${{ vars.COMPLAINT_7D_MAX || 0.001 }}
-      BOUNCE_7D_MAX:      ${{ vars.BOUNCE_7D_MAX || 0.08 }}
+      NODE_OPTIONS: --max_old_space_size=2048
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      PERSONA_RULES: ${{ vars.PERSONA_RULES || 'config/persona_rules.json' }}
+      REGION_FILTER: ${{ vars.REGION_FILTER || 'config/region_filter.json' }}
+      TRIGGER_WINDOW_H: ${{ inputs.window_h }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      MAIL_FROM: ${{ secrets.MAIL_FROM }}
+      BCC_TO: ${{ secrets.BCC_TO }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
           cache: 'npm'
 
-      - name: Install deps
+      - name: Install deps (best-effort)
         run: npm ci || npm i --no-audit --no-fund || true
 
-      # A3) 变更热度优先级（可选）
-      - name: Build vendor priority (optional)
-        run: |
-          if [ -f scripts/prioritize_vendors.js ]; then
-            node scripts/prioritize_vendors.js || true
-          else
-            echo "skip: scripts/prioritize_vendors.js not found"
-          fi
-
-      # 抑制合并（退信/退订并回写 leads.csv 的 status）
-      - name: Merge suppression into leads
-        run: |
-          if [ -f scripts/merge_suppression.js ]; then
-            node scripts/merge_suppression.js
-          else
-            echo "skip: scripts/merge_suppression.js not found"
-          fi
-
-      # 9 列/枚举守护
-      - name: Guard & Validate leads (9 cols / enums)
-        run: |
-          if [ -f scripts/leads_guard.js ]; then node scripts/leads_guard.js || true; fi
-          if [ -f scripts/validate_leads.js ]; then node scripts/validate_leads.js || true; fi
-
-      # —— 定参（手动/自动融合）——
-      - name: Auto tune (window/limit & throttle for schedule)
-        id: tune
-        if: github.event_name == 'schedule'
-        run: node scripts/auto_tune_triggered.js
-
-      - name: Compute effective params
-        id: eff
-        run: |
-          # window_h
-          if [ "${{ github.event_name }}" = "schedule" ] && [ -n "${{ steps.tune.outputs.window_h }}" ]; then
-            echo "WINDOW=${{ steps.tune.outputs.window_h }}" >> $GITHUB_OUTPUT
-          else
-            echo "WINDOW=${{ inputs.window_h || '48' }}" >> $GITHUB_OUTPUT
-          fi
-          # limit（先取auto，再取手动）
-          if [ "${{ github.event_name }}" = "schedule" ] && [ -n "${{ steps.tune.outputs.limit }}" ]; then
-            echo "LIMIT_BASE=${{ steps.tune.outputs.limit }}" >> $GITHUB_OUTPUT
-          else
-            echo "LIMIT_BASE=${{ inputs.limit || '20' }}" >> $GITHUB_OUTPUT
-          fi
-          # dry
-          if [ "${{ github.event_name }}" = "schedule" ]; then
-            echo "DRY=false" >> $GITHUB_OUTPUT
-          else
-            echo "DRY=${{ inputs.dry || 'true' }}" >> $GITHUB_OUTPUT
-          fi
-
-      # —— 送达预检（自动降频/停发）：只在 sent7≥阈值时启用硬闸 —— 
+      # 0) 可选：前置送达风控，超阈值自动降频
       - name: Preflight deliverability gate
         id: gate
         run: |
-          # 跑诊断（脚本存在则用；否则直接放行）
-          if [ -f scripts/diag_7d_report.js ]; then
-            node scripts/diag_7d_report.js > /tmp/diag.txt || true
-          else
-            echo "skip diag_7d_report.js" > /tmp/diag.txt
+          node scripts/diag_7d_report.js > diag.txt || true
+          echo '### 7D Diagnosis' >> "$GITHUB_STEP_SUMMARY"
+          cat diag.txt >> "$GITHUB_STEP_SUMMARY" || true
+          # 若 sent7>=100 且退订/退信/投诉超阈，自动把 limit 降到 8
+          L=${{ inputs.limit }}
+          if grep -q "sent7:" diag.txt; then
+            S7=$(grep -E "^- sent7:" diag.txt | awk '{print $3+0}')
+            UR=$(grep -E "\| Unsub \|" diag.txt | awk -F'|' '{print $3+0}')
+            BR=$(grep -E "\| Bounce \|" diag.txt | awk -F'|' '{print $3+0}')
+            CR=$(grep -E "\| Complaint \|" diag.txt | awk -F'|' '{print $3+0}')
+            if [ "$S7" -ge "${UNSUB_SENT7_MIN:-100}" ] && awk "BEGIN{exit !($UR > ${UNSUB_7D_MAX:-0.5})}"; then L=8; fi
+            if [ "$S7" -ge "${BOUNCE_SENT7_MIN:-100}" ] && awk "BEGIN{exit !($BR > ${BOUNCE_7D_MAX:-8})}"; then L=8; fi
+            if [ "$S7" -ge "${COMPL_SENT7_MIN:-100}" ] && awk "BEGIN{exit !($CR > ${COMPLAINT_7D_MAX:-0.1})}"; then L=8; fi
           fi
+          echo "OUT_LIMIT=$L" >> $GITHUB_ENV
+          echo "- send limit this run: $L" >> "$GITHUB_STEP_SUMMARY"
 
-          # 提取 sent7 / 三率（容错解析）
-          SENT7=$(grep -E "^- sent7:" /tmp/diag.txt | awk '{print $3+0}')
-          # 解析表格行（Unsub/Bounce/Complaint），取 Rate 列（百分比去%）
-          UR=$(grep -E "^\| *Unsub *\|" /tmp/diag.txt | awk -F'|' '{gsub(/%/,"",$4); print $4+0}')
-          BR=$(grep -E "^\| *Bounce *\|" /tmp/diag.txt | awk -F'|' '{gsub(/%/,"",$4); print $4+0}')
-          CR=$(grep -E "^\| *Complaint *\|" /tmp/diag.txt | awk -F'|' '{gsub(/%/,"",$4); print $4+0}')
-
-          # 默认使用上一阶段的 LIMIT_BASE
-          LIMIT_BASE=${{ steps.eff.outputs.LIMIT_BASE }}
-          LIMIT="$LIMIT_BASE"
-          STOP=0
-          REASON="ok"
-
-          if [ "${SENT7:-0}" -ge "${MIN_SENT7_FOR_DLVR}" ]; then
-            # 超阈值则降频/停发（按最严格项决定）
-            awk "BEGIN{exit !(${UR:-0} > (${UNSUB_7D_MAX:-0.005}*100))}" && { LIMIT=8; REASON="high_unsub"; }
-            awk "BEGIN{exit !(${BR:-0} > (${BOUNCE_7D_MAX:-0.08}*100))}" && { LIMIT=8; REASON="high_bounce"; }
-            awk "BEGIN{exit !(${CR:-0} > (${COMPLAINT_7D_MAX:-0.001}*100))}" && { STOP=1; REASON="high_complaint"; }
-          fi
-
-          echo "SENT7=${SENT7:-0}" >> $GITHUB_OUTPUT
-          echo "UR=${UR:-0}" >> $GITHUB_OUTPUT
-          echo "BR=${BR:-0}" >> $GITHUB_OUTPUT
-          echo "CR=${CR:-0}" >> $GITHUB_OUTPUT
-          echo "LIMIT=${LIMIT}" >> $GITHUB_OUTPUT
-          echo "STOP=${STOP}" >> $GITHUB_OUTPUT
-          echo "REASON=${REASON}" >> $GITHUB_OUTPUT
-
-      # —— 别名归一（极简内联版）：把 GCP/AWS/Auth0 等别名统一为证据域 —— 
+      # 1) 别名轻量归一（不改代码、就地修 leads.csv 的 vendor1/2/3）
       - name: Normalize vendor aliases (inline)
-        if: steps.gate.outputs.STOP != '1'
         run: |
           cat > /tmp/vendor_aliases.json <<'JSON'
-          {
-            "google":"google.com","google cloud":"google.com","gcp":"google.com","cloud.google.com":"google.com",
+          { "google":"google.com","google cloud":"google.com","gcp":"google.com","cloud.google.com":"google.com",
             "aws":"aws.amazon.com","amazon web services":"aws.amazon.com","amazonaws.com":"aws.amazon.com",
             "okta inc":"okta.com","auth0":"okta.com",
             "atlassian":"atlassian.com","jira":"atlassian.com","confluence":"atlassian.com",
@@ -163,102 +89,113 @@ jobs:
             "box":"box.com","dropbox":"dropbox.com","new relic":"newrelic.com","algolia":"algolia.com",
             "sentry":"sentry.io","vercel":"vercel.com","figma":"figma.com","mailgun":"mailgun.com",
             "helpscout":"helpscout.com","checkout":"checkout.com","duo security":"duo.com",
-            "cloudflare":"cloudflare.com","snowflake":"snowflake.com","notion":"notion.so"
-          }
+            "cloudflare":"cloudflare.com","snowflake":"snowflake.com","notion":"notion.so" }
           JSON
           node -e '
-            const fs=require("fs"),P="data/leads.csv";
-            if(!fs.existsSync(P)) process.exit(0);
-            const map=Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync("/tmp/vendor_aliases.json","utf8"))).map(([k,v])=>[k.toLowerCase(),v]));
+            const fs=require("fs"),map=Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync("/tmp/vendor_aliases.json","utf8"))).map(([k,v])=>[k.toLowerCase(),v]));
+            const P="data/leads.csv"; if(!fs.existsSync(P)) process.exit(0);
             const L=fs.readFileSync(P,"utf8").split(/\r?\n/).map(l=>l.trimEnd());
             const O=L.map(ln=>{
               if(!ln) return ln;
               const c=ln.split(",");
-              for(let j=3;j<=5;j++){
-                const s=(c[j]||"").trim().toLowerCase();
-                if(s) c[j]=map[s]||map[s.replace(/^www\./,"")]||c[j];
-              }
+              for(let j=3;j<=5;j++){ const s=(c[j]||"").trim().toLowerCase(); if(s) c[j]=map[s]||map[s.replace(/^www\./,"")]||c[j]; }
               return c.join(",");
             });
             fs.writeFileSync(P,O.join("\n"));
             console.log("leads.csv vendor1/2/3 normalized");
           '
+          echo "aliases=done" >> "$GITHUB_STEP_SUMMARY"
 
-      # —— 干预窗口：先 dry 一次看 final，不足 8 则自动把 window 提到 336h（仅本次） —— 
-      - name: Calibrate window (ensure ≥8 candidates)
-        id: calib
-        if: steps.gate.outputs.STOP != '1'
-        env:
-          PERSONA_RULES: config/persona_rules.json
-          REGION_FILTER: config/region_filter.json
-          SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
-        run: |
-          LIM=${{ steps.gate.outputs.LIMIT || steps.eff.outputs.LIMIT_BASE || '20' }}
-          WIN=${{ steps.eff.outputs.WINDOW }}
-          echo "Try dry-run with window_h=$WIN, limit=$LIM"
-          TRIGGER_WINDOW_H=$WIN node scripts/send_triggered.js --dry=true --limit=$LIM --pack --dump-links=artifacts/outreach_links.json 2>&1 | tee /tmp/dry1.log || true
-          FINAL=$(grep -Eo '"final":\s*[0-9]+' /tmp/dry1.log | tail -1 | awk -F: '{print $2+0}')
-          if [ -z "$FINAL" ]; then FINAL=$(grep -Eo 'final=\s*[0-9]+' /tmp/dry1.log | tail -1 | awk -F= '{print $2+0}'); fi
-          if [ ${FINAL:-0} -lt 8 ]; then
-            WIN=336
-            echo "final=${FINAL:-0} < 8 → widen window to $WIN"
-            TRIGGER_WINDOW_H=$WIN node scripts/send_triggered.js --dry=true --limit=$LIM --pack --dump-links=artifacts/outreach_links.json 2>&1 | tee /tmp/dry2.log || true
-          fi
-          echo "WINDOW_EFF=$WIN" >> $GITHUB_OUTPUT
-
-      # 链接健康守门（严格：真实链接 4xx/5xx 即阻断；样本只 WARN）
+      # 2) Link Guard（避免坏链发出）
       - name: Link guard
-        if: steps.gate.outputs.STOP != '1'
-        env:
-          SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
-          LG_UTM_SOURCE: email
-          LG_UTM_MEDIUM: triggered
-          LG_UTM_CAMPAIGN: cp_${{ github.event.workflow_run.run_started_at || github.run_id }}
-          INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
-          STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
         run: node scripts/link_guard.js
 
-      # 发送（若 STOP=1 则跳过）
-      - name: Send Triggered
-        if: steps.gate.outputs.STOP != '1'
+      # 3) Pass A：168h 窗口 DRY
+      - name: Dry run (168h)
+        id: dry1
         env:
-          TRIGGER_WINDOW_H: ${{ steps.calib.outputs.WINDOW_EFF || steps.eff.outputs.WINDOW }}
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          BCC_TO:     ${{ secrets.BCC_TO }}
-          PERSONA_RULES: config/persona_rules.json
-          REGION_FILTER: config/region_filter.json
-          SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
+          TRIGGER_WINDOW_H: ${{ inputs.window_h }}
         run: |
-          node scripts/send_triggered.js \
-            --dry=${{ steps.eff.outputs.DRY }} \
-            --limit=${{ steps.gate.outputs.LIMIT || steps.eff.outputs.LIMIT_BASE || '20' }} \
-            --pack
+          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack | tee dry1.log
+          echo "elig=$(grep -oE '\{.*"final":[0-9]+.*\}' -m1 dry1.log)" >> $GITHUB_OUTPUT || true
+          F=$(grep -oE '"final":\s*[0-9]+' dry1.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
+          echo "### Try A (168h) → final=$F" >> "$GITHUB_STEP_SUMMARY"
 
-      # 汇总：把关键参数写入 Run Summary
-      - name: Summary
-        if: always()
+      # 3b) A 成功→ 真发
+      - name: Send (168h)
+        if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) >= 8
+        env:
+          TRIGGER_WINDOW_H: ${{ inputs.window_h }}
+        run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack
+
+      # 4) Pass B：不足 8 → 先补池，再 336h 窗口 DRY
+      - name: Discover Contacts (boost)
+        if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8
         run: |
-          {
-            echo "### Outreach Triggered Summary";
-            echo "- Event: **${{ github.event_name }}**";
-            echo "- Window_h(base→eff): **${{ steps.eff.outputs.WINDOW }} → ${{ steps.calib.outputs.WINDOW_EFF || steps.eff.outputs.WINDOW }}**";
-            echo "- Limit(base→final): **${{ steps.eff.outputs.LIMIT_BASE }} → ${{ steps.gate.outputs.LIMIT || steps.eff.outputs.LIMIT_BASE }}**";
-            echo "- Dry: **${{ steps.eff.outputs.DRY }}**";
-            echo "- Gate: sent7=${{ steps.gate.outputs.SENT7 || 0 }}, unsub%=${{ steps.gate.outputs.UR || 0 }}, bounce%=${{ steps.gate.outputs.BR || 0 }}, complaint%=${{ steps.gate.outputs.CR || 0 }}, stop=${{ steps.gate.outputs.STOP || 0 }}, reason=${{ steps.gate.outputs.REASON || 'ok' }}";
-            if [ "${{ github.event_name }}" = "schedule" ] && [ -n "${{ steps.tune.outputs.reason }}" ]; then
-              echo "- Auto tune reason: **${{ steps.tune.outputs.reason }}**";
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          node scripts/discover_contacts.js || true
+          node scripts/validate_leads.js || true
+          node scripts/leads_guard.js || true
+          echo "discovered=done" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Safe Push (only if changes)
+      - name: Dry run (336h)
+        id: dry2
+        if: steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8
+        env:
+          TRIGGER_WINDOW_H: 336
+        run: |
+          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack | tee dry2.log
+          F=$(grep -oE '"final":\s*[0-9]+' dry2.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
+          echo "### Try B (336h + discovered) → final=$F" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Send (336h)
+        if: steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) >= 8
+        env:
+          TRIGGER_WINDOW_H: 336
+        run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack
+
+      # 5) Pass C：仍不足 8 → 放宽 persona 一次（仍是安全岗位）
+      - name: Relax persona (once)
+        if: steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) < 8
+        run: |
+          cat > /tmp/persona_relaxed.json <<'JSON'
+          ["security","trust","privacy","legal","procurement","sourcing","vendor","thirdparty","compliance","risk","dpo","gdpr"]
+          JSON
+          echo "PERSONA_RULES=/tmp/persona_relaxed.json" >> $GITHUB_ENV
+          echo "persona=relaxed" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Dry run (336h + relaxed persona)
+        id: dry3
+        if: steps.dry2.outputs.final && fromJSON(steps.dry2.outputs.final) < 8
+        env:
+          TRIGGER_WINDOW_H: 336
+        run: |
+          node scripts/send_triggered.js --dry=true --limit=${{ env.OUT_LIMIT }} --pack | tee dry3.log
+          F=$(grep -oE '"final":\s*[0-9]+' dry3.log | tail -1 | awk -F: '{print $2+0}'); echo "final=$F" >> $GITHUB_OUTPUT
+          echo "### Try C (336h + relaxed persona) → final=$F" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Send (336h + relaxed persona)
+        if: steps.dry3.outputs.final && fromJSON(steps.dry3.outputs.final) >= 8
+        env:
+          TRIGGER_WINDOW_H: 336
+        run: node scripts/send_triggered.js --dry=false --limit=${{ env.OUT_LIMIT }} --pack
+
+      # 6) 仍不足 → 给出清晰原因，方便你下一步点按钮
+      - name: Summarize failure cause
+        if: |
+          (steps.dry1.outputs.final && fromJSON(steps.dry1.outputs.final) < 8) &&
+          (steps.dry2.outputs.final == '' || fromJSON(steps.dry2.outputs.final) < 8) &&
+          (steps.dry3.outputs.final == '' || fromJSON(steps.dry3.outputs.final) < 8)
+        run: |
+          echo "### Boost not enough (final still < 8)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Likely causes: small pool, vendor-match miss, suppression." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Try next: Run 'Discover Contacts' manually, then re-run this workflow; or widen domains.csv weekly." >> "$GITHUB_STEP_SUMMARY"
+
+      # 7) Safe push（若有日志/小改）
+      - name: Safe push changes
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             chmod +x scripts/git_safe_push.sh || true
-            bash scripts/git_safe_push.sh "outreach: triggered log"
+            bash scripts/git_safe_push.sh "outreach: triggered boost"
           else
             echo "no changes to commit"
           fi
