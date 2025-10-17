@@ -10,9 +10,19 @@
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px}
     a{color:#222;text-decoration:underline}
   </style>
+  <link rel="canonical" href="https://www.cg-alert.com/public/who-uses/_template.html">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"CG Alert — Evidence-backed vendor change alerts","url":"https://www.cg-alert.com","description":"Monitor vendor public pages (Pricing/ToS/DPA/Subprocessors/Status) and get verifiable change evidence."}</script>
+  <meta name="description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals & compliance.">
 </head>
 <body>
   <h1>Who Uses: {{NAME}}</h1>
+<!-- CG-CTA-INJECT START -->
+<div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+<a id="cg-enable-alerts" class="btn" rel="nofollow" href="https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform">Enable alerts</a>
+<a id="cg-buy-portfolio" class="btn secondary" rel="nofollow" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801">Buy Portfolio</a>
+</div>
+<script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-enable-alerts","cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>
+<!-- CG-CTA-INJECT END -->
   <div class="grid">
     {{LIST}}
   </div>

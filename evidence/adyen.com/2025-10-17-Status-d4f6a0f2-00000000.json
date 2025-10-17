@@ -1,0 +1,10 @@
+{
+  "url": "https://adyen.com/status/",
+  "type": "Status",
+  "status": 200,
+  "body_hash": "e3b0c44298fc1c149afbf4c8996fb924",
+  "fetched_at": "2025-10-17T03:45:26.440Z",
+  "seeded": true,
+  "commit": "dfa5153",
+  "run_url": "https://github.com/motuo666/cg-alert/actions/runs/18581776236"
+}
