@@ -1,21 +1,37 @@
 name: Vendor Catalog
+
 on:
-  schedule: [ { cron: "10 15 * * 1" } ]
-  workflow_dispatch: {}
-permissions: { contents: write }
-concurrency: { group: vendor-catalog, cancel-in-progress: true }
+  workflow_dispatch:
+  schedule:
+    - cron: "10 04 * * 1"  # 周一 04:10 UTC
+
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with: { node-version: '20' }
+
       - name: Build vendor catalog
-        env: { SITE_ORIGIN: 'https://www.cg-alert.com' }
         run: node scripts/vendor_catalog.js
-      - name: Safe Push
+
+      - name: SEO/CTA inject
+        run: node scripts/seo_inject.js || true
+
+      - name: Safe push
         run: |
-          chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "vendors: weekly refresh"
+          chmod +x scripts/git_safe_push.sh || true
+          git add -A data/vendor_catalog.csv vendors updates || true
+          if [ -n "$(git status --porcelain)" ]; then
+            bash scripts/git_safe_push.sh "vendors: weekly refresh"
+          else
+            echo "no changes"
+          fi
