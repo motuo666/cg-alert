@@ -1,4 +1,5 @@
 name: Outreach Triggered Runner
+
 on:
   workflow_dispatch:
     inputs:
@@ -14,6 +15,7 @@ on:
         description: "Dry run first?"
         required: false
         default: "true"
+
 jobs:
   call:
     uses: ./.github/workflows/outreach-triggered.yml
