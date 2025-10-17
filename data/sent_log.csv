@@ -1,1 +1,21 @@
 ts,email,stage,status,subject
+2025-10-17T16:32:32.209Z,manningtopps@gmail.com,Your Co,slack.com
+2025-10-17T16:32:32.753Z,security@auth0.com,auth0,auth0.com
+2025-10-17T16:32:33.321Z,security@cloudflare.com,cloudflare,cloudflare.com
+2025-10-17T16:32:33.883Z,security@datadoghq.com,datadog,datadoghq.com
+2025-10-17T16:32:34.394Z,security@github.com,github,github.com
+2025-10-17T16:32:34.939Z,security@notion.so,notion,notion.so
+2025-10-17T16:32:35.429Z,security@slack.com,slack,slack.com
+2025-10-17T16:32:35.922Z,security@snowflake.com,snowflake,snowflake.com
+2025-10-17T16:32:36.411Z,security@stripe.com,stripe,stripe.com
+2025-10-17T16:32:36.918Z,security@twilio.com,twilio,twilio.com
+2025-10-17T16:32:36Z,"manningtopps@gmail.com","[Evidence] slack.com changed evidence/slack.com/2025-10-13-Pricing-0ca9c009-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/slack.com/"
+2025-10-17T16:32:36Z,"security@auth0.com","[Evidence] auth0.com changed evidence/auth0.com/2025-10-13-Pricing-3669ba44-82de6426.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/auth0.com/"
+2025-10-17T16:32:36Z,"security@cloudflare.com","[Evidence] cloudflare.com changed evidence/cloudflare.com/2025-10-13-Pricing-19d88464-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/cloudflare.com/"
+2025-10-17T16:32:36Z,"security@datadoghq.com","[Evidence] datadoghq.com changed evidence/datadoghq.com/2025-10-13-Pricing-7134614d-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/datadoghq.com/"
+2025-10-17T16:32:36Z,"security@github.com","[Evidence] github.com changed evidence/github.com/2025-10-13-DPA-96c6c691-0019dfc4.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/github.com/"
+2025-10-17T16:32:36Z,"security@notion.so","[Evidence] notion.so changed evidence/notion.so/2025-10-13-Pricing-85b103b9-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/notion.so/"
+2025-10-17T16:32:37Z,"security@slack.com","[Evidence] slack.com changed evidence/slack.com/2025-10-13-Pricing-0ca9c009-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/slack.com/"
+2025-10-17T16:32:37Z,"security@snowflake.com","[Evidence] snowflake.com changed evidence/snowflake.com/2025-10-13-Pricing-c426ed57-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/snowflake.com/"
+2025-10-17T16:32:37Z,"security@stripe.com","[Evidence] stripe.com changed evidence/stripe.com/2025-10-13-DPA-9fe8a7d5-75878227.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/stripe.com/"
+2025-10-17T16:32:37Z,"security@twilio.com","[Evidence] twilio.com changed evidence/twilio.com/2025-10-13-Pricing-b47f2efc-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/twilio.com/"
