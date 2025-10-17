@@ -4,19 +4,19 @@ on:
   workflow_dispatch:
     inputs:
       dry:
-        description: "Dry run first?"
+        description: "Dry run? (true=只评估, false=真实发送)"
         required: true
         default: "true"
         type: choice
         options: ["true","false"]
       limit:
-        description: "Max emails to send (real run)"
+        description: "Max emails to send (when dry=false)"
         required: true
         default: "12"
       window_h:
         description: "Primary window hours (A)"
         required: true
-        default: "168"
+        default: "336"
 
 permissions:
   contents: write
@@ -28,16 +28,14 @@ jobs:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
       PERSONA_RULES: config/persona_rules.json
       REGION_FILTER: config/region_filter.json
-      DRY_FIRST: ${{ inputs.dry }}
       SEND_LIMIT: ${{ inputs.limit }}
       WINDOW_H: ${{ inputs.window_h }}
-      FALLBACK_WINDOW_H: "720"     # Try E
-      FORCE_MIN_SEND: "8"           # 兜底确保当日 >= 8
+      FALLBACK_WINDOW_H: "720"   # Try E
+      FORCE_MIN_SEND: "8"        # 兜底（仅 dry=false 时启用）
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+        with: { node-version: "20" }
 
       - name: Install deps
         run: npm ci || npm i --no-audit --no-fund || true
@@ -47,88 +45,149 @@ jobs:
           node scripts/normalize_suppression_logs.js || true
           node scripts/leads_guard.js || true
 
-      - name: Triggered outreach (A→E auto-escalation)
+      - name: Print mode
+        run: |
+          echo "RUN_MODE: dry=${{ inputs.dry }}  limit=${{ inputs.limit }}  window_h=${{ inputs.window_h }}"
+          echo "SMTP_HOST set? $([ -n "${SMTP_HOST}" ] && echo yes || echo no)"
+          echo "MAIL_FROM: ${MAIL_FROM:-<empty>}"
+
+      - name: Link Guard
+        run: node scripts/link_guard.js || true
+
+      # ---------- DRY PATH: 只评估（A→E），不发送 ----------
+      - name: Evaluate (A→E, dry path)
+        if: ${{ inputs.dry == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
-
-          # --- helpers -------------------------------------------------------
-          try_dry () {
+          count_by_dry () {
             local win="$1"; shift || true
-            # 打干跑，统计 "DRY SENT " 行数为 final，避免 JSON/字符串解析问题
-            node scripts/send_triggered.js --dry=true --limit=999 --window_h="$win" "$@" \
-              | tee /tmp/try.log
-            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/try.log
+            node scripts/send_triggered.js --dry=true --limit=999 --window_h="$win" "$@" | tee /tmp/dry.log
+            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/dry.log
           }
-          send_real () {
-            local win="$1"; shift || true
-            node scripts/send_triggered.js --dry=false --limit="${SEND_LIMIT}" --window_h="$win" "$@"
-          }
-          # -------------------------------------------------------------------
-
-          echo "### Link Guard" >> "$GITHUB_STEP_SUMMARY"
-          node scripts/link_guard.js 2>/dev/null || true
 
           echo "### Try A (${WINDOW_H}h)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(try_dry "${WINDOW_H}")
+          F=$(count_by_dry "${WINDOW_H}")
           echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${DRY_FIRST}" = "false" ] && [ "${F:-0}" -ge 8 ]; then
-            send_real "${WINDOW_H}"
-            exit 0
-          fi
 
           echo "### Try B (336h)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(try_dry "336")
+          F=$(count_by_dry 336)
           echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${DRY_FIRST}" = "false" ] && [ "${F:-0}" -ge 8 ]; then
-            send_real "336"
-            exit 0
-          fi
 
           echo "### Try C (336h + relaxed persona)" >> "$GITHUB_STEP_SUMMARY"
-          # 放松画像：同时兼容 env/cli 两种开关
           F=$(
             RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 \
               | tee /tmp/tryC.log
             awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/tryC.log
           )
           echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${DRY_FIRST}" = "false" ] && [ "${F:-0}" -ge 8 ]; then
-            RELAX_PERSONA=1 send_real "336"
-            exit 0
-          fi
 
-          echo "### Relax caps + Try D (336h)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(try_dry "336" --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7)
+          echo "### Try D (336h + caps relaxed)" >> "$GITHUB_STEP_SUMMARY"
+          F=$(count_by_dry 336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7)
           echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${DRY_FIRST}" = "false" ] && [ "${F:-0}" -ge 8 ]; then
-            send_real "336" --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7
-            exit 0
-          fi
 
-          echo "### 30d fallback + Try E (720h)" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Try E (720h + discovered + relaxed persona)" >> "$GITHUB_STEP_SUMMARY"
           F=$(
             RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 \
             node scripts/send_triggered.js --dry=true --limit=999 --window_h=720 \
-                 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 \
+                --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 \
               | tee /tmp/tryE.log
             awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/tryE.log
           )
           echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${DRY_FIRST}" = "false" ] && [ "${F:-0}" -ge 8 ]; then
-            RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 \
-              send_real "720" --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7
+          echo "Done (dry)."
+
+      # ---------- REAL PATH: 真实发送（A→E 逐级；不足触发 FORCE_MIN_SEND） ----------
+      - name: Send (A→E escalation, real path)
+        if: ${{ inputs.dry == 'false' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          send_real () {
+            local win="$1"; shift || true
+            node scripts/send_triggered.js --dry=false --limit="${SEND_LIMIT}" --window_h="$win" "$@"
+          }
+          count_by_dry () {
+            local win="$1"; shift || true
+            node scripts/send_triggered.js --dry=true --limit=999 --window_h="$win" "$@" | tee /tmp/dry.log
+            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/dry.log
+          }
+
+          TOTAL_SENT=0
+
+          echo "### Try A (${WINDOW_H}h)" >> "$GITHUB_STEP_SUMMARY"
+          F=$(count_by_dry "${WINDOW_H}")
+          echo "- plan=${F}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${F:-0}" -ge 8 ]; then
+            send_real "${WINDOW_H}" | tee /tmp/A.log
+            SA=$(grep -c '^SENT ' /tmp/A.log || true); TOTAL_SENT=$((TOTAL_SENT+SA))
+            echo "- SENT=${SA}" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
-          # 兜底：确保当日 >= FORCE_MIN_SEND（仍基于真实变更 + 30d）
-          if [ "${DRY_FIRST}" = "false" ] && [ "${FORCE_MIN_SEND:-0}" -gt 0 ]; then
+          echo "### Try B (336h)" >> "$GITHUB_STEP_SUMMARY"
+          F=$(count_by_dry 336)
+          echo "- plan=${F}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${F:-0}" -ge 8 ]; then
+            send_real 336 | tee /tmp/B.log
+            SB=$(grep -c '^SENT ' /tmp/B.log || true); TOTAL_SENT=$((TOTAL_SENT+SB))
+            echo "- SENT=${SB}" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "### Try C (336h + relaxed persona)" >> "$GITHUB_STEP_SUMMARY"
+          F=$(
+            RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 \
+              | tee /tmp/Cdry.log
+            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/Cdry.log
+          )
+          echo "- plan=${F}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${F:-0}" -ge 8 ]; then
+            RELAX_PERSONA=1 send_real 336 | tee /tmp/C.log
+            SC=$(grep -c '^SENT ' /tmp/C.log || true); TOTAL_SENT=$((TOTAL_SENT+SC))
+            echo "- SENT=${SC}" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "### Try D (336h + caps relaxed)" >> "$GITHUB_STEP_SUMMARY"
+          F=$(count_by_dry 336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7)
+          echo "- plan=${F}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${F:-0}" -ge 8 ]; then
+            send_real 336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee /tmp/D.log
+            SD=$(grep -c '^SENT ' /tmp/D.log || true); TOTAL_SENT=$((TOTAL_SENT+SD))
+            echo "- SENT=${SD}" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "### Try E (720h + discovered + relaxed persona)" >> "$GITHUB_STEP_SUMMARY"
+          F=$(
+            RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 \
+            node scripts/send_triggered.js --dry=true --limit=999 --window_h=720 \
+                --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 \
+              | tee /tmp/Edry.log
+            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/Edry.log
+          )
+          echo "- plan=${F}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${F:-0}" -ge 8 ]; then
+            RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 \
+              send_real 720 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee /tmp/E.log
+            SE=$(grep -c '^SENT ' /tmp/E.log || true); TOTAL_SENT=$((TOTAL_SENT+SE))
+            echo "- SENT=${SE}" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # 兜底：FORCE_MIN_SEND（仅 real path）
+          if [ "${FORCE_MIN_SEND:-0}" -gt 0 ]; then
             echo "### Force minimum send (${FORCE_MIN_SEND})" >> "$GITHUB_STEP_SUMMARY"
             RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 \
-            node scripts/send_triggered.js --dry=false \
-                 --limit="${FORCE_MIN_SEND}" --window_h="${FALLBACK_WINDOW_H}" \
-                 --domain_cap=6 --domain_window_d=14 --email_cooldown_d=5 --vendor_company_d=5 \
-              | tee -a "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Boost not enough (final=${F:-0}) — widen domains.csv & run Discover Contacts." >> "$GITHUB_STEP_SUMMARY"
+              node scripts/send_triggered.js --dry=false \
+                   --limit="${FORCE_MIN_SEND}" --window_h="${FALLBACK_WINDOW_H}" \
+                   --domain_cap=6 --domain_window_d=14 --email_cooldown_d=5 --vendor_company_d=5 \
+                | tee /tmp/F.log
+            SF=$(grep -c '^SENT ' /tmp/F.log || true); TOTAL_SENT=$((TOTAL_SENT+SF))
+            echo "- SENT=${SF}" >> "$GITHUB_STEP_SUMMARY"
           fi
+
+          echo "### TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_STEP_SUMMARY"
+          exit 0
