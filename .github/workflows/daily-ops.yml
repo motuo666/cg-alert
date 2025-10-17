@@ -1,101 +1,31 @@
 name: Daily Ops
-
 on:
-  schedule:
-    - cron: "30 16 * * *"   # 每天 16:30 UTC
   workflow_dispatch:
-    inputs:
-      target_sent:
-        description: "目标：Sent today（默认 8）"
-        required: false
-        default: "8"
-      target_evid_today:
-        description: "目标：Evidence today（默认 10）"
-        required: false
-        default: "10"
-
-permissions:
-  contents: write
-
-concurrency:
-  group: daily-ops-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
-  ops:
+  run:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
+          node-version: 20
+      - name: Install deps
+        run: npm ci || npm i
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install (best-effort)
-        run: npm ci || npm i --no-audit --no-fund || true
-
-      # 版本守门：防止旧版 daily_ops_report.js 回流（含嵌套反引号/targetEvidence）
-      - name: Guard script version
-        run: |
-          if grep -q "\`Evidence vs target(" scripts/daily_ops_report.js || grep -q "targetEvidence" scripts/daily_ops_report.js; then
-            echo "Old daily_ops_report.js detected. Please push the fixed version." >> "$GITHUB_STEP_SUMMARY"
-            exit 1
-          fi
-
-      # 自检：生成 artifacts/daily_ops.json 并写入 Step Summary
-      - name: Fullchain Check
-        env:
-          # 优先顺序：手动输入 > 仓库 Variables > 默认
-          TARGET_SENT: ${{ inputs.target_sent || vars.TARGET_SENT || '8' }}
-          TARGET_EVID_TODAY: ${{ inputs.target_evid_today || vars.TARGET_EVID_TODAY || '10' }}
-        run: |
-          node scripts/fullchain_check.js || true
-
-      # 可选：生成 TTD 报告（P50/P95）
-      - name: Build TTD Report
-        run: node scripts/build_ttd_report.js || true
-
-      # 可选：ABM 小名单（近 168h 有真变的账户 TopN），生成 artifacts/abm_targets.csv
-      - name: Build ABM shortlist (optional)
-        run: |
-          if [ -f scripts/abm_shortlist.js ]; then
-            node scripts/abm_shortlist.js --window_h=168 --top=20 || true
-          else
-            echo "abm_shortlist.js not found (skip)"
-          fi
-
-      # 生成当天可视化页：/reports/ops/<YYYY-MM-DD>/index.html（脚本已自带兜底计算）
-      - name: Build Daily Ops Report
+      - name: Daily Ops Report (original)
         run: node scripts/daily_ops_report.js
 
-      # 安全推送（仅当有变化）
-      - name: Safe push report
+      - name: Fix sent_today from sent_log.csv (UTC)
         run: |
-          git add -A reports artifacts || true
-          if [ -n "$(git status --porcelain)" ]; then
-            chmod +x scripts/git_safe_push.sh || true
-            bash scripts/git_safe_push.sh "chore(ops): daily report $(date -u +%F)"
-          else
-            echo "no changes to commit"
-          fi
+          node scripts/fix_sent_today.js
+          ST=$(node -e "console.log(require('fs').existsSync('artifacts/daily_ops.json')?JSON.parse(require('fs').readFileSync('artifacts/daily_ops.json','utf8')).sent_today:0)")
+          echo "### Corrections (UTC)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- sent_today (from sent_log.csv): ${ST}" >> "$GITHUB_STEP_SUMMARY"
 
-      # 可选：在 Summary 里放快捷入口（依赖 SITE_ORIGIN 变量，未配置则仅打印本地路径）
-      - name: Quick Links (optional)
-        env:
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
-        run: |
-          TODAY="$(date -u +%F)"
-          echo "### Quick Links" >> "$GITHUB_STEP_SUMMARY"
-          if [ -n "$SITE_ORIGIN" ]; then
-            echo "- Ops Dashboard: **$SITE_ORIGIN/reports/ops/$TODAY/**" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Ops Index: **$SITE_ORIGIN/reports/ops/**" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "- Ops Dashboard (repo path): reports/ops/$TODAY/index.html" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Ops Index (repo path): reports/ops/index.html" >> "$GITHUB_STEP_SUMMARY"
-          fi
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily_ops
+          path: artifacts/daily_ops.json
+          if-no-files-found: warn
