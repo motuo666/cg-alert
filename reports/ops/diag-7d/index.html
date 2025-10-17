@@ -8,23 +8,19 @@ th{background:#f9fafb;text-align:left} .pill{display:inline-block;padding:2px 8p
 .bad{color:#b91c1c;font-weight:600} .ok{color:#065f46;font-weight:600}
 </style></head><body>
 <h1>7-Day Deliverability Diagnosis</h1>
-<p class="muted">cutoff(7d): 2025-10-10T11:24:39.835Z</p>
+<p class="muted">cutoff(7d): 2025-10-10T12:25:51.486Z</p>
 <h3>Summary</h3>
 <table>
 <tr><th>Metric</th><th>valid7</th><th>sent7</th><th>Rate</th><th>Threshold</th><th>Notes</th></tr>
-<tr><td>Unsub</td><td>0</td><td>30</td><td>0.00%</td><td>0.50%</td><td>total7=1, invalid_when=0, before_last=1, no_last_sent=0</td></tr>
-<tr><td>Bounce</td><td>0</td><td>30</td><td>0.00%</td><td>8.00%</td><td>total7=1, invalid_when=0, before_last=1, no_last_sent=0</td></tr>
+<tr><td>Unsub</td><td>0</td><td>30</td><td>0.00%</td><td>0.50%</td><td>total7=0, invalid_when=0, before_last=0, no_last_sent=0</td></tr>
+<tr><td>Bounce</td><td>0</td><td>30</td><td>0.00%</td><td>8.00%</td><td>total7=0, invalid_when=0, before_last=0, no_last_sent=0</td></tr>
 <tr><td>Complaint</td><td>0</td><td>30</td><td>0.00%</td><td>0.10%</td><td>total7=0, invalid_when=0, before_last=0, no_last_sent=0</td></tr>
 </table>
 
 <h3>Samples (latest 50 unsub/bounce events in 7d)</h3>
 <table>
 <tr><th>Type</th><th>Email</th><th>When</th><th>Last Sent</th><th>Within 7d</th><th>After Last Sent</th><th>Counted</th></tr>
-<tr>
-<td>Bounce</td><td>procurement@asana.com</td><td>2025-10-11T07:37:16.000Z</td><td>2025-10-15T10:14:17.406Z</td>
-<td>✓</td><td></td><td><span class="bad">NO</span></td></tr><tr>
-<td>Unsub</td><td>procurement@asana.com</td><td>2025-10-11T07:37:16.000Z</td><td>2025-10-15T10:14:17.406Z</td>
-<td>✓</td><td></td><td><span class="bad">NO</span></td></tr>
+
 </table>
 
 <p class="muted">Rules: only count events that are both within the last 7d and occurred after the email's last sent time.</p>
