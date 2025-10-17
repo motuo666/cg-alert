@@ -1,28 +1,18 @@
 name: Auto Acceptance
-
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "40 16 * * 1-5"
-
-permissions:
-  contents: write
 
 jobs:
-  accept:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with:
+          node-version: 20
       - name: Install deps
-        run: npm ci || npm i --no-audit --no-fund || true
-
-      - name: Normalize suppression logs
-        run: node scripts/normalize_suppression_logs.js || true
-
-      - name: Sync suppression to leads.csv
-        run: node scripts/leads_guard.js || true
-
-      - name: Acceptance (ndx, burn-in aware)
-        run: node scripts/acceptance_check.js
+        run: npm ci || npm i
+      - name: Acceptance Check
+        run: |
+          node scripts/acceptance_check.js | tee /tmp/acc.txt
+          cat /tmp/acc.txt >> "$GITHUB_STEP_SUMMARY"
