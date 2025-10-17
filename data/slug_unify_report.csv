@@ -1,13 +1,1 @@
 old_slug,new_slug,moved,skipped_same,skipped_conflict
-acme.com,acme corp,acme.com,0,0,1
-atlassian.com,atlassian,atlassian.com,0,0,1
-auth0.com,auth0,auth0.com,0,0,1
-cloudflare.com,cloudflare,cloudflare.com,0,0,1
-datadoghq.com,datadog,datadoghq.com,0,0,1
-github.com,github,github.com,0,0,1
-globex.com,globex,globex.com,0,0,1
-notion.so,notion,notion.so,0,0,1
-slack.com,slack,slack.com,0,0,1
-snowflake.com,snowflake,snowflake.com,0,0,1
-stripe.com,stripe,stripe.com,0,0,1
-twilio.com,twilio,twilio.com,0,0,1
