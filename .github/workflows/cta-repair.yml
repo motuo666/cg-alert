@@ -1,4 +1,4 @@
-name: CTA Repair (self-contained v2)
+name: CTA Hotpatch (self-contained)
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ permissions:
   contents: write
 
 jobs:
-  fix:
+  hotpatch:
     runs-on: ubuntu-latest
     env:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
@@ -22,160 +22,93 @@ jobs:
         with:
           node-version: 18
 
-      - name: Preflight vars
+      - name: Preflight (vars)
         run: |
           echo "INTAKE_FORM_URL=${{ vars.INTAKE_FORM_URL }}"
           echo "STRIPE_LINK_PORTFOLIO=${{ vars.STRIPE_LINK_PORTFOLIO }}"
           if [ -z "${{ vars.INTAKE_FORM_URL }}${{ vars.STRIPE_LINK_PORTFOLIO }}" ]; then
-            echo "::error::Both INTAKE_FORM_URL and STRIPE_LINK_PORTFOLIO are empty. Set at Settings → Secrets and variables → Actions → Variables"; exit 1;
+            echo "::error::Both INTAKE_FORM_URL and STRIPE_LINK_PORTFOLIO are empty. Set Actions → Variables first."; exit 1;
           fi
 
-      - name: Write seo_inject.js (v2)
+      # 写入注入脚本（全仓库递归扫描 .html）
+      - name: Write seo_inject.js
         run: |
           cat > seo_inject.js <<'JS'
           #!/usr/bin/env node
-          /**
-           * seo_inject.js v2
-           * - 递归扫描全仓库 HTML（排除 .git/.github/node_modules/.cache）
-           * - 幂等注入 canonical / description / JSON-LD
-           * - 在首个 <h1> 后注入 CTA 标记块（CG-CTA-INJECT），无 <h1> 则插入 <main>/<body>
-           * - 控制：INTAKE_FORM_URL / STRIPE_LINK_PORTFOLIO 任一存在才注入 CTA
-           */
-
-          const fs = require('fs');
-          const path = require('path');
-
+          const fs = require('fs'); const path = require('path');
           const ROOT = process.cwd();
-          const EXCLUDES = new Set(['.git', '.github', 'node_modules', '.cache']);
+          const EXCLUDES = new Set(['.git','.github','node_modules','.cache']);
           const INTAKE = process.env.INTAKE_FORM_URL || '';
           const STRIPE = process.env.STRIPE_LINK_PORTFOLIO || '';
-          const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+          const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 
-          let scanned = 0, seoFiles = 0, seoInjected = 0, ctaFiles = 0, ctaInjected = 0;
+          let scanned=0, seoFiles=0, seoInjected=0, ctaFiles=0, ctaInjected=0;
 
-          function listHtml(dir) {
-            const out = [];
-            const ents = fs.readdirSync(dir, { withFileTypes: true });
-            for (const e of ents) {
-              if (EXCLUDES.has(e.name)) continue;
-              const p = path.join(dir, e.name);
-              if (e.isDirectory()) { out.push(...listHtml(p)); continue; }
-              if (!e.isFile()) continue;
-              if (p.endsWith('.html')) out.push(p);
+          function walk(dir){ const out=[]; for(const e of fs.readdirSync(dir,{withFileTypes:true})){
+            if(EXCLUDES.has(e.name)) continue; const p=path.join(dir,e.name);
+            if(e.isDirectory()) out.push(...walk(p));
+            else if(e.isFile() && p.endsWith('.html')) out.push(p);
+          } return out; }
+
+          function ensureSeo(html, fp){
+            let changed=false;
+            if(!/<head[^>]*>/i.test(html)||!/<\/head>/i.test(html)) return {html,changed};
+            if(!/rel=["']canonical["']/i.test(html)){
+              const rel=path.relative(ROOT,fp).replace(/\\/g,'/'); const page='/' + rel.replace(/index\.html$/i,'');
+              html=html.replace(/<\/head>/i,`  <link rel="canonical" href="${ORIGIN}${page}">\n</head>`); changed=true;
             }
-            return out;
+            if(!/application\/ld\+json/i.test(html)){
+              const jsonld={"@context":"https://schema.org","@type":"WebPage","name":"CG Alert — Evidence-backed vendor change alerts","url":ORIGIN,"description":"Monitor vendor public pages (Pricing/ToS/DPA/Subprocessors/Status) and get verifiable change evidence."};
+              html=html.replace(/<\/head>/i,`  <script type="application/ld+json">${JSON.stringify(jsonld)}</script>\n</head>`); changed=true;
+            }
+            if(!/name=["']description["']/i.test(html)){
+              html=html.replace(/<\/head>/i,`  <meta name="description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals & compliance.">\n</head>`); changed=true;
+            }
+            return {html,changed};
           }
 
-          function ensureSeo(html, filePath) {
-            let changed = false;
-            if (!/<head[^>]*>/i.test(html) || !/<\/head>/i.test(html)) return { html, changed };
-            // canonical
-            if (!/rel=["']canonical["']/i.test(html)) {
-              const rel = path.relative(ROOT, filePath).replace(/\\/g, '/');
-              const pagePath = '/' + rel.replace(/index\.html$/i, '');
-              html = html.replace(/<\/head>/i, `  <link rel="canonical" href="${SITE_ORIGIN}${pagePath}">\n</head>`);
-              changed = true;
-            }
-            // JSON-LD
-            if (!/application\/ld\+json/i.test(html)) {
-              const jsonld = {
-                "@context":"https://schema.org",
-                "@type":"WebPage",
-                "name":"CG Alert — Evidence-backed vendor change alerts",
-                "url": SITE_ORIGIN,
-                "description":"Monitor vendor public pages (Pricing/ToS/DPA/Subprocessors/Status) and get verifiable change evidence."
-              };
-              html = html.replace(/<\/head>/i, `  <script type="application/ld+json">${JSON.stringify(jsonld)}</script>\n</head>`);
-              changed = true;
-            }
-            // description
-            if (!/name=["']description["']/i.test(html)) {
-              html = html.replace(/<\/head>/i, `  <meta name="description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals & compliance.">\n</head>`);
-              changed = true;
-            }
-            return { html, changed };
+          function ctaBlock(){
+            const btns=[];
+            if(INTAKE) btns.push(`<a id="cg-enable-alerts" class="btn" rel="nofollow" href="${INTAKE}">Enable alerts</a>`);
+            if(STRIPE) btns.push(`<a id="cg-buy-portfolio" class="btn secondary" rel="nofollow" href="${STRIPE}">Buy Portfolio</a>`);
+            if(!btns.length) return '';
+            const js=`<script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-enable-alerts","cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>`;
+            return ['<!-- CG-CTA-INJECT START -->',
+                    `<div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">`,
+                    btns.join('\n'),`</div>`,js,'<!-- CG-CTA-INJECT END -->'].join('\n');
           }
 
-          function buildCtaBlock() {
-            const btns = [];
-            if (INTAKE) btns.push(`<a id="cg-enable-alerts" class="btn" rel="nofollow" href="\${INTAKE}">Enable alerts</a>`);
-            if (STRIPE) btns.push(`<a id="cg-buy-portfolio" class="btn secondary" rel="nofollow" href="\${STRIPE}">Buy Portfolio</a>`);
-            if (!btns.length) return ''; // 两个变量都空 → 不注入
-            const js = `<script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-enable-alerts","cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>`;
-            return [
-              '<!-- CG-CTA-INJECT START -->',
-              `<div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">`,
-              btns.join('\n'),
-              `</div>`,
-              js,
-              '<!-- CG-CTA-INJECT END -->'
-            ].join('\n');
+          function ensureCta(html){
+            if(/CG-CTA-INJECT START/.test(html)) return {html,changed:false};
+            const block=ctaBlock(); if(!block) return {html,changed:false};
+            if(/<h1[^>]*>[\s\S]*?<\/h1>/i.test(html)){ html=html.replace(/(<h1[^>]*>[\s\S]*?<\/h1>)/i, `$1\n${block}`); return {html,changed:true}; }
+            if(/<main[^>]*>/i.test(html)){ html=html.replace(/<main[^>]*>/i, m=>`${m}\n${block}\n`); return {html,changed:true}; }
+            if(/<body[^>]*>/i.test(html)){ html=html.replace(/<body[^>]*>/i, m=>`${m}\n${block}\n`); return {html,changed:true}; }
+            return {html,changed:false};
           }
 
-          function ensureCta(html) {
-            if (/CG-CTA-INJECT START/.test(html)) return { html, changed: false };
-            const block = buildCtaBlock();
-            if (!block) return { html, changed: false };
-            if (/<h1[^>]*>[\s\S]*?<\/h1>/i.test(html)) {
-              html = html.replace(/(<h1[^>]*>[\s\S]*?<\/h1>)/i, `$1\n\${block}`);
-              return { html, changed: true };
-            }
-            if (/<main[^>]*>/i.test(html)) {
-              html = html.replace(/<main[^>]*>/i, (m) => `${m}\n\${block}\n`);
-              return { html, changed: true };
-            }
-            if (/<body[^>]*>/i.test(html)) {
-              html = html.replace(/<body[^>]*>/i, (m) => `${m}\n\${block}\n`);
-              return { html, changed: true };
-            }
-            return { html, changed: false };
+          function process(fp){
+            let html=fs.readFileSync(fp,'utf8'); let touched=false;
+            seoFiles++; const s1=ensureSeo(html,fp); if(s1.changed){html=s1.html; seoInjected++; touched=true;}
+            ctaFiles++; const s2=ensureCta(html); if(s2.changed){html=s2.html; ctaInjected++; touched=true;}
+            if(touched) fs.writeFileSync(fp, html.endsWith('\n')?html:html+'\n','utf8');
           }
 
-          function run() {
-            const roots = [
-              ROOT,                    // 根 index.html
-              path.join(ROOT, 'vendors'),
-              path.join(ROOT, 'updates'),
-              path.join(ROOT, 'public'),
-              path.join(ROOT, 'public/vendors'),
-              path.join(ROOT, 'public/updates'),
-              path.join(ROOT, 'site'),
-              path.join(ROOT, 'build'),
-              path.join(ROOT, 'dist'),
-              path.join(ROOT, 'docs'),
-              path.join(ROOT, 'out')
-            ].filter(fs.existsSync);
+          // 可能的根目录集合（覆盖 Cloudflare 常见构建输出）
+          const roots=[ROOT,'vendors','updates','public','public/vendors','public/updates','site','build','dist','docs','out']
+            .map(p=>path.isAbsolute(p)?p:path.join(ROOT,p)).filter(fs.existsSync);
 
-            let files = [];
-            for (const r of roots) files.push(...listHtml(r));
-            files = Array.from(new Set(files));
-            scanned = files.length;
+          let files=[]; for(const r of roots) files.push(...walk(r));
+          files = Array.from(new Set(files)); scanned=files.length;
+          files.forEach(process);
 
-            files.forEach((p) => {
-              let html = fs.readFileSync(p, 'utf8');
-              let changed = false;
-
-              seoFiles++;
-              const s1 = ensureSeo(html, p); if (s1.changed) { html = s1.html; seoInjected++; changed = true; }
-
-              ctaFiles++;
-              const s2 = ensureCta(html); if (s2.changed) { html = s2.html; ctaInjected++; changed = true; }
-
-              if (changed) fs.writeFileSync(p, html.endsWith('\n') ? html : html + '\n', 'utf8');
-            });
-
-            console.log(`Scanned HTML files: ${scanned}`);
-            console.log(`SEO Inject - files: ${seoFiles} / injected: ${seoInjected}`);
-            console.log(`CTA Inject - files: ${ctaFiles} / injected: ${ctaInjected}`);
-            if (!INTAKE && !STRIPE) {
-              console.log('CTA note: INTAKE_FORM_URL & STRIPE_LINK_PORTFOLIO both empty → CTA disabled.');
-            }
-          }
-
-          run();
+          console.log(`Scanned HTML files: ${scanned}`);
+          console.log(`SEO Inject - files: ${seoFiles} / injected: ${seoInjected}`);
+          console.log(`CTA Inject - files: ${ctaFiles} / injected: ${ctaInjected}`);
           JS
           chmod +x seo_inject.js
 
+      # 禁止 HTML 缓存（防回源旧文件）
       - name: Write _headers (no-cache for HTML)
         run: |
           cat > _headers <<'H'
@@ -191,37 +124,36 @@ jobs:
             Cache-Control: no-cache, must-revalidate, max-age=0
           H
 
-      - name: Inject CTA & SEO
+      - name: Inject & log
         run: node ./seo_inject.js | tee /tmp/inject.log
 
-      - name: Debug: counts & samples
+      - name: Show CTA markers (sample)
         run: |
           echo "---- grep CG-CTA-INJECT (top 10) ----"
           git grep -n "CG-CTA-INJECT" -- ':!node_modules' | head -n 10 || true
-          echo "---- changed files ----"
-          git status --porcelain | sed -n '1,120p' || true
 
       - name: Assert CTA markers exist
         run: |
           n=$(git grep -n "CG-CTA-INJECT" -- ':!node_modules' | wc -l || true)
           echo "CTA markers: $n"
           if [ "$n" -eq 0 ]; then
-            echo "::error::CTA markers not found in repo after inject"; exit 1; fi
+            echo "::error::CTA markers not found in repo after inject (check Variables & paths)"; exit 1; fi
 
-      - name: Commit & push changes
+      - name: Commit & push
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add -A vendors updates public site build dist docs out _headers index.html reports
+          git add -A vendors updates public site build dist docs out _headers
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else
-            git commit -m "CTA repair: inject CTA + headers (v2)"
+            git commit -m "CTA hotpatch: inject CTA + headers"
             git pull --rebase --autostash || true
             git push
           fi
 
+      # 软校验（部署/缓存滞后仅告警）
       - name: Post-deploy check (soft)
         if: ${{ always() }}
         run: |
