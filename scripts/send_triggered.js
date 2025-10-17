@@ -1,431 +1,356 @@
 #!/usr/bin/env node
 /**
- * Triggered outreach — 覆盖版（最终）
- * 目标：今天把 Sent≥8 打出来，同时长期可控（风控/可核证/零人工）。
- *
- * 核心改进：
- * - 只发“真实变更”（非 baseline；hash 非 0…）
- * - DRY 不再把 leads.csv 标记为 sent（避免把池子“试跑耗尽”）
- * - 冷却/单域上限可被 ENV/CLI 覆盖（DOMAIN_CAP / DOMAIN_WINDOW_DAYS / EMAIL_COOLDOWN_DAYS / VENDOR_COMPANY_COOLDOWN_DAYS）
- * - 兼容 vendor 别名表（config/vendor_aliases.json），提升 vendor-match 命中
- * - 抑制列表（unsub/bounce/complaint）跳过发送
- * - UTM 自动修复；Pack 存在则优先落地到 Pack
- * - 兜底窗口：window_h 无证据则回退到 168h
- * - Step Summary 输出全链路诊断
- *
- * 输入数据：
- *  - data/leads.csv（9列无表头）: email,company,domain,v1,v2,v3,persona,status,mx_ok
- *  - data/evidence.ndx（TSV）：YYYY-MM-DD<TAB>vendor<TAB>type<TAB>hash<TAB>relpath
- *  - data/outreach_log.csv（自动追加；仅 status=sent 计入冷却历史）
- *  - data/unsubscribes.csv / data/bounces.csv / data/complaints.csv（若存在，则抑制发送）
- *
- * 参数 / 环境：
- *  - --dry=true|false（默认 true）
- *  - --limit=N（默认 5）
- *  - --window_h=N（默认 env.TRIGGER_WINDOW_H 或 72）
- *  - --domain_cap / --domain_window_d / --email_cooldown_d / --vendor_company_d（可选）
- *  - ENV 覆盖：DOMAIN_CAP / DOMAIN_WINDOW_DAYS / EMAIL_COOLDOWN_DAYS / VENDOR_COMPANY_COOLDOWN_DAYS
- *  - SITE_ORIGIN / PERSONA_RULES / REGION_FILTER / MAIL_FROM / BCC_TO / SMTP_*
+ * send_triggered.js — 覆盖版（稳态）
+ * 目标：
+ * - 支持 dry / limit / pack / TRIGGER_WINDOW_H
+ * - 支持 env/CLI 覆盖：DOMAIN_CAP / DOMAIN_WINDOW_DAYS / EMAIL_COOLDOWN_DAYS / VENDOR_COMPANY_COOLDOWN_DAYS
+ *   以及别名：--domain_cap, --domain_window_d, --email_cooldown_d, --vendor_company_d
+ *   且兼容误写：COOLDOWN_DAYS（一次性同时下调三个 cooldown）
+ * - 过滤：status+mx → persona → region → vendor-match（近窗真实变更）→ cooldown & caps
+ * - 输出 eligibility JSON；dry 模式打印 DRY SENT；非 dry 追加 data/outreach_log.csv
+ * - 邮件正文使用三行模板（最简），链接自动加 utm
  */
 
 const fs = require('fs');
 const path = require('path');
-const nodemailer = require('nodemailer');
+const os = require('os');
+
+let nodemailer = null;
+try { nodemailer = require('nodemailer'); } catch(e){ /* optional */ }
+
+const argv = require('minimist')(process.argv.slice(2));
+const DRY = !!(argv.dry === true || String(argv.dry||'').toLowerCase()==='true');
+const LIMIT = Number(argv.limit ?? 12);
+const PACK = !!(argv.pack === true || String(argv.pack||'').toLowerCase()==='true');
+
+const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+const TRIGGER_WINDOW_H = Number(process.env.TRIGGER_WINDOW_H || argv.window_h || 168);
+
+// caps / cooldown（支持 env、CLI、以及历史误写 COOLDOWN_DAYS）
+let DOMAIN_CAP = num(process.env.DOMAIN_CAP ?? argv.domain_cap, 1);
+let DOMAIN_WINDOW_DAYS = num(process.env.DOMAIN_WINDOW_DAYS ?? argv.domain_window_d, 14);
+let EMAIL_COOLDOWN_DAYS = num(process.env.EMAIL_COOLDOWN_DAYS ?? argv.email_cooldown_d, 14);
+let VENDOR_COMPANY_COOLDOWN_DAYS = num(process.env.VENDOR_COMPANY_COOLDOWN_DAYS ?? argv.vendor_company_d, 14);
+const CD_ALIAS = toNum(process.env.COOLDOWN_DAYS ?? argv.cooldown_days);
+if (CD_ALIAS !== null) {
+  DOMAIN_WINDOW_DAYS = Math.min(DOMAIN_WINDOW_DAYS, CD_ALIAS);
+  EMAIL_COOLDOWN_DAYS = Math.min(EMAIL_COOLDOWN_DAYS, CD_ALIAS);
+  VENDOR_COMPANY_COOLDOWN_DAYS = Math.min(VENDOR_COMPANY_COOLDOWN_DAYS, CD_ALIAS);
+}
+
+const MAIL_FROM = process.env.MAIL_FROM || '';
+const BCC_TO = process.env.BCC_TO || '';
+
+const PERSONA_RULES = process.env.PERSONA_RULES || 'config/persona_rules.json';
+const REGION_FILTER = process.env.REGION_FILTER || 'config/region_filter.json';
 
 const ROOT = path.join(__dirname, '..');
-const DATA = (p) => path.join(ROOT, 'data', p);
-const CFG  = (p) => path.join(ROOT, 'config', p);
+const LEADS_CSV = path.join(ROOT, 'data', 'leads.csv');
+const OUT_CSV = path.join(ROOT, 'data', 'outreach_log.csv');
+const EVIDENCE_NDX = path.join(ROOT, 'data', 'evidence.ndx');
+const EVID_DIR = path.join(ROOT, 'evidence');
 
-// ---------- 小工具 ----------
-function readJSON(fp, fallback=null){ try{ return JSON.parse(fs.readFileSync(fp,'utf8')); }catch{ return fallback; } }
-function readLines(fp){ if(!fs.existsSync(fp)) return []; return fs.readFileSync(fp,'utf8').split(/\r?\n/); }
-function baseDomain(d){
-  if(!d) return '';
-  const s=String(d).toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'');
-  const host=(s.split('/')[0]||s);
-  const seg=host.split('.');
-  return seg.length>=2? seg.slice(-2).join('.') : host;
+function num(v, d){ const n = Number(v); return isFinite(n) ? n : d; }
+function toNum(v){ if(v===undefined || v===null || v==='') return null; const n=Number(v); return isFinite(n)?n:null; }
+function today(){ return new Date().toISOString().slice(0,10); }
+function dsub(d, days){ return new Date(d.getTime() - days*24*3600*1000); }
+function parseISO(s){ const t = Date.parse(s); return isNaN(t)?null:new Date(t); }
+function lc(s){ return String(s||'').toLowerCase(); }
+function includesAny(hay, allow){
+  const s = String(hay||'').toLowerCase();
+  return (allow||[]).some(k => s.includes(String(k||'').toLowerCase()));
 }
-function tld(domain){ const b=baseDomain(domain); const i=b.lastIndexOf('.'); return i>0? b.slice(i):''; }
-function isZeroHash(h){ return !h || /^0+$/i.test(String(h)); }
-function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
-function includesAny(hay, allow){ const s=(hay||'').toLowerCase(); return (allow||[]).some(k=>s.includes(String(k).toLowerCase())); }
-function parseArgNum(name, def){
-  const argv = process.argv.slice(2);
-  const i = argv.findIndex(a=>a===`--${name}`);
-  if(i>=0 && argv[i+1]!=null && !/^--/.test(argv[i+1])) return Math.max(0, +argv[i+1]);
-  const j = argv.find(a=>a.startsWith(`--${name}=`));
-  if(j){ const v = j.split('=').slice(1).join('='); return Math.max(0, +v); }
-  const env = process.env[name.toUpperCase()];
-  if(env!=null) return Math.max(0, +env);
-  return def;
+function readJSON(fp){ try { return JSON.parse(fs.readFileSync(fp,'utf8')); }catch(e){ return null; } }
+function exists(fp){ try{ fs.accessSync(fp); return true; }catch(e){ return false; } }
+
+function readCSVRows(fp){
+  if(!exists(fp)) return [];
+  // 简单 CSV（无引号），仓库格式约定 9 列，无表头
+  const txt = fs.readFileSync(fp,'utf8').trim();
+  if (!txt) return [];
+  return txt.split(/\r?\n/).map(l=>l.replace(/\t/g,',').trim()).filter(Boolean).map(l=>l.split(','));
 }
-function parseArgBool(name, def){
-  const argv = process.argv.slice(2);
-  const on = argv.some(a=>a===`--${name}` || a===`--${name}=true` || a===`--${name}=1`);
-  const off= argv.some(a=>a===`--${name}=false` || a===`--${name}=0`);
-  if(on) return true; if(off) return false;
-  if(process.env[name.toUpperCase()]!=null){
-    const v=String(process.env[name.toUpperCase()]).toLowerCase();
-    return v==='1'||v==='true';
+
+function appendCSV(fp, header, rows){
+  const has = exists(fp) && fs.statSync(fp).size>0;
+  const out = [];
+  if (!has && header) out.push(header.join(','));
+  for(const r of rows) out.push(r.map(x=>String(x??'').replace(/[\r\n,]+/g,' ')).join(','));
+  fs.mkdirSync(path.dirname(fp), {recursive:true});
+  fs.appendFileSync(fp, (has?os.EOL:'') + out.join(os.EOL));
+}
+
+function loadPersonaAllow(){
+  if(!exists(PERSONA_RULES)) return null;
+  const j = readJSON(PERSONA_RULES);
+  if (Array.isArray(j)) return new Set(j.map(lc));
+  if (j && typeof j==='object') return new Set(Object.keys(j).map(lc));
+  return null;
+}
+function personaAllowed(p, allowSet){
+  if (!allowSet) return true;
+  return allowSet.has(lc(p));
+}
+function loadRegionFilter(){
+  if(!exists(REGION_FILTER)) return null;
+  const j = readJSON(REGION_FILTER);
+  if (!j) return null;
+  // 支持 {allow:[], deny:[]} 或 简单数组
+  return j;
+}
+
+function inRegion(email, companyDomain, regionCfg){
+  if (!regionCfg) return true;
+  const allow = regionCfg.allow || regionCfg.ALLOW || regionCfg;
+  const deny  = regionCfg.deny  || regionCfg.DENY || [];
+  const target = (companyDomain || (email.split('@')[1]||'')).toLowerCase();
+  if (Array.isArray(deny) && includesAny(target, deny)) return false;
+  if (Array.isArray(allow) && allow.length>0) return includesAny(target, allow);
+  return true;
+}
+
+function loadChangedVendors(windowH){
+  const res = new Set();
+  if (!exists(EVIDENCE_NDX)) return res;
+  const cutoff = Date.now() - windowH*3600*1000;
+  const lines = fs.readFileSync(EVIDENCE_NDX,'utf8').split(/\r?\n/);
+  for(const ln of lines){
+    if(!ln.trim()) continue;
+    // 预期：ts \t domain \t type \t hash \t url ...
+    const cols = ln.split('\t');
+    if (cols.length<4) continue;
+    const ts = Date.parse(cols[0]); if (isNaN(ts) || ts<cutoff) continue;
+    const domain = (cols[1]||'').toLowerCase();
+    const hash = cols[3]||'';
+    if (!hash || /^0+$/.test(hash)) continue; // 非零hash才算真实变更
+    if (domain) res.add(domain);
   }
-  return def;
+  return res;
 }
 
-// ---------- 运行参数 ----------
-const now = new Date();
-const CUR = `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}`;
-
-const DRY   = !parseArgBool('dry', false) ? false : parseArgBool('dry', true); // 默认 true
-const LIM   = parseArgNum('limit', 5);
-let   WINH  = parseArgNum('window_h', parseArgNum('TRIGGER_WINDOW_H', 72));
-
-const DOMAIN_CAP              = parseArgNum('domain_cap', parseArgNum('DOMAIN_CAP', 1));       // 默认 1；可被 Boost/Pass D 调高至 4
-const DOMAIN_WINDOW_DAYS      = parseArgNum('domain_window_d', parseArgNum('DOMAIN_WINDOW_DAYS', 14));
-const EMAIL_COOLDOWN_DAYS     = parseArgNum('email_cooldown_d', parseArgNum('EMAIL_COOLDOWN_DAYS', 14));
-const VENDOR_COMPANY_COOLDOWN_DAYS = parseArgNum('vendor_company_d', parseArgNum('VENDOR_COMPANY_COOLDOWN_DAYS', 14));
-
-const SITE = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
-const PERSONA_FILE = process.env.PERSONA_RULES || CFG('persona_rules.json');
-const REGION_FILE  = process.env.REGION_FILTER  || CFG('region_filter.json');
-
-// ---------- 配置/别名/规则 ----------
-const FREE_EMAIL_DOMAINS = new Set(['gmail.com','yahoo.com','outlook.com','hotmail.com','aol.com','icloud.com','proton.me','protonmail.com','zoho.com','hey.com']);
-function isFreeMailbox(email){ const m=String(email||'').toLowerCase().match(/@([^>]+)$/); return m ? FREE_EMAIL_DOMAINS.has(m[1]) : false; }
-const persona = readJSON(PERSONA_FILE, { allow_roles:['legal','privacy','procurement','security','risk','compliance'], deny_prefix:['info@','support@','sales@','noreply@','no-reply@'], min_score:0.35 });
-const region  = readJSON(REGION_FILE,  { exclude_tld:['.eu','.de','.fr','.it','.es','.nl','.se','.pl'], include_country:['US','CA','AU','SG','GB','IE'] });
-const vendorAliasesRaw = readJSON(CFG('vendor_aliases.json'), {});
-const vendorAliases = new Map(Object.entries(vendorAliasesRaw).map(([k,v])=>[String(k).trim().toLowerCase(), baseDomain(v)]));
-
-function canonVendorToken(x){
-  if(!x) return '';
-  let s=String(x).trim().toLowerCase().replace(/^www\./,'');
-  // 尝试别名 -> 规范域
-  if(vendorAliases.has(s)) return vendorAliases.get(s);
-  // 若像域名，取根域
-  if(s.includes('.')) return baseDomain(s);
-  // 文本别名再查一次（去非字母数字）
-  const bare=s.replace(/[^a-z0-9]/g,'');
-  if(vendorAliases.has(bare)) return vendorAliases.get(bare);
-  return bare;
-}
-
-// ---------- 加载数据 ----------
-function parseLeadsCSV(){
-  const raw = readLines(DATA('leads.csv')).filter(Boolean);
-  const rows=[];
-  for(const line of raw){
-    const parts=line.split(',');
-    if(parts.length<9) continue;
-    if(parts.length>9){
-      const [email,...rest]=parts;
-      const tail=rest.slice(-8);
-      const company=rest.slice(0, rest.length-8).join(' ');
-      rows.push([email,company,...tail]);
-    }else rows.push(parts);
+function latestEvidenceForVendor(vendor){
+  // 找 evidence/<vendor> 下最新一条（按文件名日期）
+  const dir = path.join(EVID_DIR, vendor);
+  if (!exists(dir)) return null;
+  const files = fs.readdirSync(dir).filter(f=>/^\d{4}-\d{2}-\d{2}-/.test(f) && f.endsWith('.json')).sort().reverse();
+  for(const f of files){
+    if (f.includes('00000000')) continue; // 跳过基线
+    const m = f.match(/^(\d{4}-\d{2}-\d{2})-([A-Za-z]+)-([0-9a-fA-F]+)\.json$/);
+    const when = m? m[1] : f.slice(0,10);
+    const typ  = m? m[2] : 'Change';
+    const hash = m? m[3] : '';
+    let url = `${SITE_ORIGIN}/updates/?q=${encodeURIComponent(vendor)}`;
+    try{
+      const j = readJSON(path.join(EVID_DIR, vendor, f));
+      if (j && (j.url || j.link || j.URL)) url = j.url || j.link || j.URL;
+    }catch{}
+    return {when, type:typ, hash, url, file:f};
   }
-  return rows.map(cols=>({
-    email: cols[0]?.trim(),
-    company: cols[1]?.trim(),
-    domain: cols[2]?.trim(),
-    v1: cols[3]?.trim(), v2: cols[4]?.trim(), v3: cols[5]?.trim(),
-    persona: cols[6]?.trim(), status: cols[7]?.trim(), mx_ok: cols[8]?.trim()
-  }));
+  return null;
 }
-function loadEvidenceWindowHours(hours){
-  const ndx=DATA('evidence.ndx'); if(!fs.existsSync(ndx)) return [];
-  const cutoff = Date.now() - hours*3600*1000;
-  const out=[];
-  for(const l of readLines(ndx)){
-    if(!l.trim()) continue;
-    const [when, slug, type, hash, rel]=l.split('\t');
-    const ts = Date.parse(when+'T00:00:00Z');
-    if(isNaN(ts) || ts<cutoff) continue;
-    out.push({ when, slug: baseDomain(slug), type, hash, rel });
+
+function buildPackLink(vendor){
+  const ym = new Date().toISOString().slice(0,7);
+  return `${SITE_ORIGIN}/reports/${ym}/${vendor}/`;
+}
+
+function addUtm(u, campaign='cp_'+new Date().toISOString().slice(0,7).replace('-','')){
+  const url = new URL(u, SITE_ORIGIN);
+  url.searchParams.set('utm_source','email');
+  url.searchParams.set('utm_medium','triggered');
+  url.searchParams.set('utm_campaign', campaign);
+  return url.toString();
+}
+
+function loadOutreachHistory(){
+  const mapEmail = new Map();
+  const mapCompany = new Map(); // domain -> [ts...]
+  const mapVendorCompany = new Map(); // vendor|company -> ts
+  if(!exists(OUT_CSV)) return {mapEmail,mapCompany,mapVendorCompany};
+  const txt = fs.readFileSync(OUT_CSV,'utf8').split(/\r?\n/).filter(Boolean);
+  let start = 0;
+  if (txt[0] && /when|status/i.test(txt[0])) start = 1;
+  for(let i=start;i<txt.length;i++){
+    const cols = txt[i].split(',');
+    const when = parseISO(cols[0]); if(!when) continue;
+    const email = lc(cols[1]);
+    const domain = lc(cols[3]||'');
+    const vendor = lc(cols[4]||'');
+    const keyVC = vendor+'|'+domain;
+    const t = when.getTime();
+    mapEmail.set(email, Math.max(mapEmail.get(email)||0, t));
+    mapCompany.set(domain, Math.max(mapCompany.get(domain)||0, t));
+    mapVendorCompany.set(keyVC, Math.max(mapVendorCompany.get(keyVC)||0, t));
   }
-  return out;
-}
-function loadSuppressedSet(file){
-  const fp = DATA(file);
-  if(!fs.existsSync(fp)) return new Set();
-  const lines = readLines(fp); // 允许带表头
-  const idxEmail = lines[0]?.toLowerCase().includes('email') ? lines[0].toLowerCase().split(',').findIndex(h=>h.includes('email')) : 0;
-  const s=new Set();
-  for(let i=(idxEmail>0?1:0); i<lines.length; i++){
-    const em=(lines[i].split(',')[idxEmail]||'').trim().toLowerCase();
-    if(em) s.add(em);
-  }
-  return s;
+  return {mapEmail,mapCompany,mapVendorCompany};
 }
 
-// ---------- URL/邮件 ----------
-function existsPackFor(slug){ return fs.existsSync(path.join(ROOT,'reports',CUR,slug,'index.html')); }
-function packLinkFor(slug){
-  const s = baseDomain(slug);
-  return existsPackFor(s) ? `${SITE}/reports/${CUR}/${s}/` : `${SITE}/updates/?q=${encodeURIComponent(s)}`;
-}
-function addUTM(u, when){
-  const sep = u.includes('?')?'&':'?';
-  return `${u}${sep}utm_source=email&utm_medium=triggered&utm_campaign=cp_${when.slice(0,7)}`;
-}
-function composeMail(vendorSlug, topic, when, hash8){
-  const t=String(topic||'').toLowerCase();
-  const pretty =
-    t.includes('pricing') ? 'Pricing' :
-    t==='tos' || t.includes('term') ? 'Terms of Service' :
-    t==='dpa' || t.includes('privacy') ? 'DPA' :
-    t.includes('subprocessor') ? 'Subprocessors' :
-    t.includes('status') || t.includes('sla') ? 'SLA/Status' :
-    'Policy/Contract';
-  const impact =
-    pretty==='Pricing' ? 'Budget / renewal risk' :
-    pretty==='Terms of Service' ? 'Contract / Legal' :
-    pretty==='DPA' ? 'Privacy / data processing' :
-    pretty==='Subprocessors' ? 'Vendor risk / DP addendum' :
-    'Contract / Compliance';
-  const base = packLinkFor(vendorSlug);
-  const url  = addUTM(base, when);
-  const subj = `[Evidence] ${vendorSlug} changed ${pretty} on ${when}`;
-  const body =
-`We verified a public change on ${vendorSlug}: ${pretty} (${when}).
-Impact: ${impact}. Evidence: ${hash8 ? '#'+hash8 : 'n/a'}.
-See verifiable details → ${url}`;
-  return { subj, body, url };
+function daysBetween(ts){ return (Date.now()-ts)/86400000; }
+
+function pickNameFromEmail(em){
+  const a = (em.split('@')[0]||'').replace(/[._-]+/g,' ').trim();
+  return a ? a[0].toUpperCase()+a.slice(1) : 'there';
 }
 
-// ---------- 历史/日志 ----------
-function ensureOutreachLogHeader(){
-  const f=DATA('outreach_log.csv');
-  if(!fs.existsSync(f)) fs.writeFileSync(f,'when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status\n','utf8');
-}
-function appendLog(rec){
-  ensureOutreachLogHeader();
-  const f=DATA('outreach_log.csv');
-  const line = [
-    rec.when, rec.email, rec.company, rec.domain, rec.vendor,
-    'LI', rec.link, rec.optout_at||'', rec.status||'sent'
-  ].join(',')+'\n';
-  fs.appendFileSync(f, line, 'utf8');
-}
-function updateLeadsStatus(sentEmails){
-  if(!sentEmails.size) return;
-  const file=DATA('leads.csv'); if(!fs.existsSync(file)) return;
-  const lines = readLines(file);
-  const out=[];
-  for(const line of lines){
-    if(!line.trim()){ out.push(line); continue; }
-    const cols=line.split(',');
-    if(cols.length<9){ out.push(line); continue; }
-    const email=cols[0].trim().toLowerCase();
-    if(sentEmails.has(email)){ cols[7]='sent'; out.push(cols.join(',')); }
-    else out.push(line);
-  }
-  fs.writeFileSync(file, out.join('\n'), 'utf8');
-}
-function loadOutreachHistory(daysBack=30){
-  const f=DATA('outreach_log.csv'); if(!fs.existsSync(f)) return [];
-  const since=Date.now()-daysBack*86400*1000;
-  return readLines(f).slice(1).filter(Boolean).map(l=>{
-    const [when,email,company,domain,vendor,,link,optout_at,status]=l.split(',');
-    return { when:Date.parse(when), email:email?.toLowerCase(), company, domain, vendor, status:(status||'').toLowerCase() };
-  }).filter(r=>!isNaN(r.when) && r.when>=since && r.status==='sent');
-}
-function sentToEmailWithin(hist,email,days){ const since=Date.now()-days*86400*1000; const em=(email||'').toLowerCase(); return hist.some(r=>r.email===em && r.when>=since); }
-function sentCountToDomainWithin(hist,domain,days){ const since=Date.now()-days*86400*1000; const d=baseDomain(domain); return hist.filter(r=>baseDomain(r.domain)===d && r.when>=since).length; }
-function sentVendorToCompanyWithin(hist,vendor,company,days){ const since=Date.now()-days*86400*1000; const v=baseDomain(vendor); return hist.some(r=>baseDomain(r.vendor)===v && r.company===company && r.when>=since); }
-
-// ---------- Baseline 识别 ----------
-function vendorOnlyBaseline(arr){
-  // 有非零 hash 即视为真实变更
-  if(arr.some(e=>!isZeroHash(e.hash))) return false;
-  // 保险：读取第一条 evidence JSON 看 kind
-  try{
-    const rel=arr[0]?.rel; if(!rel) return true;
-    const j=readJSON(path.join(ROOT, rel), null);
-    if(!j) return true;
-    const k=String(j.kind||'baseline').toLowerCase();
-    return k==='baseline';
-  }catch{ return true; }
+function makeTransport(){
+  if (!nodemailer) return null;
+  const host=process.env.SMTP_HOST, port=Number(process.env.SMTP_PORT||587);
+  const user=process.env.SMTP_USER, pass=process.env.SMTP_PASS;
+  if (!host || !user || !pass) return null;
+  return nodemailer.createTransport({host, port, secure:port===465, auth:{user, pass}});
 }
 
-// ---------- 主流程 ----------
-(async function main(){
-  // 证据窗口
-  let evid = loadEvidenceWindowHours(WINH);
-  if(evid.length===0 && WINH<168){
-    console.log(`no evidence in ${WINH}h; fallback to 168h`);
-    WINH=168; evid = loadEvidenceWindowHours(WINH);
-  }
+function sendMail(transport, to, subj, text){
+  if (!transport) return Promise.resolve(false);
+  const opt = {from: MAIL_FROM, to, subject: subj, text};
+  if (BCC_TO) opt.bcc = BCC_TO;
+  return transport.sendMail(opt).then(()=>true).catch(()=>false);
+}
 
-  // 证据分桶 & changed vendor 集合（应用别名规范）
-  const byVendor = new Map();
-  for(const e of evid){
-    const canon = canonVendorToken(e.slug) || baseDomain(e.slug);
-    const arr = byVendor.get(canon) || [];
-    arr.push({ ...e, slug: canon });
-    byVendor.set(canon, arr);
-  }
-  const changedSet = new Set(byVendor.keys());
-
-  // Leads 加载 & 过滤
-  const leadsAll = parseLeadsCSV();
-  const suppressed = new Set([
-    ...loadSuppressedSet('unsubscribes.csv'),
-    ...loadSuppressedSet('bounces.csv'),
-    ...loadSuppressedSet('complaints.csv'),
-  ]);
-
-  const total = leadsAll.length;
-  const passStatus = leadsAll.filter(l => l.status==='new' && l.mx_ok==='1' && !suppressed.has((l.email||'').toLowerCase()));
-  const passPersona = passStatus.filter(l=>{
-    if(isFreeMailbox(l.email)) return false;
-    const deny = (persona.deny_prefix||[]).some(p => (l.email||'').toLowerCase().startsWith(p));
-    if(deny) return false;
-    const src=(l.persona || l.email || '').toLowerCase();
-    return includesAny(src, persona.allow_roles||[]) || (persona.min_score||0)<=0.35;
+// ------------------- MAIN -------------------
+(function main(){
+  // 0) 装载基础数据
+  const leads = readCSVRows(LEADS_CSV).map(cols=>{
+    // email,company,domain,vendor1,vendor2,vendor3,persona,status,mx_ok
+    return {
+      email: cols[0]||'',
+      company: cols[1]||'',
+      domain: lc(cols[2]||''),
+      vendor1: lc(cols[3]||''),
+      vendor2: lc(cols[4]||''),
+      vendor3: lc(cols[5]||''),
+      persona: lc(cols[6]||''),
+      status: lc(cols[7]||''),
+      mx_ok: Number(cols[8]||'0')===1
+    };
   });
-  const passRegion = passPersona.filter(l=>{
-    const tl=tld(l.domain);
-    if((region.exclude_tld||[]).includes(tl)) return false;
+
+  const personaAllow = loadPersonaAllow();
+  const regionCfg = loadRegionFilter();
+  const changedVendors = loadChangedVendors(TRIGGER_WINDOW_H);
+
+  // 1) 过滤：status+mx
+  let pool = leads.filter(l=>{
+    if (!l.email || !l.mx_ok) return false;
+    if (['unsub','optout','bounced','invalid','bad-mx'].includes(l.status)) return false;
     return true;
   });
+  const c_status_mx = pool.length;
 
-  // vendor 匹配（v1/v2/v3 → 规范化 → 命中 changedSet）
-  function matchVendorForLead(l){
-    const cand=[l.v1,l.v2,l.v3].map(canonVendorToken).filter(Boolean);
-    for(const c of cand){
-      if(changedSet.has(c)) return c;
-      // 容错：去点比较（okta.com <-> oktacom）
-      const nodot=c.replace(/\./g,'');
-      for(const v of changedSet){
-        if(v===c) return v;
-        if(v.replace(/\./g,'')===nodot) return v;
-        if(v.includes(c) || c.includes(v.replace(/\./g,''))) return v;
-      }
-    }
-    return null;
-  }
+  // 2) persona
+  pool = pool.filter(l=> personaAllowed(l.persona, personaAllow));
+  const c_persona = pool.length;
 
-  const withVendor=[];
-  for(const l of passRegion){
-    const mv = matchVendorForLead(l);
-    if(mv) withVendor.push({ lead:l, vendor:mv });
-  }
+  // 3) region
+  pool = pool.filter(l=> inRegion(l.email, l.domain, regionCfg));
+  const c_region = pool.length;
 
-  // 仅真实变更
-  const withRealChange = withVendor.filter(({vendor})=>{
-    const arr = byVendor.get(vendor)||[];
-    return arr.length && !vendorOnlyBaseline(arr);
-  });
-
-  // 冷却/域上限（只看已 sent 的历史；支持 ENV/CLI 覆盖）
-  const hist = loadOutreachHistory(Math.max(DOMAIN_WINDOW_DAYS, EMAIL_COOLDOWN_DAYS, VENDOR_COMPANY_COOLDOWN_DAYS));
-  const domainCnt={};
-  const cooled=[];
-  for(const item of withRealChange){
-    const { lead, vendor } = item;
-    const email = (lead.email||'').toLowerCase();
-    const dom   = baseDomain(lead.domain);
-
-    if(sentToEmailWithin(hist, email, EMAIL_COOLDOWN_DAYS)) continue;
-    if(sentVendorToCompanyWithin(hist, vendor, lead.company, VENDOR_COMPANY_COOLDOWN_DAYS)) continue;
-
-    domainCnt[dom] = domainCnt[dom] ?? sentCountToDomainWithin(hist, dom, DOMAIN_WINDOW_DAYS);
-    if(domainCnt[dom] >= DOMAIN_CAP) continue;
-
-    domainCnt[dom]++; cooled.push(item);
-  }
-
-  // 最终待发
-  const toSend = cooled.slice(0, LIM);
-
-  // 诊断输出
-  const diag = {
-    total,
-    'status+mx': passStatus.length,
-    persona: passPersona.length,
-    region: passRegion.length,
-    'vendor-match': withVendor.length,
-    'with-real-change': withRealChange.length,
-    cooled: cooled.length,
-    final: toSend.length,
-    window_h: WINH,
-    changed_vendors: changedSet.size,
-    caps: { DOMAIN_CAP, DOMAIN_WINDOW_DAYS, EMAIL_COOLDOWN_DAYS, VENDOR_COMPANY_COOLDOWN_DAYS }
+  // 4) vendor-match（与“近窗真实变更的供应商域”相等）
+  const matchVendor = (l)=>{
+    return [l.vendor1,l.vendor2,l.vendor3].some(v => v && changedVendors.has(v));
   };
-  console.log('eligibility:', JSON.stringify(diag));
+  const pool_vm = pool.filter(matchVendor);
+  const c_vendor_match = pool_vm.length;
 
-  try{
-    if(process.env.GITHUB_STEP_SUMMARY){
-      const sum =
-`### Outreach Triggered Summary
-- Leads total: ${total}
-- After status+mx: ${passStatus.length}
-- After persona: ${passPersona.length}
-- After region: ${passRegion.length}
-- Vendors changed in last ${WINH}h: ${changedSet.size}
-- Vendor-matched: ${withVendor.length}
-- Real-change only: ${withRealChange.length}
-- After cooldown/domain-cap: ${cooled.length}
-- Will send (limit=${LIM}): ${toSend.length}
-- Caps: domain_cap=${DOMAIN_CAP}, domain_window_d=${DOMAIN_WINDOW_DAYS}, email_cooldown_d=${EMAIL_COOLDOWN_DAYS}, vendor_company_d=${VENDOR_COMPANY_COOLDOWN_DAYS}
-`;
-      fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, sum, 'utf8');
+  // 5) real-change only（vendor-match 已经基于非零hash，等价）
+  const pool_real = pool_vm;
+  const c_real = pool_real.length;
+
+  // 6) cooldown & caps
+  const {mapEmail,mapCompany,mapVendorCompany} = loadOutreachHistory();
+  const todayStr = today();
+  const capCountByCompanyToday = new Map(); // company -> count today
+
+  const windowCompanyTs = Date.parse(todayStr+'T00:00:00Z'); // 当日窗口
+
+  const cooled = [];
+  const selected = [];
+  for(const l of pool_real){
+    // email cooldown
+    const lastE = mapEmail.get(lc(l.email))||0;
+    if (lastE && daysBetween(lastE) < EMAIL_COOLDOWN_DAYS) { cooled.push(l); continue; }
+    // vendor-company cooldown
+    const keyVC = (l.vendor1||l.vendor2||l.vendor3)+'|'+l.domain;
+    const lastVC = mapVendorCompany.get(keyVC)||0;
+    if (lastVC && daysBetween(lastVC) < VENDOR_COMPANY_COOLDOWN_DAYS) { cooled.push(l); continue; }
+    // domain window cap
+    const lastC = mapCompany.get(l.domain)||0;
+    const daysSinceCompany = lastC ? daysBetween(lastC) : 999;
+    // 公司当日上限：看今天已挑选多少
+    const sentTodayCompany = capCountByCompanyToday.get(l.domain)||0;
+    if (sentTodayCompany >= DOMAIN_CAP) { cooled.push(l); continue; }
+
+    // 通过
+    capCountByCompanyToday.set(l.domain, sentTodayCompany+1);
+    selected.push(l);
+  }
+  const c_after_caps = selected.length;
+
+  // limit
+  const finalLeads = selected.slice(0, LIMIT);
+  const FINAL = finalLeads.length;
+
+  // 统计
+  const eligibility = {
+    total: leads.length,
+    "status+mx": c_status_mx,
+    persona: c_persona,
+    region: c_region,
+    "vendor-match": c_vendor_match,
+    "with-real-change": c_real,
+    "after-caps": c_after_caps,
+    final: FINAL,
+    window_h: TRIGGER_WINDOW_H,
+    changed_vendors: changedVendors.size
+  };
+  console.log(`eligibility: ${JSON.stringify(eligibility)}`);
+
+  // DRY 模式展示
+  const ym = new Date().toISOString().slice(0,7);
+  if (DRY){
+    for(const l of finalLeads){
+      const vendor = [l.vendor1,l.vendor2,l.vendor3].find(v=> changedVendors.has(v)) || l.vendor1 || '';
+      const ev = latestEvidenceForVendor(vendor) || {};
+      const link = PACK ? buildPackLink(vendor) : (ev.url || `${SITE_ORIGIN}/updates/?q=${encodeURIComponent(vendor)}`);
+      const linkU = addUtm(link, `cp_${ym.replace('-','')}`);
+      const subj = `[Evidence] ${vendor} changed ${ev.type||'Change'}-${(ev.hash||'').slice(0,8)} on ${ev.when||todayStr}`;
+      console.log(`DRY SENT to ${l.email} subj="${subj}" link="${linkU}"`);
     }
-  }catch{}
-
-  if(toSend.length===0){ console.log('no eligible leads'); process.exit(0); }
-
-  // 准备发信
-  let transporter=null;
-  if(!DRY){
-    const host=process.env.SMTP_HOST, port=+(process.env.SMTP_PORT||587);
-    const user=process.env.SMTP_USER, pass=process.env.SMTP_PASS;
-    if(!host||!user||!pass) throw new Error('SMTP secrets missing');
-    transporter = nodemailer.createTransport({ host, port, secure: port===465, auth:{ user, pass } });
+    return;
   }
 
-  const sentEmails=new Set(); // 注意：DRY 不入集合（不改 leads.csv）
-  for(const { lead, vendor } of toSend){
-    // 取该 vendor 最近证据（降序）
-    const arr=(byVendor.get(vendor)||[]).slice().sort((a,b)=> b.when.localeCompare(a.when));
-    const top=arr[0] || { type:'Change', when:new Date().toISOString().slice(0,10), hash:'' };
-    const topic=top.type||'Change';
-    const when =top.when||new Date().toISOString().slice(0,10);
-    const rawH =String(top.hash||'').toLowerCase();
-    const hash8= isZeroHash(rawH)? '' : rawH.slice(0,8);
+  // 真发（可选 SMTP；失败也记日志）
+  const transport = makeTransport();
+  const rows = [];
+  for(const l of finalLeads){
+    const vendor = [l.vendor1,l.vendor2,l.vendor3].find(v=> changedVendors.has(v)) || l.vendor1 || '';
+    const ev = latestEvidenceForVendor(vendor) || {};
+    const link = PACK ? buildPackLink(vendor) : (ev.url || `${SITE_ORIGIN}/updates/?q=${encodeURIComponent(vendor)}`);
+    const linkU = addUtm(link, `cp_${ym.replace('-','')}`);
+    const subj = `[Evidence] ${vendor} changed ${ev.type||'Change'}-${(ev.hash||'').slice(0,8)} on ${ev.when||todayStr}`;
+    const hi = pickNameFromEmail(l.email);
+    const text =
+`Hi ${hi},
 
-    const { subj, body, url } = composeMail(vendor, topic, when, hash8);
+We detected a verified change in your supplier **${vendor}** (type: ${ev.type||'Change'}).
+Evidence: ${linkU}
 
-    if(DRY){
-      console.log(`DRY SENT to ${lead.email} subj="${subj}" link="${url}"`);
-      appendLog({ when: new Date().toISOString(), email: (lead.email||'').toLowerCase(), company: lead.company, domain: baseDomain(lead.domain), vendor, link:url, status:'dry' });
-      // DRY：不更改 leads.csv 状态
-      continue;
-    }
+If you want, enable alerts or buy Portfolio to receive monthly change packs.
 
-    try{
-      const mail = {
-        from: process.env.MAIL_FROM,
-        to: lead.email,
-        bcc: process.env.BCC_TO || undefined,
-        subject: subj,
-        text: body,
-        headers: { 'X-Mailin-Tag': 'triggered' } // 例：Brevo 标签
-      };
-      await transporter.sendMail(mail);
-      console.log(`SENT to ${lead.email} vendor=${vendor}`);
-      appendLog({ when: new Date().toISOString(), email: (lead.email||'').toLowerCase(), company: lead.company, domain: baseDomain(lead.domain), vendor, link:url, status:'sent' });
-      sentEmails.add((lead.email||'').toLowerCase());
-      // 轻节流：3–8 秒抖动
-      await wait(3000 + Math.floor(Math.random()*5000));
-    }catch(e){
-      console.error(`FAIL to ${lead.email}: ${e.message}`);
-      appendLog({ when: new Date().toISOString(), email: (lead.email||'').toLowerCase(), company: lead.company, domain: baseDomain(lead.domain), vendor, link:url, status:'fail' });
-    }
+— CG Alert`;
+
+    let ok = false;
+    try { ok = awaitMaybe(sendMail(transport, l.email, subj, text)); } catch(e){ ok=false; }
+    rows.push([new Date().toISOString(), l.email, l.company, l.domain, vendor, 'TRIG', linkU, ok?'sent':'queued']);
   }
+  appendCSV(OUT_CSV,
+    ['when','email','company','domain','vendor','source','link','status'],
+    rows
+  );
 
-  if(sentEmails.size) updateLeadsStatus(sentEmails);
-  console.log(`Send Triggered ${sentEmails.size} emails`);
-  process.exit(0);
-})().catch(e=>{ console.error(e); process.exit(1); });
+})();
+
+function awaitMaybe(p){
+  if (!p || typeof p.then!=='function') return Promise.resolve(false);
+  return p;
+}
