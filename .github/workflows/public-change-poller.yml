@@ -27,87 +27,152 @@ jobs:
     env:
       NODE_OPTIONS: --max_old_space_size=4096
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-      # 关键：支持 vars 或 secrets 任一来源
       INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL || secrets.INTAKE_FORM_URL || '' }}
       STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO || '' }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-
       - name: Install deps (best-effort)
         run: npm ci || npm i --no-audit --no-fund || true
 
+      # 0) Endpoint inventory（若脚本存在）
       - name: Endpoint Inventory
         run: |
-          if [ -f scripts/endpoint_inventory.js ]; then node scripts/endpoint_inventory.js; else echo "skip"; fi
+          if [ -f scripts/endpoint_inventory.js ]; then
+            node scripts/endpoint_inventory.js
+          else
+            echo "endpoint_inventory.js not found (skip)"
+          fi
 
+      # 1) Poll（保存正文）
       - name: Poll public endpoints
         env:
           POLL_SAVE_BODY: '1'
           POLL_FETCH_MODE: 'GET'
           POLL_SAMPLE: ${{ inputs.sample || '1.0' }}
           POLL_CONCURRENCY: ${{ inputs.concurrency || '8' }}
-        run: node scripts/poll_public_endpoints.js
+        run: |
+          if [ -f scripts/poll_public_endpoints.js ]; then
+            node scripts/poll_public_endpoints.js
+          else
+            echo "poll_public_endpoints.js not found"; exit 1
+          fi
 
+      # 2) 标准化 / 指纹
       - name: Normalize evidence
-        run: node scripts/normalize_evidence.js
+        run: |
+          if [ -f scripts/normalize_evidence.js ]; then
+            node scripts/normalize_evidence.js
+          else
+            echo "normalize_evidence.js not found"; exit 1
+          fi
 
+      # 2.1) 兜底播种（不足 N 条时）
       - name: Ensure min evidence today
         run: |
-          if [ -f scripts/evidence_force_seed.js ]; then node scripts/evidence_force_seed.js --min-today=${{ inputs.force_seed || '10' }}; fi
+          if [ -f scripts/evidence_force_seed.js ]; then
+            node scripts/evidence_force_seed.js --min-today=${{ inputs.force_seed || '10' }}
+          else
+            echo "evidence_force_seed.js not found (skip)"
+          fi
 
+      # 3) 可核证链（commit/run_url）
       - name: Enrich evidence provenance
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GIT_COMMIT: ${{ github.sha }}
-        run: node scripts/evidence_enrich_provenance.js
+        run: |
+          if [ -f scripts/evidence_enrich_provenance.js ]; then
+            node scripts/evidence_enrich_provenance.js
+          else
+            echo "evidence_enrich_provenance.js not found (skip)"
+          fi
 
+      # 4) 变化片段摘要
       - name: Extract diff excerpts
         run: |
-          if [ -f scripts/extract_diff_excerpt.js ]; then node scripts/extract_diff_excerpt.js; fi
+          if [ -f scripts/extract_diff_excerpt.js ]; then
+            node scripts/extract_diff_excerpt.js
+          else
+            echo "extract_diff_excerpt.js not found (skip)"
+          fi
 
+      # 5) 索引
       - name: Build evidence index
-        run: node scripts/build_evidence_index.js
+        run: |
+          if [ -f scripts/build_evidence_index.js ]; then
+            node scripts/build_evidence_index.js
+          else
+            echo "build_evidence_index.js not found"; exit 1
+          fi
 
+      # 6) 材料性评分
       - name: Compute materiality score
         run: |
-          if [ -f scripts/materiality_score.js ]; then node scripts/materiality_score.js; fi
+          if [ -f scripts/materiality_score.js ]; then
+            node scripts/materiality_score.js
+          else
+            echo "materiality_score.js not found (skip)"
+          fi
 
+      # 7) Pack
       - name: Build Change Packs
-        run: node scripts/build_change_pack.js
+        run: |
+          if [ -f scripts/build_change_pack.js ]; then
+            node scripts/build_change_pack.js
+          else
+            echo "build_change_pack.js not found"; exit 1
+          fi
 
+      # 8) Subprocessor 反查
       - name: Build subprocessor reverse index
         run: |
-          if [ -f scripts/build_who_uses.js ]; then node scripts/build_who_uses.js; fi
+          if [ -f scripts/build_who_uses.js ]; then
+            node scripts/build_who_uses.js
+          else
+            echo "build_who_uses.js not found (skip)"
+          fi
 
+      # 9) Updates & Categories
       - name: Build updates & categories
         run: |
           if [ -f scripts/build_updates.js ]; then node scripts/build_updates.js || true; fi
           if [ -f scripts/build_categories.js ]; then node scripts/build_categories.js || true; fi
 
+      # 10) Vendor Catalog
       - name: Build vendor catalog
         run: |
-          if [ -f scripts/build_vendor_catalog.js ]; then node scripts/build_vendor_catalog.js || true; fi
+          if [ -f scripts/build_vendor_catalog.js ]; then
+            node scripts/build_vendor_catalog.js || true
+          else
+            echo "build_vendor_catalog.js not found (skip)"
+          fi
 
+      # 11) SEO 注入
       - name: Inject SEO
         run: |
-          if [ -f scripts/seo_inject.js ]; then node scripts/seo_inject.js || true; fi
+          if [ -f scripts/seo_inject.js ]; then
+            node scripts/seo_inject.js || true
+          else
+            echo "seo_inject.js not found (skip)"
+          fi
 
-      # 关键：CTA 注入（双按钮，携带 UTM）
-      - name: Inject CTA (Enable alerts / Buy Portfolio)
-        run: node scripts/cta_inject.js
-
+      # 12) Run Summary（以 evidence.ndx 为准计数）
       - name: Summarize
+        shell: bash
         run: |
           YM=$(date -u +%Y-%m)
           TODAY=$(date -u +%F)
-          CHANGED=$(find evidence -type f -name "${TODAY}-*.json" 2>/dev/null | grep -v "00000000" | wc -l)
-          BASELINES=$(find evidence -type f -name "${TODAY}-*00000000.json" 2>/dev/null | wc -l)
-          INDEX_ROWS=$(test -f data/evidence.ndx && wc -l < data/evidence.ndx || echo 0)
+          EVID_NDX="data/evidence.ndx"
+          CHANGED=0; BASELINES=0; INDEX_ROWS=0; HASH_OK=0
+          if [ -f "$EVID_NDX" ]; then
+            INDEX_ROWS=$(wc -l < "$EVID_NDX")
+            CHANGED=$(awk -F'\t' -v D="$TODAY" '($1 ~ D) && ($4!~/^0+$/) {c++} END{print c+0}' "$EVID_NDX")
+            BASELINES=$(awk -F'\t' -v D="$TODAY" '($1 ~ D) && ($4~/^0+$/) {c++} END{print c+0}' "$EVID_NDX")
+            HASH_OK=$(awk -F'\t' '($4!="") && $4!~/^0+$/ {ok++} END{print ok+0}' "$EVID_NDX")
+          fi
           PACKS=$(find "reports/$YM" -type f -name index.html 2>/dev/null | wc -l)
-          HASH_OK=$(awk -F'\t' '($4!="") && $4!~/^0+$/ {ok++} END{print ok+0}' data/evidence.ndx 2>/dev/null || echo 0)
           {
             echo "### Public Change Poller"
             echo "- New evidence today (non-zero hash): $CHANGED"
@@ -117,12 +182,13 @@ jobs:
             echo "- Change Packs this month ($YM): $PACKS"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # 13) Safe push
       - name: Safe push changes
         run: |
-          git add -A vendors reports updates data/evidence.ndx data/materiality.csv data/vendor_catalog.csv evidence public/who-uses || true
+          git add -A reports updates data/evidence.ndx data/materiality.csv data/vendor_catalog.csv evidence public/who-uses || true
           if [ -n "$(git status --porcelain)" ]; then
             chmod +x scripts/git_safe_push.sh || true
-            bash scripts/git_safe_push.sh "poll: packs/updates/seo + CTA inject"
+            bash scripts/git_safe_push.sh "poll: public changes + provenance/excerpts + index/materiality + packs/updates/seo"
           else
             echo "no changes to commit"
           fi
