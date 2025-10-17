@@ -1,4 +1,4 @@
-name: CTA Hotpatch (self-contained)
+name: CTA Hotpatch (vars+secrets)
 
 on:
   workflow_dispatch:
@@ -9,10 +9,12 @@ permissions:
 jobs:
   hotpatch:
     runs-on: ubuntu-latest
+    # 同时支持 repo Variables 与 Secrets
     env:
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
-      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || secrets.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL || secrets.INTAKE_FORM_URL || '' }}
+      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO || '' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,26 +24,30 @@ jobs:
         with:
           node-version: 18
 
-      - name: Preflight (vars)
+      # 1) 预检：变量来源与是否为空（不会泄露值，Secrets 会被 **** 掩码）
+      - name: Preflight (show sources)
+        shell: bash
         run: |
-          echo "INTAKE_FORM_URL=${{ vars.INTAKE_FORM_URL }}"
-          echo "STRIPE_LINK_PORTFOLIO=${{ vars.STRIPE_LINK_PORTFOLIO }}"
-          if [ -z "${{ vars.INTAKE_FORM_URL }}${{ vars.STRIPE_LINK_PORTFOLIO }}" ]; then
-            echo "::error::Both INTAKE_FORM_URL and STRIPE_LINK_PORTFOLIO are empty. Set Actions → Variables first."; exit 1;
+          set -euo pipefail
+          echo "SITE_ORIGIN=${SITE_ORIGIN}"
+          echo "INTAKE from: $([[ -n '${{ vars.INTAKE_FORM_URL }}' ]] && echo vars || ([[ -n '${{ secrets.INTAKE_FORM_URL }}' ]] && echo secrets || echo empty))"
+          echo "STRIPE  from: $([[ -n '${{ vars.STRIPE_LINK_PORTFOLIO }}' ]] && echo vars || ([[ -n '${{ secrets.STRIPE_LINK_PORTFOLIO }}' ]] && echo secrets || echo empty))"
+          if [[ -z "${INTAKE_FORM_URL}${STRIPE_LINK_PORTFOLIO}" ]]; then
+            echo "::error::Both INTAKE_FORM_URL and STRIPE_LINK_PORTFOLIO are empty (neither repo Variables nor Secrets). Set them under Settings → Secrets and variables → Actions."; exit 1;
           fi
 
-      # 写入注入脚本（全仓库递归扫描 .html）
+      # 2) 写入注入脚本（全仓库递归）
       - name: Write seo_inject.js
+        shell: bash
         run: |
           cat > seo_inject.js <<'JS'
           #!/usr/bin/env node
-          const fs = require('fs'); const path = require('path');
-          const ROOT = process.cwd();
-          const EXCLUDES = new Set(['.git','.github','node_modules','.cache']);
-          const INTAKE = process.env.INTAKE_FORM_URL || '';
-          const STRIPE = process.env.STRIPE_LINK_PORTFOLIO || '';
-          const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
-
+          const fs=require('fs'), path=require('path');
+          const ROOT=process.cwd();
+          const EXCLUDES=new Set(['.git','.github','node_modules','.cache']);
+          const INTAKE=process.env.INTAKE_FORM_URL||'';
+          const STRIPE=process.env.STRIPE_LINK_PORTFOLIO||'';
+          const ORIGIN=process.env.SITE_ORIGIN||'https://www.cg-alert.com';
           let scanned=0, seoFiles=0, seoInjected=0, ctaFiles=0, ctaInjected=0;
 
           function walk(dir){ const out=[]; for(const e of fs.readdirSync(dir,{withFileTypes:true})){
@@ -94,12 +100,11 @@ jobs:
             if(touched) fs.writeFileSync(fp, html.endsWith('\n')?html:html+'\n','utf8');
           }
 
-          // 可能的根目录集合（覆盖 Cloudflare 常见构建输出）
           const roots=[ROOT,'vendors','updates','public','public/vendors','public/updates','site','build','dist','docs','out']
             .map(p=>path.isAbsolute(p)?p:path.join(ROOT,p)).filter(fs.existsSync);
 
           let files=[]; for(const r of roots) files.push(...walk(r));
-          files = Array.from(new Set(files)); scanned=files.length;
+          files=Array.from(new Set(files)); scanned=files.length;
           files.forEach(process);
 
           console.log(`Scanned HTML files: ${scanned}`);
@@ -108,7 +113,7 @@ jobs:
           JS
           chmod +x seo_inject.js
 
-      # 禁止 HTML 缓存（防回源旧文件）
+      # 3) 禁止 HTML 被缓存
       - name: Write _headers (no-cache for HTML)
         run: |
           cat > _headers <<'H'
@@ -124,21 +129,22 @@ jobs:
             Cache-Control: no-cache, must-revalidate, max-age=0
           H
 
+      # 4) 注入并输出统计
       - name: Inject & log
         run: node ./seo_inject.js | tee /tmp/inject.log
 
-      - name: Show CTA markers (sample)
+      # 5) 样本与断言（确保仓库里确有标记）
+      - name: Show markers (sample)
         run: |
-          echo "---- grep CG-CTA-INJECT (top 10) ----"
           git grep -n "CG-CTA-INJECT" -- ':!node_modules' | head -n 10 || true
-
       - name: Assert CTA markers exist
         run: |
           n=$(git grep -n "CG-CTA-INJECT" -- ':!node_modules' | wc -l || true)
           echo "CTA markers: $n"
           if [ "$n" -eq 0 ]; then
-            echo "::error::CTA markers not found in repo after inject (check Variables & paths)"; exit 1; fi
+            echo "::error::CTA markers not found in repo after inject"; exit 1; fi
 
+      # 6) 提交并推送
       - name: Commit & push
         run: |
           set -e
@@ -148,16 +154,16 @@ jobs:
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else
-            git commit -m "CTA hotpatch: inject CTA + headers"
+            git commit -m "CTA hotpatch: inject CTA (vars+secrets)"
             git pull --rebase --autostash || true
             git push
           fi
 
-      # 软校验（部署/缓存滞后仅告警）
+      # 7) 软校验（仅告警）
       - name: Post-deploy check (soft)
         if: ${{ always() }}
         run: |
-          PAGES="${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}"
+          PAGES="${SITE_ORIGIN}"
           for P in "/vendors/zendesk.com/" "/updates/"; do
             echo "check $PAGES$P"
             if curl -fsSL "$PAGES$P?v=${{ github.sha }}" | grep -q "CG-CTA-INJECT"; then
