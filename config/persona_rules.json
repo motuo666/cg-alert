@@ -1,97 +1,19 @@
 {
-  "version": "v2025-10-16",
-  "min_score": 0.35,
-
-  // 安全阈值与发送护栏（若脚本未使用将被忽略）
-  "max_recipients_per_domain": 3,
-  "cooldown_days": 14,
-
-  // 允许的角色/职能（title/department 命中其一即可加分）
-  "allow_roles": [
-    "legal","counsel","privacy","data protection","dpo",
-    "procurement","sourcing","purchasing","it procurement","it sourcing",
-    "vendor management","vendor manager","third party","third-party","tpmm","tprm","tpra",
-    "security","infosec","secops","appsec","trust",
-    "governance","grc","risk","compliance","audit","assurance",
-    "legal operations","legal ops","contracts","contract management","deal desk"
-  ],
-
-  // 邮箱本地部分（@前）包含这些关键词也加分
-  "allow_local_contains": [
-    "security","infosec","trust","privacy","dpo","dataprotection",
-    "legal","counsel","contracts","dealdesk","legalops",
-    "procurement","purchasing","sourcing","vendor","thirdparty","tprm","tpra","tpmm",
-    "grc","risk","compliance","governance"
-  ],
-
-  // 拒绝的邮箱前缀（硬拒）
-  "deny_prefix": [
-    "info@","support@","help@","service@","customer@",
-    "no-reply@","noreply@","do-not-reply@","donotreply@",
-    "sales@","marketing@","press@","pr@","hello@","contact@",
-    "webmaster@","postmaster@","abuse@","admin@",
-    "billing@","accounting@","finance@","careers@","jobs@","hr@","talent@","recruit@","recruiting@"
-  ],
-
-  // 邮箱本地部分包含以下关键词则降分/拒绝
-  "deny_local_contains": [
-    "sales","marketing","growth","bd","bizdev",
-    "career","jobs","hr","talent","recruit",
-    "newsletter","promo","ads","advert","press","pr",
-    "support","help","service","customer","hello","contact",
-    "postmaster","webmaster","abuse","billing","accounting","finance",
-    "noreply","no-reply","donotreply"
-  ],
-
-  // 可选：拒绝的免费邮箱域（B2B 场景建议拒绝；如需允许，清空该列表）
-  "deny_domains": [
-    "gmail.com","yahoo.com","outlook.com","hotmail.com","aol.com","icloud.com",
-    "proton.me","protonmail.com","gmx.com","mail.com","yandex.com","yandex.ru","zoho.com"
-  ],
-
-  // 允许/拒绝的标题正则（忽略大小写）
-  "allow_title_regex": "(?i)\\b(dpo|data\\s*protection|privacy|trust|security|infosec|grc|governance|risk|compliance|counsel|legal(\\s+ops|\\s+operations)?|contracts?|deal\\s*desk|procurement|sourcing|purchasing|vendor(\\s+management|\\s+manager)?|third[-\\s]?party|tprm|tpra|tpmm)\\b",
-  "deny_title_regex": "(?i)\\b(sales|marketing|growth|business\\s*development|bd|demand\\s*gen|customer\\s*success|support|help|service|public\\s*relations|pr|recruit(er|ing)?|talent|hr|student|intern)\\b",
-
-  // 细粒度加权（若脚本支持，将用于累加评分；不支持会被忽略）
-  "role_boost": {
-    "dpo": 1.0,
-    "data protection": 0.9,
-    "privacy": 0.8,
-    "security": 0.8,
-    "trust": 0.6,
-    "grc": 0.7,
-    "risk": 0.6,
-    "compliance": 0.7,
-    "legal": 0.7,
-    "contracts": 0.6,
-    "deal desk": 0.6,
-    "procurement": 0.8,
-    "sourcing": 0.7,
-    "purchasing": 0.6,
-    "vendor management": 0.8,
-    "third party": 0.7,
-    "tprm": 1.0,
-    "tpra": 0.9,
-    "tpmm": 0.8
+  "allow_personas": ["LI", "SEC", "PROC", "GEN"],
+  "caps": {
+    "domain_cap": 4,
+    "domain_window_d": 7,
+    "email_cooldown_d": 7,
+    "vendor_company_d": 7
   },
-
-  "email_boost": {
-    "privacy": 0.6,
-    "dpo": 0.8,
-    "security": 0.6,
-    "trust": 0.5,
-    "procurement": 0.6,
-    "sourcing": 0.5,
-    "vendor": 0.5,
-    "tprm": 0.9,
-    "tpra": 0.8,
-    "tpmm": 0.7,
-    "legal": 0.6,
-    "contracts": 0.5,
-    "dealdesk": 0.5,
-    "grc": 0.6,
-    "risk": 0.5,
-    "compliance": 0.6
+  "safety": {
+    "unsub_pct_max": 0.5,
+    "bounce_pct_max": 8.0,
+    "complaint_pct_max": 0.1
+  },
+  "utm": {
+    "source": "email",
+    "medium": "triggered",
+    "campaign": "cp_202510"
   }
 }
