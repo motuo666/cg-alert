@@ -1,11 +1,11 @@
 ### 7-Day Deliverability Diagnosis
-- cutoff (7d): **2025-10-10T08:21:13.086Z**
+- cutoff (7d): **2025-10-10T08:46:02.585Z**
 - sent7: **30** (MIN_SENT7_FOR_DLVR=100)
 
 | Metric | Count (valid/after-last-sent, in 7d) | Rate vs sent7 | Threshold | Notes |
 |---|---:|---:|---:|---|
 | Unsub | 0 | 0.00% | 0.50% | total7=1, invalid_when=0, before_last=1, no_last_sent=0 |
-| Bounce | 0 | 0.00% | 8.00% | total7=1, invalid_when=0, before_last=1, no_last_sent=0 |
+| Bounce | 0 | 0.00% | 8.00% | total7=1, invalid_when=18, before_last=1, no_last_sent=0 |
 | Complaint | 0 | 0.00% | 0.10% | total7=0, invalid_when=0, before_last=0, no_last_sent=0 |
 
 > ℹ️ **Burn-in**: sent7 小于阈值，仅做诊断不过闸（建议先把发送提升到 sent7≥100 再恢复严格门槛）。

@@ -1,2 +1,1 @@
-eligibility: {"total":877,"status+mx":823,"persona":816,"region":816,"vendor-match":11,"with-real-change":11,"cooled":0,"final":0,"window_h":336,"changed_vendors":66,"caps":{"DOMAIN_CAP":4,"DOMAIN_WINDOW_DAYS":14,"EMAIL_COOLDOWN_DAYS":14,"VENDOR_COMPANY_COOLDOWN_DAYS":14}}
-no eligible leads
+eligibility: {"total":877,"status+mx":876,"persona":814,"region":814,"vendor-match":1,"with-real-change":1,"after-caps":0,"final":0,"window_h":336,"changed_vendors":125}
