@@ -81,7 +81,7 @@ jobs:
           if [ -f scripts/leads_guard.js ]; then node scripts/leads_guard.js || true; fi
           if [ -f scripts/validate_leads.js ]; then node scripts/validate_leads.js || true; fi
 
-      # —— 计算本次运行采用的 window_h / limit / dry（调参与手动输入融合）——
+      # —— 定参（手动/自动融合）——
       - name: Auto tune (window/limit & throttle for schedule)
         id: tune
         if: github.event_name == 'schedule'
@@ -148,20 +148,63 @@ jobs:
           echo "STOP=${STOP}" >> $GITHUB_OUTPUT
           echo "REASON=${REASON}" >> $GITHUB_OUTPUT
 
-      # 预跑（dry）导出“本次要发”的真实落地链接 → Link Guard 只校验这批真实链接
-      - name: Prepare outreach links (dry-run export)
+      # —— 别名归一（极简内联版）：把 GCP/AWS/Auth0 等别名统一为证据域 —— 
+      - name: Normalize vendor aliases (inline)
+        if: steps.gate.outputs.STOP != '1'
+        run: |
+          cat > /tmp/vendor_aliases.json <<'JSON'
+          {
+            "google":"google.com","google cloud":"google.com","gcp":"google.com","cloud.google.com":"google.com",
+            "aws":"aws.amazon.com","amazon web services":"aws.amazon.com","amazonaws.com":"aws.amazon.com",
+            "okta inc":"okta.com","auth0":"okta.com",
+            "atlassian":"atlassian.com","jira":"atlassian.com","confluence":"atlassian.com",
+            "microsoft":"microsoft.com","azure":"microsoft.com",
+            "salesforce":"salesforce.com","zendesk":"zendesk.com","twilio":"twilio.com","stripe":"stripe.com",
+            "box":"box.com","dropbox":"dropbox.com","new relic":"newrelic.com","algolia":"algolia.com",
+            "sentry":"sentry.io","vercel":"vercel.com","figma":"figma.com","mailgun":"mailgun.com",
+            "helpscout":"helpscout.com","checkout":"checkout.com","duo security":"duo.com",
+            "cloudflare":"cloudflare.com","snowflake":"snowflake.com","notion":"notion.so"
+          }
+          JSON
+          node -e '
+            const fs=require("fs"),P="data/leads.csv";
+            if(!fs.existsSync(P)) process.exit(0);
+            const map=Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync("/tmp/vendor_aliases.json","utf8"))).map(([k,v])=>[k.toLowerCase(),v]));
+            const L=fs.readFileSync(P,"utf8").split(/\r?\n/).map(l=>l.trimEnd());
+            const O=L.map(ln=>{
+              if(!ln) return ln;
+              const c=ln.split(",");
+              for(let j=3;j<=5;j++){
+                const s=(c[j]||"").trim().toLowerCase();
+                if(s) c[j]=map[s]||map[s.replace(/^www\./,"")]||c[j];
+              }
+              return c.join(",");
+            });
+            fs.writeFileSync(P,O.join("\n"));
+            console.log("leads.csv vendor1/2/3 normalized");
+          '
+
+      # —— 干预窗口：先 dry 一次看 final，不足 8 则自动把 window 提到 336h（仅本次） —— 
+      - name: Calibrate window (ensure ≥8 candidates)
+        id: calib
         if: steps.gate.outputs.STOP != '1'
         env:
-          TRIGGER_WINDOW_H: ${{ steps.eff.outputs.WINDOW }}
           PERSONA_RULES: config/persona_rules.json
           REGION_FILTER: config/region_filter.json
           SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
         run: |
-          node scripts/send_triggered.js \
-            --dry=true \
-            --limit=${{ steps.gate.outputs.LIMIT || steps.eff.outputs.LIMIT_BASE || '20' }} \
-            --pack \
-            --dump-links=artifacts/outreach_links.json
+          LIM=${{ steps.gate.outputs.LIMIT || steps.eff.outputs.LIMIT_BASE || '20' }}
+          WIN=${{ steps.eff.outputs.WINDOW }}
+          echo "Try dry-run with window_h=$WIN, limit=$LIM"
+          TRIGGER_WINDOW_H=$WIN node scripts/send_triggered.js --dry=true --limit=$LIM --pack --dump-links=artifacts/outreach_links.json 2>&1 | tee /tmp/dry1.log || true
+          FINAL=$(grep -Eo '"final":\s*[0-9]+' /tmp/dry1.log | tail -1 | awk -F: '{print $2+0}')
+          if [ -z "$FINAL" ]; then FINAL=$(grep -Eo 'final=\s*[0-9]+' /tmp/dry1.log | tail -1 | awk -F= '{print $2+0}'); fi
+          if [ ${FINAL:-0} -lt 8 ]; then
+            WIN=336
+            echo "final=${FINAL:-0} < 8 → widen window to $WIN"
+            TRIGGER_WINDOW_H=$WIN node scripts/send_triggered.js --dry=true --limit=$LIM --pack --dump-links=artifacts/outreach_links.json 2>&1 | tee /tmp/dry2.log || true
+          fi
+          echo "WINDOW_EFF=$WIN" >> $GITHUB_OUTPUT
 
       # 链接健康守门（严格：真实链接 4xx/5xx 即阻断；样本只 WARN）
       - name: Link guard
@@ -179,7 +222,7 @@ jobs:
       - name: Send Triggered
         if: steps.gate.outputs.STOP != '1'
         env:
-          TRIGGER_WINDOW_H: ${{ steps.eff.outputs.WINDOW }}
+          TRIGGER_WINDOW_H: ${{ steps.calib.outputs.WINDOW_EFF || steps.eff.outputs.WINDOW }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
@@ -202,7 +245,7 @@ jobs:
           {
             echo "### Outreach Triggered Summary";
             echo "- Event: **${{ github.event_name }}**";
-            echo "- Window_h: **${{ steps.eff.outputs.WINDOW }}**";
+            echo "- Window_h(base→eff): **${{ steps.eff.outputs.WINDOW }} → ${{ steps.calib.outputs.WINDOW_EFF || steps.eff.outputs.WINDOW }}**";
             echo "- Limit(base→final): **${{ steps.eff.outputs.LIMIT_BASE }} → ${{ steps.gate.outputs.LIMIT || steps.eff.outputs.LIMIT_BASE }}**";
             echo "- Dry: **${{ steps.eff.outputs.DRY }}**";
             echo "- Gate: sent7=${{ steps.gate.outputs.SENT7 || 0 }}, unsub%=${{ steps.gate.outputs.UR || 0 }}, bounce%=${{ steps.gate.outputs.BR || 0 }}, complaint%=${{ steps.gate.outputs.CR || 0 }}, stop=${{ steps.gate.outputs.STOP || 0 }}, reason=${{ steps.gate.outputs.REASON || 'ok' }}";
