@@ -1,4 +1,5 @@
 name: Outreach Triggered
+
 on:
   workflow_dispatch:
     inputs:
@@ -21,14 +22,13 @@ env:
   REGION_FILTER: config/region_filter.json
   SEND_LIMIT: ${{ inputs.limit }}
   WINDOW_H: ${{ inputs.window_h }}
-  FALLBACK_WINDOW_H: 720
-  FORCE_MIN_SEND: 8
+  FALLBACK_WINDOW_H: "720"
+  FORCE_MIN_SEND: "8"
   SMTP_HOST: ${{ secrets.SMTP_HOST }}
   SMTP_PORT: ${{ secrets.SMTP_PORT }}
   SMTP_USER: ${{ secrets.SMTP_USER }}
   SMTP_PASS: ${{ secrets.SMTP_PASS }}
   MAIL_FROM: ${{ secrets.MAIL_FROM }}
-  SENDER_NAME: CG Alerts
 
 jobs:
   run:
@@ -41,162 +41,188 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install deps (no lockfile changes)
-        run: npm ci || npm i
-
-      - name: Normalize Suppression
-        run: |
-          node scripts/normalize_suppression_logs.js || true
-          node scripts/leads_guard.js || true
-
-      - name: Link Guard (sample)
-        run: |
-          echo "- Checks: **16** links" >> "$GITHUB_STEP_SUMMARY"
-          echo "### Link Guard Report" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Site origin: **${SITE_ORIGIN}**" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Mode: **dynamic-sample**" >> "$GITHUB_STEP_SUMMARY"
-          echo "- UTM: source=email, medium=triggered, campaign=cp_$(date -u +%Y%m)" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: SMTP sanity
-        run: |
-          [[ -n "${SMTP_HOST}" && -n "${SMTP_USER}" && -n "${SMTP_PASS}" && -n "${MAIL_FROM}" ]] || { echo "SMTP not configured"; exit 1; }
-          echo "SMTP OK."
-
-      - name: Define helpers
+      - name: Install deps
         shell: bash
         run: |
           set -euo pipefail
-          send_real () {
-            local win="$1"; shift || true
-            node scripts/send_triggered.js --dry=false --limit="${SEND_LIMIT}" --window_h="$win" "$@"
-          }
-          count_by_dry () {
-            local win="$1"; shift || true
-            node scripts/send_triggered.js --dry=true --limit=999 --window_h="$win" "$@" > "/tmp/dry_${win}.log" 2>&1
-            cat "/tmp/dry_${win}.log" >> "$GITHUB_STEP_SUMMARY"
-            awk '/^DRY SENT /{n++} END{print (n+0)}' "/tmp/dry_${win}.log"
-          }
-          echo 'TOTAL_SENT=0' >> $GITHUB_ENV
+          (npm ci || npm i)
 
-      - name: Try A/B/C/D/E + Force
+      - name: Suppression Sync (preflight, 不失败流程)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/normalize_suppression_logs.js || true
+          node scripts/leads_guard.js || true
+
+      - name: SMTP sanity
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "${SMTP_HOST:-}" && -n "${SMTP_USER:-}" && -n "${SMTP_PASS:-}" && -n "${MAIL_FROM:-}" ]] || { echo "SMTP not configured"; exit 1; }
+          echo "SMTP OK."
+
+      # -------- DRY MODE --------
+      - name: Try A/B/C/D/E (dry)
         if: ${{ inputs.dry == 'true' }}
         shell: bash
         run: |
           set -euo pipefail
+          count_by_dry () {
+            local win="$1"; shift || true
+            # 保留完整日志到 /tmp，统计 DRY SENT 数
+            node scripts/send_triggered.js --dry=true --limit=999 --window_h="$win" "$@" > "/tmp/dry_${win}.log" 2>&1 || true
+            awk '/^DRY SENT /{n++} END{print (n+0)}' "/tmp/dry_${win}.log"
+          }
+
           echo "RUN_MODE: dry=true  limit=${SEND_LIMIT}  window_h=${WINDOW_H}"
-          echo "### Try A (${WINDOW_H}h)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(count_by_dry "${WINDOW_H}"); echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### Outreach Triggered — Dry Plan"
+            echo ""
+            echo "#### Try A (${WINDOW_H}h)"
+            FA=$(count_by_dry "${WINDOW_H}"); echo "- final=${FA}"
+            echo ""
+            echo "#### Try B (336h)"
+            FB=$(count_by_dry 336); echo "- final=${FB}"
+            echo ""
+            echo "#### Try C (336h + RELAX_PERSONA=1)"
+            FC=$(
+              RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 > /tmp/Cdry.log 2>&1 || true
+              awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/Cdry.log
+            ); echo "- final=${FC}"
+            echo ""
+            echo "#### Try D (336h + caps relaxed)"
+            FD=$(count_by_dry 336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7); echo "- final=${FD}"
+            echo ""
+            echo "#### Try E (720h + discovered + RELAX_PERSONA=1)"
+            FE=$(
+              RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=720 \
+                --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 > /tmp/Edry.log 2>&1 || true
+              awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/Edry.log
+            ); echo "- final=${FE}"
+          } >> "$GITHUB_STEP_SUMMARY"
 
-          echo "### Try B (336h)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(count_by_dry 336); echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
-
-          echo "### Try C (336h + relaxed persona)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(
-            RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 > /tmp/tryC.log 2>&1
-            cat /tmp/tryC.log >> "$GITHUB_STEP_SUMMARY"
-            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/tryC.log
-          ); echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
-
-          echo "### Try D (336h + caps relaxed)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(count_by_dry 336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7); echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
-
-          echo "### Try E (720h + discovered + relaxed persona)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(
-            RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=720 \
-              --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 > /tmp/tryE.log 2>&1
-            cat /tmp/tryE.log >> "$GITHUB_STEP_SUMMARY"
-            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/tryE.log
-          ); echo "- final=${F}" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Real send (A→E or Force) with accounting
+      # -------- REAL SEND --------
+      - name: Real send (A→E or Force) + write sent_log
         if: ${{ inputs.dry == 'false' }}
         shell: bash
         run: |
           set -euo pipefail
+
+          # 本 step 内联所有 helper，防止 127
+          count_plan () {
+            local win="$1"; shift || true
+            node scripts/send_triggered.js --dry=true --limit=999 --window_h="$win" "$@" 2>/dev/null \
+              | awk '/^DRY SENT /{n++} END{print (n+0)}'
+          }
+
+          send_real () {
+            local win="$1"; shift || true
+            node scripts/send_triggered.js --dry=false --limit="${SEND_LIMIT}" --window_h="$win" "$@"
+          }
+
+          append_sent_from_log () {
+            local log="$1"
+            local csv="data/sent_log.csv"
+            mkdir -p data
+            [[ -f "$csv" ]] || echo 'ts,email,subject,link' > "$csv"
+            # 从 SENT 行解析 email/subject/link，并以 UTC 时间写入 CSV
+            # 允许主题/链接含逗号，统一 CSV 引号并转义双引号
+            while IFS= read -r line; do
+              [[ "$line" =~ ^SENT\ to\  ]] || continue
+              email=$(echo "$line"   | sed -n 's/^SENT to \([^ ]*\).*/\1/p')
+              subject=$(echo "$line" | sed -n 's/.*subj="\([^"]*\)".*/\1/p' | sed 's/"/""/g')
+              link=$(echo "$line"    | sed -n 's/.*link="\([^"]*\)".*/\1/p' | sed 's/"/""/g')
+              ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+              printf '%s,"%s","%s","%s"\n' "$ts" "$email" "$subject" "$link" >> "$csv"
+            done < "$log"
+          }
+
+          TOTAL_SENT=0
           echo "RUN_MODE: dry=false  limit=${SEND_LIMIT}  window_h=${WINDOW_H}"
+
+          summarize () { local tag="$1" cnt="$2"; echo "#### ${tag}" >> "$GITHUB_STEP_SUMMARY"; echo "- SENT=${cnt}" >> "$GITHUB_STEP_SUMMARY"; }
+
+          # A 计划
+          PA=$(count_plan "${WINDOW_H}")
           echo "### Try A (${WINDOW_H}h)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(node -e 'process.stdout.write(String(require("child_process").execSync(`node scripts/send_triggered.js --dry=true --limit=999 --window_h=${process.env.WINDOW_H}`).toString().split("\\n").filter(l=>/^DRY SENT /.test(l)).length))')
-          echo "- plan=${F}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${F:-0}" -ge 8 ]; then
+          echo "- plan=${PA}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${PA:-0}" -ge 8 ]; then
             send_real "${WINDOW_H}" | tee /tmp/A.log
-            node scripts/append_sent_from_log.js /tmp/A.log
-            SA=$(grep -c '^SENT ' /tmp/A.log || true); TOTAL_SENT=$((SA))
-            echo "- SENT=${SA}" >> "$GITHUB_STEP_SUMMARY"
-            echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
+            SA=$(grep -c '^SENT ' /tmp/A.log || true)
+            append_sent_from_log /tmp/A.log
+            TOTAL_SENT=$((TOTAL_SENT+SA)); summarize "A" "${SA}"; echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
             exit 0
           fi
 
+          # B 计划
+          PB=$(count_plan 336)
           echo "### Try B (336h)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(node -e 'process.stdout.write(String(require("child_process").execSync(`node scripts/send_triggered.js --dry=true --limit=999 --window_h=336`).toString().split("\\n").filter(l=>/^DRY SENT /.test(l)).length))')
-          echo "- plan=${F}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${F:-0}" -ge 8 ]; then
+          echo "- plan=${PB}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${PB:-0}" -ge 8 ]; then
             send_real 336 | tee /tmp/B.log
-            node scripts/append_sent_from_log.js /tmp/B.log
-            SB=$(grep -c '^SENT ' /tmp/B.log || true); TOTAL_SENT=$((TOTAL_SENT+SB))
-            echo "- SENT=${SB}" >> "$GITHUB_STEP_SUMMARY"
-            echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
+            SB=$(grep -c '^SENT ' /tmp/B.log || true)
+            append_sent_from_log /tmp/B.log
+            TOTAL_SENT=$((TOTAL_SENT+SB)); summarize "B" "${SB}"; echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
             exit 0
           fi
 
-          echo "### Try C (336h + relaxed persona)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(
-            RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 > /tmp/Cdry.log 2>&1
-            cat /tmp/Cdry.log >> "$GITHUB_STEP_SUMMARY"
-            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/Cdry.log
-          ); echo "- plan=${F}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${F:-0}" -ge 8 ]; then
+          # C 计划
+          PC=$(RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 2>/dev/null | awk '/^DRY SENT /{n++} END{print (n+0)}')
+          echo "### Try C (336h + RELAX_PERSONA=1)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- plan=${PC}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${PC:-0}" -ge 8 ]; then
             RELAX_PERSONA=1 send_real 336 | tee /tmp/C.log
-            node scripts/append_sent_from_log.js /tmp/C.log
-            SC=$(grep -c '^SENT ' /tmp/C.log || true); TOTAL_SENT=$((TOTAL_SENT+SC))
-            echo "- SENT=${SC}" >> "$GITHUB_STEP_SUMMARY"
-            echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
+            SC=$(grep -c '^SENT ' /tmp/C.log || true)
+            append_sent_from_log /tmp/C.log
+            TOTAL_SENT=$((TOTAL_SENT+SC)); summarize "C" "${SC}"; echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
             exit 0
           fi
 
+          # D 计划
+          PD=$(node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 2>/dev/null | awk '/^DRY SENT /{n++} END{print (n+0)}')
           echo "### Try D (336h + caps relaxed)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(node -e 'process.stdout.write(String(require("child_process").execSync(`node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7`).toString().split("\\n").filter(l=>/^DRY SENT /.test(l)).length))')
-          echo "- plan=${F}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${F:-0}" -ge 8 ]; then
+          echo "- plan=${PD}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${PD:-0}" -ge 8 ]; then
             send_real 336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee /tmp/D.log
-            node scripts/append_sent_from_log.js /tmp/D.log
-            SD=$(grep -c '^SENT ' /tmp/D.log || true); TOTAL_SENT=$((TOTAL_SENT+SD))
-            echo "- SENT=${SD}" >> "$GITHUB_STEP_SUMMARY"
-            echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
+            SD=$(grep -c '^SENT ' /tmp/D.log || true)
+            append_sent_from_log /tmp/D.log
+            TOTAL_SENT=$((TOTAL_SENT+SD)); summarize "D" "${SD}"; echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
             exit 0
           fi
 
-          echo "### Try E (720h + discovered + relaxed persona)" >> "$GITHUB_STEP_SUMMARY"
-          F=$(
-            RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=720 \
-              --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 > /tmp/Edry.log 2>&1
-            cat /tmp/Edry.log >> "$GITHUB_STEP_SUMMARY"
-            awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/Edry.log
-          ); echo "- plan=${F}" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${F:-0}" -ge 8 ]; then
+          # E 计划
+          PE=$(RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=720 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 2>/dev/null | awk '/^DRY SENT /{n++} END{print (n+0)}')
+          echo "### Try E (720h + discovered + RELAX_PERSONA=1)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- plan=${PE}" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${PE:-0}" -ge 8 ]; then
             RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 send_real 720 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee /tmp/E.log
-            node scripts/append_sent_from_log.js /tmp/E.log
-            SE=$(grep -c '^SENT ' /tmp/E.log || true); TOTAL_SENT=$((TOTAL_SENT+SE))
-            echo "- SENT=${SE}" >> "$GITHUB_STEP_SUMMARY"
-            echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
+            SE=$(grep -c '^SENT ' /tmp/E.log || true)
+            append_sent_from_log /tmp/E.log
+            TOTAL_SENT=$((TOTAL_SENT+SE)); summarize "E" "${SE}"; echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
             exit 0
           fi
 
+          # 兜底 FORCE_MIN_SEND
           if [ "${FORCE_MIN_SEND:-0}" -gt 0 ]; then
             echo "### Force minimum send (${FORCE_MIN_SEND})" >> "$GITHUB_STEP_SUMMARY"
             RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js --dry=false \
               --limit="${FORCE_MIN_SEND}" --window_h="${FALLBACK_WINDOW_H}" \
               --domain_cap=6 --domain_window_d=14 --email_cooldown_d=5 --vendor_company_d=5 | tee /tmp/F.log
-            node scripts/append_sent_from_log.js /tmp/F.log
-            SF=$(grep -c '^SENT ' /tmp/F.log || true); TOTAL_SENT=$((TOTAL_SENT+SF))
-            echo "- SENT=${SF}" >> "$GITHUB_STEP_SUMMARY"
+            SF=$(grep -c '^SENT ' /tmp/F.log || true)
+            append_sent_from_log /tmp/F.log
+            TOTAL_SENT=$((TOTAL_SENT+SF)); summarize "FORCE" "${SF}"; echo "TOTAL_SENT=${TOTAL_SENT}" >> "$GITHUB_ENV"
           fi
 
       - name: Commit sent_log (if changed)
         if: ${{ inputs.dry == 'false' }}
+        shell: bash
         run: |
+          set -euo pipefail
           git add -A data/sent_log.csv || true
           if [ -n "$(git status --porcelain)" ]; then
             git -c user.name="cg-bot" -c user.email="bot@users.noreply.github.com" commit -m "outreach: append sent_log"
+            git pull --rebase --autostash || true
+            git push
             echo "Committed sent_log."
           fi
           echo "### TOTAL_SENT=${{ env.TOTAL_SENT }}" >> "$GITHUB_STEP_SUMMARY"
