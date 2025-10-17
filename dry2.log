@@ -1,1 +1,1 @@
-eligibility: {"total":877,"status+mx":876,"persona":876,"region":876,"vendor-match":63,"with-real-change":63,"after-caps":0,"final":0,"window_h":336,"changed_vendors":125}
+eligibility: {"total":877,"status+mx":876,"persona":876,"region":876,"vendor-match":63,"with-real-change":63,"cooled":{"email":41,"vendor_company":22,"domain_window":0,"domain_cap":0},"after-caps":0,"final":0,"window_h":336,"changed_vendors":125}
