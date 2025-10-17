@@ -53,3 +53,5 @@ when,email,company,domain,vendor,lawful_basis,evidence_link,optout_at,status
 2025-10-15T16:32:49.389Z,legal@twilio.com,twilio,twilio,twilio.com,LI,https://www.cg-alert.com/reports/2025-10/twilio.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
 2025-10-15T16:32:57.451Z,cto@twilio.com,twilio,twilio,twilio.com,LI,https://www.cg-alert.com/reports/2025-10/twilio.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
 2025-10-15T16:33:03.197Z,ciso@twilio.com,twilio,twilio,twilio.com,LI,https://www.cg-alert.com/reports/2025-10/twilio.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,sent
+2025-10-17T08:06:23.866Z,info@auth0.com,auth0,auth0,auth0.com,LI,https://www.cg-alert.com/updates/?q=auth0.com&utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
+2025-10-17T08:06:23.867Z,info@cloudflare.com,cloudflare,cloudflare,cloudflare.com,LI,https://www.cg-alert.com/reports/2025-10/cloudflare.com/?utm_source=email&utm_medium=triggered&utm_campaign=cp_2025-10,,dry
