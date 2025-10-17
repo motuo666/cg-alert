@@ -3,10 +3,10 @@
   "YM": "2025-10",
   "kpi": {
     "endpoints": 7097,
-    "evidence_total": 594,
-    "evidence_today": 0,
-    "changed_vendors_72h": 0,
-    "hash_ratio": 0.44612794612794615,
+    "evidence_total": 624,
+    "evidence_today": 30,
+    "changed_vendors_72h": 2,
+    "hash_ratio": 0.42467948717948717,
     "ttd_samples": 0,
     "ttd_p50_hours": 0,
     "ttd_p95_hours": 0,
@@ -16,10 +16,8 @@
   },
   "PASS": [],
   "WARN": [
-    "今天暂无新证据（evidence_today=0）",
     "TTD 样本不足（近 72h 无有效样本）",
-    "今日发送量低于目标 0/8",
-    "今日新证据低于目标 0/10"
+    "今日发送量低于目标 0/8"
   ],
   "FAIL": [
     "抑制未生效：有 1 个退订/退信邮箱仍为 status=new"
