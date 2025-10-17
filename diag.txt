@@ -1,5 +1,5 @@
 ### 7-Day Deliverability Diagnosis
-- cutoff (7d): **2025-10-10T11:06:54.936Z**
+- cutoff (7d): **2025-10-10T11:24:39.835Z**
 - sent7: **30** (MIN_SENT7_FOR_DLVR=100)
 
 | Metric | Count (valid/after-last-sent, in 7d) | Rate vs sent7 | Threshold | Notes |
