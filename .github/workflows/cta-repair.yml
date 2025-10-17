@@ -9,7 +9,6 @@ permissions:
 jobs:
   hotpatch:
     runs-on: ubuntu-latest
-    # 同时支持 repo Variables 与 Secrets
     env:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || secrets.SITE_ORIGIN || 'https://www.cg-alert.com' }}
       INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL || secrets.INTAKE_FORM_URL || '' }}
@@ -24,7 +23,7 @@ jobs:
         with:
           node-version: 18
 
-      # 1) 预检：变量来源与是否为空（不会泄露值，Secrets 会被 **** 掩码）
+      # 1) 预检：变量来源与是否为空（Secrets 值会被掩码）
       - name: Preflight (show sources)
         shell: bash
         run: |
@@ -36,7 +35,7 @@ jobs:
             echo "::error::Both INTAKE_FORM_URL and STRIPE_LINK_PORTFOLIO are empty (neither repo Variables nor Secrets). Set them under Settings → Secrets and variables → Actions."; exit 1;
           fi
 
-      # 2) 写入注入脚本（全仓库递归）
+      # 2) 写入注入脚本（全仓库递归扫描 .html）
       - name: Write seo_inject.js
         shell: bash
         run: |
@@ -144,13 +143,15 @@ jobs:
           if [ "$n" -eq 0 ]; then
             echo "::error::CTA markers not found in repo after inject"; exit 1; fi
 
-      # 6) 提交并推送
+      # 6) 提交并推送（关键改动：用 git add -A .，不再枚举目录）
       - name: Commit & push
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add -A vendors updates public site build dist docs out _headers
+          git add -A .
+          echo "---- staged diff ----"
+          git diff --cached --name-status || true
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else
