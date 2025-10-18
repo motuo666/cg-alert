@@ -1,5 +1,5 @@
-import fs from 'node:fs';
-import path from 'node:path';
+const fs = require('fs');
+const path = require('path');
 
 const reportsDir = 'reports';
 fs.mkdirSync(reportsDir, { recursive: true });
