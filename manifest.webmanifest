@@ -1,0 +1,19 @@
+{
+  "name": "CG Alert",
+  "short_name": "cg-alert",
+  "id": ".",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "description": "Change alerts, vendor updates and ops reports.",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["productivity", "business"],
+  "lang": "en",
+  "dir": "ltr",
+  "orientation": "portrait"
+}
