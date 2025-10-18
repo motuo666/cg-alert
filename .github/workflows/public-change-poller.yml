@@ -20,7 +20,7 @@ jobs:
       - name: Install deps
         run: npm ci || npm i
 
-      - name: Run poll & build packs
+      - name: Poll & Build Change Packs
         run: |
           set -euo pipefail
           export POLL_SAVE_BODY=1
@@ -36,13 +36,12 @@ jobs:
           node scripts/monthly_checksum.js
 
       - name: Public index/sitemap/rss
-        env:
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        env: { SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }} }
         run: |
           node scripts/generate_reports_index.js
           node scripts/generate_sitemap_rss.js
 
-      - name: Summarize
+      - name: Daily Ops snapshot (UTC)
         run: |
           node scripts/daily_ops_report.js || true
           node scripts/fix_sent_today.js || true
@@ -51,11 +50,11 @@ jobs:
             cat artifacts/daily_ops.json >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Commit changes (if any)
+      - name: Commit changes
         run: |
           git add -A reports public data artifacts || true
           if [ -n "$(git status --porcelain)" ]; then
-            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "poller: packs+indexes+sitemap/rss"
+            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "poller: packs+index+sitemap/rss"
             git pull --rebase --autostash || true
             git push
           else
