@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 /**
- * seo_inject.js v2
- * - 递归扫描全仓库 HTML（排除 .git/.github/node_modules/.cache）
- * - 幂等注入 canonical / description / JSON-LD
- * - 在首个 <h1> 后注入 CTA 标记块（CG-CTA-INJECT），无 <h1> 则插入 <main>/<body>
- * - 控制：INTAKE_FORM_URL / STRIPE_LINK_PORTFOLIO 任一存在才注入 CTA
+ * seo_inject.js v3 (drop-in)
+ * 目标：
+ *  - 幂等 & 去重：在注入前清理旧的 <title>/<meta desc>/<link rel=canonical>，
+ *    以及上一轮我们注入的 WebPage JSON-LD 与 OG/Twitter 卡片，避免重复标签。
+ *  - canonical 修正：把 public/site/build/dist/docs/out 这类输出目录前缀剥离，
+ *    统一生成站点层级路径；index.html → 目录尾部斜杠；其它 .html 原样保留。
+ *  - SEO 补强：若缺失则注入 <title>（优先保留旧值，否则用 H1 生成）、
+ *    <meta name="description">（优先保留旧值，否则从首段文本截取）、
+ *    WebPage JSON-LD、OG/Twitter 基础卡片。
+ *  - CTA：与 v2 一致；只有设置 INTAKE_FORM_URL 或 STRIPE_LINK_PORTFOLIO 才注入。
  */
 
 const fs = require('fs');
@@ -14,7 +19,10 @@ const ROOT = process.cwd();
 const EXCLUDES = new Set(['.git', '.github', 'node_modules', '.cache']);
 const INTAKE = process.env.INTAKE_FORM_URL || '';
 const STRIPE = process.env.STRIPE_LINK_PORTFOLIO || '';
-const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+const SITE_ORIGIN = (process.env.SITE_ORIGIN || 'https://www.cg-alert.com').replace(/\/+$/,'');
+
+// 这些目录如果出现在相对路径开头，会在 canonical 中剥离
+const STRIP_LEADING = ['public','site','build','dist','docs','out'];
 
 let scanned = 0, seoFiles = 0, seoInjected = 0, ctaFiles = 0, ctaInjected = 0;
 
@@ -31,34 +39,143 @@ function listHtml(dir) {
   return out;
 }
 
+function extractFirst(re, html) {
+  const m = re.exec(html);
+  return m ? m[1].trim() : '';
+}
+
+function textFromTag(tag, html) {
+  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'i');
+  return extractFirst(re, html).replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim();
+}
+
+function deriveTitle(html, fallback='CG Alert — Evidence-backed vendor change alerts') {
+  const oldTitle = extractFirst(/<title>([\s\S]*?)<\/title>/i, html);
+  if (oldTitle) return oldTitle;
+  const h1 = textFromTag('h1', html);
+  if (h1) return `${h1} – CG Alert`;
+  return fallback;
+}
+
+function deriveDescription(html, fallback='Monitor vendor public changes and receive verifiable evidence cards for renewals & compliance.') {
+  const old = extractFirst(/<meta[^>]+name=["']description["'][^>]+content=["']([\s\S]*?)["'][^>]*>/i, html);
+  if (old) return old;
+  const p = textFromTag('p', html) || textFromTag('h1', html);
+  const t = (p || '').replace(/\s+/g,' ').trim();
+  return (t && t.length > 40) ? (t.length > 160 ? t.slice(0,157)+'…' : t) : fallback;
+}
+
+function filePathToCanonical(filePath) {
+  // 相对仓库路径（统一斜杠）
+  let rel = path.relative(ROOT, filePath).replace(/\\/g,'/');
+  // 只保留最后一个根目录后的路径
+  for (const lead of STRIP_LEADING) {
+    if (rel.startsWith(lead + '/')) { rel = rel.slice(lead.length + 1); break; }
+  }
+  // index.html → 去掉并确保目录斜杠
+  if (/\/index\.html$/i.test(rel)) {
+    rel = rel.replace(/\/index\.html$/i, '/');
+  } else if (/index\.html$/i.test(rel)) {
+    rel = rel.replace(/index\.html$/i, '');
+  }
+  // 统一前导斜杠
+  if (!rel.startsWith('/')) rel = '/' + rel;
+  // 双斜杠压缩
+  rel = rel.replace(/\/{2,}/g,'/');
+  // 防止 /./ 之类
+  rel = rel.replace(/\/\.\//g,'/');
+  // 根目录空文件 -> '/'
+  if (rel === '') rel = '/';
+  return SITE_ORIGIN + rel;
+}
+
+function slugFromPath(filePath) {
+  const rel = path.relative(ROOT, filePath).replace(/\\/g,'/');
+  const base = rel.replace(/\/index\.html$/i,'').replace(/\.html$/i,'');
+  const parts = base.split('/').filter(Boolean);
+  return parts[parts.length - 1] || 'page';
+}
+
+function cleanHead(html) {
+  if (!/<head[^>]*>/i.test(html) || !/<\/head>/i.test(html)) return html;
+
+  // 1) 先删除我们可能注入过的 SEO 区块（通过标记或选择器）
+  html = html
+    .replace(/<!--\s*CG-SEO-INJECT START[\s\S]*?CG-SEO-INJECT END\s*-->/gi, '')
+    .replace(/<!--\s*CG-CTA-INJECT START[\s\S]*?CG-CTA-INJECT END\s*-->/gi, (m)=>m); // CTA 在 body，不在 head，这里仅保留
+
+  // 2) 清理重复基础标签（保留第一个，其余都删；策略：先全删，后统一注入一次）
+  html = html
+    .replace(/<title>[\s\S]*?<\/title>/ig, '')
+    .replace(/<meta[^>]+name=["']description["'][^>]*>/ig, '')
+    .replace(/<link[^>]+rel=["']canonical["'][^>]*>/ig, '');
+
+  // 3) 清理我们上一轮注入的 WebPage JSON-LD（尽量不删别的类型）
+  html = html.replace(
+    /<script[^>]+type=["']application\/ld\+json["'][^>]*>[\s\S]*?"@type"\s*:\s*"(WebPage)"[\s\S]*?<\/script>\s*/ig,
+    ''
+  );
+
+  // 4) 清理 OG/Twitter（为避免重复，全部移除后重建）
+  html = html
+    .replace(/<meta[^>]+property=["']og:[^"']+["'][^>]*>/ig, '')
+    .replace(/<meta[^>]+name=["']twitter:[^"']+["'][^>]*>/ig, '');
+
+  return html;
+}
+
 function ensureSeo(html, filePath) {
-  let changed = false;
-  if (!/<head[^>]*>/i.test(html) || !/<\/head>/i.test(html)) return { html, changed };
-  // canonical
-  if (!/rel=["']canonical["']/i.test(html)) {
-    const rel = path.relative(ROOT, filePath).replace(/\\/g, '/');
-    const pagePath = '/' + rel.replace(/index\.html$/i, '');
-    html = html.replace(/<\/head>/i, `  <link rel="canonical" href="${SITE_ORIGIN}${pagePath}">\n</head>`);
-    changed = true;
-  }
-  // JSON-LD
-  if (!/application\/ld\+json/i.test(html)) {
-    const jsonld = {
-      "@context":"https://schema.org",
-      "@type":"WebPage",
-      "name":"CG Alert — Evidence-backed vendor change alerts",
-      "url": SITE_ORIGIN,
-      "description":"Monitor vendor public pages (Pricing/ToS/DPA/Subprocessors/Status) and get verifiable change evidence."
-    };
-    html = html.replace(/<\/head>/i, `  <script type="application/ld+json">${JSON.stringify(jsonld)}</script>\n</head>`);
-    changed = true;
-  }
-  // description
-  if (!/name=["']description["']/i.test(html)) {
-    html = html.replace(/<\/head>/i, `  <meta name="description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals & compliance.">\n</head>`);
-    changed = true;
-  }
-  return { html, changed };
+  if (!/<head[^>]*>/i.test(html) || !/<\/head>/i.test(html)) return { html, changed:false };
+
+  const title = deriveTitle(html);
+  const desc = deriveDescription(html);
+  const canonical = filePathToCanonical(filePath);
+  const slug = slugFromPath(filePath);
+  const ogImage = `${SITE_ORIGIN}/og/default.png?slug=${encodeURIComponent(slug)}`;
+
+  // 清理头部重复项再注入
+  const before = html;
+  html = cleanHead(html);
+
+  // 统一注入块（带标记，便于后续幂等更新）
+  const block = [
+    '<!-- CG-SEO-INJECT START -->',
+    `  <title>${escapeHtml(title)}</title>`,
+    `  <meta name="description" content="${escapeHtml(desc)}">`,
+    `  <link rel="canonical" href="${canonical}">`,
+    // WebPage JSON-LD
+    '  <script type="application/ld+json">' +
+      JSON.stringify({
+        "@context":"https://schema.org",
+        "@type":"WebPage",
+        "name": title,
+        "url": canonical,
+        "description": desc
+      }) +
+    '</script>',
+    // OG/Twitter
+    `  <meta property="og:title" content="${escapeHtml(title)}">`,
+    `  <meta property="og:description" content="${escapeHtml(desc)}">`,
+    `  <meta property="og:url" content="${canonical}">`,
+    `  <meta property="og:site_name" content="CG Alert">`,
+    `  <meta property="og:type" content="website">`,
+    `  <meta property="og:image" content="${ogImage}">`,
+    `  <meta name="twitter:card" content="summary_large_image">`,
+    `  <meta name="twitter:title" content="${escapeHtml(title)}">`,
+    `  <meta name="twitter:description" content="${escapeHtml(desc)}">`,
+    `  <meta name="twitter:image" content="${ogImage}">`,
+    '<!-- CG-SEO-INJECT END -->'
+  ].join('\n');
+
+  html = html.replace(/<\/head>/i, block + '\n</head>');
+
+  return { html, changed: html !== before };
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[<>&'"]/g, c => ({
+    '<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'
+  }[c]));
 }
 
 function buildCtaBlock() {
