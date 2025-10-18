@@ -2,7 +2,7 @@ name: Channel Grow (weekly)
 
 on:
   schedule:
-    - cron: "10 4 * * 1"
+    - cron: "10 4 * * 1"   # 每周一 04:10 UTC
   workflow_dispatch:
     inputs:
       limit:
@@ -20,19 +20,18 @@ concurrency:
 jobs:
   grow:
     runs-on: ubuntu-latest
-    # 统一在 job 级 env 计算默认值：手动触发用 inputs.limit；定时触发回落到 '40'
-    env:
-      NEW_CHANNELS_LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '40' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: npm
 
       - name: Install deps
         shell: bash
@@ -40,34 +39,58 @@ jobs:
           set -e
           npm ci || npm i --no-audit --no-fund
 
-      - name: Validate inputs & summarize
+      - name: Resolve limit & summarize
+        id: resolve
         shell: bash
         run: |
           set -euo pipefail
-          re='^[0-9]+$'
-          if [[ ! "${NEW_CHANNELS_LIMIT}" =~ ${re} ]]; then
-            echo "::warning::NEW_CHANNELS_LIMIT is not a number; fallback to 40"
-            NEW_LIMIT=40
+          # 事件判断：手动触发沿用 inputs.limit；定时触发回退到 40
+          EVENT="${{ github.event_name }}"
+          RAW_LIMIT="${{ inputs.limit }}"
+          if [[ "${EVENT}" != "workflow_dispatch" || -z "${RAW_LIMIT}" ]]; then
+            NEW_LIMIT="40"
           else
-            NEW_LIMIT="${NEW_CHANNELS_LIMIT}"
+            # 仅接受纯数字，否则回退 40
+            if [[ "${RAW_LIMIT}" =~ ^[0-9]+$ ]]; then
+              NEW_LIMIT="${RAW_LIMIT}"
+            else
+              echo "::warning::inputs.limit 非数字，回退 40"
+              NEW_LIMIT="40"
+            fi
           fi
 
-          # 传递给后续步骤
           echo "NEW_CHANNELS_LIMIT=${NEW_LIMIT}" >> "$GITHUB_ENV"
+          echo "limit=${NEW_LIMIT}" >> "$GITHUB_OUTPUT"
 
           {
             echo "## Channel Grow (weekly)"
-            echo "- event: ${{ github.event_name }}"
+            echo "- event: ${EVENT}"
             echo "- NEW_CHANNELS_LIMIT: ${NEW_LIMIT}"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Discover channel candidates
         env:
           NEW_CHANNELS_LIMIT: ${{ env.NEW_CHANNELS_LIMIT }}
-        run: node scripts/auto_discover_channels.js
+        run: |
+          node scripts/auto_discover_channels.js
 
-      - name: Safe Push
+      - name: Safe commit & push
         shell: bash
         run: |
-          chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "channel: weekly partner targets"
+          set -euo pipefail
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+
+          # 全量安全提交（仅在有变更时推送）
+          git add -A || true
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+            echo "### Commit" >> "$GITHUB_STEP_SUMMARY"
+            echo "- no changes" >> "$GITHUB_STEP_SUMMARY"
+          else
+            git commit -m "channel: weekly partner targets (limit=${{ steps.resolve.outputs.limit }})"
+            git pull --rebase --autostash || true
+            git push
+            echo "### Commit" >> "$GITHUB_STEP_SUMMARY"
+            echo "- pushed with limit=${{ steps.resolve.outputs.limit }}" >> "$GITHUB_STEP_SUMMARY"
+          fi
