@@ -1,27 +1,15 @@
-// scripts/acceptance_check.js  —— 覆盖版（Node 20 / ESM）
-// 职责：1) 先生成当日快照（调用 daily_ops_report + fix_sent_today）
-//       2) 统一从 artifacts/daily_ops.json 与 data/sent_log.csv 取数（CSV 优先生效）
-//       3) 输出到控制台 + 直接写入 GitHub Step Summary（避免 Summary 为空）
-
+// scripts/acceptance_check.js  (ESM 兼容，Node 20)
 import fs from 'node:fs';
-import { execSync } from 'node:child_process';
+import path from 'node:path';
 
 const today = new Date().toISOString().slice(0,10); // UTC YYYY-MM-DD
-const ART_PATH = 'artifacts/daily_ops.json';
-const SENT_CSV = 'data/sent_log.csv';
+const artifactsDir = 'artifacts';
+const dailyJson = path.join(artifactsDir, 'daily_ops.json');
+const accJson   = path.join(artifactsDir, 'acceptance.json');
+const accMd     = path.join(artifactsDir, 'acceptance.md');
+fs.mkdirSync(artifactsDir, { recursive: true });
 
-// 便捷：往 Step Summary 里追加 Markdown（若环境支持）
-function appendSummary(md) {
-  const p = process.env.GITHUB_STEP_SUMMARY;
-  if (!p) return;
-  try { fs.appendFileSync(p, md + '\n'); } catch {}
-}
-
-// 1) 先生成/纠偏快照（无论工作流有没有调用这两个脚本，这里都做一遍）
-try { execSync('node scripts/daily_ops_report.js', { stdio: 'ignore' }); } catch {}
-try { execSync('node scripts/fix_sent_today.js',   { stdio: 'ignore' }); } catch {}
-
-// 2) 读取 KPI（以 daily_ops.json 为基线）
+// 读 Daily Ops（若不存在也不报错）
 const kpi = {
   date: today,
   evidence_today: 0,
@@ -31,33 +19,31 @@ const kpi = {
   ttd_samples: 0,
   changed_vendors_72h: 1,
 };
+if (fs.existsSync(dailyJson)) {
+  try { Object.assign(kpi, JSON.parse(fs.readFileSync(dailyJson, 'utf8'))); } catch {}
+}
 
-if (fs.existsSync(ART_PATH)) {
+// 总是从 data/sent_log.csv 纠偏 sent_today（取更大值），保证“发了≠统计”不会再出现
+const sentCsv = 'data/sent_log.csv';
+if (fs.existsSync(sentCsv)) {
   try {
-    const obj = JSON.parse(fs.readFileSync(ART_PATH,'utf8'));
-    Object.assign(kpi, obj || {});
+    const lines = fs.readFileSync(sentCsv, 'utf8').trim().split(/\r?\n/);
+    if (lines.length > 1) {
+      const rows = lines.slice(1);
+      const csvCount = rows.filter(l => l.startsWith(today)).length;
+      if ((csvCount || 0) > (kpi.sent_today || 0)) kpi.sent_today = csvCount;
+    }
   } catch {}
 }
 
-// 3) 总是从 sent_log.csv 纠偏 sent_today（取更大值，确保真实发送计入）
-let csvSent = 0;
-if (fs.existsSync(SENT_CSV)) {
-  try {
-    const lines = fs.readFileSync(SENT_CSV, 'utf8').trim().split(/\r?\n/).slice(1);
-    // sent_log.csv 的首列为 ISO 时间戳（UTC），直接以 YYYY-MM-DD 开头判断
-    csvSent = lines.filter(l => l.startsWith(today)).length;
-  } catch {}
-}
-if ((csvSent || 0) > (kpi.sent_today || 0)) kpi.sent_today = csvSent;
-
-// 4) 判定（400k 节奏阈值）
-const passDaily   = (kpi.evidence_today >= 30) && (kpi.sent_today >= 40);
-const passQuality = (kpi.hash_ratio >= 40);
-const passTTD     = (kpi.ttd_samples >= 10) ? (kpi.ttd_p95 <= 24) : true; // 样本<10时 Burn-in 放行
+// 400k 节奏阈值
+const passDaily   = kpi.evidence_today >= 30 && kpi.sent_today >= 40;
+const passQuality = kpi.hash_ratio >= 40;
+const passTTD     = (kpi.ttd_samples >= 10) ? (kpi.ttd_p95 <= 24) : true; // Burn-in 放行
 const passChange  = (kpi.changed_vendors_72h ?? 0) > 0;
 const ok = passDaily && passQuality && passTTD && passChange;
 
-// 5) 控制台输出（便于在日志中直观看到）
+// 控制台输出（便于在 Logs 中一眼看到）
 const lines = [
   'Fullchain Check Summary (UTC)',
   `Date: ${kpi.date}`,
@@ -70,18 +56,31 @@ const lines = [
 ];
 console.log(lines.join('\n'));
 
-// 6) 直接写 Step Summary（**关键修复**：不依赖 YAML 的 echo，Summary 一定有内容）
-appendSummary('### Auto Acceptance (UTC)');
-appendSummary([
-  '',
-  `- **Date**: \`${kpi.date}\``,
-  `- **Evidence today**: **${kpi.evidence_today}** (target ≥30)`,
-  `- **Sent today**: **${kpi.sent_today}** (target ≥40)`,
-  `- **Hash coverage**: **${kpi.hash_ratio}%** (target ≥40%)`,
-  `- **TTD**: P95 **${kpi.ttd_p95}h** (samples=${kpi.ttd_samples})`,
-  `- **Changed vendors (72h)**: **${kpi.changed_vendors_72h}**`,
-  '',
-  ok ? '✅ **PASS (400k cadence)**' : '⚠️ **WARN (below 400k cadence)**',
-].join('\n'));
+// 写 artifacts/acceptance.json（结构化）
+const acc = {
+  ...kpi,
+  passDaily, passQuality, passTTD, passChange, ok,
+  note: ok ? 'PASS (400k cadence)' : 'WARN (below 400k cadence)',
+};
+fs.writeFileSync(accJson, JSON.stringify(acc, null, 2));
 
+// 写 artifacts/acceptance.md（Markdown，供 Step Summary 直接拼接）
+const md = `
+### Auto Acceptance (UTC)
+
+| Metric                  | Value            | Target   | Status |
+|------------------------|-----------------:|---------:|:------:|
+| Evidence today         | ${kpi.evidence_today} | ≥30      | ${passDaily ? '✅' : (kpi.evidence_today>=30?'✅':'❌')} |
+| Sent today             | ${kpi.sent_today} | ≥40      | ${kpi.sent_today>=40 ? '✅' : '❌'} |
+| Hash coverage          | ${kpi.hash_ratio}% | ≥40%     | ${passQuality ? '✅' : '❌'} |
+| TTD (P95, hours)       | ${kpi.ttd_p95} (n=${kpi.ttd_samples}) | ≤24* | ${passTTD ? '✅' : '❌'} |
+| Changed vendors (72h)  | ${kpi.changed_vendors_72h} | >0       | ${passChange ? '✅' : '❌'} |
+
+_* 若样本 <10，进入 Burn-in 放行。_
+
+**Result:** ${ok ? '✅ PASS (400k cadence)' : '⚠️ WARN (below 400k cadence)'}
+`.trim() + '\n';
+fs.writeFileSync(accMd, md);
+
+// 永远退出 0，不阻断流水
 process.exit(0);
