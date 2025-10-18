@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 /**
  * 读取 data/evidence.ndx → 生成 Change Pack（/reports/<YYYY-MM>/<vendor>/index.html）
- * 增强：
+ * 修正点（不再泄露 GitHub 仓库）：
+ * - Proof/Verified 链接指向你站内快照（/reports/proof/...），绝不渲染 run_url
+ * - 若 evidence JSON 含 proof_url，则优先使用；否则按 rel 计算本地快照路径
+ * 其他增强保持不变：
  * - 首屏徽章：Last change / Evidence / Impact（材料性评分）
- * - Verified 徽章：从 evidence JSON / ndx 读取 sha256/hash + commit/run_url
- * - 证据表支持 Proof（GH Run 链接）与 Excerpt（变化片段摘要）
+ * - 证据表支持 Excerpt（变化片段摘要）
  * - CTA（Enable alerts / Buy Portfolio / Home），未配置则自动隐藏
- * - 兼容老数据（无 commit/run_url/sha256 时自动降级显示）
  *
  * 依赖（可选，若不存在则优雅降级）：
  * - data/materiality.csv（由 scripts/materiality_score.js 生成）
- * - evidence JSON 中可能含字段：sha256 / fingerprint / commit / run_url / diff_excerpt_before / diff_excerpt_after / processors
+ * - evidence JSON 中可能含字段：sha256 / fingerprint / commit / proof_url / diff_excerpt_before / diff_excerpt_after / processors
  */
 
 const fs = require('fs');
@@ -30,10 +31,19 @@ const CUR = `${Y}-${M}`;
 const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 const INTAKE_FORM_URL = process.env.INTAKE_FORM_URL || '';              // Google Form 基础链接（不带 ?）
 const STRIPE_LINK_PORTFOLIO = process.env.STRIPE_LINK_PORTFOLIO || '';  // Stripe Payment Link（不带 ?）
+// 本地域名快照前缀（与 build_proof_from_evidence.js 输出保持一致）
+const PROOF_BASE = process.env.PROOF_BASE || (ORIGIN + '/reports/proof');
 
 // ---------- 工具 ----------
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
-function escapeHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapeHtml(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
 function isZeroHash(h) { return !h || /^0+$/i.test(String(h)); }
 function daysSince(dateStr) {
   const ms = NOW - new Date(dateStr + 'T00:00:00Z');
@@ -48,6 +58,16 @@ function joinWithUTM(url, extraParams){
   const join = url.includes('?') ? '&' : '?';
   const utm = `utm_source=email&utm_medium=triggered&utm_campaign=cp_${CUR}`;
   return url + join + (extraParams ? `${extraParams}&` : '') + utm;
+}
+function buildProofFromRel(rel) {
+  // evidence/<vendor>/<file>.json → /reports/proof/<vendor>/<file>.html
+  const r = String(rel || '');
+  if (!r.startsWith('evidence/')) return '';
+  const parts = r.split('/');
+  if (parts.length < 3) return '';
+  const vendor = parts[1];
+  const base = parts[2].replace(/\.json$/i, '');
+  return `${PROOF_BASE}/${vendor}/${base}.html`;
 }
 
 // ---------- 业务映射 ----------
@@ -69,12 +89,12 @@ function changeImpact(type) {
 function readNDX() {
   if (!fs.existsSync(NDX)) return [];
   // 支持 5~7 列：date, slug, type, hash, rel, [commit], [run_url]
-  return fs.readFileSync(NDX, 'utf8').split(/\r?\n/).filter(Boolean).map(l => {
+  return fs.readFileSync(NDX, 'utf8').split(/\r?\\n/).filter(Boolean).map(l => {
     const cols = l.split('\t');
     return {
       date: cols[0], slug: cols[1], type: cols[2],
       hash: cols[3], rel: cols[4],
-      commit: cols[5] || '', run_url: cols[6] || ''
+      commit: cols[5] || '', run_url: cols[6] || '' // run_url 会被忽略，不再对外渲染
     };
   });
 }
@@ -139,11 +159,16 @@ function renderPack(vendor, records, matInfo, alsoSeeLinks, verifiedBadge) {
     const link = '/' + String(r.rel || '').replace(/\\/g, '/');
     const h = String(r.sha256 || r.hash || '').toLowerCase();
     const display = isZeroHash(h) ? '&mdash;' : `<code>#${escapeHtml(h.slice(0,8))}</code>`;
-    const proof = r.run_url ? `<a href="${escapeHtml(r.run_url)}" target="_blank" rel="noopener">run</a>` : '';
+
+    // 仅使用本地快照/自定义 proof_url，不再渲染 run_url
+    const proofHref = r.proof_url || '';
+    const proof = proofHref ? `<a href="${escapeHtml(proofHref)}" target="_blank" rel="noopener">snapshot</a>` : '';
+
     const excerpt = (r.diff_excerpt_before || r.diff_excerpt_after)
       ? escapeHtml(`${r.diff_excerpt_before||''}${r.diff_excerpt_after?(' → '+r.diff_excerpt_after):''}`.trim())
       : '';
     const excerptCell = excerpt ? `<td title="${excerpt}">excerpt</td>` : '<td></td>';
+
     return `<tr>
       <td>${escapeHtml(r.date || '')}</td>
       <td>${escapeHtml(pickTopic(r.type))}</td>
@@ -225,7 +250,7 @@ ${ctas}
   <thead><tr><th>Date</th><th>Type</th><th>Hash</th><th>Link</th><th>Proof</th><th>Excerpt</th></tr></thead>
   <tbody>${rows || '<tr><td colspan="6">No evidence available</td></tr>'}</tbody>
 </table>
-<p class="small">All evidence from public pages; robots/sitemap/security.txt respected. Refund policy and terms as published on site. “Proof” links to the GitHub Actions run that observed or indexed the change (when available).</p>
+<p class="small">“Proof” links to a stable snapshot hosted on cg-alert.com (no internal build links exposed).</p>
 </body>
 </html>`;
   return html;
@@ -239,16 +264,19 @@ ${ctas}
   // 读取材料性（可选）
   const matMap = readMateriality();
 
-  // 将 evidence JSON 增强字段塞回记录（sha256 / run_url / commit / diff excerpts / processors）
+  // 将 evidence JSON 增强字段塞回记录（sha256 / commit / proof_url / diff excerpts / processors）
   const recs = ndx.map(r => {
     const json = safeReadJSON(r.rel);
     const sha256 = json?.sha256 || json?.fingerprint || r.hash || '';
-    const run_url = r.run_url || json?.run_url || '';
     const commit  = r.commit  || json?.commit  || '';
+
+    // 只产生对外可见的 proof_url；绝不透出 run_url
+    const proof_url = json?.proof_url || buildProofFromRel(r.rel);
+
     const diff_before = json?.diff_excerpt_before || '';
     const diff_after  = json?.diff_excerpt_after  || '';
     const processors = Array.isArray(json?.processors) ? json.processors.slice(0,5).map(String) : [];
-    return { ...r, sha256, run_url, commit, diff_excerpt_before: diff_before, diff_excerpt_after: diff_after, processors };
+    return { ...r, sha256, commit, proof_url, diff_excerpt_before: diff_before, diff_excerpt_after: diff_after, processors };
   });
 
   // 分组
@@ -272,14 +300,14 @@ ${ctas}
     // 材料性
     const matInfo = matMap.get(vendor) || fallbackMateriality(arr);
 
-    // Verified 徽章（取最近一个非零 hash/sha256）
+    // Verified 徽章（取最近一个非零 hash/sha256），提供本地 snapshot 链接
     let verifiedBadge = '';
     const verified = [...arr].reverse().find(x => !isZeroHash(x.sha256||x.hash));
     if (verified) {
       const h8 = String(verified.sha256 || verified.hash).slice(0,8);
       const commitShort = verified.commit ? String(verified.commit).slice(0,7) : '';
-      const proofLink = verified.run_url ? `<a href="${escapeHtml(verified.run_url)}" target="_blank" rel="noopener">proof</a>` : '';
-      verifiedBadge = `Verified • #${escapeHtml(h8)}${commitShort?(' • '+escapeHtml(commitShort)) : ''}${proofLink?(' • '+proofLink):''}`;
+      const snap = verified.proof_url ? `<a href="${escapeHtml(verified.proof_url)}" target="_blank" rel="noopener">snapshot</a>` : '';
+      verifiedBadge = `Verified • #${escapeHtml(h8)}${commitShort?(' • '+escapeHtml(commitShort)) : ''}${snap?(' • '+snap):''}`;
     }
 
     // Subprocessor “Also see” 链接（聚合去重）
