@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 /**
  * 从 data/evidence.ndx 生成 Change Pack（/reports/<YYYY-MM>/<vendor>/index.html）
- * 关键修正：
- * - 绝不渲染/拼接 GitHub run/仓库链接（run_url、actions、/runs/ 等一律丢弃）
- * - Proof/Verified 只指向站内快照（/reports/proof/...）。若 evidence JSON 有 proof_url 且安全，则用之；否则用本地推导
- * - 修复换行分隔符：split(/\r?\n/)（原来写成了 \\n 导致不分行）
+ *
+ * 关键点（覆盖版）：
+ * - 绝不渲染/拼接 GitHub run/仓库链接（含 actions、/runs、workflow 等统统丢弃）
+ * - Proof 仅指向站内快照（/reports/proof/...）；若 evidence JSON 有 proof_url 且安全，则用之；否则按本地规则推导
+ * - 行分隔符统一用 split(/\r?\n/)；空行过滤
  * - 即使 evidence JSON 仍留有 run_url 字段，也不会被读取/输出
  */
 
@@ -25,7 +26,7 @@ const CUR = `${Y}-${M}`;
 const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 const INTAKE_FORM_URL = process.env.INTAKE_FORM_URL || '';
 const STRIPE_LINK_PORTFOLIO = process.env.STRIPE_LINK_PORTFOLIO || '';
-const PROOF_BASE = process.env.PROOF_BASE || (ORIGIN + '/reports/proof');
+const PROOF_BASE = (process.env.PROOF_BASE || (ORIGIN + '/reports/proof')).replace(/\/+$/,'');
 
 // ---------- 小工具 ----------
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
@@ -46,9 +47,10 @@ function readLines(fp){
 function slugify(s){ return String(s||'').toLowerCase().trim().replace(/[^a-z0-9.-]+/g,'-').replace(/^-+|-+$/g,''); }
 function joinWithUTM(url, extraParams){
   const join = url.includes('?') ? '&' : '?';
-  const utm = `utm_source=email&utm_medium=triggered&utm_campaign=cp_${CUR}`;
+  const utm = `utm_source=site&utm_medium=internal&utm_campaign=cp_${CUR}`;
   return url + join + (extraParams ? `${extraParams}&` : '') + utm;
 }
+
 // 站内快照路径：evidence/<vendor>/<file>.json → /reports/proof/<vendor>/<file>.html
 function buildProofFromRel(rel) {
   const r = String(rel || '');
@@ -59,11 +61,13 @@ function buildProofFromRel(rel) {
   const base = parts.slice(2).join('/').replace(/\.json$/i, '');
   return `${PROOF_BASE}/${vendor}/${base}.html`;
 }
-// 任何疑似 GitHub/Actions/run 的 URL 直接丢弃
+
+// 任何疑似 CI/仓库/run 的 URL 直接丢弃（避免暴露仓库）
 function safeProof(url){
   const u = String(url||'');
   if (!u) return '';
-  if (/github\.com|actions|workflow|\/runs?\//i.test(u)) return '';
+  if (/(^|\/\/)github\.com/i.test(u)) return '';
+  if (/actions|\/runs?(\/|$)|\/workflows?(\/|$)|gitlab\.com|bitbucket\.org/i.test(u)) return '';
   return u;
 }
 
@@ -87,7 +91,7 @@ function readNDX() {
   if (!fs.existsSync(NDX)) return [];
   // 支持 5~7 列：date, slug, type, hash, rel, [commit], [run_url]
   return fs.readFileSync(NDX, 'utf8')
-    .split(/\r?\n/)               // ✅ 修正分隔符
+    .split(/\r?\n/)
     .filter(Boolean)
     .map(l => {
       const cols = l.split('\t');
@@ -95,7 +99,7 @@ function readNDX() {
         date: cols[0], slug: cols[1], type: cols[2],
         hash: cols[3], rel: cols[4],
         commit: cols[5] || '',
-        // 第 7 列可能是 run_url，但我们绝不对外使用
+        // 第 7 列可能是 run_url（内部字段），但不会用于渲染
         run_url_internal: cols[6] || ''
       };
     });
@@ -156,11 +160,12 @@ function renderPack(vendor, records, matInfo, alsoSeeLinks, verifiedBadge) {
     const h = String(r.sha256 || r.hash || '').toLowerCase();
     const display = isZeroHash(h) ? '&mdash;' : `<code>#${escapeHtml(h.slice(0,8))}</code>`;
 
-    const proofHref = safeProof(r.proof_url || '');
+    // 只允许站内快照
+    const proofHref = safeProof(r.proof_url || '') || buildProofFromRel(r.rel);
     const proof = proofHref ? `<a href="${escapeHtml(proofHref)}" target="_blank" rel="noopener nofollow">snapshot</a>` : '';
 
-    const before = (r.diff_excerpt_before || '').trim();
-    const after  = (r.diff_excerpt_after  || '').trim();
+    const before = (r.diff_excerpt_before || '').toString().trim();
+    const after  = (r.diff_excerpt_after  || '').toString().trim();
     const excerptTxt = (before || after) ? `${before}${after?(' → '+after):''}` : '';
     const excerpt = excerptTxt ? escapeHtml(excerptTxt.slice(0,240)) : '';
     const excerptCell = excerpt ? `<td title="${excerpt}">excerpt</td>` : '<td></td>';
