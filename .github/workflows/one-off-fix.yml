@@ -5,42 +5,37 @@ on:
 jobs:
   migrate-proof-to-snapshots:
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
+    permissions: { contents: write }
     steps:
       - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+        with: { node-version: 20 }
 
       - name: Install deps
         run: npm ci || npm i
 
-      # 先“修”
-      - name: Redact internal fields (remove run_url etc.)
+      # 先“修”数据（去掉 run 链接等内部字段）
+      - name: Redact internal fields
         run: node scripts/redact_public_fields.js || true
 
-      # 生成快照（这里不允许静默失败）
+      # 生成站内快照到 public/proof，并把链接写成 /proof/...
       - name: Build local proof snapshots
-        run: node scripts/build_proof_from_evidence.js
         env:
-          PROOF_BASE: https://www.cg-alert.com/reports/proof
+          PROOF_OUT_DIR: public/proof
+          PROOF_BASE: /proof
+        run: node scripts/build_proof_from_evidence.js
 
-      # 再批量替换已有报告页里的 run 链接
-      - name: Sanitize legacy report pages
-        run: node scripts/sanitize_reports.js
+      # 用站内快照替换报告里的 Proof 列
+      - name: Rebuild change pages
+        env:
+          PROOF_BASE: /proof
+        run: node scripts/build_change_pack.js
 
-      # 你原来的打包步骤（如果会重新生成报告页也行）
-      - name: Rebuild change pages (optional)
-        run: node scripts/build_change_pack.js || true
-
-      - name: Commit & push changes
+      - name: Commit & push
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/ evidence/ artifacts/ data/ || true
-          git commit -m "one-off: snapshots built; replace GH run links with site snapshots; redact pipeline refs" || echo "Nothing to commit"
+          git add public/proof reports/ || true
+          git commit -m "migrate Proof to /proof snapshots; remove run links" || echo "Nothing to commit"
           git push
