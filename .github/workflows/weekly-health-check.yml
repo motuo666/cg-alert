@@ -14,8 +14,7 @@ jobs:
       - name: Install deps
         run: npm ci || npm i
       - name: Radar & Index
-        env:
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        env: { SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }} }
         run: |
           node scripts/generate_reports_index.js
           node scripts/generate_sitemap_rss.js
