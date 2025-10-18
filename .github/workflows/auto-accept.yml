@@ -1,20 +1,31 @@
-name: Auto Acceptance
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "10 0 * * *"  # 每日 00:10 UTC
+ name: Auto Acceptance
+ on:
+   workflow_dispatch:
+   schedule:
+     - cron: "10 0 * * *"  # 每日 00:10 UTC
 
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm i
-      - name: Acceptance Check (400k cadence)
-        run: |
-          node scripts/acceptance_check.js | tee /tmp/acc.txt
-          echo "### Auto Acceptance" >> "$GITHUB_STEP_SUMMARY"
-          cat /tmp/acc.txt >> "$GITHUB_STEP_SUMMARY"
+ jobs:
+   check:
+     runs-on: ubuntu-latest
+     steps:
+       - uses: actions/checkout@v4
+       - uses: actions/setup-node@v4
+         with: { node-version: 20 }
+       - name: Install deps
+         run: npm ci || npm i
++      - name: Daily Ops snapshot (UTC)
++        run: |
++          # 先生成当日快照 & 纠偏 sent_today（从 data/sent_log.csv 读取，UTC）
++          node scripts/daily_ops_report.js || true
++          node scripts/fix_sent_today.js || true
++          echo "### Daily Ops Snapshot (UTC)" >> "$GITHUB_STEP_SUMMARY"
++          if [ -f artifacts/daily_ops.json ]; then
++            cat artifacts/daily_ops.json >> "$GITHUB_STEP_SUMMARY"
++          else
++            echo '{"note":"no daily_ops.json"}' >> "$GITHUB_STEP_SUMMARY"
++          fi
+       - name: Acceptance Check (400k cadence)
+         run: |
+           node scripts/acceptance_check.js | tee /tmp/acc.txt
+           echo "### Auto Acceptance" >> "$GITHUB_STEP_SUMMARY"
+           cat /tmp/acc.txt >> "$GITHUB_STEP_SUMMARY"
