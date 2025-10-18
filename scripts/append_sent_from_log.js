@@ -1,11 +1,6 @@
-// scripts/append_sent_from_log.js
-// Node 20，无第三方依赖
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// scripts/append_sent_from_log.js  (CommonJS, Node 20)
+const fs = require('fs');
+const path = require('path');
 
 const logPath = process.argv[2];
 if (!logPath) {
@@ -22,18 +17,17 @@ function ensureHeader(p){
 }
 ensureHeader(csvPath);
 
-const raw = fs.readFileSync(logPath, 'utf8');
+const raw = fs.existsSync(logPath) ? fs.readFileSync(logPath, 'utf8') : '';
 const lines = raw.split(/\r?\n/);
 let appended = 0;
 
 for (const line of lines) {
-  // 只认真实发送的 SENT 行，忽略 DRY
-  // 例：SENT to user@x.com subj="..." link="https://..."
+  // 仅匹配真实发送：SENT to xxx subj="..." link="..."
   const m = line.match(/^SENT\s+to\s+(\S+)\s+subj="([^"]*)"(?:\s+link="([^"]*)")?/);
   if (!m) continue;
   const email = m[1];
-  const subj  = m[2] ?? '';
-  const link  = m[3] ?? '';
+  const subj  = m[2] || '';
+  const link  = m[3] || '';
   const ts = new Date().toISOString(); // UTC
   const esc = (s) => `"${String(s).replace(/"/g,'""')}"`;
   fs.appendFileSync(csvPath, `${ts},${esc(email)},${esc(subj)},${esc(link)}\n`);
