@@ -1,0 +1,21 @@
+name: Build Proof Snapshots
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: write   # 允许回推生成的 HTML
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Generate proof pages
+        run: |
+          node --version
+          node scripts/build_proof_from_evidence.js
+      - name: Commit & push if changed
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: generate proof snapshots under /reports/proof"
+          file_pattern: "reports/proof/**"
