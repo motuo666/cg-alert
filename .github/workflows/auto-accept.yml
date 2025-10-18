@@ -31,15 +31,18 @@ jobs:
         run: npm ci || npm i
 
       # 1) 先产出当天快照并修正 sent_today（从 data/sent_log.csv 纠偏，UTC）
+      #    为避免在控制台出现“未修正”的 banner，这里静默 daily_ops_report 的输出
       - name: Daily Ops snapshot (UTC)
+        shell: bash
         run: |
           set -euo pipefail
-          node scripts/daily_ops_report.js || true
+          node scripts/daily_ops_report.js >/dev/null 2>&1 || true
           node scripts/fix_sent_today.js || true
           test -f artifacts/daily_ops.json && echo "snapshot_ok=1" || echo "snapshot_ok=0"
 
       # 2) 执行验收（脚本会生成 artifacts/acceptance.md / acceptance.json 并打印到控制台）
       - name: Acceptance Check (400k cadence)
+        shell: bash
         run: |
           set -euo pipefail
           node scripts/acceptance_check.js
@@ -47,6 +50,7 @@ jobs:
       # 3) 最终汇总写入 Step Summary（即便上一步失败也展示）
       - name: Step Summary (final)
         if: always()
+        shell: bash
         run: |
           set -euo pipefail
           echo "## Daily Ops Snapshot (UTC)" >> "$GITHUB_STEP_SUMMARY"
