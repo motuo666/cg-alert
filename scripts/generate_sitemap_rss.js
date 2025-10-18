@@ -1,6 +1,5 @@
-// scripts/generate_sitemap_rss.js  (CommonJS)
-const fs = require('fs');
-const path = require('path');
+import fs from 'node:fs';
+import path from 'node:path';
 
 const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 const reportsDir = 'reports';
@@ -28,16 +27,14 @@ ${urls.map(u=>`<url><loc>${u}</loc></url>`).join('\n')}
 </urlset>`;
 fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemap);
 
-// Weekly Radar RSS (轻量：列出最近 7 天的前 30 条 Change Pack 页)
-const sevenDaysAgo = Date.now() - 7*24*3600*1000;
-const items = urls.slice(-500).map(u => ({u, t: fs.statSync(path.join('public')).mtime.getTime()})); // 无文件 mtime，就平铺
-const top = items.slice(-30);
+// 周榜 RSS（最近 30 条）
+const items = urls.slice(-30);
 const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"><channel>
 <title>CG Alert — Weekly Vendor Change Radar</title>
 <link>${ORIGIN}/reports/</link>
 <description>Top recent vendor change packs</description>
-${top.map(x=>`<item><title>Vendor Change</title><link>${x.u}</link></item>`).join('\n')}
+${items.map(u=>`<item><title>Vendor Change</title><link>${u}</link></item>`).join('\n')}
 </channel></rss>`;
 fs.writeFileSync(path.join(publicDir, 'reports.rss.xml'), rss);
-console.log(`sitemap & rss generated: urls=${urls.length}, rss_items=${top.length}`);
+console.log(`sitemap & rss generated: urls=${urls.length}, rss_items=${items.length}`);
