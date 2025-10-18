@@ -1,7 +1,7 @@
-// scripts/fix_sent_today.js
-import fs from 'fs';
+// scripts/fix_sent_today.js  (CommonJS)
+const fs = require('fs');
 
-const today = new Date().toISOString().slice(0,10);
+const today = new Date().toISOString().slice(0,10); // UTC YYYY-MM-DD
 const sentCsv = 'data/sent_log.csv';
 const art = 'artifacts/daily_ops.json';
 
