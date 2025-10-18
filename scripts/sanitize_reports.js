@@ -11,9 +11,9 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const REPORTS = path.join(ROOT, 'reports');
 
-function walk(dir, acc=[]){
-  if(!fs.existsSync(dir)) return acc;
-  for (const ent of fs.readdirSync(dir,{withFileTypes:true})){
+function walk(dir, acc = []) {
+  if (!fs.existsSync(dir)) return acc;
+  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, ent.name);
     if (ent.isDirectory()) walk(p, acc);
     else if (ent.isFile() && ent.name.endsWith('.html')) acc.push(p);
@@ -21,14 +21,14 @@ function walk(dir, acc=[]){
   return acc;
 }
 
-function vendorYmFromPath(fp){
+function vendorYmFromPath(fp) {
   //  .../reports/YYYY-MM/vendor/...
-  const m = fp.replace(/\\/g,'/').match(/\/reports\/(\d{4}-\d{2})\/([^\/]+)\//);
+  const m = fp.replace(/\\/g, '/').match(/\/reports\/(\d{4}-\d{2})\/([^\/]+)\//);
   if (!m) return null;
   return { ym: m[1], vendor: m[2] };
 }
 
-function processFile(fp){
+function processFile(fp) {
   const id = vendorYmFromPath(fp);
   if (!id) return false;
 
@@ -46,21 +46,22 @@ function processFile(fp){
     .replace(/\sdata-run-id="[^"]*"/gi, '')
     .replace(/\sdata-gh-run="[^"]*"/gi, '');
 
-  if (html !== before){
+  if (html !== before) {
     fs.writeFileSync(fp, html, 'utf8');
     return true;
   }
   return false;
 }
 
-function main(){
+function main() {
   const files = walk(REPORTS);
   let changed = 0;
-  for (const f of files){
-    try{
+  for (const f of files) {
+    try {
       if (processFile(f)) changed++;
-    }catch(e){}
+    } catch (e) {}
   }
   console.log(`sanitize_reports: updated ${changed} files under reports/`);
 }
+
 main();
