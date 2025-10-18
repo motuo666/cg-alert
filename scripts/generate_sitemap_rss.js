@@ -1,5 +1,5 @@
-import fs from 'node:fs';
-import path from 'node:path';
+const fs = require('node:fs');
+const path = require('node:path');
 
 const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 const reportsDir = 'reports';
@@ -37,4 +37,5 @@ const rss = `<?xml version="1.0" encoding="UTF-8"?>
 ${items.map(u=>`<item><title>Vendor Change</title><link>${u}</link></item>`).join('\n')}
 </channel></rss>`;
 fs.writeFileSync(path.join(publicDir, 'reports.rss.xml'), rss);
+
 console.log(`sitemap & rss generated: urls=${urls.length}, rss_items=${items.length}`);
