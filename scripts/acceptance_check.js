@@ -1,4 +1,4 @@
-// scripts/acceptance_check.js  — v2 (Node20, CommonJS)
+// scripts/acceptance_check.js  — v2.1 (fix % scaling + formatting)
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -8,7 +8,7 @@ const DAILY_JSON = path.join(ARTIFACTS, 'daily_ops.json');
 const ACC_JSON   = path.join(ARTIFACTS, 'acceptance.json');
 const ACC_MD     = path.join(ARTIFACTS, 'acceptance.md');
 const SENT_CSV   = 'data/sent_log.csv';
-const EVIDENCE_DIRS = ['evidence', 'public/evidence', 'site/evidence']; // 尽量兼容不同仓库布局
+const EVIDENCE_DIRS = ['evidence', 'public/evidence', 'site/evidence'];
 
 fs.mkdirSync(ARTIFACTS, { recursive: true });
 
@@ -26,6 +26,17 @@ const toNum = (v, def=0) => {
   }
   return def;
 };
+
+// —— 新增：百分比归一化与格式化 ——
+const normalizePercent = (v) => {
+  const n = toNum(v, 0);
+  // 0.425 → 42.5；42.5 → 42.5
+  if (n > 0 && n <= 1) return n * 100;
+  return n;
+};
+const round1 = (n) => Math.round(toNum(n)*10)/10;
+const fmtPct = (n) => `${round1(n).toFixed(1)}%`;
+
 const pick = (obj, keys, def=0) => {
   for (const o of [obj, obj?.metrics, obj?.data, obj?.kpi, obj?.stats]) {
     if (!o || typeof o !== 'object') continue;
@@ -34,7 +45,6 @@ const pick = (obj, keys, def=0) => {
   return def;
 };
 const parseDailyFromText = (txt) => {
-  // 兼容 JSON/Markdown/随手 key:value 文本
   const grab = (regex, def=0) => {
     const m = txt.match(regex);
     return m ? toNum(m[1], def) : def;
@@ -42,14 +52,13 @@ const parseDailyFromText = (txt) => {
   return {
     evidence_today: grab(/evidence[_\s-]*today[^0-9]*([0-9]+)\b/i, 0),
     sent_today:     grab(/sent[_\s-]*today[^0-9]*([0-9]+)\b/i, 0),
-    hash_ratio:     grab(/hash[_\s-]*coverage[^0-9]*([0-9.]+)\s*%/i, 0),
+    hash_ratio:     grab(/hash[_\s-]*coverage[^0-9]*([0-9.]+)\s*%?/i, 0), // 允许无%
     ttd_p95:        grab(/TTD[^0-9]*P95[^0-9]*([0-9.]+)/i, 0),
     ttd_samples:    grab(/samples[^0-9]*([0-9]+)/i, 0),
     changed_vendors_72h: grab(/changed[^0-9]*vendors[^0-9]*\(?72h\)?[^0-9]*([0-9]+)/i, 0),
   };
 };
 
-// 1) 先从 artifacts/daily_ops.json 取数（JSON -> 文本兜底）
 let kpi = {
   date: todayStr,
   evidence_today: 0,
@@ -60,6 +69,7 @@ let kpi = {
   changed_vendors_72h: 0,
 };
 
+// 1) 从 daily_ops.json 读取（JSON→文本兜底）
 if (fs.existsSync(DAILY_JSON)) {
   const raw = fs.readFileSync(DAILY_JSON, 'utf8');
   try {
@@ -76,10 +86,9 @@ if (fs.existsSync(DAILY_JSON)) {
   } catch {
     Object.assign(kpi, { ...kpi, ...parseDailyFromText(raw) });
   }
-  // 如果 JSON 可读但关键字段仍 0，再用文本兜底扫一遍
+  // 关键字段兜底再扫一遍文本
   if (kpi.evidence_today===0 || kpi.hash_ratio===0 || kpi.ttd_samples===0) {
-    const txt = fs.readFileSync(DAILY_JSON, 'utf8');
-    const z = parseDailyFromText(txt);
+    const z = parseDailyFromText(raw);
     kpi.evidence_today ||= z.evidence_today;
     kpi.hash_ratio     ||= z.hash_ratio;
     kpi.ttd_p95        ||= z.ttd_p95;
@@ -88,7 +97,7 @@ if (fs.existsSync(DAILY_JSON)) {
   }
 }
 
-// 2) sent_today 以 CSV 为准（≥ ）
+// 2) sent_today 以 CSV 为准
 if (fs.existsSync(SENT_CSV)) {
   try {
     const lines = fs.readFileSync(SENT_CSV,'utf8').trim().split(/\r?\n/);
@@ -148,12 +157,15 @@ if (kpi.evidence_today===0 || kpi.hash_ratio===0 || kpi.changed_vendors_72h===0)
   const s = scanEvidenceDirs();
   if (kpi.evidence_today===0) kpi.evidence_today = s.todayTotal;
   if (kpi.hash_ratio===0) {
-    kpi.hash_ratio = s.todayTotal>0 ? Math.round((s.todayNonZero*1000.0/s.todayTotal))/10 : 0;
+    kpi.hash_ratio = s.todayTotal>0 ? (s.todayNonZero*100.0/s.todayTotal) : 0;
   }
   if (kpi.changed_vendors_72h===0) kpi.changed_vendors_72h = s.changedVendors.size;
 }
 
-// 4) 最后兜底：当天有证据或有发送 → 认为 72h≥1（防误杀）
+// —— 关键修正：把 hash_ratio 归一化成百分数并四舍五入 1 位 ——
+kpi.hash_ratio = round1(normalizePercent(kpi.hash_ratio));
+
+// 4) 最后兜底：当天有证据或有发送 → 认为 72h≥1
 if (kpi.changed_vendors_72h===0 && (kpi.evidence_today>0 || kpi.sent_today>0)) {
   kpi.changed_vendors_72h = 1;
 }
@@ -170,7 +182,7 @@ const lines = [
   `Date: ${kpi.date || todayStr}`,
   `Evidence today: ${kpi.evidence_today} (target ≥30)`,
   `Sent today: ${kpi.sent_today} (target ≥40)`,
-  `Hash coverage: ${kpi.hash_ratio}% (target ≥40%)`,
+  `Hash coverage: ${fmtPct(kpi.hash_ratio)} (target ≥40%)`,
   `TTD: P95 ${kpi.ttd_p95}h (samples=${kpi.ttd_samples})`,
   `Changed vendors (72h): ${kpi.changed_vendors_72h}`,
   ok ? '✅ PASS (400k cadence)' : '⚠️ WARN (below 400k cadence)',
@@ -182,7 +194,7 @@ const acc = {
   date: kpi.date || todayStr,
   evidence_today: kpi.evidence_today,
   sent_today: kpi.sent_today,
-  hash_ratio: kpi.hash_ratio,
+  hash_ratio: kpi.hash_ratio, // 存数值（百分比），如 42.5
   ttd_p95: kpi.ttd_p95,
   ttd_samples: kpi.ttd_samples,
   changed_vendors_72h: kpi.changed_vendors_72h,
@@ -194,11 +206,11 @@ fs.writeFileSync(ACC_JSON, JSON.stringify(acc,null,2));
 const md = `
 ### Auto Acceptance (UTC)
 
-| Metric                  | Value            | Target   | Status |
-|------------------------|-----------------:|---------:|:------:|
-| Evidence today         | ${kpi.evidence_today} | ≥30      | ${kpi.evidence_today>=30 ? '✅' : '❌'} |
-| Sent today             | ${kpi.sent_today} | ≥40      | ${kpi.sent_today>=40 ? '✅' : '❌'} |
-| Hash coverage          | ${kpi.hash_ratio}% | ≥40%     | ${kpi.hash_ratio>=40 ? '✅' : '❌'} |
+| Metric                  | Value                   | Target   | Status |
+|------------------------|------------------------:|---------:|:------:|
+| Evidence today         | ${kpi.evidence_today}   | ≥30      | ${kpi.evidence_today>=30 ? '✅' : '❌'} |
+| Sent today             | ${kpi.sent_today}       | ≥40      | ${kpi.sent_today>=40 ? '✅' : '❌'} |
+| Hash coverage          | ${fmtPct(kpi.hash_ratio)} | ≥40%     | ${kpi.hash_ratio>=40 ? '✅' : '❌'} |
 | TTD (P95, hours)       | ${kpi.ttd_p95} (n=${kpi.ttd_samples}) | ≤24* | ${(toNum(kpi.ttd_samples,0)>=10?toNum(kpi.ttd_p95,0)<=24:true) ? '✅' : '❌'} |
 | Changed vendors (72h)  | ${kpi.changed_vendors_72h} | >0       | ${kpi.changed_vendors_72h>0 ? '✅' : '❌'} |
 
@@ -208,5 +220,4 @@ _* n<10 → Burn-in 放行。_
 `.trim()+'\n';
 fs.writeFileSync(ACC_MD, md);
 
-// 结束
 process.exit(0);
