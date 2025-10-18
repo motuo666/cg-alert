@@ -32,12 +32,12 @@ jobs:
         with: { node-version: 20 }
       - name: Install deps
         run: npm ci || npm i
-      - name: Suppression (safety)
+      - name: Safety suppression
         run: |
           node scripts/normalize_suppression_logs.js || true
           node scripts/leads_guard.js || true
 
-      - name: Decide DRY when schedule
+      - name: Mode
         id: mode
         run: |
           if [ "${{ github.event_name }}" = "schedule" ]; then echo "dry=false" >> $GITHUB_OUTPUT; else echo "dry=${{ inputs.dry }}" >> $GITHUB_OUTPUT; fi
@@ -50,16 +50,16 @@ jobs:
           echo "### Try A (${{ env.WINDOW_H }}h)" >> "$GITHUB_STEP_SUMMARY"; echo "plan=$(plan ${{ env.WINDOW_H }})" >> "$GITHUB_STEP_SUMMARY"
           echo "### Try B (336h)" >> "$GITHUB_STEP_SUMMARY"; echo "plan=$(plan 336)" >> "$GITHUB_STEP_SUMMARY"
           echo "### Try C (336h + RELAX_PERSONA=1)" >> "$GITHUB_STEP_SUMMARY"; RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 | tee /tmp/planC.log; echo "plan=$(awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/planC.log)" >> "$GITHUB_STEP_SUMMARY"
-          echo "### Try D (336h + caps)" >> "$GITHUB_STEP_SUMMARY"; echo "plan=$(node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | awk '/^DRY SENT /{n++} END{print (n+0)}')" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Try D (caps)" >> "$GITHUB_STEP_SUMMARY"; echo "plan=$(node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | awk '/^DRY SENT /{n++} END{print (n+0)}')" >> "$GITHUB_STEP_SUMMARY"
           echo "### Try E (720h + discovered + persona)" >> "$GITHUB_STEP_SUMMARY"; RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=720 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee /tmp/planE.log; echo "plan=$(awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/planE.log)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Real send (C→E→Force) & accounting
         if: steps.mode.outputs.dry == 'false'
         run: |
           set -euo pipefail
-          # 先看 C 档；不够 40 再走 E；仍不够走 Force 兜底到 40（分批多次避免风控）
           RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 > /tmp/planC.log 2>&1 || true
           PLAN_C=$(awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/planC.log)
+
           if [ "${PLAN_C:-0}" -ge 40 ]; then
             RELAX_PERSONA=1 node scripts/send_triggered.js --dry=false --limit=40 --window_h=336 | tee /tmp/C.log
           else
@@ -67,7 +67,6 @@ jobs:
             RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js --dry=false --limit=$((40-PLAN_C>0?40-PLAN_C:0)) --window_h=720 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee /tmp/E.log
           fi
 
-          # 记账
           node scripts/append_sent_from_log.js /tmp/C.log || true
           node scripts/append_sent_from_log.js /tmp/E.log || true
           SENT=$(grep -h -c '^SENT ' /tmp/C.log /tmp/E.log 2>/dev/null || true)
