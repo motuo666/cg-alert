@@ -1,8 +1,9 @@
 name: Public Change Poller
+
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 */3 * * *"   # 每 3 小时（UTC）
+    - cron: "17 */3 * * *"  # 每 3 小时（UTC）
 
 permissions:
   contents: write
@@ -11,19 +12,26 @@ jobs:
   poll:
     runs-on: ubuntu-latest
     env:
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
       POLL_SAVE_BODY: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm i
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm ci || npm i
 
       - name: Poll & Build Change Packs
         run: |
           set -euo pipefail
-          export POLL_SAVE_BODY=1
+          # 确保保存 body（hash 计算依赖）
+          export POLL_SAVE_BODY="${POLL_SAVE_BODY:-1}"
           node scripts/poll_public_endpoints.js
           node scripts/normalize_evidence.js
           node scripts/evidence_enrich_provenance.js
@@ -35,8 +43,10 @@ jobs:
           node scripts/build_updates.js
           node scripts/monthly_checksum.js
 
-      - name: Public index/sitemap/rss
-        env: { SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }} }
+      - name: Public index / sitemap / RSS
+        # 不在 env 里做表达式回退，默认值在脚本内处理
+        env:
+          SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
         run: |
           node scripts/generate_reports_index.js
           node scripts/generate_sitemap_rss.js
@@ -50,7 +60,7 @@ jobs:
             cat artifacts/daily_ops.json >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Commit changes
+      - name: Commit changes (if any)
         run: |
           git add -A reports public data artifacts || true
           if [ -n "$(git status --porcelain)" ]; then
