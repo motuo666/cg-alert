@@ -12,7 +12,8 @@
     "ttd_p95_hours": 0,
     "packs_month": 50,
     "sent_today": 0,
-    "dry_today": 2
+    "dry_today": 2,
+    "hash_ratio_pct": 42.5
   },
   "PASS": [],
   "WARN": [
@@ -20,5 +21,6 @@
     "今日发送量低于目标 0/8"
   ],
   "FAIL": [],
-  "sent_today": 0
+  "sent_today": 0,
+  "hash_coverage": "42.5%"
 }
