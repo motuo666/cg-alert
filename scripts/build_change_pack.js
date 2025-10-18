@@ -1,17 +1,11 @@
 #!/usr/bin/env node
 /**
- * 读取 data/evidence.ndx → 生成 Change Pack（/reports/<YYYY-MM>/<vendor>/index.html）
- * 修正点（不再泄露 GitHub 仓库）：
- * - Proof/Verified 链接指向你站内快照（/reports/proof/...），绝不渲染 run_url
- * - 若 evidence JSON 含 proof_url，则优先使用；否则按 rel 计算本地快照路径
- * 其他增强保持不变：
- * - 首屏徽章：Last change / Evidence / Impact（材料性评分）
- * - 证据表支持 Excerpt（变化片段摘要）
- * - CTA（Enable alerts / Buy Portfolio / Home），未配置则自动隐藏
- *
- * 依赖（可选，若不存在则优雅降级）：
- * - data/materiality.csv（由 scripts/materiality_score.js 生成）
- * - evidence JSON 中可能含字段：sha256 / fingerprint / commit / proof_url / diff_excerpt_before / diff_excerpt_after / processors
+ * 从 data/evidence.ndx 生成 Change Pack（/reports/<YYYY-MM>/<vendor>/index.html）
+ * 关键修正：
+ * - 绝不渲染/拼接 GitHub run/仓库链接（run_url、actions、/runs/ 等一律丢弃）
+ * - Proof/Verified 只指向站内快照（/reports/proof/...）。若 evidence JSON 有 proof_url 且安全，则用之；否则用本地推导
+ * - 修复换行分隔符：split(/\r?\n/)（原来写成了 \\n 导致不分行）
+ * - 即使 evidence JSON 仍留有 run_url 字段，也不会被读取/输出
  */
 
 const fs = require('fs');
@@ -27,22 +21,18 @@ const Y = NOW.getUTCFullYear();
 const M = String(NOW.getUTCMonth() + 1).padStart(2, '0');
 const CUR = `${Y}-${M}`;
 
-// 外部可配（不配就隐藏相关按钮）
+// 外部可配
 const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
-const INTAKE_FORM_URL = process.env.INTAKE_FORM_URL || '';              // Google Form 基础链接（不带 ?）
-const STRIPE_LINK_PORTFOLIO = process.env.STRIPE_LINK_PORTFOLIO || '';  // Stripe Payment Link（不带 ?）
-// 本地域名快照前缀（与 build_proof_from_evidence.js 输出保持一致）
+const INTAKE_FORM_URL = process.env.INTAKE_FORM_URL || '';
+const STRIPE_LINK_PORTFOLIO = process.env.STRIPE_LINK_PORTFOLIO || '';
 const PROOF_BASE = process.env.PROOF_BASE || (ORIGIN + '/reports/proof');
 
-// ---------- 工具 ----------
+// ---------- 小工具 ----------
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 function escapeHtml(s) {
   return String(s||'')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#39;');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 function isZeroHash(h) { return !h || /^0+$/i.test(String(h)); }
 function daysSince(dateStr) {
@@ -59,15 +49,22 @@ function joinWithUTM(url, extraParams){
   const utm = `utm_source=email&utm_medium=triggered&utm_campaign=cp_${CUR}`;
   return url + join + (extraParams ? `${extraParams}&` : '') + utm;
 }
+// 站内快照路径：evidence/<vendor>/<file>.json → /reports/proof/<vendor>/<file>.html
 function buildProofFromRel(rel) {
-  // evidence/<vendor>/<file>.json → /reports/proof/<vendor>/<file>.html
   const r = String(rel || '');
   if (!r.startsWith('evidence/')) return '';
   const parts = r.split('/');
   if (parts.length < 3) return '';
   const vendor = parts[1];
-  const base = parts[2].replace(/\.json$/i, '');
+  const base = parts.slice(2).join('/').replace(/\.json$/i, '');
   return `${PROOF_BASE}/${vendor}/${base}.html`;
+}
+// 任何疑似 GitHub/Actions/run 的 URL 直接丢弃
+function safeProof(url){
+  const u = String(url||'');
+  if (!u) return '';
+  if (/github\.com|actions|workflow|\/runs?\//i.test(u)) return '';
+  return u;
 }
 
 // ---------- 业务映射 ----------
@@ -85,33 +82,36 @@ function changeImpact(type) {
   return 'Contract/Compliance';
 }
 
-// ---------- 数据读取 ----------
+// ---------- 读取 ----------
 function readNDX() {
   if (!fs.existsSync(NDX)) return [];
   // 支持 5~7 列：date, slug, type, hash, rel, [commit], [run_url]
-  return fs.readFileSync(NDX, 'utf8').split(/\r?\\n/).filter(Boolean).map(l => {
-    const cols = l.split('\t');
-    return {
-      date: cols[0], slug: cols[1], type: cols[2],
-      hash: cols[3], rel: cols[4],
-      commit: cols[5] || '', run_url: cols[6] || '' // run_url 会被忽略，不再对外渲染
-    };
-  });
+  return fs.readFileSync(NDX, 'utf8')
+    .split(/\r?\n/)               // ✅ 修正分隔符
+    .filter(Boolean)
+    .map(l => {
+      const cols = l.split('\t');
+      return {
+        date: cols[0], slug: cols[1], type: cols[2],
+        hash: cols[3], rel: cols[4],
+        commit: cols[5] || '',
+        // 第 7 列可能是 run_url，但我们绝不对外使用
+        run_url_internal: cols[6] || ''
+      };
+    });
 }
 
 function safeReadJSON(relPath) {
   try {
     const p = path.join(ROOT, relPath || '');
     if (!fs.existsSync(p)) return null;
-    const raw = fs.readFileSync(p,'utf8');
-    return JSON.parse(raw);
+    return JSON.parse(fs.readFileSync(p,'utf8'));
   } catch { return null; }
 }
 
 function readMateriality() {
   const map = new Map();
   if (!fs.existsSync(MATERIALITY_CSV)) return map;
-  // vendor,score,impact
   for (const l of readLines(MATERIALITY_CSV)) {
     const cols = l.split(',');
     const vendor = cols[0];
@@ -123,7 +123,6 @@ function readMateriality() {
 }
 
 function fallbackMateriality(records){
-  // 简易评分（无 data/materiality.csv 时使用）
   const weights = { pricing:3, dpa:3, tos:2, privacy:2, subprocessors:2, status:1, other:1 };
   let score = 0;
   for (const r of records) {
@@ -136,11 +135,9 @@ function fallbackMateriality(records){
 
 // ---------- 渲染 ----------
 function renderPack(vendor, records, matInfo, alsoSeeLinks, verifiedBadge) {
-  // 分类统计
   const buckets = {};
   for (const r of records) (buckets[r.type] = buckets[r.type] || []).push(r);
 
-  // What / So What
   const what = Object.entries(buckets)
     .map(([k, arr]) => `<li><b>${escapeHtml(pickTopic(k))}</b>: ${arr.length} change(s) in last 90 days</li>`)
     .join('');
@@ -154,32 +151,30 @@ function renderPack(vendor, records, matInfo, alsoSeeLinks, verifiedBadge) {
     'Update internal register & notify stakeholders if material'
   ];
 
-  // 证据表
   const rows = records.slice(0, 300).map(r => {
-    const link = '/' + String(r.rel || '').replace(/\\/g, '/');
+    const evidenceHref = '/' + String(r.rel || '').replace(/\\/g, '/');
     const h = String(r.sha256 || r.hash || '').toLowerCase();
     const display = isZeroHash(h) ? '&mdash;' : `<code>#${escapeHtml(h.slice(0,8))}</code>`;
 
-    // 仅使用本地快照/自定义 proof_url，不再渲染 run_url
-    const proofHref = r.proof_url || '';
-    const proof = proofHref ? `<a href="${escapeHtml(proofHref)}" target="_blank" rel="noopener">snapshot</a>` : '';
+    const proofHref = safeProof(r.proof_url || '');
+    const proof = proofHref ? `<a href="${escapeHtml(proofHref)}" target="_blank" rel="noopener nofollow">snapshot</a>` : '';
 
-    const excerpt = (r.diff_excerpt_before || r.diff_excerpt_after)
-      ? escapeHtml(`${r.diff_excerpt_before||''}${r.diff_excerpt_after?(' → '+r.diff_excerpt_after):''}`.trim())
-      : '';
+    const before = (r.diff_excerpt_before || '').trim();
+    const after  = (r.diff_excerpt_after  || '').trim();
+    const excerptTxt = (before || after) ? `${before}${after?(' → '+after):''}` : '';
+    const excerpt = excerptTxt ? escapeHtml(excerptTxt.slice(0,240)) : '';
     const excerptCell = excerpt ? `<td title="${excerpt}">excerpt</td>` : '<td></td>';
 
     return `<tr>
       <td>${escapeHtml(r.date || '')}</td>
       <td>${escapeHtml(pickTopic(r.type))}</td>
       <td>${display}</td>
-      <td><a href="${escapeHtml(link)}">evidence</a></td>
+      <td><a href="${escapeHtml(evidenceHref)}" rel="nofollow">evidence</a></td>
       <td>${proof}</td>
       ${excerptCell}
     </tr>`;
   }).join('');
 
-  // 徽章（含材料性与 Verified）
   const lastDate = records.map(r=>r.date).sort().slice(-1)[0] || '';
   const total = records.length;
   const impactChip = (matInfo?.impact || 'Low');
@@ -191,7 +186,6 @@ function renderPack(vendor, records, matInfo, alsoSeeLinks, verifiedBadge) {
   ${verifiedBadge ? `<span style="background:#e6f4ea;padding:4px 8px;border-radius:8px">${verifiedBadge}</span>` : ''}
 </div>`.trim();
 
-  // CTA（未配置的自动隐藏）
   const vParam = encodeURIComponent(vendor);
   const ctaEnable = INTAKE_FORM_URL
     ? `<a class="btn primary" href="${escapeHtml(joinWithUTM(INTAKE_FORM_URL, `vendor=${vParam}`))}">Enable alerts for ${escapeHtml(vendor)}</a>` : '';
@@ -202,20 +196,12 @@ function renderPack(vendor, records, matInfo, alsoSeeLinks, verifiedBadge) {
     ? `<div class="also">Also see: ${alsoSeeLinks.map(p=>`<a href="/who-uses/${escapeHtml(slugify(p))}/" class="muted">${escapeHtml(p)}</a>`).join(' · ')}</div>`
     : '';
 
-  const ctas = `
-<div class="cta">
-  ${ctaEnable}${ctaBuy}${ctaHome}
-</div>
-${also}`.trim();
-
-  // JSON-LD
   const ld = { '@context':'https://schema.org','@type':'Report',
     name: `${vendor} Change Pack ${CUR}`,
     datePublished: new Date().toISOString(),
     about: vendor };
   const ldJson = JSON.stringify(ld);
 
-  // HTML
   const html = `<!doctype html>
 <html>
 <head>
@@ -241,7 +227,10 @@ ${also}`.trim();
 <body>
 <h1>${escapeHtml(vendor)} — Change Pack (${CUR})</h1>
 ${badges}
-${ctas}
+<div class="cta">
+  ${ctaEnable}${ctaBuy}${ctaHome}
+</div>
+${also}
 <h3>What</h3><ul>${what || '<li>No public changes in last 90 days</li>'}</ul>
 <h3>So What</h3><p>${so || 'No material impact detected'}</p>
 <h3>Now What</h3><ul>${nowBullets.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
@@ -250,7 +239,7 @@ ${ctas}
   <thead><tr><th>Date</th><th>Type</th><th>Hash</th><th>Link</th><th>Proof</th><th>Excerpt</th></tr></thead>
   <tbody>${rows || '<tr><td colspan="6">No evidence available</td></tr>'}</tbody>
 </table>
-<p class="small">“Proof” links to a stable snapshot hosted on cg-alert.com (no internal build links exposed).</p>
+<p class="small">“Proof” links to a stable snapshot hosted on cg-alert.com. Internal build links are never exposed.</p>
 </body>
 </html>`;
   return html;
@@ -258,24 +247,24 @@ ${ctas}
 
 // ---------- 主流程 ----------
 (function main(){
-  const ndx = readNDX().filter(r => r && r.date && r.slug && r.rel && daysSince(r.date) <= 90);
-  if (!ndx.length) { console.log('no recent evidence; skip'); return; }
+  const ndxRaw = readNDX().filter(r => r && r.date && r.slug && r.rel && daysSince(r.date) <= 90);
+  if (!ndxRaw.length) { console.log('no recent evidence; skip'); return; }
 
-  // 读取材料性（可选）
   const matMap = readMateriality();
 
-  // 将 evidence JSON 增强字段塞回记录（sha256 / commit / proof_url / diff excerpts / processors）
-  const recs = ndx.map(r => {
-    const json = safeReadJSON(r.rel);
-    const sha256 = json?.sha256 || json?.fingerprint || r.hash || '';
-    const commit  = r.commit  || json?.commit  || '';
+  // 将 evidence JSON 的安全字段回填；任何 run_url 一概忽略
+  const recs = ndxRaw.map(r => {
+    const json = safeReadJSON(r.rel) || {};
+    const sha256 = json.sha256 || json.fingerprint || r.hash || '';
+    const commit  = r.commit || json.commit || '';
 
-    // 只产生对外可见的 proof_url；绝不透出 run_url
-    const proof_url = json?.proof_url || buildProofFromRel(r.rel);
+    // 只产生“站内快照” proof_url
+    const proof_url = safeProof(json.proof_url) || buildProofFromRel(r.rel);
 
-    const diff_before = json?.diff_excerpt_before || '';
-    const diff_after  = json?.diff_excerpt_after  || '';
-    const processors = Array.isArray(json?.processors) ? json.processors.slice(0,5).map(String) : [];
+    const diff_before = (json.diff_excerpt_before || '').toString();
+    const diff_after  = (json.diff_excerpt_after  || '').toString();
+    const processors = Array.isArray(json.processors) ? json.processors.slice(0,5).map(String) : [];
+
     return { ...r, sha256, commit, proof_url, diff_excerpt_before: diff_before, diff_excerpt_after: diff_after, processors };
   });
 
@@ -287,39 +276,36 @@ ${ctas}
     byVendor.set(r.slug, arr);
   }
 
-  // 只渲染前 50（按证据数降序）
+  // 仅渲染证据数 Top 50
   const top = [...byVendor.entries()].sort((a,b)=>b[1].length - a[1].length).slice(0,50);
 
   const base = path.join(REPORT_ROOT, CUR);
   ensureDir(base);
 
   for (const [vendor, arr0] of top) {
-    // 按日期排序
     const arr = arr0.slice().sort((a,b)=>a.date.localeCompare(b.date));
 
-    // 材料性
     const matInfo = matMap.get(vendor) || fallbackMateriality(arr);
 
-    // Verified 徽章（取最近一个非零 hash/sha256），提供本地 snapshot 链接
+    // Verified（最近一个非零 hash），仅附“snapshot”链接
     let verifiedBadge = '';
     const verified = [...arr].reverse().find(x => !isZeroHash(x.sha256||x.hash));
     if (verified) {
       const h8 = String(verified.sha256 || verified.hash).slice(0,8);
       const commitShort = verified.commit ? String(verified.commit).slice(0,7) : '';
-      const snap = verified.proof_url ? `<a href="${escapeHtml(verified.proof_url)}" target="_blank" rel="noopener">snapshot</a>` : '';
+      const snap = verified.proof_url ? `<a href="${escapeHtml(verified.proof_url)}" target="_blank" rel="noopener nofollow">snapshot</a>` : '';
       verifiedBadge = `Verified • #${escapeHtml(h8)}${commitShort?(' • '+escapeHtml(commitShort)) : ''}${snap?(' • '+snap):''}`;
     }
 
-    // Subprocessor “Also see” 链接（聚合去重）
+    // Also see（Subprocessors）
     const processors = new Set();
     for (const r of arr) {
       if ((r.type||'').toLowerCase().includes('subprocessor')) {
         (r.processors||[]).forEach(p => processors.add(p));
       }
     }
-    const alsoSeeLinks = [...processors].slice(0,5); // 最多展示 5 个
+    const alsoSeeLinks = [...processors].slice(0,5);
 
-    // 渲染
     const outDir = path.join(base, vendor);
     ensureDir(outDir);
     const html = renderPack(vendor, arr, matInfo, alsoSeeLinks, verifiedBadge);
