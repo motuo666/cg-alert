@@ -5,15 +5,26 @@ on:
   schedule:
     - cron: "17 */3 * * *"  # 每 3 小时（UTC）
 
+# 只给必须权限
 permissions:
   contents: write
+
+# 避免并发轮询互相覆盖
+concurrency:
+  group: public-change-poller
+  cancel-in-progress: true
 
 jobs:
   poll:
     runs-on: ubuntu-latest
     env:
+      # 站点根（用于生成外链、RSS 等）。如未配置，脚本内会兜底。
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+      # PROOF_BASE 提供给 build_change_pack.js 使用，指向你站内快照目录
+      PROOF_BASE: ${{ vars.SITE_ORIGIN }}/reports/proof
+      # 保留页面正文，便于哈希/差异计算
       POLL_SAVE_BODY: "1"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,49 +33,72 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: |
           npm ci || npm i
 
-      - name: Poll & Build Change Packs
+      # ========== 采集 & 预处理 ==========
+      - name: Poll public endpoints & normalize
         run: |
           set -euo pipefail
-          # 确保保存 body（hash 计算依赖）
-          export POLL_SAVE_BODY="${POLL_SAVE_BODY:-1}"
           node scripts/poll_public_endpoints.js
           node scripts/normalize_evidence.js
           node scripts/evidence_enrich_provenance.js
           node scripts/extract_diff_excerpt.js
           node scripts/materiality_score.js
           node scripts/build_evidence_index.js
+
+      # ========== 先修 ==========
+      # 1) 去除证据中的内部 run_url 等敏感字段
+      - name: Redact internal fields in evidence
+        run: |
+          node scripts/redact_public_fields.js
+
+      # 2) 由每个 evidence 生成站内快照页（Proof 列将指向这些页面）
+      - name: Build local proof snapshots
+        run: |
+          node scripts/build_proof_from_evidence.js
+
+      # （可选）一次性把历史页面中的 GitHub run 链接清理掉
+      - name: Sanitize legacy report pages (remove GitHub run links)
+        run: |
+          node scripts/sanitize_reports.js || true
+
+      # ========== 再展示 ==========
+      - name: Build change packs & monthly rollups
+        run: |
+          set -euo pipefail
+          # 注意：build_change_pack.js 已改为优先使用 PROOF_BASE/snapshot 链接
           node scripts/build_change_pack.js
           node scripts/build_who_uses.js
           node scripts/build_updates.js
           node scripts/monthly_checksum.js
 
       - name: Public index / sitemap / RSS
-        # 不在 env 里做表达式回退，默认值在脚本内处理
         env:
           SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
         run: |
           node scripts/generate_reports_index.js
           node scripts/generate_sitemap_rss.js
 
+      # ========== 日报（可选，不阻断） ==========
       - name: Daily Ops snapshot (UTC)
         run: |
           node scripts/daily_ops_report.js || true
           node scripts/fix_sent_today.js || true
           if [ -f artifacts/daily_ops.json ]; then
-            echo "### Poller Summary (UTC)" >> "$GITHUB_STEP_SUMMARY"
+            echo "## Poller Summary (UTC)" >> "$GITHUB_STEP_SUMMARY"
             cat artifacts/daily_ops.json >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # ========== 提交 ==========
       - name: Commit changes (if any)
         run: |
           git add -A reports public data artifacts || true
           if [ -n "$(git status --porcelain)" ]; then
-            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "poller: packs+index+sitemap/rss"
+            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "poller: redact+proof+packs+index+sitemap/rss"
             git pull --rebase --autostash || true
             git push
           else
