@@ -1,12 +1,8 @@
 #!/usr/bin/env node
-/**
- * build_proof_from_evidence.js
- * 将 evidence/**/*.json 生成“对外可见”的快照页，并产出 vendor+月份索引页。
- * 还会写入 artifacts/proof_map.json 供后续替换器使用。
- *
- * 环境变量：
- *   PROOF_BASE  例如 https://www.cg-alert.com/reports/proof  （仅用于 <link rel="canonical">）
- */
+// build_proof_from_evidence.js
+// 功能：将 evidence/**/*.json 生成站内快照页，产出 vendor+月份索引；写出 artifacts/proof_map.json。
+// 环境变量：PROOF_BASE（可选），如 https://www.cg-alert.com/reports/proof ，用于 canonical。
+
 const fs = require('fs');
 const path = require('path');
 
@@ -29,14 +25,10 @@ function walk(dir, acc = []) {
 function readJSON(fp){ try{ return JSON.parse(fs.readFileSync(fp,'utf8')); }catch{ return null; } }
 function ensureDir(d){ fs.mkdirSync(d, { recursive:true }); }
 function slug(s){ return (s||'').toString().trim().toLowerCase().replace(/[^a-z0-9\-_.]+/g, '-').replace(/-+/g,'-').replace(/^-|-$/g,''); }
-function isoDate(d){ return d ? new Date(d).toISOString() : ''; }
-function getHostFromURL(u){
-  try{ return new URL(u).hostname.toLowerCase(); }catch{ return ''; }
-}
+function getHostFromURL(u){ try{ return new URL(u).hostname.toLowerCase(); }catch{ return ''; } }
 function inferVendor(fp, j){
   return (j && (j.vendor||j.domain||getHostFromURL(j.url))) ||
-         fp.split(path.sep).slice(-3)[0] || // evidence/<vendor>/<maybe-ym>/file.json
-         'unknown';
+         fp.split(path.sep).slice(-3)[0] || 'unknown';
 }
 function ymFromJson(j, fp){
   const d = j?.observed_at || j?.fetched_at || '';
@@ -45,6 +37,9 @@ function ymFromJson(j, fp){
   return m ? m[1] : 'unknown';
 }
 function baseNameNoExt(fp){ return path.basename(fp).replace(/\.json$/,''); }
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
 
 function buildHTML(vendor, ym, j, canonPathRel){
   const t = j?.title || j?.page_title || j?.url || `${vendor} snapshot`;
@@ -80,54 +75,8 @@ a{color:#2563eb;text-decoration:none}a:hover{text-decoration:underline}
   <div class="kv"><div>Source URL</div><div>${src ? `<a href="${escapeAttr(src)}" target="_blank" rel="noopener">Open</a>` : '—'}</div></div>
   <p><small>Snapshot generated from evidence JSON. Private pipeline metadata (like run_url) is stripped.</small></p>
 </div>
-
 ${j?.excerpt ? `<div class="card"><h3>Excerpt</h3><pre>${escapeHtml(j.excerpt)}</pre></div>` : ''}
-
 </body></html>`;
-}
-
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-function escapeAttr(s){ return escapeHtml(s).replace(/"/g,'&quot;'); }
-
-function main(){
-  const files = walk(EVD_DIR);
-  const map = {};
-  let count = 0;
-
-  for (const fp of files){
-    const j = readJSON(fp);
-    if (!j) continue;
-
-    // 生成快照输出路径
-    const vendor = slug(inferVendor(fp, j));
-    const ym = ymFromJson(j, fp);
-    const name = slug(baseNameNoExt(fp)) || 'item';
-
-    const outDir = path.join(OUT_ROOT, vendor, ym);
-    ensureDir(outDir);
-    const outHtml = path.join(outDir, name + '.html');
-
-    // 页面
-    const relForCanonical = ['reports','proof',vendor,ym,(name + '.html')].join('/');
-    const html = buildHTML(vendor, ym, j, relForCanonical);
-    fs.writeFileSync(outHtml, html, 'utf8');
-
-    // 记录映射（便于后续替换）
-    const key = path.relative(EVD_DIR, fp).replace(/\\/g,'/');
-    map[key] = {
-      vendor, ym, file: (vendor + '/' + ym + '/' + name + '.html')
-    };
-    count++;
-  }
-
-  // 写映射
-  ensureDir(ART_DIR);
-  fs.writeFileSync(MAP_FILE, JSON.stringify(map, null, 2));
-
-  // 生成 vendor+月份索引页
-  buildIndexes();
-
-  console.log(`proof snapshots built: ${count}, map=${path.relative(ROOT, MAP_FILE)}`);
 }
 
 function buildIndexes(){
@@ -138,7 +87,6 @@ function buildIndexes(){
     for (const ym of fs.readdirSync(vdir)){
       const d = path.join(vdir, ym);
       if (!fs.statSync(d).isDirectory()) continue;
-
       const items = fs.readdirSync(d).filter(f => f.endsWith('.html')).sort();
       const list = items.map(f => `<li><a href="./${f}" target="_blank" rel="noopener">${f}</a></li>`).join('\n');
 
@@ -158,6 +106,39 @@ ${canonical ? `<link rel="canonical" href="${canonical}">` : ''}
       fs.writeFileSync(path.join(d,'index.html'), html, 'utf8');
     }
   }
+}
+
+function main(){
+  const files = walk(EVD_DIR);
+  const map = {};
+  let count = 0;
+
+  for (const fp of files){
+    const j = readJSON(fp);
+    if (!j) continue;
+
+    const vendor = slug(inferVendor(fp, j));
+    const ym = ymFromJson(j, fp);
+    const name = slug(baseNameNoExt(fp)) || 'item';
+
+    const outDir = path.join(OUT_ROOT, vendor, ym);
+    ensureDir(outDir);
+    const outHtml = path.join(outDir, name + '.html');
+
+    const relForCanonical = ['reports','proof',vendor,ym,(name + '.html')].join('/');
+    const html = buildHTML(vendor, ym, j, relForCanonical);
+    fs.writeFileSync(outHtml, html, 'utf8');
+
+    const key = path.relative(EVD_DIR, fp).replace(/\\/g,'/');
+    map[key] = { vendor, ym, file: `${vendor}/${ym}/${name}.html` };
+    count++;
+  }
+
+  ensureDir(ART_DIR);
+  fs.writeFileSync(MAP_FILE, JSON.stringify(map, null, 2));
+
+  buildIndexes();
+  console.log(`proof snapshots built: ${count}, map=${path.relative(ROOT, MAP_FILE)}`);
 }
 
 main();
