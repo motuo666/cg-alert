@@ -1,0 +1,45 @@
+name: one-off-fix
+on:
+  workflow_dispatch: {}
+
+jobs:
+  migrate-proof-to-snapshots:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci || npm i
+
+      # 先“修”
+      - name: Redact internal fields (remove run_url etc.)
+        run: node scripts/redact_public_fields.js || true
+
+      - name: Build local proof snapshots
+        run: node scripts/build_proof_from_evidence.js || true
+        env:
+          PROOF_BASE: https://www.cg-alert.com/reports/proof
+
+      - name: Sanitize legacy report pages
+        run: node scripts/sanitize_reports.js || true
+
+      # 再“展示”
+      - name: Rebuild change pages (Proof -> snapshot)
+        run: node scripts/build_change_pack.js
+
+      # 提交变更
+      - name: Commit & push changes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/ evidence/ artifacts/ data/ || true
+          git commit -m "one-off: migrate Proof to site snapshots; redact run_url; sanitize pages" || echo "Nothing to commit"
+          git push
