@@ -1,16 +1,31 @@
 name: Auto Acceptance
+
 on:
   workflow_dispatch:
   schedule:
     - cron: "10 0 * * *"  # 每日 00:10 UTC
 
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-accept-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   check:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TZ: UTC
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
       - name: Install deps
         run: npm ci || npm i
@@ -23,14 +38,15 @@ jobs:
           node scripts/fix_sent_today.js || true
           test -f artifacts/daily_ops.json && echo "snapshot_ok=1" || echo "snapshot_ok=0"
 
-      # 2) 执行验收，脚本会生成 artifacts/acceptance.md + acceptance.json 并打印到控制台
+      # 2) 执行验收（脚本会生成 artifacts/acceptance.md / acceptance.json 并打印到控制台）
       - name: Acceptance Check (400k cadence)
         run: |
           set -euo pipefail
           node scripts/acceptance_check.js
 
-      # 3) 最终汇总写入 Step Summary（即便上一步没有输出，也用兜底文案）
+      # 3) 最终汇总写入 Step Summary（即便上一步失败也展示）
       - name: Step Summary (final)
+        if: always()
         run: |
           set -euo pipefail
           echo "## Daily Ops Snapshot (UTC)" >> "$GITHUB_STEP_SUMMARY"
@@ -46,3 +62,15 @@ jobs:
           else
             echo "_acceptance.md missing — check acceptance_check.js execution_" >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      # 可选：把结果打包留存
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auto-accept-${{ github.run_id }}
+          path: |
+            artifacts/daily_ops.json
+            artifacts/acceptance.md
+            artifacts/acceptance.json
+          if-no-files-found: warn
