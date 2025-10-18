@@ -19,3 +19,97 @@ ts,email,stage,status,subject
 2025-10-17T16:32:37Z,"security@snowflake.com","[Evidence] snowflake.com changed evidence/snowflake.com/2025-10-13-Pricing-c426ed57-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/snowflake.com/"
 2025-10-17T16:32:37Z,"security@stripe.com","[Evidence] stripe.com changed evidence/stripe.com/2025-10-13-DPA-9fe8a7d5-75878227.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/stripe.com/"
 2025-10-17T16:32:37Z,"security@twilio.com","[Evidence] twilio.com changed evidence/twilio.com/2025-10-13-Pricing-b47f2efc-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/twilio.com/"
+2025-10-18T03:49:12.557Z,manningtopps@gmail.com,Your Co,slack.com
+2025-10-18T03:49:13.067Z,security@auth0.com,auth0,auth0.com
+2025-10-18T03:49:13.554Z,security@cloudflare.com,cloudflare,cloudflare.com
+2025-10-18T03:49:14.041Z,security@datadoghq.com,datadog,datadoghq.com
+2025-10-18T03:49:14.535Z,security@github.com,github,github.com
+2025-10-18T03:49:15.021Z,security@notion.so,notion,notion.so
+2025-10-18T03:49:15.503Z,security@slack.com,slack,slack.com
+2025-10-18T03:49:15.988Z,security@snowflake.com,snowflake,snowflake.com
+2025-10-18T03:49:16.470Z,security@stripe.com,stripe,stripe.com
+2025-10-18T03:49:16.956Z,security@twilio.com,twilio,twilio.com
+2025-10-18T03:49:17.570Z,manningtopps@gmail.com,Your Co,slack.com
+2025-10-18T03:49:18.060Z,security@auth0.com,auth0,auth0.com
+2025-10-18T03:49:18.546Z,compliance@auth0.com,auth0,auth0.com
+2025-10-18T03:49:19.026Z,privacy@auth0.com,auth0,auth0.com
+2025-10-18T03:49:19.513Z,legal@auth0.com,auth0,auth0.com
+2025-10-18T03:49:20.000Z,security@cloudflare.com,cloudflare,cloudflare.com
+2025-10-18T03:49:20.484Z,compliance@cloudflare.com,cloudflare,cloudflare.com
+2025-10-18T03:49:20.966Z,privacy@cloudflare.com,cloudflare,cloudflare.com
+2025-10-18T03:49:21.453Z,legal@cloudflare.com,cloudflare,cloudflare.com
+2025-10-18T03:49:21.933Z,security@datadoghq.com,datadog,datadoghq.com
+2025-10-18T03:49:22.419Z,compliance@datadoghq.com,datadog,datadoghq.com
+2025-10-18T03:49:22.903Z,privacy@datadoghq.com,datadog,datadoghq.com
+2025-10-18T03:49:23.388Z,legal@datadoghq.com,datadog,datadoghq.com
+2025-10-18T03:49:23.872Z,security@github.com,github,github.com
+2025-10-18T03:49:24.358Z,compliance@github.com,github,github.com
+2025-10-18T03:49:24.844Z,privacy@github.com,github,github.com
+2025-10-18T03:49:25.327Z,cto@github.com,github,github.com
+2025-10-18T03:49:25.816Z,security@notion.so,notion,notion.so
+2025-10-18T03:49:26.301Z,compliance@notion.so,notion,notion.so
+2025-10-18T03:49:26.784Z,privacy@notion.so,notion,notion.so
+2025-10-18T03:49:27.267Z,legal@notion.so,notion,notion.so
+2025-10-18T03:49:27.755Z,security@slack.com,slack,slack.com
+2025-10-18T03:49:28.241Z,compliance@slack.com,slack,slack.com
+2025-10-18T03:49:28.725Z,privacy@slack.com,slack,slack.com
+2025-10-18T03:49:29.205Z,legal@slack.com,slack,slack.com
+2025-10-18T03:49:29.688Z,security@snowflake.com,snowflake,snowflake.com
+2025-10-18T03:49:30.176Z,compliance@snowflake.com,snowflake,snowflake.com
+2025-10-18T03:49:30.664Z,privacy@snowflake.com,snowflake,snowflake.com
+2025-10-18T03:49:31.151Z,legal@snowflake.com,snowflake,snowflake.com
+2025-10-18T03:49:31.632Z,security@stripe.com,stripe,stripe.com
+2025-10-18T03:49:32.115Z,compliance@stripe.com,stripe,stripe.com
+2025-10-18T03:49:32.603Z,privacy@stripe.com,stripe,stripe.com
+2025-10-18T03:49:33.088Z,legal@stripe.com,stripe,stripe.com
+2025-10-18T03:49:33.576Z,security@twilio.com,twilio,twilio.com
+2025-10-18T03:49:34.061Z,compliance@twilio.com,twilio,twilio.com
+2025-10-18T03:49:34.608Z,privacy@twilio.com,twilio,twilio.com
+2025-10-18T03:49:35.093Z,legal@twilio.com,twilio,twilio.com
+2025-10-18T03:49:35.163Z,"manningtopps@gmail.com","[Evidence] slack.com changed evidence/slack.com/2025-10-13-Pricing-0ca9c009-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/slack.com/"
+2025-10-18T03:49:35.164Z,"security@auth0.com","[Evidence] auth0.com changed evidence/auth0.com/2025-10-13-Pricing-3669ba44-82de6426.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/auth0.com/"
+2025-10-18T03:49:35.164Z,"security@cloudflare.com","[Evidence] cloudflare.com changed evidence/cloudflare.com/2025-10-13-Pricing-19d88464-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/cloudflare.com/"
+2025-10-18T03:49:35.164Z,"security@datadoghq.com","[Evidence] datadoghq.com changed evidence/datadoghq.com/2025-10-13-Pricing-7134614d-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/datadoghq.com/"
+2025-10-18T03:49:35.164Z,"security@github.com","[Evidence] github.com changed evidence/github.com/2025-10-13-DPA-96c6c691-0019dfc4.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/github.com/"
+2025-10-18T03:49:35.164Z,"security@notion.so","[Evidence] notion.so changed evidence/notion.so/2025-10-13-Pricing-85b103b9-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/notion.so/"
+2025-10-18T03:49:35.164Z,"security@slack.com","[Evidence] slack.com changed evidence/slack.com/2025-10-13-Pricing-0ca9c009-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/slack.com/"
+2025-10-18T03:49:35.164Z,"security@snowflake.com","[Evidence] snowflake.com changed evidence/snowflake.com/2025-10-13-Pricing-c426ed57-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/snowflake.com/"
+2025-10-18T03:49:35.164Z,"security@stripe.com","[Evidence] stripe.com changed evidence/stripe.com/2025-10-13-DPA-9fe8a7d5-75878227.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/stripe.com/"
+2025-10-18T03:49:35.164Z,"security@twilio.com","[Evidence] twilio.com changed evidence/twilio.com/2025-10-13-Pricing-b47f2efc-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/twilio.com/"
+2025-10-18T03:49:35.197Z,"manningtopps@gmail.com","[Evidence] slack.com changed evidence/slack.com/2025-10-13-Pricing-0ca9c009-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/slack.com/"
+2025-10-18T03:49:35.197Z,"security@auth0.com","[Evidence] auth0.com changed evidence/auth0.com/2025-10-13-Pricing-3669ba44-82de6426.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/auth0.com/"
+2025-10-18T03:49:35.197Z,"compliance@auth0.com","[Evidence] auth0.com changed evidence/auth0.com/2025-10-13-Pricing-3669ba44-82de6426.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/auth0.com/"
+2025-10-18T03:49:35.197Z,"privacy@auth0.com","[Evidence] auth0.com changed evidence/auth0.com/2025-10-13-Pricing-3669ba44-82de6426.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/auth0.com/"
+2025-10-18T03:49:35.197Z,"legal@auth0.com","[Evidence] auth0.com changed evidence/auth0.com/2025-10-13-Pricing-3669ba44-82de6426.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/auth0.com/"
+2025-10-18T03:49:35.197Z,"security@cloudflare.com","[Evidence] cloudflare.com changed evidence/cloudflare.com/2025-10-13-Pricing-19d88464-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/cloudflare.com/"
+2025-10-18T03:49:35.197Z,"compliance@cloudflare.com","[Evidence] cloudflare.com changed evidence/cloudflare.com/2025-10-13-Pricing-19d88464-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/cloudflare.com/"
+2025-10-18T03:49:35.197Z,"privacy@cloudflare.com","[Evidence] cloudflare.com changed evidence/cloudflare.com/2025-10-13-Pricing-19d88464-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/cloudflare.com/"
+2025-10-18T03:49:35.197Z,"legal@cloudflare.com","[Evidence] cloudflare.com changed evidence/cloudflare.com/2025-10-13-Pricing-19d88464-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/cloudflare.com/"
+2025-10-18T03:49:35.197Z,"security@datadoghq.com","[Evidence] datadoghq.com changed evidence/datadoghq.com/2025-10-13-Pricing-7134614d-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/datadoghq.com/"
+2025-10-18T03:49:35.197Z,"compliance@datadoghq.com","[Evidence] datadoghq.com changed evidence/datadoghq.com/2025-10-13-Pricing-7134614d-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/datadoghq.com/"
+2025-10-18T03:49:35.197Z,"privacy@datadoghq.com","[Evidence] datadoghq.com changed evidence/datadoghq.com/2025-10-13-Pricing-7134614d-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/datadoghq.com/"
+2025-10-18T03:49:35.197Z,"legal@datadoghq.com","[Evidence] datadoghq.com changed evidence/datadoghq.com/2025-10-13-Pricing-7134614d-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/datadoghq.com/"
+2025-10-18T03:49:35.197Z,"security@github.com","[Evidence] github.com changed evidence/github.com/2025-10-13-DPA-96c6c691-0019dfc4.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/github.com/"
+2025-10-18T03:49:35.197Z,"compliance@github.com","[Evidence] github.com changed evidence/github.com/2025-10-13-DPA-96c6c691-0019dfc4.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/github.com/"
+2025-10-18T03:49:35.197Z,"privacy@github.com","[Evidence] github.com changed evidence/github.com/2025-10-13-DPA-96c6c691-0019dfc4.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/github.com/"
+2025-10-18T03:49:35.197Z,"cto@github.com","[Evidence] github.com changed evidence/github.com/2025-10-13-DPA-96c6c691-0019dfc4.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/github.com/"
+2025-10-18T03:49:35.197Z,"security@notion.so","[Evidence] notion.so changed evidence/notion.so/2025-10-13-Pricing-85b103b9-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/notion.so/"
+2025-10-18T03:49:35.197Z,"compliance@notion.so","[Evidence] notion.so changed evidence/notion.so/2025-10-13-Pricing-85b103b9-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/notion.so/"
+2025-10-18T03:49:35.197Z,"privacy@notion.so","[Evidence] notion.so changed evidence/notion.so/2025-10-13-Pricing-85b103b9-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/notion.so/"
+2025-10-18T03:49:35.197Z,"legal@notion.so","[Evidence] notion.so changed evidence/notion.so/2025-10-13-Pricing-85b103b9-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/notion.so/"
+2025-10-18T03:49:35.198Z,"security@slack.com","[Evidence] slack.com changed evidence/slack.com/2025-10-13-Pricing-0ca9c009-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/slack.com/"
+2025-10-18T03:49:35.198Z,"compliance@slack.com","[Evidence] slack.com changed evidence/slack.com/2025-10-13-Pricing-0ca9c009-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/slack.com/"
+2025-10-18T03:49:35.198Z,"privacy@slack.com","[Evidence] slack.com changed evidence/slack.com/2025-10-13-Pricing-0ca9c009-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/slack.com/"
+2025-10-18T03:49:35.198Z,"legal@slack.com","[Evidence] slack.com changed evidence/slack.com/2025-10-13-Pricing-0ca9c009-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/slack.com/"
+2025-10-18T03:49:35.198Z,"security@snowflake.com","[Evidence] snowflake.com changed evidence/snowflake.com/2025-10-13-Pricing-c426ed57-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/snowflake.com/"
+2025-10-18T03:49:35.198Z,"compliance@snowflake.com","[Evidence] snowflake.com changed evidence/snowflake.com/2025-10-13-Pricing-c426ed57-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/snowflake.com/"
+2025-10-18T03:49:35.198Z,"privacy@snowflake.com","[Evidence] snowflake.com changed evidence/snowflake.com/2025-10-13-Pricing-c426ed57-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/snowflake.com/"
+2025-10-18T03:49:35.198Z,"legal@snowflake.com","[Evidence] snowflake.com changed evidence/snowflake.com/2025-10-13-Pricing-c426ed57-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/snowflake.com/"
+2025-10-18T03:49:35.198Z,"security@stripe.com","[Evidence] stripe.com changed evidence/stripe.com/2025-10-13-DPA-9fe8a7d5-75878227.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/stripe.com/"
+2025-10-18T03:49:35.198Z,"compliance@stripe.com","[Evidence] stripe.com changed evidence/stripe.com/2025-10-13-DPA-9fe8a7d5-75878227.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/stripe.com/"
+2025-10-18T03:49:35.198Z,"privacy@stripe.com","[Evidence] stripe.com changed evidence/stripe.com/2025-10-13-DPA-9fe8a7d5-75878227.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/stripe.com/"
+2025-10-18T03:49:35.198Z,"legal@stripe.com","[Evidence] stripe.com changed evidence/stripe.com/2025-10-13-DPA-9fe8a7d5-75878227.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/stripe.com/"
+2025-10-18T03:49:35.198Z,"security@twilio.com","[Evidence] twilio.com changed evidence/twilio.com/2025-10-13-Pricing-b47f2efc-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/twilio.com/"
+2025-10-18T03:49:35.198Z,"compliance@twilio.com","[Evidence] twilio.com changed evidence/twilio.com/2025-10-13-Pricing-b47f2efc-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/twilio.com/"
+2025-10-18T03:49:35.198Z,"privacy@twilio.com","[Evidence] twilio.com changed evidence/twilio.com/2025-10-13-Pricing-b47f2efc-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/twilio.com/"
+2025-10-18T03:49:35.198Z,"legal@twilio.com","[Evidence] twilio.com changed evidence/twilio.com/2025-10-13-Pricing-b47f2efc-e3b0c442.json on 2025-10-13","https://www.cg-alert.com/reports/2025-10/twilio.com/"
