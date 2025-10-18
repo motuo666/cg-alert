@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
  * 从 data/evidence.ndx 生成 Change Pack（/reports/<YYYY-MM>/<vendor>/index.html）
+ * —— no-snapshot 覆盖版 ——
  *
- * 关键点（覆盖版）：
- * - 绝不渲染/拼接 GitHub run/仓库链接（含 actions、/runs、workflow 等统统丢弃）
- * - Proof 仅指向站内快照（/reports/proof/...）；若 evidence JSON 有 proof_url 且安全，则用之；否则按本地规则推导
- * - 行分隔符统一用 split(/\r?\n/)；空行过滤
- * - 即使 evidence JSON 仍留有 run_url 字段，也不会被读取/输出
+ * 目标：
+ * - 彻底移除 “Proof/snapshot” 列与链接（不生成、不渲染）
+ * - 绝不渲染/拼接任何 GitHub run/仓库链接（含 actions、/runs、workflow 等）
+ * - 表格列固定为 5：Date / Type / Hash / Link / Excerpt
+ * - “No evidence” 行使用 colspan="5"
+ * - 其他 CTA/SEO 逻辑保持不变
  */
 
 const fs = require('fs');
@@ -22,13 +24,12 @@ const Y = NOW.getUTCFullYear();
 const M = String(NOW.getUTCMonth() + 1).padStart(2, '0');
 const CUR = `${Y}-${M}`;
 
-// 外部可配
+// 外部可配（仅用于 CTA，不影响证据渲染）
 const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 const INTAKE_FORM_URL = process.env.INTAKE_FORM_URL || '';
 const STRIPE_LINK_PORTFOLIO = process.env.STRIPE_LINK_PORTFOLIO || '';
-const PROOF_BASE = (process.env.PROOF_BASE || (ORIGIN + '/reports/proof')).replace(/\/+$/,'');
 
-// ---------- 小工具 ----------
+// ---------- 工具 ----------
 function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
 function escapeHtml(s) {
   return String(s||'')
@@ -49,26 +50,6 @@ function joinWithUTM(url, extraParams){
   const join = url.includes('?') ? '&' : '?';
   const utm = `utm_source=site&utm_medium=internal&utm_campaign=cp_${CUR}`;
   return url + join + (extraParams ? `${extraParams}&` : '') + utm;
-}
-
-// 站内快照路径：evidence/<vendor>/<file>.json → /reports/proof/<vendor>/<file>.html
-function buildProofFromRel(rel) {
-  const r = String(rel || '');
-  if (!r.startsWith('evidence/')) return '';
-  const parts = r.split('/');
-  if (parts.length < 3) return '';
-  const vendor = parts[1];
-  const base = parts.slice(2).join('/').replace(/\.json$/i, '');
-  return `${PROOF_BASE}/${vendor}/${base}.html`;
-}
-
-// 任何疑似 CI/仓库/run 的 URL 直接丢弃（避免暴露仓库）
-function safeProof(url){
-  const u = String(url||'');
-  if (!u) return '';
-  if (/(^|\/\/)github\.com/i.test(u)) return '';
-  if (/actions|\/runs?(\/|$)|\/workflows?(\/|$)|gitlab\.com|bitbucket\.org/i.test(u)) return '';
-  return u;
 }
 
 // ---------- 业务映射 ----------
@@ -99,7 +80,7 @@ function readNDX() {
         date: cols[0], slug: cols[1], type: cols[2],
         hash: cols[3], rel: cols[4],
         commit: cols[5] || '',
-        // 第 7 列可能是 run_url（内部字段），但不会用于渲染
+        // 第 7 列可能是 run_url（内部字段），但**不使用也不渲染**
         run_url_internal: cols[6] || ''
       };
     });
@@ -160,10 +141,7 @@ function renderPack(vendor, records, matInfo, alsoSeeLinks, verifiedBadge) {
     const h = String(r.sha256 || r.hash || '').toLowerCase();
     const display = isZeroHash(h) ? '&mdash;' : `<code>#${escapeHtml(h.slice(0,8))}</code>`;
 
-    // 只允许站内快照
-    const proofHref = safeProof(r.proof_url || '') || buildProofFromRel(r.rel);
-    const proof = proofHref ? `<a href="${escapeHtml(proofHref)}" target="_blank" rel="noopener nofollow">snapshot</a>` : '';
-
+    // 仅渲染站内 evidence 链接；不渲染任何 Proof/snapshot/run 相关链接
     const before = (r.diff_excerpt_before || '').toString().trim();
     const after  = (r.diff_excerpt_after  || '').toString().trim();
     const excerptTxt = (before || after) ? `${before}${after?(' → '+after):''}` : '';
@@ -175,7 +153,6 @@ function renderPack(vendor, records, matInfo, alsoSeeLinks, verifiedBadge) {
       <td>${escapeHtml(pickTopic(r.type))}</td>
       <td>${display}</td>
       <td><a href="${escapeHtml(evidenceHref)}" rel="nofollow">evidence</a></td>
-      <td>${proof}</td>
       ${excerptCell}
     </tr>`;
   }).join('');
@@ -241,10 +218,10 @@ ${also}
 <h3>Now What</h3><ul>${nowBullets.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
 <h3>Verifiable evidence</h3>
 <table>
-  <thead><tr><th>Date</th><th>Type</th><th>Hash</th><th>Link</th><th>Proof</th><th>Excerpt</th></tr></thead>
-  <tbody>${rows || '<tr><td colspan="6">No evidence available</td></tr>'}</tbody>
+  <thead><tr><th>Date</th><th>Type</th><th>Hash</th><th>Link</th><th>Excerpt</th></tr></thead>
+  <tbody>${rows || '<tr><td colspan="5">No evidence available</td></tr>'}</tbody>
 </table>
-<p class="small">“Proof” links to a stable snapshot hosted on cg-alert.com. Internal build links are never exposed.</p>
+<p class="small">Only internal evidence JSON links are shown. No build or repository links are exposed.</p>
 </body>
 </html>`;
   return html;
@@ -257,20 +234,17 @@ ${also}
 
   const matMap = readMateriality();
 
-  // 将 evidence JSON 的安全字段回填；任何 run_url 一概忽略
+  // 回填少量可用字段（绝不生成/渲染 proof / run）
   const recs = ndxRaw.map(r => {
     const json = safeReadJSON(r.rel) || {};
     const sha256 = json.sha256 || json.fingerprint || r.hash || '';
     const commit  = r.commit || json.commit || '';
 
-    // 只产生“站内快照” proof_url
-    const proof_url = safeProof(json.proof_url) || buildProofFromRel(r.rel);
-
     const diff_before = (json.diff_excerpt_before || '').toString();
     const diff_after  = (json.diff_excerpt_after  || '').toString();
     const processors = Array.isArray(json.processors) ? json.processors.slice(0,5).map(String) : [];
 
-    return { ...r, sha256, commit, proof_url, diff_excerpt_before: diff_before, diff_excerpt_after: diff_after, processors };
+    return { ...r, sha256, commit, diff_excerpt_before: diff_before, diff_excerpt_after: diff_after, processors };
   });
 
   // 分组
@@ -292,14 +266,13 @@ ${also}
 
     const matInfo = matMap.get(vendor) || fallbackMateriality(arr);
 
-    // Verified（最近一个非零 hash），仅附“snapshot”链接
+    // Verified（最近一个非零 hash），不附任何链接
     let verifiedBadge = '';
     const verified = [...arr].reverse().find(x => !isZeroHash(x.sha256||x.hash));
     if (verified) {
       const h8 = String(verified.sha256 || verified.hash).slice(0,8);
       const commitShort = verified.commit ? String(verified.commit).slice(0,7) : '';
-      const snap = verified.proof_url ? `<a href="${escapeHtml(verified.proof_url)}" target="_blank" rel="noopener nofollow">snapshot</a>` : '';
-      verifiedBadge = `Verified • #${escapeHtml(h8)}${commitShort?(' • '+escapeHtml(commitShort)) : ''}${snap?(' • '+snap):''}`;
+      verifiedBadge = `Verified • #${escapeHtml(h8)}${commitShort?(' • '+escapeHtml(commitShort)) : ''}`;
     }
 
     // Also see（Subprocessors）
