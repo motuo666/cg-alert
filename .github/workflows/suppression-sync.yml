@@ -1,10 +1,8 @@
-name: Suppression Sync (Manual)
-
+name: Suppression Sync
 on:
   workflow_dispatch:
-
-permissions:
-  contents: write
+  schedule:
+    - cron: "5 */6 * * *"   # 每 6 小时
 
 jobs:
   sync:
@@ -12,32 +10,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: 20 }
       - name: Install deps
-        run: npm ci || npm i --no-audit --no-fund || true
-
-      - name: Normalize suppression_log → 3 CSV
-        run: node scripts/normalize_suppression_logs.js
-
-      - name: Sync to leads.csv
-        run: node scripts/leads_guard.js
-
-      - name: Diagnose leaks
-        run: node scripts/diag_suppression_leaks.js | tee /tmp/leaks.txt
-
-      - name: Step summary
+        run: npm ci || npm i
+      - name: Normalize & Guard
+        run: |
+          node scripts/normalize_suppression_logs.js
+          node scripts/leads_guard.js
+      - name: Step Summary
         run: |
           echo "### Suppression Sync" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
-          cat /tmp/leaks.txt >> "$GITHUB_STEP_SUMMARY" || true
-          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Safe push
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            chmod +x scripts/git_safe_push.sh || true
-            bash scripts/git_safe_push.sh "chore: suppression normalized & synced"
-          else
-            echo "no changes to commit"
-          fi
+          echo "- unsub/bounce/complaint normalized & applied" >> "$GITHUB_STEP_SUMMARY"
