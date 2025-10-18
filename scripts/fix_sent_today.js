@@ -1,20 +1,17 @@
-// scripts/fix_sent_today.js  (CommonJS)
-const fs = require('fs');
+import fs from 'node:fs';
 
 const today = new Date().toISOString().slice(0,10); // UTC YYYY-MM-DD
-const sentCsv = 'data/sent_log.csv';
 const art = 'artifacts/daily_ops.json';
+const sentCsv = 'data/sent_log.csv';
 
 let sentToday = 0;
 if (fs.existsSync(sentCsv)) {
-  const lines = fs.readFileSync(sentCsv, 'utf8').trim().split(/\r?\n/).slice(1);
+  const lines = fs.readFileSync(sentCsv,'utf8').trim().split(/\r?\n/).slice(1);
   sentToday = lines.filter(l => l.startsWith(today)).length;
 }
 
 let obj = {};
-if (fs.existsSync(art)) {
-  try { obj = JSON.parse(fs.readFileSync(art,'utf8')); } catch {}
-}
+if (fs.existsSync(art)) { try { obj = JSON.parse(fs.readFileSync(art,'utf8')); } catch {} }
 obj.date = today;
 obj.sent_today = sentToday;
 
