@@ -33,16 +33,21 @@ jobs:
           echo "-----"
           cat /tmp/seo_inject.log
 
+      - name: Generate Sitemap and RSS
+        run: |
+          node scripts/sitemaps_full.cjs
+        working-directory: ./
+
       - name: Safe push (include vendors/updates/reports & indices)
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add -A vendors reports updates data/evidence.ndx data/materiality.csv data/vendor_catalog.csv evidence public/who-uses || true
+          git add -A vendors reports updates data/evidence.ndx data/materiality.csv data/vendor_catalog.csv evidence public/who-uses public/sitemap.xml public/rss.xml || true
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else
-            git commit -m "SEO Tighten: inject SEO + CTA [skip ci]"
+            git commit -m "SEO Tighten: inject SEO + CTA + generate Sitemap/RSS [skip ci]"
             chmod +x ./git_safe_push.sh || true
             if [ -f ./git_safe_push.sh ]; then
               ./git_safe_push.sh
