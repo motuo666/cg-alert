@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' https:; connect-src *; frame-src https://buy.stripe.com https://forms.gle; form-action 'self' https://buy.stripe.com https://forms.gle;">
+  <!-- CSP：允许表单直连 Worker；允许内联脚本；保留 Stripe/Google Forms -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https:; connect-src *; frame-src https://buy.stripe.com https://forms.gle; form-action 'self' https://buy.stripe.com https://forms.gle https://lead-gateway.manningtopps.workers.dev;">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CG Alert — Evidence-backed vendor change alerts</title>
@@ -54,13 +55,82 @@
     <div class="hero"><div class="container">
       <span class="badge">Evidence-backed · Public-source only · Low-noise filtering</span>
       <h1>Enterprise-grade vendor change alerts — with verifiable evidence</h1>
-      <!-- CG-CTA-INJECT START -->
-      <div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
-        <a id="cg-enable-alerts" class="btn" rel="nofollow" href="https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform">Enable alerts</a>
-        <a id="cg-buy-portfolio" class="btn secondary" rel="nofollow" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801">Buy Portfolio</a>
+
+      <!-- CG-CTA-INJECT START (覆盖版) -->
+      <div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <!-- 1) 直连 Worker 的表单（无 JS 也能提交） -->
+        <form id="cta" action="https://lead-gateway.manningtopps.workers.dev/form" method="POST" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input type="email" name="email" placeholder="Work email" required inputmode="email" autocomplete="email" />
+          <input type="text"  name="name"  placeholder="Your name (optional)" autocomplete="name" />
+          <!-- 追踪/来源（JS 会自动填充 utm/ref） -->
+          <input type="hidden" name="source" value="cta" />
+          <input type="hidden" name="utm_source" />
+          <input type="hidden" name="utm_medium" />
+          <input type="hidden" name="utm_campaign" />
+          <input type="hidden" name="ref" />
+          <!-- honeypot 抗机器人 -->
+          <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" />
+          <button type="submit" class="btn">Enable alerts</button>
+          <span id="cta-msg" class="faint" style="min-width:180px"></span>
+        </form>
+
+        <!-- 2) Stripe 购买按钮保留 -->
+        <a id="cg-buy-portfolio" class="btn secondary" rel="nofollow" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801" target="_blank" rel="noopener">Buy Portfolio</a>
       </div>
-      <script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-enable-alerts","cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>
+
+      <!-- UTM 透传到按钮（保留老逻辑） -->
+      <script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>
+
+      <!-- 表单无刷新增强 + UTM/ref 自动填充 -->
+      <script>
+      (function () {
+        var form = document.getElementById('cta');
+        var msg  = document.getElementById('cta-msg');
+        if (!form) return;
+
+        // 写入 utm/ref
+        try {
+          var sp = new URLSearchParams(location.search);
+          if (form.elements['utm_source'])   form.elements['utm_source'].value   = sp.get('utm_source')   || '';
+          if (form.elements['utm_medium'])   form.elements['utm_medium'].value   = sp.get('utm_medium')   || '';
+          if (form.elements['utm_campaign']) form.elements['utm_campaign'].value = sp.get('utm_campaign') || '';
+          if (form.elements['ref'])          form.elements['ref'].value          = document.referrer || '';
+        } catch (e) {}
+
+        form.addEventListener('submit', function (e) {
+          // 增强：fetch 无刷新；无 JS 时走原生 POST（也能用）
+          e.preventDefault();
+          msg.textContent = '';
+          var fd = new FormData(form);
+
+          // 简易机器人拦截（honeypot 有值则静默通过）
+          if (fd.get('website')) { msg.textContent = 'Submitted.'; return; }
+
+          var btn = form.querySelector('button[type="submit"]');
+          if (btn) btn.disabled = true;
+
+          fetch(form.action, { method: 'POST', body: fd })
+            .then(function(res){ return res.json().catch(function(){ return {}; }).then(function(data){ return {ok:res.ok, status:res.status, data:data}; });})
+            .then(function(r){
+              if (r.ok && r.data && r.data.ok) {
+                msg.style.color = '#0a0';
+                msg.textContent = "Thanks! We'll be in touch.";
+                try { form.reset(); } catch(e){}
+              } else {
+                msg.style.color = '#c00';
+                msg.textContent = 'Submit failed: ' + ((r.data && r.data.error) || r.status);
+              }
+            })
+            .catch(function(){
+              msg.style.color = '#c00';
+              msg.textContent = 'Network error, please retry.';
+            })
+            .finally(function(){ if (btn) btn.disabled = false; });
+        });
+      })();
+      </script>
       <!-- CG-CTA-INJECT END -->
+
       <p class="lead">We continuously watch your vendors’ public pages (Pricing, ToS, DPA, Subprocessors, Status) and alert only on material changes. Every alert includes a timestamped evidence card you can use in negotiations.</p>
       <p class="faint" style="margin-top:8px">Not legal advice — informational risk warnings only.</p>
       <div class="trust-row" aria-label="Trusted by functions">
@@ -176,6 +246,8 @@ Note: Evidence card is for internal negotiation — not legal advice.</pre>
       <div><a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a> · <a href="/reports/">Reports</a></div>
     </div>
   </div></div>
+
+  <!-- 导航高亮（保留） -->
   <script>
   (function(){
     var links=[].slice.call(document.querySelectorAll('.nav-links a[href^="/#"]'));
