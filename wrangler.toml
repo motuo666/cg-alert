@@ -1,0 +1,12 @@
+name = "lead-gateway"
+main = "src/worker.js"
+compatibility_date = "2025-10-19"
+
+# 允许的来源：先放开，跑通后再收紧到正式域名
+[vars]
+ALLOWED_ORIGINS = "*"
+
+# 绑定你的 KV（你给的 ID）
+kv_namespaces = [
+  { binding = "LEADS", id = "b214daf070d54636a05bc281ccdb0b11" }
+]
