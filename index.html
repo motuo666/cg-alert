@@ -12,7 +12,7 @@
   <link rel="manifest" href="/site.webmanifest">
 
   <!-- Canonical and favicon links -->
-  <link rel="canonical" href="https://www.cg-alert.com/">
+  <link rel="canonical" href="https://cg-alert.com/">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   
   <!-- Preconnect for external links -->
@@ -25,9 +25,9 @@
   <meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
   <meta property="og:description" content="We watch Pricing, ToS, DPA, Subprocessors, Status and alert only on material changes, with timestamped evidence.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.cg-alert.com/">
+  <meta property="og:url" content="https://cg-alert.com/">
   <link rel="image_src" href="/og.png">
-  <meta property="og:image" content="https://www.cg-alert.com/og.png">
+  <meta property="og:image" content="https://cg-alert.com/og.png">
   
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/styles.css">
@@ -59,7 +59,7 @@
       <!-- CG-CTA-INJECT START (覆盖版) -->
       <div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
         <!-- 1) 直连 Worker 的表单（无 JS 也能提交） -->
-        <form id="cta" action="https://lead-gateway.manningtopps.workers.dev/form" method="POST" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <form id="cta" action="https://lead-gateway.manningtopps.workers.dev/form" method="POST" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center" novalidate>
           <input type="email" name="email" placeholder="Work email" required inputmode="email" autocomplete="email" />
           <input type="text"  name="name"  placeholder="Your name (optional)" autocomplete="name" />
           <!-- 追踪/来源（JS 会自动填充 utm/ref） -->
@@ -71,7 +71,7 @@
           <!-- honeypot 抗机器人 -->
           <input type="text" name="website" style="display:none" tabindex="-1" autocomplete="off" />
           <button type="submit" class="btn">Enable alerts</button>
-          <span id="cta-msg" class="faint" style="min-width:180px"></span>
+          <span id="cta-msg" class="faint" style="min-width:220px" role="status" aria-live="polite"></span>
         </form>
 
         <!-- 2) Stripe 购买按钮保留 -->
@@ -81,7 +81,7 @@
       <!-- UTM 透传到按钮（保留老逻辑） -->
       <script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>
 
-      <!-- 表单无刷新增强 + UTM/ref 自动填充 -->
+      <!-- 表单无刷新增强 + UTM/ref 自动填充（修复 EMAIL_REQUIRED） -->
       <script>
       (function () {
         var form = document.getElementById('cta');
@@ -100,32 +100,51 @@
         form.addEventListener('submit', function (e) {
           // 增强：fetch 无刷新；无 JS 时走原生 POST（也能用）
           e.preventDefault();
+
+          // ✅ 触发 HTML5 校验（required 等）
+          if (!form.checkValidity()) { form.reportValidity(); return; }
+
+          msg.style.color = '';
           msg.textContent = '';
           var fd = new FormData(form);
 
-          // 简易机器人拦截（honeypot 有值则静默通过）
-          if (fd.get('website')) { msg.textContent = 'Submitted.'; return; }
+          // ✅ 简易机器人拦截（honeypot）
+          if (fd.get('website')) { msg.textContent = 'Submitted.'; try{form.reset();}catch(e){} return; }
+
+          // ✅ 统一 email 字段并兼容后端命名
+          var email = (fd.get('email') || '').trim().toLowerCase();
+          if (!email) { msg.style.color = '#c00'; msg.textContent = 'Please enter your email.'; return; }
+          fd.set('email', email);
+          if (!fd.get('work_email')) fd.set('work_email', email);
 
           var btn = form.querySelector('button[type="submit"]');
           if (btn) btn.disabled = true;
 
-          fetch(form.action, { method: 'POST', body: fd })
-            .then(function(res){ return res.json().catch(function(){ return {}; }).then(function(data){ return {ok:res.ok, status:res.status, data:data}; });})
-            .then(function(r){
-              if (r.ok && r.data && r.data.ok) {
-                msg.style.color = '#0a0';
-                msg.textContent = "Thanks! We'll be in touch.";
-                try { form.reset(); } catch(e){}
-              } else {
-                msg.style.color = '#c00';
-                msg.textContent = 'Submit failed: ' + ((r.data && r.data.error) || r.status);
-              }
-            })
-            .catch(function(){
+          fetch(form.action, {
+            method: 'POST',
+            body: fd,
+            headers: { 'Accept': 'application/json' }
+          })
+          .then(function(res){
+            return res.json().catch(function(){ return {}; })
+                     .then(function(data){ return {ok:res.ok, status:res.status, data:data}; });
+          })
+          .then(function(r){
+            if (r.ok && r.data && (r.data.ok || r.data.status === 'ok')) {
+              msg.style.color = '#0a0';
+              msg.textContent = "Thanks! We'll be in touch.";
+              try { form.reset(); } catch(e){}
+            } else {
               msg.style.color = '#c00';
-              msg.textContent = 'Network error, please retry.';
-            })
-            .finally(function(){ if (btn) btn.disabled = false; });
+              var code = (r.data && (r.data.error || r.data.code || r.data.message)) || r.status;
+              msg.textContent = 'Submit failed: ' + code;
+            }
+          })
+          .catch(function(){
+            msg.style.color = '#c00';
+            msg.textContent = 'Network error, please retry.';
+          })
+          .finally(function(){ if (btn) btn.disabled = false; });
         });
       })();
       </script>
@@ -252,7 +271,7 @@ Note: Evidence card is for internal negotiation — not legal advice.</pre>
   (function(){
     var links=[].slice.call(document.querySelectorAll('.nav-links a[href^="/#"]'));
     var map=new Map(links.map(function(a){return [a.getAttribute('href').slice(2),a];}));
-    if(!('IntersectionObserver'in window)) return;
+    if(!('IntersectionObserver' in window)) return;
     var obs=new IntersectionObserver(function(entries){
       entries.forEach(function(e){
         var id=e.target.id, a=map.get(id); if(!a) return;
