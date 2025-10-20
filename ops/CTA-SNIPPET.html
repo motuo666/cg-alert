@@ -1,0 +1,24 @@
+<!-- Minimal CTA form; embed in your page -->
+<form id="cta" onsubmit="submitLead(event)">
+  <input type="email" name="email" placeholder="Work email" required>
+  <input type="text" name="name" placeholder="Your name">
+  <input type="text" name="company" placeholder="Company">
+  <input type="hidden" name="_hp" value="">
+  <button type="submit">Get alerts</button>
+  <div id="cta-msg"></div>
+</form>
+<script>
+async function submitLead(e) {
+  e.preventDefault();
+  const f = e.target;
+  const data = Object.fromEntries(new FormData(f).entries());
+  const r = await fetch("https://lead-gateway.manningtopps.workers.dev/lead", {
+    method: "POST",
+    headers: { "content-type":"application/json" },
+    body: JSON.stringify(data)
+  });
+  const j = await r.json();
+  document.getElementById("cta-msg").textContent = j.ok ? "Thanks! We'll be in touch." : ("Error: " + (j.error||"fail"));
+  if (j.ok) f.reset();
+}
+</script>
