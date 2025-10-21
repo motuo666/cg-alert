@@ -1,46 +1,48 @@
 name: On Failure Notify
 on:
   workflow_run:
-    workflows: ["Daily Ops (scheduled)", "Auto Acceptance", "CTA Connectivity Probe"]
+    workflows:
+      - Daily Ops
+      - Auto Acceptance
+      - CTA Health Repair
+      - Heartbeat
+      - Programmatic SEO Pages
+      - Weekly Report
     types: [completed]
-
 permissions:
   contents: read
   issues: write
-
 jobs:
   notify:
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    if: ${{ github.event.workflow_run.conclusion != 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Open Issue
+      - name: Open GitHub Issue
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const wf = context.payload.workflow_run;
-            const title = `❗ Pipeline failure: ${wf.name} @ ${wf.head_branch} (#${wf.run_number})`;
+            const title = `❗ Pipeline failed: ${context.payload.workflow.name} @ ${context.payload.workflow_run.head_branch}`;
             const body = [
-              `Workflow: ${wf.name}`,
-              `Run: ${wf.html_url}`,
-              `Branch: ${wf.head_branch}`,
-              `Event: ${wf.event}`,
-              `Conclusion: ${wf.conclusion}`,
+              `Workflow: **${context.payload.workflow.name}**`,
+              `Run: ${context.payload.workflow_run.html_url}`,
+              `Conclusion: ${context.payload.workflow_run.conclusion}`,
+              `Event: ${context.payload.workflow_run.event}`,
               '',
-              'Auto-opened by on-failure-notify.yml'
+              'Please triage. This issue was created automatically.'
             ].join('\n');
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title,
-              body,
-              labels: ['pipeline-failure']
+              title, body, labels: ['pipeline-failure']
             });
       - name: Slack (optional)
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          set -euo pipefail
-          payload=$(jq -n --arg t "${{ github.event.workflow_run.name }}"                          --arg u "${{ github.event.workflow_run.html_url }}"                          --arg c "${{ github.event.workflow_run.conclusion }}"                          '{text: ("Workflow ""+$t+"" failed: "+$u+" ("+$c+")") }')
-          curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL" || true
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            curl -X POST -H 'Content-type: application/json' \
+              --data "$(jq -n --arg t "Pipeline failed: ${{ github.event.workflow.name }}" '{text:$t}')" \
+              "$SLACK_WEBHOOK_URL"
+          else
+            echo "No SLACK_WEBHOOK_URL set."
