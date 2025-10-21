@@ -1,20 +1,20 @@
 /**
- * scripts/generate_seo_pages.js  —— 覆盖版
+ * scripts/generate_seo_pages.js —— 覆盖版（CommonJS，无警告）
  * Programmatic SEO 落地页（稳健：无数据也不报错）
  * - 输入：artifacts/daily_ops.json（已有产物）
  * - 可选：data/vendors.json（数组：["Okta","Snowflake",...]）
  * - 输出：public/seo/**.html
- * 关键改进：
- * 1) canonical 按页面类型分别正确指向 /seo/, /seo/vendor/:slug/, /seo/month/:ym/
- * 2) vendor 名称 HTML 转义 + slug 化，防注入&非法路径
- * 3) 对缺失文件完全容错，仍然成功生成基础页
- * 4) JSON-LD 针对 vendor 页增加 about 指向具体 vendor
+ * 改进要点：
+ * 1) canonical 按页面类型分别指向 /seo/, /seo/vendor/:slug/, /seo/month/:ym/
+ * 2) vendor 名称 HTML 转义 + slug 化，防注入&非法路径；重名 slug 加短随机后缀
+ * 3) 缺失文件完全容错，仍生成基础页
+ * 4) JSON-LD 在 vendor 页增加 about 指向具体 vendor
+ * 5) 统一 CommonJS，避免 Node v20 “MODULE_TYPELESS_PACKAGE_JSON” 警告
  */
 
-import fs from 'fs';
-import path from 'path';
-import dayjs from 'dayjs';
-import { loadJSON, ensureDir, writeText, fmtDate, yyyymm } from './util.js';
+const path = require('path');
+const dayjs = require('dayjs');
+const { loadJSON, ensureDir, writeText, fmtDate, yyyymm } = require('./util');
 
 const ROOT = process.cwd();
 const OUT = path.join(ROOT, 'public', 'seo');
@@ -25,11 +25,11 @@ const origin = (process.env.SITE_ORIGIN || '').replace(/\/+$/, ''); // 去掉尾
 
 const escapeHtml = (s = '') =>
   String(s)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 // “温和” slug：保留字母数字，空格/下划线/点/斜杠转短横线，其余去除
 const slugify = (s = '') =>
@@ -79,8 +79,8 @@ const vendorsInput = loadJSON(path.join(ROOT, 'data', 'vendors.json'), []); // �
 const vendors = Array.isArray(vendorsInput) ? vendorsInput : [];
 
 const now = dayjs();
-const ym = daily?.YM || yyyymm(now);
-const k = daily?.kpi || {};
+const ym = (daily && daily.YM) || yyyymm(now);
+const k = (daily && daily.kpi) || {};
 
 // ---------- /seo/index.html ----------
 const idxBody = `
@@ -111,6 +111,7 @@ const idxBody = `
 </section>
 `;
 
+ensureDir(OUT);
 writeText(
   path.join(OUT, 'index.html'),
   layout(
@@ -153,7 +154,7 @@ if (vendors.length) {
         vDesc,
         vBody,
         `/seo/vendor/${slug}/`,
-        { about: titleName } // JSON-LD 丰富一下 vendor 语义
+        { about: titleName } // JSON-LD 丰富 vendor 语义
       )
     );
   });
@@ -173,4 +174,8 @@ writeText(
   )
 );
 
-console.log('SEO pages generated → public/seo');
+if (require.main === module) {
+  console.log('SEO pages generated → public/seo');
+}
+
+module.exports = {}; // 若被 require，不暴露 API，保持为 side-effect 脚本
