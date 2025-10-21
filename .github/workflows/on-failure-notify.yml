@@ -1,0 +1,46 @@
+name: On Failure Notify
+on:
+  workflow_run:
+    workflows: ["Daily Ops (scheduled)", "Auto Acceptance", "CTA Connectivity Probe"]
+    types: [completed]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  notify:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open Issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const wf = context.payload.workflow_run;
+            const title = `❗ Pipeline failure: ${wf.name} @ ${wf.head_branch} (#${wf.run_number})`;
+            const body = [
+              `Workflow: ${wf.name}`,
+              `Run: ${wf.html_url}`,
+              `Branch: ${wf.head_branch}`,
+              `Event: ${wf.event}`,
+              `Conclusion: ${wf.conclusion}`,
+              '',
+              'Auto-opened by on-failure-notify.yml'
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['pipeline-failure']
+            });
+      - name: Slack (optional)
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          payload=$(jq -n --arg t "${{ github.event.workflow_run.name }}"                          --arg u "${{ github.event.workflow_run.html_url }}"                          --arg c "${{ github.event.workflow_run.conclusion }}"                          '{text: ("Workflow ""+$t+"" failed: "+$u+" ("+$c+")") }')
+          curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL" || true
