@@ -1,14 +1,15 @@
 /**
- * imap_bounce_sweep.js
- * Reads IMAP inbox, finds bounces, flags CF KV leads as bounced
- * Env: IMAP_HOST, IMAP_USER, IMAP_PASS, CF_ACCOUNT_ID, KV_NAMESPACE_ID, CF_API_TOKEN
+ * imap_bounce_sweep.js (optimized)
+ * - LOOKBACK_HOURS env (default 168h) widens bounce detection window for early-stage lists
+ * - Logs counters for observability
  */
 import { ImapFlow } from "imapflow";
 import API from "./lib/cfkv.js";
 
 const {
   IMAP_HOST, IMAP_USER, IMAP_PASS,
-  CF_ACCOUNT_ID, KV_NAMESPACE_ID, CF_API_TOKEN
+  CF_ACCOUNT_ID, KV_NAMESPACE_ID, CF_API_TOKEN,
+  LOOKBACK_HOURS
 } = process.env;
 
 if (!IMAP_HOST || !IMAP_USER || !IMAP_PASS) throw new Error("Missing IMAP_*");
@@ -25,20 +26,22 @@ function extractEmails(text) {
 }
 
 async function main() {
+  const lookbackH = Number(LOOKBACK_HOURS || 168);
+  const since = new Date(Date.now() - 1000 * 60 * 60 * lookbackH);
+
   const client = new ImapFlow({
-    host: IMAP_HOST,
-    port: 993,
-    secure: true,
+    host: IMAP_HOST, port: 993, secure: true,
     auth: { user: IMAP_USER, pass: IMAP_PASS },
   });
   await client.connect();
   const lock = await client.getMailboxLock("INBOX");
+
+  let totalChecked = 0, totalSuppressed = 0;
+
   try {
     const lastUidText = await kv.get(META_KEY);
     const lastUid = lastUidText ? Number(lastUidText) : 0;
 
-    // search recent possible bounces
-    const since = new Date(Date.now() - 1000 * 60 * 60 * 72); // 72h
     const list = await client.search(
       { since, from: ["MAILER-DAEMON", "postmaster"], subject: ["Undelivered", "delivery", "returned", "failure", "bounced"] },
       { uid: true }
@@ -50,6 +53,7 @@ async function main() {
       const chunks = [];
       for await (const ch of msg.content) chunks.push(Buffer.isBuffer(ch) ? ch : Buffer.from(ch));
       const raw = Buffer.concat(chunks).toString("utf-8");
+      totalChecked++;
 
       const emails = extractEmails(raw);
       for (const e of emails) {
@@ -61,7 +65,7 @@ async function main() {
         lead.status = "suppressed";
         lead.updated_at = new Date().toISOString();
         await kv.put(key, JSON.stringify(lead));
-        console.log("Suppressed bounced:", e);
+        totalSuppressed++;
       }
       await kv.put(META_KEY, String(uid));
     }
@@ -69,6 +73,8 @@ async function main() {
     lock.release();
     await client.logout();
   }
+
+  console.log(JSON.stringify({ ok: true, lookback_h: Number(LOOKBACK_HOURS || 168), total_checked: totalChecked, total_suppressed: totalSuppressed }));
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
