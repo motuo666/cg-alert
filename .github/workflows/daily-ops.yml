@@ -1,25 +1,35 @@
-name: Daily Ops
+name: Daily Ops (scheduled)
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
   schedule:
-    - cron: "0 0 * * *"   # 每日 00:00 UTC
+    - cron: "12 * * * *"  # hourly at :12 UTC
+permissions:
+  contents: read
 
 jobs:
-  run:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm i
-      - name: Daily Ops Report
-        run: node scripts/daily_ops_report.js || true
-      - name: Correct sent_today (UTC)
+        with:
+          node-version: 20
+      - name: Install deps (if package.json exists)
         run: |
-          node scripts/fix_sent_today.js
-          echo "### Corrections (UTC)" >> "$GITHUB_STEP_SUMMARY"
-          cat artifacts/daily_ops.json >> "$GITHUB_STEP_SUMMARY"
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with: { name: daily_ops, path: artifacts/daily_ops.json, if-no-files-found: warn }
+          if [ -f package.json ]; then npm ci || npm i; fi
+      - name: Daily ops snapshot
+        run: |
+          set -euo pipefail
+          node scripts/daily_ops_report.js || true
+          node scripts/fix_sent_today.js || true
+          echo 'snapshot_ok='$(test -f artifacts/daily_ops.json && echo 1 || echo 0) >> $GITHUB_OUTPUT
+      - name: Append Job Summary
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "## Daily Ops Snapshot (UTC)" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f artifacts/daily_ops.json ]; then
+            cat artifacts/daily_ops.json >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo '{"note":"no daily_ops.json produced"}' >> "$GITHUB_STEP_SUMMARY"
+          fi
