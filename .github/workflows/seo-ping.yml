@@ -1,0 +1,27 @@
+name: seo-ping
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: ["main"]
+    paths:
+      - "public/**"
+      - "site/**"
+      - "pages/**"
+      - "evidence/**"
+      - "reports/**"
+      - "sitemap.xml"
+  schedule:
+    - cron: "17 3 * * *"
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Google/Bing with sitemap
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: |
+          set -e
+          curl -fsS "https://www.google.com/ping?sitemap=${SITE_ORIGIN%/}/sitemap.xml" || true
+          curl -fsS "https://www.bing.com/ping?sitemap=${SITE_ORIGIN%/}/sitemap.xml" || true
