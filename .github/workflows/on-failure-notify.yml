@@ -59,6 +59,7 @@ jobs:
             });
 
       - name: Slack (optional)
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           WF_NAME: ${{ github.event.workflow_run.name }}
@@ -66,15 +67,12 @@ jobs:
           RUN_URL: ${{ github.event.workflow_run.html_url }}
           CONCLUSION: ${{ github.event.workflow_run.conclusion }}
         run: |
-          if [ -n "$SLACK_WEBHOOK_URL" ]; then
-            text="❗ Pipeline failed: $WF_NAME @ $HEAD_BRANCH\nRun: $RUN_URL\nConclusion: $CONCLUSION"
-            # 转义为合法 JSON
-            text_esc=${text//\\/\\\\}
-            text_esc=${text_esc//\"/\\\"}
-            text_esc=${text_esc//$'\n'/\\n}
-            payload="{\"text\":\"$text_esc\"}"
-            curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL" \
-              || echo "Slack post failed"
-          else
-            echo "No SLACK_WEBHOOK_URL set. Skipping Slack notification."
-          fi
+          text="❗ Pipeline failed: $WF_NAME @ $HEAD_BRANCH
+          Run: $RUN_URL
+          Conclusion: $CONCLUSION"
+          # 转义为合法 JSON
+          text_esc=${text//\\/\\\\}
+          text_esc=${text_esc//\"/\\\"}
+          text_esc=${text_esc//$'\n'/\\n}
+          payload="{\"text\":\"$text_esc\"}"
+          curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL" || echo "Slack post failed"
