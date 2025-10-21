@@ -1,20 +1,51 @@
-import fs from 'fs';
+\
+/**
+ * fix_sent_today.js
+ * Ensures sent_today fields are present and optionally overridden.
+ * Logs: `fix_sent_today: date=YYYY-MM-DD sent_today=NN`
+ */
+const fs = require('fs');
+const path = require('path');
+
+const ART_DIR = path.join(process.cwd(), 'artifacts');
+const JSON_PATH = path.join(ART_DIR, 'daily_ops.json');
 
 function main() {
-  const p = 'artifacts/daily_ops.json';
-  if (!fs.existsSync(p)) {
-    console.log("fix_sent_today: snapshot missing, skip");
+  if (!fs.existsSync(JSON_PATH)) {
+    console.log('snapshot_ok=0');
     return;
   }
-  const s = JSON.parse(fs.readFileSync(p,'utf-8'));
-  const rootSent = typeof s.sent_today === 'number' ? s.sent_today : null;
-  if (!s.kpi) s.kpi = {};
-  const before = s.kpi.sent_today ?? 0;
-  if (typeof rootSent === 'number') {
-    s.kpi.sent_today = rootSent;
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
+  } catch {
+    console.log('snapshot_ok=0');
+    return;
   }
-  const after = s.kpi.sent_today ?? 0;
-  fs.writeFileSync(p, JSON.stringify(s, null, 2));
-  console.log(`fix_sent_today: date=${s.date} sent_today=${after}`);
+  if (!data.kpi) data.kpi = {};
+  const override = process.env.SENT_TODAY_OVERRIDE;
+  if (override && override !== '') {
+    const n = Number(override);
+    if (Number.isFinite(n)) {
+      data.kpi.sent_today = n;
+      data.sent_today = n;
+    }
+  } else {
+    // ensure consistency
+    if (typeof data.kpi.sent_today === 'number') {
+      data.sent_today = data.kpi.sent_today;
+    } else if (typeof data.sent_today === 'number') {
+      data.kpi.sent_today = data.sent_today;
+    } else {
+      data.kpi.sent_today = 0;
+      data.sent_today = 0;
+    }
+  }
+  fs.writeFileSync(JSON_PATH, JSON.stringify(data, null, 2), 'utf8');
+  const date = data.date || new Date().toISOString().slice(0,10);
+  const sent = data.kpi.sent_today ?? 0;
+  console.log(`fix_sent_today: date=${date} sent_today=${sent}`);
+  console.log('snapshot_ok=1');
 }
+
 main();
