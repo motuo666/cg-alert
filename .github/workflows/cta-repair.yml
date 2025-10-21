@@ -1,175 +1,29 @@
-name: CTA Hotpatch (vars+secrets)
-
+name: CTA Connectivity Probe
 on:
-  workflow_dispatch:
-
+  workflow_dispatch: {}
+  schedule:
+    - cron: "*/30 * * * *" # every 30 minutes
 permissions:
-  contents: write
-
+  contents: read
 jobs:
-  hotpatch:
+  probe:
     runs-on: ubuntu-latest
     env:
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || secrets.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL || secrets.INTAKE_FORM_URL || '' }}
-      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO || '' }}
-
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-
-      # 1) 预检：变量来源与是否为空（Secrets 值会被掩码）
-      - name: Preflight (show sources)
+      - name: GET site
         shell: bash
         run: |
           set -euo pipefail
-          echo "SITE_ORIGIN=${SITE_ORIGIN}"
-          echo "INTAKE from: $([[ -n '${{ vars.INTAKE_FORM_URL }}' ]] && echo vars || ([[ -n '${{ secrets.INTAKE_FORM_URL }}' ]] && echo secrets || echo empty))"
-          echo "STRIPE  from: $([[ -n '${{ vars.STRIPE_LINK_PORTFOLIO }}' ]] && echo vars || ([[ -n '${{ secrets.STRIPE_LINK_PORTFOLIO }}' ]] && echo secrets || echo empty))"
-          if [[ -z "${INTAKE_FORM_URL}${STRIPE_LINK_PORTFOLIO}" ]]; then
-            echo "::error::Both INTAKE_FORM_URL and STRIPE_LINK_PORTFOLIO are empty (neither repo Variables nor Secrets). Set them under Settings → Secrets and variables → Actions."; exit 1;
-          fi
-
-      # 2) 写入注入脚本（全仓库递归扫描 .html）
-      - name: Write seo_inject.js
+          code=$(curl -sS -o /dev/null -w "%{http_code}" "$SITE_ORIGIN" || echo 000)
+          echo "GET $SITE_ORIGIN -> $code" >> "$GITHUB_STEP_SUMMARY"
+          test "$code" -ge 200 && test "$code" -lt 400
+      - name: POST intake form (synthetic)
         shell: bash
         run: |
-          cat > seo_inject.js <<'JS'
-          #!/usr/bin/env node
-          const fs=require('fs'), path=require('path');
-          const ROOT=process.cwd();
-          const EXCLUDES=new Set(['.git','.github','node_modules','.cache']);
-          const INTAKE=process.env.INTAKE_FORM_URL||'';
-          const STRIPE=process.env.STRIPE_LINK_PORTFOLIO||'';
-          const ORIGIN=process.env.SITE_ORIGIN||'https://www.cg-alert.com';
-          let scanned=0, seoFiles=0, seoInjected=0, ctaFiles=0, ctaInjected=0;
-
-          function walk(dir){ const out=[]; for(const e of fs.readdirSync(dir,{withFileTypes:true})){
-            if(EXCLUDES.has(e.name)) continue; const p=path.join(dir,e.name);
-            if(e.isDirectory()) out.push(...walk(p));
-            else if(e.isFile() && p.endsWith('.html')) out.push(p);
-          } return out; }
-
-          function ensureSeo(html, fp){
-            let changed=false;
-            if(!/<head[^>]*>/i.test(html)||!/<\/head>/i.test(html)) return {html,changed};
-            if(!/rel=["']canonical["']/i.test(html)){
-              const rel=path.relative(ROOT,fp).replace(/\\/g,'/'); const page='/' + rel.replace(/index\.html$/i,'');
-              html=html.replace(/<\/head>/i,`  <link rel="canonical" href="${ORIGIN}${page}">\n</head>`); changed=true;
-            }
-            if(!/application\/ld\+json/i.test(html)){
-              const jsonld={"@context":"https://schema.org","@type":"WebPage","name":"CG Alert — Evidence-backed vendor change alerts","url":ORIGIN,"description":"Monitor vendor public pages (Pricing/ToS/DPA/Subprocessors/Status) and get verifiable change evidence."};
-              html=html.replace(/<\/head>/i,`  <script type="application/ld+json">${JSON.stringify(jsonld)}</script>\n</head>`); changed=true;
-            }
-            if(!/name=["']description["']/i.test(html)){
-              html=html.replace(/<\/head>/i,`  <meta name="description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals & compliance.">\n</head>`); changed=true;
-            }
-            return {html,changed};
-          }
-
-          function ctaBlock(){
-            const btns=[];
-            if(INTAKE) btns.push(`<a id="cg-enable-alerts" class="btn" rel="nofollow" href="${INTAKE}">Enable alerts</a>`);
-            if(STRIPE) btns.push(`<a id="cg-buy-portfolio" class="btn secondary" rel="nofollow" href="${STRIPE}">Buy Portfolio</a>`);
-            if(!btns.length) return '';
-            const js=`<script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-enable-alerts","cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>`;
-            return ['<!-- CG-CTA-INJECT START -->',
-                    `<div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">`,
-                    btns.join('\n'),`</div>`,js,'<!-- CG-CTA-INJECT END -->'].join('\n');
-          }
-
-          function ensureCta(html){
-            if(/CG-CTA-INJECT START/.test(html)) return {html,changed:false};
-            const block=ctaBlock(); if(!block) return {html,changed:false};
-            if(/<h1[^>]*>[\s\S]*?<\/h1>/i.test(html)){ html=html.replace(/(<h1[^>]*>[\s\S]*?<\/h1>)/i, `$1\n${block}`); return {html,changed:true}; }
-            if(/<main[^>]*>/i.test(html)){ html=html.replace(/<main[^>]*>/i, m=>`${m}\n${block}\n`); return {html,changed:true}; }
-            if(/<body[^>]*>/i.test(html)){ html=html.replace(/<body[^>]*>/i, m=>`${m}\n${block}\n`); return {html,changed:true}; }
-            return {html,changed:false};
-          }
-
-          function process(fp){
-            let html=fs.readFileSync(fp,'utf8'); let touched=false;
-            seoFiles++; const s1=ensureSeo(html,fp); if(s1.changed){html=s1.html; seoInjected++; touched=true;}
-            ctaFiles++; const s2=ensureCta(html); if(s2.changed){html=s2.html; ctaInjected++; touched=true;}
-            if(touched) fs.writeFileSync(fp, html.endsWith('\n')?html:html+'\n','utf8');
-          }
-
-          const roots=[ROOT,'vendors','updates','public','public/vendors','public/updates','site','build','dist','docs','out']
-            .map(p=>path.isAbsolute(p)?p:path.join(ROOT,p)).filter(fs.existsSync);
-
-          let files=[]; for(const r of roots) files.push(...walk(r));
-          files=Array.from(new Set(files)); scanned=files.length;
-          files.forEach(process);
-
-          console.log(`Scanned HTML files: ${scanned}`);
-          console.log(`SEO Inject - files: ${seoFiles} / injected: ${seoInjected}`);
-          console.log(`CTA Inject - files: ${ctaFiles} / injected: ${ctaInjected}`);
-          JS
-          chmod +x seo_inject.js
-
-      # 3) 禁止 HTML 被缓存
-      - name: Write _headers (no-cache for HTML)
-        run: |
-          cat > _headers <<'H'
-          /index.html
-            Cache-Control: no-cache, must-revalidate, max-age=0
-          /vendors/*
-            Cache-Control: no-cache, must-revalidate, max-age=0
-          /updates/*
-            Cache-Control: no-cache, must-revalidate, max-age=0
-          /categories/*
-            Cache-Control: no-cache, must-revalidate, max-age=0
-          /reports/*
-            Cache-Control: no-cache, must-revalidate, max-age=0
-          H
-
-      # 4) 注入并输出统计
-      - name: Inject & log
-        run: node ./seo_inject.js | tee /tmp/inject.log
-
-      # 5) 样本与断言（确保仓库里确有标记）
-      - name: Show markers (sample)
-        run: |
-          git grep -n "CG-CTA-INJECT" -- ':!node_modules' | head -n 10 || true
-      - name: Assert CTA markers exist
-        run: |
-          n=$(git grep -n "CG-CTA-INJECT" -- ':!node_modules' | wc -l || true)
-          echo "CTA markers: $n"
-          if [ "$n" -eq 0 ]; then
-            echo "::error::CTA markers not found in repo after inject"; exit 1; fi
-
-      # 6) 提交并推送（关键改动：用 git add -A .，不再枚举目录）
-      - name: Commit & push
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A .
-          echo "---- staged diff ----"
-          git diff --cached --name-status || true
-          if git diff --cached --quiet; then
-            echo "no changes to commit"
-          else
-            git commit -m "CTA hotpatch: inject CTA (vars+secrets)"
-            git pull --rebase --autostash || true
-            git push
-          fi
-
-      # 7) 软校验（仅告警）
-      - name: Post-deploy check (soft)
-        if: ${{ always() }}
-        run: |
-          PAGES="${SITE_ORIGIN}"
-          for P in "/vendors/zendesk.com/" "/updates/"; do
-            echo "check $PAGES$P"
-            if curl -fsSL "$PAGES$P?v=${{ github.sha }}" | grep -q "CG-CTA-INJECT"; then
-              echo "ok: CTA visible on $PAGES$P"
-            else
-              echo "::warning::CTA not visible on $PAGES$P (likely caching/deploy lag)"
-            fi
-          done
+          set -euo pipefail
+          payload='{"email":"probe+'$(date +%s)'@example.com","name":"Probe Bot","note":"healthcheck"}'
+          code=$(curl -sS -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" -d "$payload" "$INTAKE_FORM_URL" || echo 000)
+          echo "POST $INTAKE_FORM_URL -> $code" >> "$GITHUB_STEP_SUMMARY"
+          test "$code" -ge 200 && test "$code" -lt 400
