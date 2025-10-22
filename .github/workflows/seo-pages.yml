@@ -1,0 +1,38 @@
+name: Programmatic SEO Pages
+on:
+  schedule:
+    - cron: "30 2 * * *"   # 02:30 UTC 每天
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: seo-pages
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install deps
+        run: npm i dayjs fs-extra glob@10
+      - name: Generate SEO pages + sitemap
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+        run: |
+          node scripts/generate_seo_pages.js
+          node scripts/build_sitemap.js
+      - name: Commit SEO pages
+        run: |
+          set -e
+          git config user.name "bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add -A public/seo public/sitemap.xml
+          if git diff --staged --quiet; then
+            echo "No changes."
+          else
+            git commit -m "chore(seo): daily programmatic pages & sitemap"
+            git push
+          fi
