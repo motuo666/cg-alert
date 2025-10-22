@@ -2,15 +2,16 @@
 <html>
 <head>
   <meta charset="utf-8">
-  
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     body{font-family:system-ui,Arial;max-width:800px;margin:auto;padding:24px;line-height:1.6}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
     .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px}
     a{color:#222;text-decoration:underline}
+    .btn{display:inline-block;padding:8px 12px;border-radius:10px;border:1px solid #222;text-decoration:none}
+    .secondary{border-color:#777}
   </style>
-  
+
   <!-- CG-SEO-INJECT START -->
   <title>Who Uses — Template</title>
   <meta name="description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals &amp; compliance.">
@@ -26,20 +27,85 @@
   <meta name="twitter:title" content="Who Uses — Template">
   <meta name="twitter:description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals &amp; compliance.">
   <meta name="twitter:image" content="https://www.cg-alert.com/og/default.png?slug=_template">
-<!-- CG-SEO-INJECT END -->
+  <!-- CG-SEO-INJECT END -->
 </head>
 <body>
   <h1>Who Uses: {{NAME}}</h1>
-<!-- CG-CTA-INJECT START -->
-<div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
-<a id="cg-enable-alerts" class="btn" rel="nofollow" href="https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform">Enable alerts</a>
-<a id="cg-buy-portfolio" class="btn secondary" rel="nofollow" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801">Buy Portfolio</a>
-</div>
-<script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-enable-alerts","cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>
-<!-- CG-CTA-INJECT END -->
+
+  <!-- CG-CTA-INJECT START -->
+  <div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+    <a id="cg-enable-alerts" class="btn" rel="nofollow"
+       href="https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform">
+       Enable alerts
+    </a>
+    <!-- 统一 UTM；lid 由下方脚本在运行时自动补全 -->
+    <a id="cg-buy-portfolio" class="btn secondary" rel="nofollow"
+       href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801?utm_source=site&utm_medium=cta&utm_campaign=buy">
+       Buy Portfolio
+    </a>
+  </div>
+
   <div class="grid">
     {{LIST}}
   </div>
   <p><a href="/who-uses/">Back to index</a></p>
+
+  <!-- 确保设置/复用 cg_lead_id，并自动上报 lead（若页面含表单） -->
+  <script src="/public/js/lead.js"></script>
+
+  <!-- 统一追加页面级 UTM；给 Stripe/表单链接补 lid（避免重复参数） -->
+  <script>
+  (function(){
+    function getCookie(name){
+      var m = document.cookie.match(new RegExp('(^| )'+name+'=([^;]+)'));
+      return m ? decodeURIComponent(m[2]) : '';
+    }
+    // 合并 query：优先保留已有参数，只把缺的补上
+    function mergeParams(url, extra){
+      try{
+        var u = new URL(url, location.origin);
+        // 页面上的 utm_*（如果有）补到链接；但不覆盖链接已有值
+        var page = new URL(location.href);
+        page.searchParams.forEach(function(v,k){
+          if(/^utm_/.test(k) && !u.searchParams.has(k)){ u.searchParams.set(k,v); }
+        });
+        // 额外默认值（如 site/cta/buy）同样只在缺失时补
+        for (var k in extra){ if(!u.searchParams.has(k) && extra[k] !== '') u.searchParams.set(k, extra[k]); }
+        return u.toString();
+      }catch(e){ return url; }
+    }
+
+    var lid = getCookie('cg_lead_id'); // lead.js 已设置；若没有也不阻断
+    var buy = document.getElementById('cg-buy-portfolio');
+    if (buy && buy.href){
+      buy.href = mergeParams(buy.href, {
+        utm_source: 'site',
+        utm_medium: 'cta',
+        utm_campaign: 'buy'
+      });
+      if (lid) {
+        try {
+          var u = new URL(buy.href, location.origin);
+          if (!u.searchParams.get('lid')) u.searchParams.set('lid', lid);
+          buy.href = u.toString();
+        } catch(e){}
+      }
+    }
+
+    // 可选：给“Enable alerts”（Google Form）也带上页面级 UTM 和 lid
+    var enable = document.getElementById('cg-enable-alerts');
+    if (enable && enable.href){
+      enable.href = mergeParams(enable.href, {});
+      if (lid){
+        try{
+          var u2 = new URL(enable.href, location.origin);
+          if (!u2.searchParams.get('lid')) u2.searchParams.set('lid', lid);
+          enable.href = u2.toString();
+        }catch(e){}
+      }
+    }
+  })();
+  </script>
+  <!-- CG-CTA-INJECT END -->
 </body>
 </html>
