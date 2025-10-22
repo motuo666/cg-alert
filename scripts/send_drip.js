@@ -4,6 +4,7 @@
  * - Subject A/B via stable 0/1 bucket from lid/email
  * - Preheader + List-Unsubscribe headers
  * - Retry with backoff; lightweight per-lead stage lock
+ * - Rate limit via SEND_RATE (emails/min), default 20
  */
 
 import fs from "fs";
@@ -16,7 +17,8 @@ const {
   CF_ACCOUNT_ID, KV_NAMESPACE_ID, CF_API_TOKEN, SITE_ORIGIN,
   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM,
   REPLY_TO, BCC_TO,
-  WORKER_URL, UNSUB_HMAC_SECRET
+  WORKER_URL, UNSUB_HMAC_SECRET,
+  SEND_RATE, // 可选：每分钟发件上限，默认 20
 } = process.env;
 
 // ---- sanity checks ----
@@ -39,13 +41,14 @@ function bucket2(seed) {
 
 function pickLang(lead) {
   const e = String(lead.email || "").toLowerCase();
-  const cn = e.endsWith(".cn")
-    || /(^|_|-)cn($|_|-)/i.test(lead?.first_touch?.utm_source || "")
-    || /(^|_|-)cn($|_|-)/i.test(lead?.last_touch?.utm_source || "")
-    || /\.cn\b/i.test(lead?.first_touch?.referrer || "")
-    || /\.cn\b/i.test(lead?.last_touch?.referrer || "")
-    || /\.cn\b/i.test(lead?.first_touch?.landing_url || "")
-    || /\.cn\b/i.test(lead?.last_touch?.landing_url || "");
+  const cn =
+    e.endsWith(".cn") ||
+    /(^|_|-)cn($|_|-)/i.test(lead?.first_touch?.utm_source || "") ||
+    /(^|_|-)cn($|_|-)/i.test(lead?.last_touch?.utm_source || "") ||
+    /\.cn\b/i.test(lead?.first_touch?.referrer || "") ||
+    /\.cn\b/i.test(lead?.last_touch?.referrer || "") ||
+    /\.cn\b/i.test(lead?.first_touch?.landing_url || "") ||
+    /\.cn\b/i.test(lead?.last_touch?.landing_url || "");
   return cn ? "zh" : "en";
 }
 
@@ -79,7 +82,6 @@ function loadTemplate(relPath) {
   try {
     return fs.readFileSync(p, "utf-8");
   } catch {
-    // try zh fallback if relPath contains /en/
     if (relPath.includes("/en/")) {
       const zh = path.join("config", "email_templates", relPath.replace("/en/", "/"));
       if (fs.existsSync(zh)) {
@@ -113,22 +115,34 @@ async function withRetry(fn, tries = 3, baseMs = 300) {
   let last;
   for (let i = 0; i < tries; i++) {
     try { return await fn(); }
-    catch (e) {
-      last = e;
-      await new Promise(r => setTimeout(r, baseMs * Math.pow(1.8, i)));
-    }
+    catch (e) { last = e; await sleep(baseMs * Math.pow(1.8, i)); }
   }
   throw last;
 }
+
+// rate limit: SEND_RATE emails per minute (default 20)
+const RATE = Math.max(1, Number(SEND_RATE || "20"));
+let sentInWindow = 0;
+let windowStart = Date.now();
+async function ratelimit() {
+  sentInWindow++;
+  const elapsed = Date.now() - windowStart;
+  if (sentInWindow >= RATE) {
+    if (elapsed < 60_000) await sleep(60_000 - elapsed);
+    sentInWindow = 0; windowStart = Date.now();
+  }
+}
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 async function main() {
   let cursor;
   const batchSize = 1000;
   const sentCounters = { d0: 0, d2: 0, d7: 0 };
-  const site = SITE_ORIGIN || "https://www.cg-alert.com";
+  const site = SITE_ORIGIN || "https://cg-alert.com";
 
   while (true) {
-    const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${KV_NAMESPACE_ID}/keys` +
+    const url =
+      `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${KV_NAMESPACE_ID}/keys` +
       `?prefix=lead%3A&limit=${batchSize}${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`;
     const listRes = await fetch(url, {
       headers: { Authorization: `Bearer ${CF_API_TOKEN}` },
@@ -170,11 +184,14 @@ async function main() {
       const b = bucket2(lead.lid || lead.email);
       const subject = stageDefs[stage].subject[lang][b];
 
-      const unsubToken = hmacHex(UNSUB_HMAC_SECRET, lead.email.toLowerCase());
+      const unsubToken = hmacHex(UNSUB_HMAC_SECRET, String(lead.email || "").toLowerCase());
       const unsubUrl = `${WORKER_URL}/u?e=${encodeURIComponent(lead.email)}&t=${unsubToken}`;
       const lid = lead.lid || "";
       const ctaUrl = `${site}/?utm_source=email&utm_medium=drip&utm_campaign=${stage}&lid=${encodeURIComponent(lid)}`;
-      const preheader = "Monitor vendor changes with verifiable evidence cards. Negotiate with facts.";
+      const preheader =
+        lang === "zh"
+          ? "用可核验的证据卡跟踪供应商变更，用事实赢下谈判。"
+          : "Monitor vendor changes with verifiable evidence cards. Negotiate with facts.";
 
       const html = renderTemplate(tplHtml, {
         lead, cta_url: ctaUrl, unsub_url: unsubUrl, site_origin: site, preheader, stage,
@@ -187,7 +204,7 @@ async function main() {
             port: Number(SMTP_PORT || 587),
             user: SMTP_USER,
             pass: SMTP_PASS,
-            from: MAIL_FROM,             // "CG Alerts <ops@cg-alert.com>"
+            from: MAIL_FROM,             // e.g. "CG Alerts <ops@cg-alert.com>"
             replyTo: REPLY_TO || "ops@cg-alert.com",
             bcc: BCC_TO || undefined,
             to: lead.email,
@@ -203,6 +220,9 @@ async function main() {
         lead.updated_at = NOW();
         await kv.put(key, JSON.stringify(lead));
         sentCounters[stage]++;
+
+        // respect provider rate limit
+        await ratelimit();
       } catch (err) {
         console.error(JSON.stringify({
           level: "error", route: "drip", email_hash: sha1(lead.email),
@@ -211,17 +231,16 @@ async function main() {
         // release lock on failure so next run retries
         if (lead?.drip?.lock) delete lead.drip.lock;
         await kv.put(key, JSON.stringify(lead));
+        // 轻微退避，避免瞬时反复失败
+        await sleep(500);
       }
-
-      // throttle a bit to respect SMTP provider
-      await new Promise(r => setTimeout(r, 200));
     }
 
     if (!listRes.result_info?.cursor) break;
     cursor = listRes.result_info.cursor;
   }
 
-  console.log(JSON.stringify({ level: "info", route: "drip", sent: sentCounters }));
+  console.log(JSON.stringify({ level: "info", route: "drip", sent: sentCounters, rate: RATE }));
 }
 
 // utils
