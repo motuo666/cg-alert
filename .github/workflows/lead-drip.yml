@@ -17,27 +17,33 @@ jobs:
   drip:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
     env:
-      # ---- Cloudflare / 站点口径（放 Variables；Secrets 仅放敏感）----
-      CF_ACCOUNT_ID: ${{ vars.CF_ACCOUNT_ID }}
+      # ---- Cloudflare / 站点口径（变量优先）----
+      CF_ACCOUNT_ID:   ${{ vars.CF_ACCOUNT_ID }}
       KV_NAMESPACE_ID: ${{ vars.KV_NAMESPACE_ID }}
-      WORKER_URL: ${{ vars.WORKER_URL }}
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      WORKER_URL:      ${{ vars.WORKER_URL }}
+      SITE_ORIGIN:     ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
 
-      # ---- 密钥 ----
-      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      # ---- 密钥（只放 Secrets）----
+      CF_API_TOKEN:       ${{ secrets.CF_API_TOKEN }}
+      SMTP_HOST:          ${{ secrets.SMTP_HOST }}
+      SMTP_PORT:          ${{ secrets.SMTP_PORT }}
+      SMTP_USER:          ${{ secrets.SMTP_USER }}
+      SMTP_PASS:          ${{ secrets.SMTP_PASS }}
+      UNSUB_HMAC_SECRET:  ${{ secrets.UNSUB_HMAC_SECRET }}
+      SLACK_WEBHOOK_URL:  ${{ secrets.SLACK_WEBHOOK_URL }}
 
-      # ---- 发件身份（优先取 Variables，没有再回退 Secrets）----
-      MAIL_FROM: ${{ vars.MAIL_FROM || secrets.MAIL_FROM }}
-      REPLY_TO:  ${{ vars.REPLY_TO  || secrets.REPLY_TO || 'ops@cg-alert.com' }}
+      # ---- 发件身份（变量优先，回退到 Secrets，再回退到默认）----
+      MAIL_FROM:   ${{ vars.MAIL_FROM   || secrets.MAIL_FROM   || 'CG Alerts <ops@cg-alert.com>' }}
+      REPLY_TO:    ${{ vars.REPLY_TO    || secrets.REPLY_TO    || 'ops@cg-alert.com' }}
+      SENDER_NAME: ${{ vars.SENDER_NAME || 'CG Alerts' }}
 
-      # 时区 & Node 运行一致性
+      # ---- 运行护栏（send_drip.js 已读取则生效；未读取也不影响）----
+      SEND_RATE:    20     # 每分钟最大发送数（域名健康）
+      MAX_PER_RUN:  400    # 单次 run 最多处理多少线索
+
+      # ---- 运行时一致性 ----
       TZ: UTC
       NODE_OPTIONS: --unhandled-rejections=strict
 
@@ -48,10 +54,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
-      # 依赖安装兜底：有 package.json 用 ci；否则就临时装最小依赖
+      # 依赖安装兜底：有 lock 用 ci；没有就安装最小依赖
       - name: Install deps (smart)
         run: |
           if [ -f package-lock.json ]; then
@@ -60,13 +66,13 @@ jobs:
             npm install --no-audit --no-fund
           else
             npm init -y -f
-            npm install nodemailer imapflow --no-audit --no-fund
+            npm install nodemailer --no-audit --no-fund
           fi
 
       - name: Send drip
         run: node scripts/send_drip.js
 
-      # 可选：失败时 Slack 告警（配置了 SLACK_WEBHOOK_URL 就会发）
+      # 失败告警（配了 SLACK_WEBHOOK_URL 才会发）
       - name: Notify failure (Slack)
         if: failure()
         run: |
