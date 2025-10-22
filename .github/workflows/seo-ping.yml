@@ -11,22 +11,38 @@ on:
       - "sitemap.xml"
       - "public/sitemap.xml"
   schedule:
-    - cron: "17 3 * * *"
+    - cron: "17 3 * * *"  # UTC
+
+# 防止并发重复跑
+concurrency:
+  group: seo-ping-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   ensure-and-ping:
     runs-on: ubuntu-latest
+    env:
+      # 有变量就用变量；没有就稳妥落到 www 版本
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+
       - name: Ensure root sitemap.xml
         run: node scripts/ops/sitemap_sync.js
-      - name: Ping Google/Bing with sitemap
-        env:
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+
+      - name: Ping Google/Bing (force WWW)
         run: |
-          set -e
-          curl -fsS "https://www.google.com/ping?sitemap=${SITE_ORIGIN%/}/sitemap.xml" || true
-          curl -fsS "https://www.bing.com/ping?sitemap=${SITE_ORIGIN%/}/sitemap.xml" || true
+          set -euo pipefail
+          origin="${SITE_ORIGIN:-https://www.cg-alert.com}"
+          # 强制把裸域替换成 www，避免分叉
+          origin="${origin/https:\/\/cg-alert.com/https:\/\/www.cg-alert.com}"
+          url="${origin%/}/sitemap.xml"
+          echo "PING URL: ${url}"
+          curl -fsS "https://www.google.com/ping?sitemap=${url}" || echo "::warning::Google ping failed"
+          curl -fsS "https://www.bing.com/ping?sitemap=${url}" || echo "::warning::Bing ping failed"
