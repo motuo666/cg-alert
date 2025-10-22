@@ -1,9 +1,14 @@
-name: bounce-sweep
+name: Bounce Sweep
 
 on:
   schedule:
-    - cron: "0 */6 * * *"   # 每 6 小时
-  workflow_dispatch: {}
+    - cron: "0 */6 * * *"        # 每 6 小时
+  workflow_dispatch:
+    inputs:
+      lookback_hours:
+        description: "回捞窗口（小时），留空则用 Secrets 或 168"
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -17,6 +22,7 @@ jobs:
   sweep:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,22 +33,39 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
 
       - name: Install deps (imapflow only)
         run: |
           npm init -y >/dev/null 2>&1
           npm install --no-audit --no-fund --silent imapflow@latest
 
-      # 给 LOOKBACK_HOURS 设置默认值（未配置时用 168 小时）
-      - name: Set defaults
+      # 校验必需 Secrets 与 Vars，提前失败给出清晰提示
+      - name: Validate required secrets & vars
         env:
-          LOOKBACK_HOURS_IN: ${{ secrets.LOOKBACK_HOURS }}
+          IMAP_HOST:       ${{ secrets.IMAP_HOST }}
+          IMAP_USER:       ${{ secrets.IMAP_USER }}
+          IMAP_PASS:       ${{ secrets.IMAP_PASS }}
+          CF_API_TOKEN:    ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID:   ${{ vars.CF_ACCOUNT_ID }}
+          KV_NAMESPACE_ID: ${{ vars.KV_NAMESPACE_ID }}
         run: |
-          L="${LOOKBACK_HOURS_IN}"
+          miss=""
+          for k in IMAP_HOST IMAP_USER IMAP_PASS CF_API_TOKEN CF_ACCOUNT_ID KV_NAMESPACE_ID; do
+            if [ -z "${!k}" ]; then echo "::error::missing $k"; miss=1; fi
+          done
+          if [ -n "$miss" ]; then exit 1; fi
+
+      # 统一回捞窗口优先级：手动输入 > Secrets > 默认 168
+      - name: Resolve LOOKBACK_HOURS
+        env:
+          INP:  ${{ inputs.lookback_hours }}
+          SEC:  ${{ secrets.LOOKBACK_HOURS }}
+        run: |
+          L="$INP"
+          if [ -z "$L" ]; then L="$SEC"; fi
           if [ -z "$L" ]; then L=168; fi
           echo "LOOKBACK_HOURS=$L" >> $GITHUB_ENV
-          echo "::notice::bounce-sweep lookback_h=${L}"
+          echo "::notice::bounce-sweep lookback_h=$L"
 
       - name: Sweep IMAP bounces -> suppress
         env:
@@ -53,10 +76,20 @@ jobs:
           KV_NAMESPACE_ID:  ${{ vars.KV_NAMESPACE_ID }}
           CF_API_TOKEN:     ${{ secrets.CF_API_TOKEN }}
           LOOKBACK_HOURS:   ${{ env.LOOKBACK_HOURS }}
-        run: node scripts/imap_bounce_sweep.js
+        run: |
+          set -e
+          node scripts/imap_bounce_sweep.js | tee sweep.log
+
+      - name: Upload sweep log (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bounce-sweep-log
+          path: sweep.log
+          retention-days: 7
 
       - name: Notify Slack (optional)
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        if: ${{ always() && secrets.SLACK_WEBHOOK_URL != '' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           LOOKBACK_HOURS:    ${{ env.LOOKBACK_HOURS }}
