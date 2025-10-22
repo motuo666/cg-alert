@@ -2,27 +2,64 @@ name: bounce-sweep
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 */6 * * *"   # 每 6 小时
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
+# 防止并发重叠执行
+concurrency:
+  group: bounce-sweep
+  cancel-in-progress: true
+
 jobs:
   sweep:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: npm init -y && npm install imapflow
+          cache: "npm"
+
+      - name: Install deps (imapflow only)
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install --no-audit --no-fund --silent imapflow@latest
+
+      # 给 LOOKBACK_HOURS 设置默认值（未配置时用 168 小时）
+      - name: Set defaults
+        env:
+          LOOKBACK_HOURS_IN: ${{ secrets.LOOKBACK_HOURS }}
+        run: |
+          L="${LOOKBACK_HOURS_IN}"
+          if [ -z "$L" ]; then L=168; fi
+          echo "LOOKBACK_HOURS=$L" >> $GITHUB_ENV
+          echo "::notice::bounce-sweep lookback_h=${L}"
+
       - name: Sweep IMAP bounces -> suppress
         env:
-          IMAP_HOST: ${{ secrets.IMAP_HOST }}
-          IMAP_USER: ${{ secrets.IMAP_USER }}
-          IMAP_PASS: ${{ secrets.IMAP_PASS }}
-          CF_ACCOUNT_ID: ${{ vars.CF_ACCOUNT_ID }}
-          KV_NAMESPACE_ID: ${{ vars.KV_NAMESPACE_ID }}
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          IMAP_HOST:        ${{ secrets.IMAP_HOST }}
+          IMAP_USER:        ${{ secrets.IMAP_USER }}
+          IMAP_PASS:        ${{ secrets.IMAP_PASS }}
+          CF_ACCOUNT_ID:    ${{ vars.CF_ACCOUNT_ID }}
+          KV_NAMESPACE_ID:  ${{ vars.KV_NAMESPACE_ID }}
+          CF_API_TOKEN:     ${{ secrets.CF_API_TOKEN }}
+          LOOKBACK_HOURS:   ${{ env.LOOKBACK_HOURS }}
         run: node scripts/imap_bounce_sweep.js
+
+      - name: Notify Slack (optional)
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          LOOKBACK_HOURS:    ${{ env.LOOKBACK_HOURS }}
+        run: |
+          printf '{"text":"✅ bounce-sweep finished (lookback_h=%s)"}' "$LOOKBACK_HOURS" \
+          | curl -sS -X POST -H "content-type: application/json" --data @- "$SLACK_WEBHOOK_URL"
