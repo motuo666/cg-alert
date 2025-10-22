@@ -1,0 +1,23 @@
+name: obs-daily
+on:
+  schedule:
+    - cron: "7 23 * * *"   # 每天 UTC 23:07
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch stats
+        env:
+          OBS_URL: ${{ vars.WORKER_URL }}/_stats
+          OBS_KEY: ${{ secrets.UNSUB_HMAC_SECRET }}   # 或单独建 OBS_KEY
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          set -e
+          KEY=$(echo "$OBS_KEY" | cut -c1-16)
+          RESP=$(curl -sS -H "x-obs-key: $KEY" "$OBS_URL")
+          echo "stats=$RESP"
+          # 可选：发 Slack
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            echo "{\"text\":\"obs daily: $RESP\"}" | \
+            curl -sS -X POST -H "content-type: application/json" --data @- "$SLACK_WEBHOOK_URL"
+          fi
