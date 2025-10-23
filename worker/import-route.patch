@@ -1,0 +1,77 @@
+@@
++// ---------- /import (BuildWith 名单导入) ----------
++async function handleImport(req, env) {
++  // 简单读钥：与 /stats 共用 OBS_KEY；也可改为 IMPORT_KEY
++  const k = req.headers.get('x-obs-key') || '';
++  const ok = env.OBS_KEY && (k === env.OBS_KEY || (k && env.OBS_KEY.startsWith(env.OBS_KEY.slice(0,16))));
++  if (!ok) return json({ error: 'forbidden' }, 403);
++
++  const ct = (req.headers.get('content-type') || '').toLowerCase();
++  let items = [];
++  if (ct.includes('application/json')) {
++    const body = await req.json();
++    items = Array.isArray(body) ? body : (body.items || []);
++  } else {
++    // 视为 text/csv
++    const text = await req.text();
++    // 允许简单 CSV: email,domain,company,tech（tech 可分号或逗号分隔）
++    const lines = text.split(/\r?\n/).filter(Boolean);
++    const head = lines.shift().split(',').map(s=>s.trim().toLowerCase());
++    const idx = (k)=>head.indexOf(k);
++    for (const ln of lines) {
++      const cols = ln.split(',');
++      const email = (cols[idx('email')]||'').trim().toLowerCase();
++      const domain = (cols[idx('domain')]||'').trim().toLowerCase();
++      const company = (cols[idx('company')]||'').trim();
++      const tech = (cols[idx('tech')]||'').split(/;|,/).map(s=>s.trim()).filter(Boolean);
++      if (email) items.push({ email, domain, company, tech });
++    }
++  }
++  let okCnt = 0, skip = 0;
++  const hour = new Date().toISOString().slice(0,13).replace(/[-:T]/g,''); // yyyyMMHH
++  for (const it of items) {
++    const email = (it.email||'').trim().toLowerCase();
++    if (!email) { skip++; continue; }
++    const key = `lead:${email}`;
++    let obj = {};
++    try { obj = JSON.parse((await env.LEADS.get(key)) || '{}'); } catch {}
++    // 抑制状态不改（unsub/bounced），其余设为 verified
++    if (!obj.status || (obj.status!=="unsub" && obj.status!=="suppressed" && obj.status!=="bounced"))
++      obj.status = obj.status==="new" ? "verified" : (obj.status||"verified");
++    obj.email = email;
++    obj.company = it.company || obj.company || '';
++    obj.domain = it.domain || obj.domain || '';
++    obj.source = "buildwith";
++    // tech 合并去重
++    const a = Array.isArray(obj.tech)? obj.tech : [];
++    const b = Array.isArray(it.tech)? it.tech : (it.tech? [it.tech]:[]);
++    obj.tech = Array.from(new Set([...a, ...b].filter(Boolean)));
++    // cg_lead_id 保底
++    obj.cg_lead_id = obj.cg_lead_id || cryptoRandomUUID();
++    // touches 记录
++    obj.touches = obj.touches || [];
++    obj.touches.push({ ts: Date.now(), source:"buildwith", domain: obj.domain, company: obj.company });
++    await env.LEADS.put(key, JSON.stringify(obj));
++    // 入队外拓：近两小时 Worker/Actions 消费
++    await env.LEADS.put(`dripq:outbound:${hour}:${email}`, '1', { expirationTtl: 7*24*3600 });
++    okCnt++;
++  }
++  return json({ imported: okCnt, skipped: skip });
++}
+@@
+ export default {
+   async fetch(req, env, ctx) {
+     const url = new URL(req.url);
+     const p = url.pathname;
+-    if (p === "/lead") return withCORS(await handleLead(req, env, ctx));
+-    if (p === "/u")    return withCORS(await handleUnsub(req, env, ctx));
+-    if (p === "/stripe") return await handleStripe(req, env, ctx);
+-    if (p === "/stats")  return await handleStats(req, env, ctx);
++    if (p === "/lead")   return withCORS(await handleLead(req, env, ctx));
++    if (p === "/u")      return withCORS(await handleUnsub(req, env, ctx));
++    if (p === "/stripe") return await handleStripe(req, env, ctx);
++    if (p === "/import") return await handleImport(req, env, ctx);
++    if (p === "/stats")  return await handleStats(req, env, ctx);
+     return json({ ok:true, name:"lead-gateway" });
+   }
+ }
