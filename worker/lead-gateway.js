@@ -1,15 +1,15 @@
 /**
- * lead-gateway Worker (tight CORS + observability, 2025-10-22)
+ * lead-gateway Worker (tight CORS + RL + queues + obs)
  * Routes:
- *  - POST /lead     : accept CTA/form payload, enrich UTM/referrer, upsert KV lead:{email}
- *  - GET  /u        : unsubscribe endpoint with HMAC token (?e=<email>&t=<token>)
- *  - POST /stripe   : Stripe webhook (checkout.session.completed)
- *  - GET  /_stats   : last-7-day counters (requires header x-obs-key protection)
+ *  - POST /lead     : 接受表单/CTA，补齐 UTM/referrer，KV upsert lead:{email}，新线索入队 dripq:d0
+ *  - GET  /u        : 一键退订 (?e=&t=HMAC(email))
+ *  - POST /stripe   : Stripe webhook (checkout.session.completed)，入队 dripq:d2
+ *  - GET  /_stats   : 最近 7 天指标（需 x-obs-key）
  *
  * Bindings:
- *  - KV namespace: LEADS
- *  - Vars: ALLOWED_ORIGINS, SITE_ORIGIN (opt)
- *  - Secrets: UNSUB_HMAC_SECRET, STRIPE_WEBHOOK_SECRET, SLACK_WEBHOOK_URL (opt), OBS_KEY (opt)
+ *  - KV: LEADS
+ *  - Vars: ALLOWED_ORIGINS, SITE_ORIGIN(可选)
+ *  - Secrets: UNSUB_HMAC_SECRET, STRIPE_WEBHOOK_SECRET, SLACK_WEBHOOK_URL(可选), OBS_KEY(可选)
  */
 
 export default {
@@ -28,28 +28,23 @@ export default {
         if (!allowedOrigin) return denyCORS();
         return corsPreflight(allowedOrigin);
       }
-
       if (request.method === "POST") {
         if (!allowedOrigin) return denyCORS();
         const res = await handleLead(request, env);
         return withCORS(res, allowedOrigin);
       }
-
       return new Response("method not allowed", { status: 405 });
     }
 
-    // ---------- Unsubscribe ----------
     if (path === "/u" && request.method === "GET") {
       return await handleUnsub(request, env);
     }
 
-    // ---------- Stripe Webhook ----------
     if (path === "/stripe") {
       if (request.method !== "POST") return new Response("method not allowed", { status: 405 });
       return await handleStripe(request, env);
     }
 
-    // ---------- Protected stats ----------
     if (path === "/_stats" && request.method === "GET") {
       return await handleStats(request, env);
     }
@@ -70,13 +65,7 @@ async function sha1Hex(s) {
 
 function baseLog(req, extra = {}) {
   const url = new URL(req.url);
-  return {
-    ts: nowIso(),
-    cf_ray: req.headers.get("cf-ray") || "",
-    route: url.pathname,
-    method: req.method,
-    ...extra,
-  };
+  return { ts: nowIso(), cf_ray: req.headers.get("cf-ray") || "", route: url.pathname, method: req.method, ...extra };
 }
 
 async function logJSON(req, level, extra = {}) {
@@ -115,12 +104,8 @@ async function incStat(env, name, n = 1) {
 
 /* -------------------- CORS helpers -------------------- */
 function parseAllowed(list) {
-  return new Set(String(list || "")
-    .split(",")
-    .map(s => s.trim())
-    .filter(Boolean));
+  return new Set(String(list || "").split(",").map(s => s.trim()).filter(Boolean));
 }
-
 function corsPreflight(origin) {
   return new Response(null, {
     status: 204,
@@ -133,7 +118,6 @@ function corsPreflight(origin) {
     }
   });
 }
-
 function withCORS(res, origin) {
   const h = new Headers(res.headers);
   h.set("access-control-allow-origin", origin);
@@ -142,7 +126,6 @@ function withCORS(res, origin) {
   h.set("vary", "Origin");
   return new Response(res.body, { status: res.status, headers: h });
 }
-
 function denyCORS() { return jsonErr(403, "origin_not_allowed"); }
 
 /* -------------------- JSON helpers -------------------- */
@@ -171,7 +154,7 @@ async function handleLead(request, env) {
   try {
     if (ct.includes("application/json")) {
       body = await request.json();
-    } else if (ct.includes("application/x-www-form-urlencoded")) {
+    } else if (ct.includes("application/x-www-form-urlencoded") || ct.includes("multipart/form-data")) {
       const form = await request.formData();
       form.forEach((v, k) => (body[k] = v));
     }
@@ -189,6 +172,19 @@ async function handleLead(request, env) {
   }
   const emailHash = await sha1Hex(email);
 
+  // 基于 IP+email 的 5 分钟轻量限流（>3 次 -> 429）
+  const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "0.0.0.0";
+  try {
+    const rlKey = `ratelimit:${ip}:${email}`;
+    const cur = parseInt((await env.LEADS.get(rlKey)) || "0", 10);
+    if (cur >= 3) {
+      await incStat(env, "rate_limited", 1);
+      await logJSON(request, "warn", { event: "lead_rate_limited", email_hash: emailHash });
+      return jsonErr(429, "too_many_requests");
+    }
+    await env.LEADS.put(rlKey, String(cur + 1), { expirationTtl: 300 });
+  } catch {}
+
   // lead id cookie
   const cookieIn = request.headers.get("cookie") || "";
   const cookies = Object.fromEntries(
@@ -204,11 +200,10 @@ async function handleLead(request, env) {
     utm_content: body.utm_content || url.searchParams.get("utm_content") || "",
     utm_term: body.utm_term || url.searchParams.get("utm_term") || "",
   };
-  const now = new Date().toISOString();
+  const now = nowIso();
   const referrer = body.referrer || request.headers.get("referer") || "";
   const landing_url = body.landing_url || (referrer || (env.SITE_ORIGIN ? `${env.SITE_ORIGIN}/` : ""));
   const ua = request.headers.get("user-agent") || "";
-  const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "";
 
   const key = `lead:${email}`;
   let existing = await env.LEADS.get(key, { type: "json" });
@@ -236,6 +231,12 @@ async function handleLead(request, env) {
   existing.touches.push({ ts: now, ...utm, referrer, landing_url });
 
   await env.LEADS.put(key, JSON.stringify(existing), { expirationTtl: 60 * 60 * 24 * 365 * 3 });
+
+  // 新线索 -> 入队 D0（按小时滚动前缀，TTL 7 天）
+  if (isNew) {
+    const hour = new Date().toISOString().slice(0,13).replace(/[-:T]/g,'');
+    await env.LEADS.put(`dripq:d0:${hour}:${email}`, '1', { expirationTtl: 7*24*3600 });
+  }
 
   // set readable cookie
   const isHttps = (new URL(request.url)).protocol === "https:";
@@ -297,9 +298,12 @@ async function handleStripe(request, env) {
     return new Response("Missing signature", { status: 400 });
   }
 
-  const parts = Object.fromEntries(sig.split(",").map(s => s.split("=", 2)));
-  const t = parts["t"]; const v1 = parts["v1"];
-  if (!t || !v1) {
+  // 兼容多 v1 值（任意一个匹配即通过）
+  const pairs = sig.split(",").map(s => s.trim().split("=", 2));
+  const t = (pairs.find(([k]) => k === "t") || [,""])[1] || "";
+  const v1s = pairs.filter(([k]) => k === "v1").map(([,v]) => v).filter(Boolean);
+
+  if (!t || !v1s.length) {
     await logJSON(request, "error", { event: "stripe_bad_sig_hdr" });
     await incStat(env, "errors", 1);
     return new Response("Bad signature header", { status: 400 });
@@ -307,7 +311,7 @@ async function handleStripe(request, env) {
 
   const signedPayload = `${t}.${raw}`;
   const digest = await hmacHex(env.STRIPE_WEBHOOK_SECRET, signedPayload);
-  if (!timingSafeEqualHex(v1, digest)) {
+  if (!v1s.some(v => timingSafeEqualHex(v, digest))) {
     await logJSON(request, "error", { event: "stripe_sig_mismatch" });
     await incStat(env, "errors", 1);
     return new Response("Signature mismatch", { status: 400 });
@@ -323,7 +327,7 @@ async function handleStripe(request, env) {
 
   try {
     if (event.type === "checkout.session.completed") {
-      const session = event.data.object || {};
+      const session = event.data?.object || {};
       const email = String((session.customer_details?.email || "").toLowerCase());
       if (email) {
         const key = `lead:${email}`;
@@ -342,6 +346,10 @@ async function handleStripe(request, env) {
         lead.updated_at = nowIso();
 
         await env.LEADS.put(key, JSON.stringify(lead), { expirationTtl: 60 * 60 * 24 * 365 * 3 });
+
+        // 入队 D2（按小时滚动）
+        const hour = new Date().toISOString().slice(0,13).replace(/[-:T]/g,'');
+        await env.LEADS.put(`dripq:d2:${hour}:${email}`, '1', { expirationTtl: 7*24*3600 });
 
         await incStat(env, "stripe_ok", 1);
         await logJSON(request, "info", { event: "stripe_ok", type: event.type, email_hash: await sha1Hex(email), amount: lead.purchase.amount, ms: Date.now() - t0 });
@@ -363,7 +371,7 @@ async function handleStripe(request, env) {
 }
 
 async function handleStats(request, env) {
-  // 简单保护：x-obs-key = env.OBS_KEY（推荐）或 UNSUB_HMAC_SECRET 的前 16 位
+  // 保护：x-obs-key = env.OBS_KEY（推荐）或 UNSUB_HMAC_SECRET 的前 16 位
   const provided = request.headers.get("x-obs-key") || "";
   const want = (env.OBS_KEY || env.UNSUB_HMAC_SECRET || "").slice(0, 16);
   if (!want || provided !== want) return new Response("forbidden", { status: 403 });
@@ -371,7 +379,7 @@ async function handleStats(request, env) {
   const out = {};
   for (let i = 0; i < 7; i++) {
     const day = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-    for (const name of ["lead_new", "lead_touch", "unsub", "stripe_ok", "errors"]) {
+    for (const name of ["lead_new", "lead_touch", "unsub", "stripe_ok", "errors", "rate_limited"]) {
       const k = `stats:${day}:${name}`;
       out[`${day}.${name}`] = parseInt(await env.LEADS.get(k) || "0", 10);
     }
