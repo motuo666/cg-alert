@@ -1,3 +1,4 @@
+
 name: Build Diff Visuals
 
 on:
@@ -8,11 +9,21 @@ on:
         required: false
         default: "public/evidence"
         type: string
+      max_lines:
+        description: "Guardrail: max lines per side (fallback to coarse)"
+        required: false
+        default: "5000"
+        type: string
+      max_ms:
+        description: "Guardrail: max ms per pair (fallback to coarse)"
+        required: false
+        default: "5000"
+        type: string
   push:
     paths:
       - 'public/evidence/**'
       - 'scripts/build_diff_visuals.js'
-      - 'scripts/diff_lcs.js'
+      - 'scripts/diff_engine.js'
       - '.github/workflows/build-diffs.yml'
 
 permissions:
@@ -25,6 +36,11 @@ concurrency:
 jobs:
   build-diffs:
     runs-on: ubuntu-latest
+    env:
+      EVIDENCE_ROOT: ${{ inputs.evidence_root || 'public/evidence' }}
+      DIFF_MAX_LINES: ${{ inputs.max_lines || '5000' }}
+      DIFF_MAX_MS: ${{ inputs.max_ms || '5000' }}
+      DIFF_MAX_BYTES: '1500000'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,25 +50,15 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Verify scripts exist
+      - name: Generate diff.html (SAFE)
         shell: bash
         run: |
           set -e
-          [[ -f scripts/build_diff_visuals.js ]] || { echo "::error::Missing scripts/build_diff_visuals.js"; exit 1; }
-          [[ -f scripts/diff_lcs.js ]] || { echo "::error::Missing scripts/diff_lcs.js"; exit 1; }
-
-      - name: Generate diff.html for evidence
-        env:
-          EVIDENCE_ROOT: ${{ inputs.evidence_root || 'public/evidence' }}
-        shell: bash
-        run: |
-          set -e
-          ROOT="${EVIDENCE_ROOT:-public/evidence}"
-          if [[ ! -d "$ROOT" ]]; then
-            echo "No evidence dir (${ROOT}); nothing to do." | tee -a "$GITHUB_STEP_SUMMARY"
+          if [[ ! -d "$EVIDENCE_ROOT" ]]; then
+            echo "No evidence dir ($EVIDENCE_ROOT); nothing to do." | tee -a "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          node scripts/build_diff_visuals.js
+          node -e "require('./scripts/build_diff_visuals.js')"
 
       - name: Commit diffs (if any)
         shell: bash
@@ -64,7 +70,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "no diffs to commit" | tee -a "$GITHUB_STEP_SUMMARY"
           else
-            git commit -m "evidence: add diff visualizations"
+            git commit -m "evidence: add diff visualizations (safe)"
             git pull --rebase --autostash || true
             git push
             echo "Committed and pushed diff visualizations." | tee -a "$GITHUB_STEP_SUMMARY"
