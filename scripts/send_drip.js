@@ -150,7 +150,7 @@ async function main() {
 
     if (!listRes?.success) throw new Error("KV list failed: " + JSON.stringify(listRes));
 
-    for (const item of listRes.result || []) {
+    for (const item of (listRes.result || [])) {
       const key = item.name;
       const value = await kv.get(key);
       if (!value) continue;
