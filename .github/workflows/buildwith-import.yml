@@ -1,0 +1,23 @@
+name: buildwith-import
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: buildwith-import
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Install nodemailer deps
+        run: npm i node-fetch@2
+      - name: Import BuildWith lists
+        env:
+          WORKER_URL: ${{ vars.WORKER_URL }}
+          OBS_KEY:    ${{ secrets.OBS_KEY }}
+        run: node scripts/import_buildwith.js
