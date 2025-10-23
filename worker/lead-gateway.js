@@ -58,7 +58,7 @@ export default {
     }
 
     // BuildWith / 技术画像导入（CSV/JSON）
-    if (path === "/import" && request.method === "POST") {
+    if ((path === "/import" || path === "/import/buildwith") && request.method === "POST") {
       return await handleImport(request, env);
     }
 
@@ -281,22 +281,20 @@ async function handleUnsub(request, env) {
     return new Response("Missing token", { status: 400 });
   }
 
-  // 兼容老邮件：若没传 email，则从 KV 逆向容错（不推荐，尽量带上 email）
-  let targetEmail = email;
-  if (!targetEmail) {
-    // 无 email 情况：放弃逆向爆破，直接拒绝更安全
+  // 更安全：必须带 email（避免 KV 逆向）
+  if (!email) {
     await logJSON(request, "error", { event: "unsub_missing_email" });
     return new Response("Missing email", { status: 400 });
   }
 
-  const ok = await hmacVerify(env.UNSUB_HMAC_SECRET, targetEmail, token);
+  const ok = await hmacVerify(env.UNSUB_HMAC_SECRET, email, token);
   if (!ok) {
     await logJSON(request, "error", { event: "unsub_bad_token" });
     await incStat(env, "errors", 1);
     return new Response("Invalid token", { status: 403 });
   }
 
-  const key = `lead:${targetEmail}`;
+  const key = `lead:${email}`;
   let lead = await env.LEADS.get(key, { type: "json" });
   if (!lead) {
     await logJSON(request, "info", { event: "unsub_no_record" });
@@ -309,7 +307,7 @@ async function handleUnsub(request, env) {
   await env.LEADS.put(key, JSON.stringify(lead), { expirationTtl: 60 * 60 * 24 * 365 * 3 });
 
   await incStat(env, "unsub", 1);
-  await logJSON(request, "info", { event: "unsub_ok", email_hash: await sha1Hex(targetEmail), ms: Date.now() - t0 });
+  await logJSON(request, "info", { event: "unsub_ok", email_hash: await sha1Hex(email), ms: Date.now() - t0 });
   return new Response("You have been unsubscribed. ✔", { headers: { "content-type": "text/plain; charset=utf-8" } });
 }
 
@@ -437,7 +435,6 @@ async function handleImport(request, env) {
     obj.touches.push({ ts: Date.now(), source:"buildwith", domain: obj.domain, company: obj.company });
 
     await env.LEADS.put(key, JSON.stringify(obj), { expirationTtl: 60 * 60 * 24 * 365 * 3 });
-
     await env.LEADS.put(`dripq:outbound:${hour}:${email}`, '1', { expirationTtl: 7*24*3600 });
     imported++;
   }
