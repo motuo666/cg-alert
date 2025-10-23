@@ -1,0 +1,76 @@
+name: Final Acceptance Gate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+  REQUIRE_SLACK_EITHER: "1"
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secrets/vars
+        shell: bash
+        run: |
+          set -e
+          miss=()
+          [[ -n "${SLACK_WEBHOOK:-}" || -n "${SLACK_WEBHOOK_URL:-}" ]] || miss+=("SLACK_WEBHOOK or SLACK_WEBHOOK_URL")
+          for k in UNSUB_HMAC_SECRET CF_API_TOKEN STRIPE_WEBHOOK_SECRET SMTP_HOST SMTP_USER SMTP_PASS IMAP_HOST IMAP_USER IMAP_PASS MAIL_FROM; do
+            [[ -n "${!k:-}" ]] || miss+=("$k")
+          done
+          echo "Missing: ${miss[*]}"
+          if ((${#miss[@]})); then
+            echo "::error::Missing secrets/vars: ${miss[*]}"; exit 1;
+          fi
+
+      - name: Verify root redirect
+        run: |
+          grep -E '^\s*/\s+/seo/\s+301' _redirects >/dev/null || { echo "::error::/_redirects missing root 301 to /seo/"; exit 1; }
+          echo "Root redirect OK"
+
+      - name: Evidence existence
+        run: |
+          cnt=$(find public/evidence -type f -name index.html 2>/dev/null | wc -l || true)
+          [[ $cnt -ge 1 ]] || { echo "::error::No evidence pages found"; exit 1; }
+          test -f reports/index.json || { echo "::error::reports/index.json not found"; exit 1; }
+          echo "Evidence count=$cnt"
+
+      - name: Diff visualizer presence
+        run: |
+          dcnt=$(find public/evidence -type f -name 'diff.html' 2>/dev/null | wc -l || true)
+          [[ $dcnt -ge 1 ]] || { echo "::warning::No diff.html found; ensure your diff step wrote artifacts"; }
+          echo "Diff files=$dcnt"
+
+      - name: Weekly hash announce (dry tag)
+        run: |
+          set -e
+          h=$(sha256sum reports/index.json | awk '{print $1}')
+          echo "SHA256=${h}"
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git tag -f -a "weekly-$(date -u +%Y%m%d)-${h:0:8}" -m "reports/index.json ${h}"
+          git push --force --tags
+
+      - name: Probe site endpoints
+        if: env.SITE_ORIGIN != ''
+        run: |
+          set -e
+          ok=0; total=0
+          for path in / /seo/ /reports/ /who-uses/ /sitemap.xml /rss.xml; do
+            total=$((total+1))
+            code=$(curl -s -o /dev/null -w "%{http_code}" "${SITE_ORIGIN%/}$path")
+            echo "$path -> $code"
+            [[ "$code" == "200" || "$code" == "301" || "$code" == "302" ]] && ok=$((ok+1))
+          done
+          [[ $ok -ge 5 ]] || { echo "::error::Endpoint probe failed ($ok/$total ok)"; exit 1; }
+
+      - name: Summary
+        run: |
+          echo "✅ Final Acceptance passed" >> $GITHUB_STEP_SUMMARY
