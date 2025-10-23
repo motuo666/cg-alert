@@ -1,16 +1,16 @@
-// scripts/ops/sitemap_sync.js
-import fs from "fs";
-const src = "public/sitemap.xml";
-const dst = "sitemap.xml";
-try {
-  if (fs.existsSync(src)) {
-    const a = fs.readFileSync(src, "utf-8");
-    fs.writeFileSync(dst, a);
-    console.log("sitemap_sync: copied public/sitemap.xml -> sitemap.xml");
-  } else {
-    console.log("sitemap_sync: source public/sitemap.xml not found; skip");
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+const root = process.cwd();
+async function ensure() {
+  const src = path.join(root, 'public', 'sitemap.xml');
+  const dst = path.join(root, 'public', 'seo', 'sitemap.xml');
+  try {
+    await fs.mkdir(path.dirname(dst), { recursive: true });
+    const buf = await fs.readFile(src);
+    await fs.writeFile(dst, buf);
+    console.log('sitemap_sync: ensured public/seo/sitemap.xml exists');
+  } catch (e) {
+    console.warn('sitemap_sync: warning: cannot ensure public/seo/sitemap.xml -', e.message);
   }
-} catch(e) {
-  console.error("sitemap_sync error:", e);
-  process.exit(1);
 }
+await ensure();
