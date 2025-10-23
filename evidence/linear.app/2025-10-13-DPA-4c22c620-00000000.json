@@ -7,5 +7,6 @@
   "etag": null,
   "last_modified": null,
   "hash": "9a4ff382b6bbd64a520084aa9a08a7a365881ef609a42bf7a63c1c63770c3742",
-  "commit": "3680760"
+  "commit": "3680760",
+  "sha256": "9a4ff382b6bbd64a520084aa9a08a7a365881ef609a42bf7a63c1c63770c3742"
 }

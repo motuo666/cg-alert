@@ -6,5 +6,8 @@
   "etag": "W/\"1761137019\"",
   "last_modified": "Wed, 22 Oct 2025 12:43:39 GMT",
   "hash": "1f63a3816922725894da3a6af3e43f26d82f96c246c7e1dea440495c7ff570ff",
-  "commit": "3680760"
+  "commit": "3680760",
+  "sha256": "1f63a3816922725894da3a6af3e43f26d82f96c246c7e1dea440495c7ff570ff",
+  "diff_excerpt_before": "<!DOCTYPE html> <html lang=\"en\" dir=\"lt",
+  "diff_excerpt_after": "<!DOCTYPE html><html lang=\"en\" dir=\"ltr\""
 }
