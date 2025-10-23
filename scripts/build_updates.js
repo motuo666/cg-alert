@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// build_updates.js — render /updates/index.html with CTA + search (+SEO guards)
+// build_updates.js — render /updates/index.html with CTA + search (+SEO guards + UTM + lid)
 const fs = require('fs');
 const path = require('path');
 
@@ -57,19 +57,19 @@ function existsPack(slug) {
       ? `/reports/${CUR}/${slugEnc}/`
       : `/updates/?q=${slugEnc}`;
     const when = it.when.toISOString().slice(0, 10);
-    return `<li data-slug="${it.slug}">${when} — <a href="${href}">${it.slug}</a> <small>(${it.count})</small></li>`;
+    return `<li data-slug="${it.slug}">${when} — <a href="${href}" rel="nofollow noopener">${it.slug}</a> <small>(${it.count})</small></li>`;
   }).join('\n');
 
   const robots = `<meta name="robots" content="noindex,follow">`;
   const canonical = `<link rel="canonical" href="/updates/">`;
 
   const ctaEnable = INTAKE_FORM_URL
-    ? `<a id="cta-enable" class="btn primary" href="${INTAKE_FORM_URL}">Enable alerts</a>`
+    ? `<a id="cta-enable" class="btn primary" href="${INTAKE_FORM_URL}" rel="nofollow noopener">Enable alerts</a>`
     : '';
   const ctaBuy = STRIPE_LINK_PORTFOLIO
-    ? `<a id="cta-buy" class="btn" href="${STRIPE_LINK_PORTFOLIO}">Buy Portfolio $2,988/yr</a>`
+    ? `<a id="cta-buy" class="btn" href="${STRIPE_LINK_PORTFOLIO}" rel="nofollow noopener">Buy Portfolio $2,988/yr</a>`
     : '';
-  const ctaHome = `<a class="btn ghost" href="${SITE_ORIGIN}/">Home</a>`;
+  const ctaHome = `<a class="btn ghost" href="${SITE_ORIGIN}/" rel="noopener">Home</a>`;
 
   const html = `<!doctype html>
 <html>
@@ -114,12 +114,35 @@ function existsPack(slug) {
 <script>
 (function(){
   const CUR = ${JSON.stringify(CUR)};
-  const utm = 'utm_source=site&utm_medium=updates&utm_campaign=cp_' + CUR;
+  // 统一 UTM 基础
+  const UTM_BASE = {
+    utm_source: 'site',
+    utm_medium: 'updates',
+    utm_campaign: 'cp_' + CUR
+  };
 
-  function addUTM(u){
-    if(!u) return u;
-    const hasQ = u.includes('?');
-    return u + (hasQ ? '&' : '?') + utm;
+  function addOrUpdateParam(url, key, value){
+    try{
+      const u = new URL(url, location.origin);
+      if (value === null || value === undefined || value === '') return u.toString();
+      u.searchParams.set(key, value);
+      return u.toString();
+    }catch{ return url; }
+  }
+
+  function addUTM(url, extra){
+    try{
+      const u = new URL(url, location.origin);
+      for (const [k,v] of Object.entries(UTM_BASE)) u.searchParams.set(k, v);
+      if (extra) for (const [k,v] of Object.entries(extra)) u.searchParams.set(k, v);
+      return u.toString();
+    }catch{ return url; }
+  }
+
+  // 读取 lid（cg_lead_id）
+  function readLid(){
+    const m = document.cookie.match(/(?:^|;\\s*)cg_lead_id=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : '';
   }
 
   // read q from URL
@@ -128,25 +151,32 @@ function existsPack(slug) {
   const qInput = document.getElementById('q');
   const list = document.getElementById('list');
   const go = document.getElementById('go');
-
   qInput.value = q;
 
-  // CTA: attach vendor + utm when q exists
+  // CTA: Enable —— vendor + UTM
   const enable = document.getElementById('cta-enable');
   if (enable) {
     let href = enable.getAttribute('href') || '';
     if (href) {
-      if (q) {
-        const sep = href.includes('?') ? '&' : '?';
-        href = href + sep + 'vendor=' + encodeURIComponent(q);
-      }
-      enable.setAttribute('href', addUTM(href));
+      if (q) href = addOrUpdateParam(href, 'vendor', q);
+      href = addUTM(href, { utm_content: 'cta_enable' });
+      enable.setAttribute('href', href);
     }
   }
-  const buy = document.getElementById('cta-buy');
-  if (buy) buy.setAttribute('href', addUTM(buy.getAttribute('href')||''));
 
-  // Filter list client-side
+  // CTA: Buy —— UTM + lid（若存在）
+  const buy = document.getElementById('cta-buy');
+  if (buy) {
+    let href = buy.getAttribute('href') || '';
+    if (href) {
+      href = addUTM(href, { utm_content: 'cta_buy' });
+      const lid = readLid();
+      if (lid) href = addOrUpdateParam(href, 'lid', lid);
+      buy.setAttribute('href', href);
+    }
+  }
+
+  // 搜索交互
   function applyFilter(val){
     const v = (val||'').toLowerCase();
     let hit = 0;
@@ -159,7 +189,6 @@ function existsPack(slug) {
       list.innerHTML = '<li>No updates for <code>'+ (val?String(val).replace(/[&<>]/g,s=>({ "&":"&amp;","<":"&lt;",">":"&gt;" }[s])):'') +'</code>. Try another query.</li>';
     }
   }
-
   applyFilter(q);
 
   go.addEventListener('click', function(){
@@ -172,16 +201,25 @@ function existsPack(slug) {
     if (e.key === 'Enter') go.click();
   });
 
-  // Rewrite item hrefs to include UTM; if linking to updates, preserve vendor q
+  // 列表链接：补 UTM；若仍是 /updates/?q=…，附 utm_content=list_item
   for (const a of list.querySelectorAll('a[href]')) {
     const href = a.getAttribute('href');
     if (!href) continue;
     if (href.startsWith('/updates/?q=')) {
-      a.setAttribute('href', addUTM(href));
+      a.setAttribute('href', addUTM(href, { utm_content: 'list_item' }));
     } else {
-      a.setAttribute('href', addUTM(href));
+      a.setAttribute('href', addUTM(href, { utm_content: 'list_item' }));
     }
   }
+
+  // 兜底：页面内所有 buy.stripe.com 链接追加 lid（避免遗漏）
+  (function ensureStripeLid(){
+    const lid = readLid();
+    if (!lid) return;
+    document.querySelectorAll('a[href*="buy.stripe.com"]').forEach(a=>{
+      a.href = addOrUpdateParam(a.href, 'lid', lid);
+    });
+  })();
 })();
 </script>
 </body>
