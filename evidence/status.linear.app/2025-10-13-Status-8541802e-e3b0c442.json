@@ -1,10 +1,10 @@
 {
   "vendor": "status.linear.app",
   "type": "Status",
-  "url": "https://status.linear.app/api/v2/summary.json",
+  "url": "https://linearstatus.com/",
   "detected_at": "2025-10-13T06:00:46.372Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "930aa3d06e711a17f36795ba0fa79dbdf8c8816a2df7b33cd81d7e3de13d056b",
   "commit": "3680760"
 }

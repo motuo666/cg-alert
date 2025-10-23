@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.render.com/",
   "detected_at": "2025-10-13T06:01:38.760Z",
-  "etag": "W/\"7bea5d2bb0daf4e05c96b050b68c4612\"",
+  "etag": "W/\"e9f61ddf07f9b487be3bf7b7df466ff4\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "e9f61ddf07f9b487be3bf7b7df466ff4f9e991f0ee3365d18f526f1fb574588f",
   "commit": "3680760"
 }

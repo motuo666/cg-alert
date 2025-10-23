@@ -1,11 +1,11 @@
 {
   "vendor": "cloudflare.com",
   "type": "Security",
-  "url": "https://cloudflare.com/.well-known/security.txt",
+  "url": "https://www.cloudflare.com/.well-known/security.txt",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:55.721Z",
-  "etag": null,
+  "etag": "W/\"71db69fbb404486379d819b815fc4fcf\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "b11054b9528757cb9a92e79ef3d73f0c03691110d8060a78106ce21417a38b11",
   "commit": "3680760"
 }

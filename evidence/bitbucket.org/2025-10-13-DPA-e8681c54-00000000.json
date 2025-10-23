@@ -1,11 +1,11 @@
 {
   "vendor": "bitbucket.org",
   "type": "DPA",
-  "url": "https://bitbucket.org/data-processing-addendum",
+  "url": "https://bitbucket.org/data-processing-addendum/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:49.963Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "cfd3c6ed87c82345a493437e303a59fa78c56e5e6f710eb17d33538cb2617a05",
   "commit": "3680760"
 }

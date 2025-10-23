@@ -1,11 +1,11 @@
 {
   "vendor": "vercel.com",
   "type": "Privacy",
-  "url": "https://vercel.com/legal/privacy",
+  "url": "https://vercel.com/legal/privacy-policy",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:55:59.100Z",
-  "etag": null,
+  "etag": "W/\"9b99c7e51557350e0adce8393ec7c90f\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "89fba739193b77000b14b79d8ed5b692df5e84b005e8d33b836f0fb1f3aa06e6",
   "commit": "3680760"
 }

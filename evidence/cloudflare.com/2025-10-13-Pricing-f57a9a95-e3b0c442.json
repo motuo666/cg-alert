@@ -1,10 +1,10 @@
 {
   "vendor": "cloudflare.com",
   "type": "Pricing",
-  "url": "https://cloudflare.com/plans",
+  "url": "https://www.cloudflare.com/plans/",
   "detected_at": "2025-10-13T05:58:47.090Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "62c1a07ee1cc505b4dd518ee28638c74c314f179eac4d2550139be384a3402eb",
   "commit": "3680760"
 }

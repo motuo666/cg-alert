@@ -1,10 +1,10 @@
 {
   "vendor": "status.slack.com",
   "type": "Status",
-  "url": "https://status.slack.com/",
+  "url": "https://slack-status.com/",
   "detected_at": "2025-10-13T05:58:56.555Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "c5419521f90d2718830ff3a4a031a6736bfa447baafb1b207e5a54a3b0021770",
   "commit": "3680760"
 }

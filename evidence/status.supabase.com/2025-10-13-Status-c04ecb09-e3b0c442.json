@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.supabase.com/api/v2/summary.json",
   "detected_at": "2025-10-13T06:01:32.309Z",
-  "etag": "W/\"c07fd6484c01e034efe0dca2d6bcd75d\"",
+  "etag": "W/\"d033f663411c547e802d0d99d39ab6bb\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "d033f663411c547e802d0d99d39ab6bb1bccfb01f8a94afbbc55bc1a98f228e0",
   "commit": "3680760"
 }

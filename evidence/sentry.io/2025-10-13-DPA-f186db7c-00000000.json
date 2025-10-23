@@ -1,11 +1,11 @@
 {
   "vendor": "sentry.io",
   "type": "DPA",
-  "url": "https://sentry.io/data-processing-addendum",
+  "url": "https://sentry.io/auth/login/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:56.963Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "22064a7f806706d4e37025003f20cd930c169158ce09627a736d600b64198659",
   "commit": "3680760"
 }

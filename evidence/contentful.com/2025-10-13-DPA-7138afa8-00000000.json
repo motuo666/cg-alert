@@ -1,11 +1,11 @@
 {
   "vendor": "contentful.com",
   "type": "DPA",
-  "url": "https://contentful.com/data-processing-addendum",
+  "url": "https://www.contentful.com/data-processing-addendum/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:57.655Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "073601438c0ca239d3996469af02798b15718623c3a70182f22758ede80f1add",
   "commit": "3680760"
 }

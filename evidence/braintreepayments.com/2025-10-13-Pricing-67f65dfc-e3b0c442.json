@@ -1,10 +1,10 @@
 {
   "vendor": "braintreepayments.com",
   "type": "Pricing",
-  "url": "https://braintreepayments.com/plans",
+  "url": "https://www.paypal.com/us/braintree",
   "detected_at": "2025-10-13T06:00:14.883Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "13aab55b641099b1884d61e2cabbca1969ed3b3a6d9e234641ea8867593cba3a",
   "commit": "3680760"
 }

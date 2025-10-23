@@ -1,10 +1,10 @@
 {
   "vendor": "snowflake.com",
   "type": "Pricing",
-  "url": "https://snowflake.com/plans",
+  "url": "https://www.snowflake.com/plans/",
   "detected_at": "2025-10-13T05:58:57.083Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "505391f434fdd64a05b0bf6da664ff34c050cc97e2d4d881c831d17f1469230d",
   "commit": "3680760"
 }

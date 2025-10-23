@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.elastic.co/api/v2/summary.json",
   "detected_at": "2025-10-13T06:01:53.559Z",
-  "etag": "W/\"c3ae0ad2dc200611885d35003dda5015\"",
+  "etag": "W/\"f0c6d1e0bdb66a9aa6a7adcaf7f65328\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "f0c6d1e0bdb66a9aa6a7adcaf7f653283571c244f5d26e018a6560730a559384",
   "commit": "3680760"
 }

@@ -1,11 +1,11 @@
 {
   "vendor": "cloudflare.com",
   "type": "DPA",
-  "url": "https://cloudflare.com/dpa",
+  "url": "https://www.cloudflare.com/dpa/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:55.948Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "d8a95e1535449a0156a517be16d897a1a1b86d5272c6ef102e1d6352cf92b127",
   "commit": "3680760"
 }

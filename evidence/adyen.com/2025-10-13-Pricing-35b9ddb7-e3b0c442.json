@@ -1,10 +1,10 @@
 {
   "vendor": "adyen.com",
   "type": "Pricing",
-  "url": "https://adyen.com/plans",
+  "url": "https://www.adyen.com/plans",
   "detected_at": "2025-10-13T06:00:13.244Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "f7bdcf0e4746b7930aa69969cf8e9a8ce98a3412869fec12691ab50c23bfe8b4",
   "commit": "3680760"
 }

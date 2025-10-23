@@ -1,11 +1,11 @@
 {
   "vendor": "helpscout.com",
   "type": "DPA",
-  "url": "https://helpscout.com/legal/dpa",
+  "url": "https://www.helpscout.com/legal/dpa/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:17.903Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "\"472dc9f3233a89e0974fc4cadee64816\"",
+  "last_modified": "Thu, 23 Oct 2025 10:26:04 GMT",
+  "hash": "002773c059574a81deaae62904e23af69a014e17acd81925539dcde8ddb4f74e",
   "commit": "3680760"
 }

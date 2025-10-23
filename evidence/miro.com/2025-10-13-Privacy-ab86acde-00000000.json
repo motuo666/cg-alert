@@ -1,11 +1,11 @@
 {
   "vendor": "miro.com",
   "type": "Privacy",
-  "url": "https://miro.com/legal/privacy",
+  "url": "https://miro.com/legal/privacy/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:27.712Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "ac952fd4063c016fd14bc68ae22bb371f74910cb85078c4fe8c4974580d02d0d",
   "commit": "3680760"
 }

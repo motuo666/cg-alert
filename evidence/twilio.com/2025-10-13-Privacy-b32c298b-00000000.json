@@ -1,11 +1,11 @@
 {
   "vendor": "twilio.com",
   "type": "Privacy",
-  "url": "https://twilio.com/legal/privacy",
+  "url": "https://www.twilio.com/en-us/legal/privacy",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:55:57.577Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "\"958aa-641d2339d7e46-gzip\"",
+  "last_modified": "Thu, 23 Oct 2025 12:02:05 GMT",
+  "hash": "23679a174ebcd11d794a7b75e97a7cc10846fb10321c4a7600cf82edc096a8cf",
   "commit": "3680760"
 }

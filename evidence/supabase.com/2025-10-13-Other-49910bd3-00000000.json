@@ -1,11 +1,11 @@
 {
   "vendor": "supabase.com",
-  "type": "Other",
-  "url": "https://supabase.com",
+  "type": "Homepage",
+  "url": "https://supabase.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:55:56.089Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "\"49c6d21545eb318e0c4d8413f846446d\"",
+  "last_modified": "Thu, 23 Oct 2025 11:43:43 GMT",
+  "hash": "11ed503fc3212a39ec409ea449595b16aece1e38fc65d6726e35259a013b4f13",
   "commit": "3680760"
 }

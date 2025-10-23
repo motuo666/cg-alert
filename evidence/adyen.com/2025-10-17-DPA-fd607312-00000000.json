@@ -1,9 +1,12 @@
 {
-  "url": "https://adyen.com/legal/dpa",
+  "url": "https://www.adyen.com/legal/dpa",
   "type": "DPA",
   "status": 200,
   "body_hash": "e3b0c44298fc1c149afbf4c8996fb924",
   "fetched_at": "2025-10-17T03:45:26.437Z",
   "seeded": true,
-  "commit": "3680760"
+  "commit": "3680760",
+  "hash": "8b05bb37fa2fcb462267b790a019a920268ca3481528d8c3bb2388174ffa75b7",
+  "etag": null,
+  "last_modified": null
 }

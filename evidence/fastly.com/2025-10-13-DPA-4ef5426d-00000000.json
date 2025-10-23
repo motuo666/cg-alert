@@ -1,11 +1,11 @@
 {
   "vendor": "fastly.com",
   "type": "DPA",
-  "url": "https://fastly.com/dpa",
+  "url": "https://www.fastly.com/dpa",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:48:07.889Z",
-  "etag": null,
+  "etag": "\"525f01a69856515340d5181e861c017c\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "73f2c9f5409aff500573b62a2cbe2896a006065991c89f21293603e9056a05bc",
   "commit": "3680760"
 }

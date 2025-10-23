@@ -1,11 +1,11 @@
 {
   "vendor": "okta.com",
   "type": "Privacy",
-  "url": "https://okta.com/legal/privacy",
+  "url": "https://www.okta.com/legal/privacy/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:42.184Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Thu, 23 Oct 2025 10:09:50 GMT",
+  "hash": "dd378afa71dbbd128a9534e64da45de301cbd51c477361d29094c9deae564e29",
   "commit": "3680760"
 }

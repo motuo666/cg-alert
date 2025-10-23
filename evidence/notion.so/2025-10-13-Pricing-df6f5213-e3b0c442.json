@@ -1,10 +1,10 @@
 {
   "vendor": "notion.so",
   "type": "Pricing",
-  "url": "https://notion.so/pricing",
+  "url": "https://www.notion.com/pricing",
   "detected_at": "2025-10-13T05:58:47.992Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "576ef515262529704c5c0d5710b5eb46bd3b7a1be222f189d06ee84efa35b970",
   "commit": "3680760"
 }

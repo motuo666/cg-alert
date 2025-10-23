@@ -1,9 +1,12 @@
 {
-  "url": "https://adyen.com/tos",
+  "url": "https://www.adyen.com/tos",
   "type": "ToS",
   "status": 200,
   "body_hash": "e3b0c44298fc1c149afbf4c8996fb924",
   "fetched_at": "2025-10-17T03:45:26.441Z",
   "seeded": true,
-  "commit": "3680760"
+  "commit": "3680760",
+  "hash": "7ed4c82ee20616e04e29b3f17a7a70f3360caab6323e29fdd016828fd2b6122c",
+  "etag": null,
+  "last_modified": null
 }

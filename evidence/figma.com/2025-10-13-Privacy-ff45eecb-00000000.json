@@ -1,11 +1,11 @@
 {
   "vendor": "figma.com",
   "type": "Privacy",
-  "url": "https://figma.com/legal/privacy",
+  "url": "https://www.figma.com/legal/privacy/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:48:09.811Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Wed, 22 Oct 2025 20:41:25 GMT",
+  "hash": "17bc9eb1fd4cd86ba6fb8ac44dced7eb196bd0ee5ceebb4c703e2cd508af5781",
   "commit": "3680760"
 }

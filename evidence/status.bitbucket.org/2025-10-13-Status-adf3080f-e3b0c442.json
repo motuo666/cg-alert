@@ -1,10 +1,10 @@
 {
   "vendor": "status.bitbucket.org",
   "type": "Status",
-  "url": "https://status.bitbucket.org/api/v2/summary.json",
+  "url": "https://bitbucket.status.atlassian.com/api/v2/summary.json",
   "detected_at": "2025-10-13T06:00:44.806Z",
-  "etag": null,
+  "etag": "W/\"fde3c1ec8b5ed2f1cf64e2f3c207891e\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "fde3c1ec8b5ed2f1cf64e2f3c207891e56d3b965c332109cb1684c330bbd8a31",
   "commit": "3680760"
 }

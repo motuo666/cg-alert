@@ -1,11 +1,11 @@
 {
   "vendor": "status.stripe.com",
-  "type": "Other",
-  "url": "https://status.stripe.com",
+  "type": "Homepage",
+  "url": "https://status.stripe.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:55:43.083Z",
   "etag": "\"b74c2bf89e0b982668a77d715b278d1f\"",
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Mon, 20 Oct 2025 22:00:36 GMT",
+  "hash": "afb5aa7bb462608694f63c9326898713592355ac55f9a8d6c4554a6387c4343c",
   "commit": "3680760"
 }

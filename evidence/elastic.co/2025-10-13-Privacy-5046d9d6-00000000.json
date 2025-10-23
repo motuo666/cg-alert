@@ -1,11 +1,11 @@
 {
   "vendor": "elastic.co",
   "type": "Privacy",
-  "url": "https://elastic.co/legal/privacy",
+  "url": "https://www.elastic.co/legal/privacy",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:48:07.425Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "23f92650b01b5e641a1be1a17af19548c5eb5e1acb3d62219086057df07e242d",
   "commit": "3680760"
 }

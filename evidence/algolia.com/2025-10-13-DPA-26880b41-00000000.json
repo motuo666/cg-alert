@@ -1,11 +1,11 @@
 {
   "vendor": "algolia.com",
   "type": "DPA",
-  "url": "https://algolia.com/legal/dpa",
+  "url": "https://www.algolia.com/legal/dpa",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:42.560Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "3ffe2695373ffef571f79c045dc8afc6561db1f5117e36120d57d5a2c4a18603",
   "commit": "3680760"
 }

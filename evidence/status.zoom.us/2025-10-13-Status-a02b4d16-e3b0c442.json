@@ -1,10 +1,10 @@
 {
   "vendor": "status.zoom.us",
   "type": "Status",
-  "url": "https://status.zoom.us/api/v2/summary.json",
+  "url": "https://www.zoomstatus.com/api/v2/summary.json",
   "detected_at": "2025-10-13T06:01:09.313Z",
-  "etag": null,
+  "etag": "W/\"e2336e061c8e4fc6860736ed14f60e4a\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "e2336e061c8e4fc6860736ed14f60e4aef2288810a06ee6b802ecb6c9b8bbf50",
   "commit": "3680760"
 }

@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.figma.com/api/v2/summary.json",
   "detected_at": "2025-10-13T06:01:59.698Z",
-  "etag": "W/\"7e1820af2defc028ae387abccd837554\"",
+  "etag": "W/\"b1b5980d3b659abd725d05d5e357a830\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "b1b5980d3b659abd725d05d5e357a83034433255af862fd0c38f7fbc3072e4d4",
   "commit": "3680760"
 }

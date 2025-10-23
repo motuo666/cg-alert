@@ -1,9 +1,12 @@
 {
-  "url": "https://adyen.com",
+  "url": "https://www.adyen.com/",
   "type": "Other",
   "status": 200,
   "body_hash": "e3b0c44298fc1c149afbf4c8996fb924",
   "fetched_at": "2025-10-17T03:45:26.430Z",
   "seeded": true,
-  "commit": "3680760"
+  "commit": "3680760",
+  "hash": "327c8e0a39786d86a3549e91d6b779fc43fbf901df75bb6c96fc8d0e8be6ff98",
+  "etag": "W/\"84ab5cdbf45628440b90cb02ecd0be8e-ssl-df\"",
+  "last_modified": null
 }

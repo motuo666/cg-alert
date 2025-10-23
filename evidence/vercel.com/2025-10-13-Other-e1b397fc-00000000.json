@@ -1,11 +1,11 @@
 {
   "vendor": "vercel.com",
-  "type": "Other",
-  "url": "https://vercel.com",
+  "type": "Homepage",
+  "url": "https://vercel.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:55:57.776Z",
-  "etag": null,
+  "etag": "W/\"d9wiuqz5olgyrq\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "f70a1888345bb3b55b5a29751bf068a312f23342c448ab28c78b9a652703b174",
   "commit": "3680760"
 }

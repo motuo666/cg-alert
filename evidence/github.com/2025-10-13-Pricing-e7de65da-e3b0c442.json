@@ -1,10 +1,10 @@
 {
   "vendor": "github.com",
   "type": "Pricing",
-  "url": "https://github.com/plans",
+  "url": "https://github.com/pricing",
   "detected_at": "2025-10-13T05:58:58.887Z",
-  "etag": null,
+  "etag": "W/\"054cffaf22e0da4ef7d51277d171ac14\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "f21dadc9ce8752b8be958e9aa7f906b94d86e6e5f1c64029aa1f8052000b8ceb",
   "commit": "3680760"
 }

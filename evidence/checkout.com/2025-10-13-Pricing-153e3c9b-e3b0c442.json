@@ -1,10 +1,10 @@
 {
   "vendor": "checkout.com",
   "type": "Pricing",
-  "url": "https://checkout.com/pricing",
+  "url": "https://www.checkout.com/pricing",
   "detected_at": "2025-10-13T06:00:16.196Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "22bf554d12bd0f474d838d4b736ecaa3feb1d264971214c37e3399f425f6a459",
   "commit": "3680760"
 }

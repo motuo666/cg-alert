@@ -1,11 +1,11 @@
 {
   "vendor": "snowflake.com",
   "type": "Security",
-  "url": "https://snowflake.com/.well-known/security.txt",
+  "url": "https://www.snowflake.com/.well-known/security.txt",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:58.996Z",
-  "etag": null,
+  "etag": "W/\"ec8409b674b09674735624ca73f8bbc1\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "9dfd0325d51f2181e6c7110dcc395a18eca60b3401129d735f8b3e97831faa86",
   "commit": "3680760"
 }

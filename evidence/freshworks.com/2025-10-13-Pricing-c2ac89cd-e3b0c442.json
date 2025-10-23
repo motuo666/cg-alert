@@ -1,10 +1,10 @@
 {
   "vendor": "freshworks.com",
   "type": "Pricing",
-  "url": "https://freshworks.com/pricing",
+  "url": "https://www.freshworks.com/pricing/",
   "detected_at": "2025-10-13T06:00:32.944Z",
-  "etag": null,
+  "etag": "\"1v1f56eux868em\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "fd0a9b6b906a6c131db2ddfd66d525fe4956b7c685d2bc389c05c3a57cee937c",
   "commit": "3680760"
 }

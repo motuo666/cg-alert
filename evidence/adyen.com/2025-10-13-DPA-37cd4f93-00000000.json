@@ -1,11 +1,11 @@
 {
   "vendor": "adyen.com",
   "type": "DPA",
-  "url": "https://adyen.com/data-processing-addendum",
+  "url": "https://www.adyen.com/data-processing-addendum",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:41.205Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "d148d0fb7f19a82bbd7cc8615896f71e541f3cc329262e9d7f5b7505dc694dfe",
   "commit": "3680760"
 }

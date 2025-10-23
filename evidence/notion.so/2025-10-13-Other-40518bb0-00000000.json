@@ -1,11 +1,11 @@
 {
   "vendor": "notion.so",
-  "type": "Other",
-  "url": "https://notion.so",
+  "type": "Homepage",
+  "url": "https://www.notion.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:40.528Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "689ac7de0e98ca5b569eb51f1d469419a93cae221364ad764c4e35a3026089c8",
   "commit": "3680760"
 }

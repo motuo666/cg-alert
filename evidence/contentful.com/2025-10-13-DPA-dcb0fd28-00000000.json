@@ -1,11 +1,11 @@
 {
   "vendor": "contentful.com",
   "type": "DPA",
-  "url": "https://contentful.com/legal/dpa",
+  "url": "https://www.contentful.com/legal/dpa/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:58.065Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "\"f39695d6382c989a5547d74092c8261d\"",
+  "last_modified": "Thu, 23 Oct 2025 10:44:57 GMT",
+  "hash": "731bbe8c99e433ce98efe4a6aa25665b5f8417fbb4872c70fd9ca0e177bc80d9",
   "commit": "3680760"
 }

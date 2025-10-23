@@ -1,11 +1,11 @@
 {
   "vendor": "onelogin.com",
   "type": "Security",
-  "url": "https://onelogin.com/.well-known/security.txt",
+  "url": "https://www.onelogin.com/.well-known/security.txt",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:42.645Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Thu, 23 Oct 2025 12:53:51 GMT",
+  "hash": "e2a76ad092f17805c3e7d022abd71c61a1b089f05b5ac243542ed7be36c5074f",
   "commit": "3680760"
 }

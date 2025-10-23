@@ -1,10 +1,10 @@
 {
   "vendor": "asana.com",
   "type": "Pricing",
-  "url": "https://asana.com/plans",
+  "url": "https://asana.com/pricing",
   "detected_at": "2025-10-13T06:00:47.200Z",
-  "etag": null,
+  "etag": "W/\"i2e96ngi4tg0uz-df\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "d9d9331b368561ab67037672df23d249a64d0db6024fc1db77b4d39dfa006731",
   "commit": "3680760"
 }

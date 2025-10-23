@@ -1,10 +1,10 @@
 {
   "vendor": "onelogin.com",
   "type": "Pricing",
-  "url": "https://onelogin.com/pricing",
+  "url": "https://www.onelogin.com/product/pricing",
   "detected_at": "2025-10-13T05:59:11.767Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "5d23e97bb86864f15a92ae9beaa597549512261047979b03fa70415b446590e6",
   "commit": "3680760"
 }

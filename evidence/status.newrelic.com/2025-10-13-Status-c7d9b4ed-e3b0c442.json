@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.newrelic.com/",
   "detected_at": "2025-10-13T06:01:23.629Z",
-  "etag": "W/\"a10a30f115594f3793cfbf76c25e5c4d\"",
+  "etag": "W/\"3426416fd64e3bcd5144fe289633e973\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "3426416fd64e3bcd5144fe289633e97314501a1c402912828dc26d0534fa80ef",
   "commit": "3680760"
 }

@@ -1,11 +1,11 @@
 {
   "vendor": "status.aws.amazon.com",
-  "type": "Other",
-  "url": "https://status.aws.amazon.com",
+  "type": "Homepage",
+  "url": "https://health.aws.amazon.com/health/status",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:52:03.740Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "ada465ecb2e830d44b99f02472c1380bb9cbdf194fe91853486857dc3b530eb8",
   "commit": "3680760"
 }

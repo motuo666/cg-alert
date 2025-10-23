@@ -1,11 +1,11 @@
 {
   "vendor": "paddle.com",
   "type": "DPA",
-  "url": "https://paddle.com/dpa",
+  "url": "https://www.paddle.com/dpa",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:43.889Z",
-  "etag": null,
+  "etag": "\"10spas7xuo05q97-df\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "52a81e55edfae3f83285753c4b79fe764a77033baa7599e3cfa3dc1e73a2d138",
   "commit": "3680760"
 }

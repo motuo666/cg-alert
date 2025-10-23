@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.snowflake.com/api/v2/summary.json",
   "detected_at": "2025-10-13T05:58:58.430Z",
-  "etag": "W/\"e038470f099c55fdc247e9c0e6be01e1\"",
+  "etag": "W/\"029fc1f1252a8ece3defa1b3b92d596a\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "029fc1f1252a8ece3defa1b3b92d596a4ac86b19c869a4f239f3e0dcadee1507",
   "commit": "3680760"
 }

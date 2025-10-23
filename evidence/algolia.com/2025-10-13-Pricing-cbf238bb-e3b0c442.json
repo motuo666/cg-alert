@@ -1,10 +1,10 @@
 {
   "vendor": "algolia.com",
   "type": "Pricing",
-  "url": "https://algolia.com/plans",
+  "url": "https://dashboard.algolia.com/plans",
   "detected_at": "2025-10-13T06:01:50.443Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "commit": "3680760"
 }

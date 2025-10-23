@@ -1,11 +1,11 @@
 {
   "vendor": "twilio.com",
   "type": "DPA",
-  "url": "https://twilio.com/dpa",
+  "url": "https://www.twilio.com/dpa",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:55:57.332Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "e7231908f746582dadffae353949e05699be635b36d0243a245f4899025538f1",
   "commit": "3680760"
 }

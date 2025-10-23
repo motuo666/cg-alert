@@ -1,9 +1,12 @@
 {
-  "url": "https://adyen.com/legal/privacy",
+  "url": "https://www.adyen.com/legal/privacy",
   "type": "Privacy",
   "status": 200,
   "body_hash": "e3b0c44298fc1c149afbf4c8996fb924",
   "fetched_at": "2025-10-17T03:45:26.437Z",
   "seeded": true,
-  "commit": "3680760"
+  "commit": "3680760",
+  "hash": "b2fdf50012bbc63fa2ad3166993edd6f0683c0ea95db96ec6d018962bf3a7801",
+  "etag": null,
+  "last_modified": null
 }

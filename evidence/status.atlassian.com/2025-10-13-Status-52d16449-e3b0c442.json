@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.atlassian.com/",
   "detected_at": "2025-10-13T05:58:41.340Z",
-  "etag": "W/\"78fb90abe514ab6a0f319e1fd8ad6d44\"",
+  "etag": "W/\"8cb1032fd13f7565ae4bd7f281024091\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "8cb1032fd13f7565ae4bd7f281024091cbc78d8653f115361cc31be37524fb3d",
   "commit": "3680760"
 }

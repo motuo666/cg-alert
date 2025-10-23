@@ -1,11 +1,11 @@
 {
   "vendor": "heroku.com",
   "type": "Security",
-  "url": "https://heroku.com/.well-known/security.txt",
+  "url": "https://www.heroku.com/.well-known/security.txt",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:18.682Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "0ddf77fdd75484238f514c7a1daa22f4e875ae87fff2707aed3080582d14fd47",
   "commit": "3680760"
 }

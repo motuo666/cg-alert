@@ -1,11 +1,11 @@
 {
   "vendor": "adyen.com",
-  "type": "Other",
-  "url": "https://adyen.com",
+  "type": "Homepage",
+  "url": "https://www.adyen.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:40.899Z",
-  "etag": null,
+  "etag": "W/\"84ab5cdbf45628440b90cb02ecd0be8e-ssl-df\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "221e4289734459caf12b2460b12c830de0ef736e1a422f4c06a9eda293ec652e",
   "commit": "3680760"
 }

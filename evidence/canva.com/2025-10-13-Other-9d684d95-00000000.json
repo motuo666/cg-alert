@@ -1,11 +1,11 @@
 {
   "vendor": "canva.com",
-  "type": "Other",
-  "url": "https://canva.com",
+  "type": "Homepage",
+  "url": "https://www.canva.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:52.702Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "992fd91214a43685614b6abdf15306fbfe92c9215eff223f2858d6e1b1f1d79e",
   "commit": "3680760"
 }

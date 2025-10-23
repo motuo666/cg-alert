@@ -1,11 +1,11 @@
 {
   "vendor": "recurly.com",
-  "type": "Other",
-  "url": "https://recurly.com",
+  "type": "Homepage",
+  "url": "https://recurly.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:47.491Z",
-  "etag": "\"68e94ba6-81124\"",
-  "last_modified": "Fri, 10 Oct 2025 18:08:38 GMT",
-  "hash": null,
+  "etag": "W/\"68f93092-819f2\"",
+  "last_modified": "Wed, 22 Oct 2025 19:29:22 GMT",
+  "hash": "bb5364176c7325e79144539f4a9f57b762db3f808ca03700a311401730928e47",
   "commit": "3680760"
 }

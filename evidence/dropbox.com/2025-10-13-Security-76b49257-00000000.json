@@ -1,11 +1,11 @@
 {
   "vendor": "dropbox.com",
   "type": "Security",
-  "url": "https://dropbox.com/.well-known/security.txt",
+  "url": "https://www.dropbox.com/.well-known/security.txt",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:48:00.129Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "649d017514c230951ee31fc038953dc29d95b2b98fc7a25c372dce6366073959",
   "commit": "3680760"
 }

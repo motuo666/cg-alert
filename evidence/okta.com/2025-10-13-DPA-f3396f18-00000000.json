@@ -1,11 +1,11 @@
 {
   "vendor": "okta.com",
   "type": "DPA",
-  "url": "https://okta.com/legal/dpa",
+  "url": "https://www.okta.com/legal/dpa/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:41.991Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Thu, 23 Oct 2025 10:08:05 GMT",
+  "hash": "e1cf0725019fb83ba93b9b70d424a039fa272fff3a586bb461c9addc9b513588",
   "commit": "3680760"
 }

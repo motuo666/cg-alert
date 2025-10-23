@@ -1,11 +1,11 @@
 {
   "vendor": "braintreepayments.com",
   "type": "DPA",
-  "url": "https://braintreepayments.com/legal/dpa",
+  "url": "https://www.paypal.com/us/legalhub/braintree/home?utm_campaign=Braintree_Migration&utm_medium=Website&utm_source=Braintree",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:52.415Z",
-  "etag": null,
+  "etag": "W/\"14c270-k8TbCLex65zaXsgme377RUOrQ3w\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "2e01663171bf81ca5f2b4ac83e03868e821e09f574af44a1081c5e64ff317085",
   "commit": "3680760"
 }

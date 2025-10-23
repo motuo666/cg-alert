@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.algolia.com/api/v2/summary.json",
   "detected_at": "2025-10-13T06:01:51.346Z",
-  "etag": "\"67dd773d-f74\"",
+  "etag": "W/\"67dd773d-f74\"",
   "last_modified": "Fri, 21 Mar 2025 14:27:09 GMT",
-  "hash": null,
+  "hash": "72291c5c45c7c67ff498fced58e23e3b9ac2b05db0157372aae024cb0d656e27",
   "commit": "3680760"
 }

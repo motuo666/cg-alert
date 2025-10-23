@@ -4,8 +4,8 @@
   "url": "https://asana.com/.well-known/security.txt",
   "kind": "baseline",
   "detected_at": "2025-10-13T07:04:20.180Z",
-  "etag": "\"38b5c65e1aa51cb4e299d72ad0d431a5-ssl\"",
+  "etag": "\"087067ab463139086eed8b914d381d62-ssl\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "e36d46976ff2f51ffa4efbc8a2a75cc6dba17228b278de8f0cd6e23b177ef4f8",
   "commit": "3680760"
 }

@@ -1,11 +1,11 @@
 {
   "vendor": "sanity.io",
   "type": "Privacy",
-  "url": "https://sanity.io/legal/privacy",
+  "url": "https://www.sanity.io/legal/privacy",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:52.780Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "4a09d8a3c5e47801d3d7a53e3c24f3c043c489434376cf0c4320ea5398107655",
   "commit": "3680760"
 }

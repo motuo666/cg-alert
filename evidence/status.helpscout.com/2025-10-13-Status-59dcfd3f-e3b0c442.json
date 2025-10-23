@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.helpscout.com/",
   "detected_at": "2025-10-13T06:00:40.411Z",
-  "etag": "W/\"8e1e5840bcb8a32fce96f934f2ee706b\"",
+  "etag": "W/\"9852f8a4ecb844566b4183272a24c2dc\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "9852f8a4ecb844566b4183272a24c2dc629cd0edabfd0bf214c05395e0aa602f",
   "commit": "3680760"
 }

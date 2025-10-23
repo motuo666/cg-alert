@@ -1,10 +1,10 @@
 {
   "vendor": "aws.amazon.com",
   "type": "Pricing",
-  "url": "https://aws.amazon.com/plans",
+  "url": "https://aws.amazon.com/plans/",
   "detected_at": "2025-10-13T06:01:15.447Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "2aebcd244a1331bc93e118c012530f3dbfc545c9d0aa621e13086d8242463d6a",
   "commit": "3680760"
 }

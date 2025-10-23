@@ -1,10 +1,10 @@
 {
   "vendor": "segment.com",
   "type": "Pricing",
-  "url": "https://segment.com/plans",
+  "url": "https://segment.com/pricing/",
   "detected_at": "2025-10-13T06:01:27.195Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "\"6e459-641d24a4183de-gzip\"",
+  "last_modified": "Thu, 23 Oct 2025 12:08:25 GMT",
+  "hash": "c63e86a446a476dcf7244b7635d0341d64d62242fae8e6e3f56de2640967f9b6",
   "commit": "3680760"
 }

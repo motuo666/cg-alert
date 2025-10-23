@@ -1,10 +1,10 @@
 {
   "vendor": "datadoghq.com",
   "type": "Pricing",
-  "url": "https://datadoghq.com/plans",
+  "url": "https://www.datadoghq.com/plans",
   "detected_at": "2025-10-13T05:58:49.252Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "W/\"bcc72c05da31ab5feac5619625ebab43\"",
+  "last_modified": "Wed, 22 Oct 2025 23:38:28 GMT",
+  "hash": "3d1747e6660615c16ad7edbeeb677242120d73b90ed3ff0d720e871c56c5f2e9",
   "commit": "3680760"
 }

@@ -1,11 +1,11 @@
 {
   "vendor": "box.com",
-  "type": "Other",
-  "url": "https://box.com",
+  "type": "Homepage",
+  "url": "https://www.box.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:50.974Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Wed, 22 Oct 2025 22:14:29 GMT",
+  "hash": "ed9f252abd8ac29aaa4c876314ed67410ff5f83e1c8b19f829dfe4ff24a53c95",
   "commit": "3680760"
 }

@@ -1,10 +1,10 @@
 {
   "vendor": "chargebee.com",
   "type": "Pricing",
-  "url": "https://chargebee.com/pricing",
+  "url": "https://www.chargebee.com/pricing",
   "detected_at": "2025-10-13T06:00:21.523Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "W/\"d2cd3f769e967bc9f162c2e3f6aab1b2\"",
+  "last_modified": "Fri, 17 Oct 2025 08:23:41 GMT",
+  "hash": "941f21bbc82ca34ef5d3f2b96794ed3f659759425a2d3acab376c55ab9b446ab",
   "commit": "3680760"
 }

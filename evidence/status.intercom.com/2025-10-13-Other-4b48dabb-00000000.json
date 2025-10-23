@@ -1,11 +1,11 @@
 {
   "vendor": "status.intercom.com",
-  "type": "Other",
-  "url": "https://status.intercom.com",
+  "type": "Homepage",
+  "url": "https://www.intercomstatus.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:53:53.550Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "f4569c90e5d76ee60968df2a3110b3c8486c63a4aadd1af4a806de0ef9115047",
   "commit": "3680760"
 }

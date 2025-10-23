@@ -1,10 +1,10 @@
 {
   "vendor": "contentful.com",
   "type": "Pricing",
-  "url": "https://contentful.com/plans",
+  "url": "https://www.contentful.com/plans/",
   "detected_at": "2025-10-13T06:01:54.032Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "6fe07e703f15c8dede2126da52e0a49891d6c4373c97de01bfbc490087793ac3",
   "commit": "3680760"
 }

@@ -1,11 +1,11 @@
 {
   "vendor": "hubspot.com",
   "type": "DPA",
-  "url": "https://hubspot.com/dpa",
+  "url": "https://www.hubspot.com/dpa",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:20.592Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "931fa3356e6c1f196c4fff8df77444c3eb1d8371c40d92db77ab04f029521569",
   "commit": "3680760"
 }

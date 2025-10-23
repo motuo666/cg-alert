@@ -1,11 +1,11 @@
 {
   "vendor": "recurly.com",
   "type": "Privacy",
-  "url": "https://recurly.com/legal/privacy",
+  "url": "https://recurly.com/legal/privacy/?",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:48.105Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "W/\"68f93092-6fc8e\"",
+  "last_modified": "Wed, 22 Oct 2025 19:29:22 GMT",
+  "hash": "5d5d2a93b322cd63a786bad00e95f1f7ef92b2aa46828f7a0f942933dbc49975",
   "commit": "3680760"
 }

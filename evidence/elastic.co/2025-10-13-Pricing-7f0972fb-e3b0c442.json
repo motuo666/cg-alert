@@ -1,10 +1,10 @@
 {
   "vendor": "elastic.co",
   "type": "Pricing",
-  "url": "https://elastic.co/pricing",
+  "url": "https://www.elastic.co/pricing",
   "detected_at": "2025-10-13T06:01:51.720Z",
-  "etag": null,
+  "etag": "\"ay59xrkojlb0hy\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "508d3dd0a7711feebb8233069eb7631dcaaf6ddf053b9a8cc07195d5038c91f0",
   "commit": "3680760"
 }

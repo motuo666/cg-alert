@@ -1,10 +1,10 @@
 {
   "vendor": "recurly.com",
   "type": "Pricing",
-  "url": "https://recurly.com/pricing",
+  "url": "https://recurly.com/pricing/?",
   "detected_at": "2025-10-13T06:00:19.888Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "W/\"68f93092-a04f1\"",
+  "last_modified": "Wed, 22 Oct 2025 19:29:22 GMT",
+  "hash": "025fc0d08ef2abd803ef1468aef331d896bed5771e7ed38540ecf8ce70372b1b",
   "commit": "3680760"
 }

@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.mailgun.com/api/v2/summary.json",
   "detected_at": "2025-10-13T06:01:45.371Z",
-  "etag": "W/\"27590a9f897bf530cf761e19503b451f\"",
+  "etag": "W/\"8782b93f31d59679c6ed288822d24e22\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "8782b93f31d59679c6ed288822d24e22a3158d764fa87224b48df459953bee7f",
   "commit": "3680760"
 }

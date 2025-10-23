@@ -1,11 +1,11 @@
 {
   "vendor": "status.checkout.com",
-  "type": "Other",
-  "url": "https://status.checkout.com",
+  "type": "Homepage",
+  "url": "https://identity.checkout.com/app/statuspage_saml/exk1izzuix2ptvgqk0h8/sso/saml?SAMLRequest=fZLBbsIwEER%2FJTefTGInhMQiSLSoKhJVUaE99IIc24AFsUPWQZSvbwKl0B44WLKlmbezu%2B4DL7YlG9Zubd7UrlbgvCGAqpy25tEaqAtVzVS110K9v00ytHauBOb7BTd8pTrguKuhbK%2Fa%2BgDNaYC%2BODuRN2qA2vCWdvVqqYzT7qsj1kpsbO06whY%2BL0v%2FilucOOqwIfp4rPWBlm6%2F2m2CdfJbBXlPthLqlD1DS76FpuB4lKFFQHJJ8jzASSRiHAV5D6eSKBzmcRLnNE2StJUC1GpsmprGZYgGtItJgGk4J5R1IxaST%2BRNK%2BussNsHbaQ2qwzVlWGWgwZmeKGAOcFmw5cJo52A5WcRsOf5fIqnr7M58j5UBafmGwHyDsXWAGvD3yfxywpuLeV9T%2FkTFQ36rZqd2qsGl6GLRCZpGi%2BxpMsIR1wQnMiYYsElX5JeGErxf519%2FxZ0fv39K4Nv&RelayState=https%3A%2F%2Fcheckout-services.statuspage.io%2F&SigAlg=http%3A%2F%2Fwww.w3.org%2F2001%2F04%2Fxmldsig-more%23rsa-sha256&Signature=KBcz2SlsZgQE0JvNhDA3GbgPdFQHjJztIg4fdXO1vVEhzpsUbIoA6samgXBbbkUso6NAvafA5xAzMKZHjs3PMmsPi91YUov6YvnguhBdUixusH1ihDRgonhdlqygF9KSpCL%2BTqSJ4r5%2BL53qjbJxqwePrnj0B53%2BX%2Bk0gi308qOjpZp5gw1gBDV3%2Fm1bVUh7lAZOvfApSIEJxqO8pgtpsT3DSG0ZUlgjQ5USDel5RQwkFagwsW0h6CqLfTBK8hwATcXPRDOrzxgKXenXGJUSva21573jT97mZ6pEUQCo1YIgqkdLx%2BLCeepn7dVbWaJme6LefE2FvpWcCWdIJ0Xf5Q%3D%3D",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:52:10.045Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "0dd6eae918970331e3b8438d9e71a0ed944b37ab54912a09bf69793d1309d9be",
   "commit": "3680760"
 }

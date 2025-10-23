@@ -1,11 +1,11 @@
 {
   "vendor": "notion.so",
   "type": "DPA",
-  "url": "https://notion.so/data-processing-addendum",
+  "url": "https://www.notion.so/data-processing-addendum",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:40.746Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "\"af5eee262de5b1ce877fef6537d35051\"",
+  "last_modified": "Thu, 23 Oct 2025 12:03:59 GMT",
+  "hash": "0099d8bbba93f1293fa9effb292f8f193dea985b05c16f79f6866d71c1f37e29",
   "commit": "3680760"
 }

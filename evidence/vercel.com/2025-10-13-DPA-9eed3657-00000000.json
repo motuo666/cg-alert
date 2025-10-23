@@ -4,8 +4,8 @@
   "url": "https://vercel.com/legal/dpa",
   "kind": "baseline",
   "detected_at": "2025-10-13T07:12:32.424Z",
-  "etag": null,
+  "etag": "W/\"610e4f40c1f0f2f4bad2dd193e302e15\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "b762127f52bd0ff5459cb45298cb04ad867e81c238aa3c528fb1af792ddaea3e",
   "commit": "3680760"
 }

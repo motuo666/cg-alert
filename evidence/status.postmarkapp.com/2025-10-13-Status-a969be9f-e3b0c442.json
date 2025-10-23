@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.postmarkapp.com/",
   "detected_at": "2025-10-13T06:01:49.786Z",
-  "etag": "W/\"171b8e40f6cc908ba7cdd8b67836e14d\"",
+  "etag": "W/\"0b7be45caab4162b1480cb51c4be9039\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "0b7be45caab4162b1480cb51c4be90396efac68ba0fe15c3791a8db8fa5035b2",
   "commit": "3680760"
 }

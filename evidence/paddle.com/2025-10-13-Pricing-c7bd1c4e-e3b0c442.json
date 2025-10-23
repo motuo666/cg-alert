@@ -1,10 +1,10 @@
 {
   "vendor": "paddle.com",
   "type": "Pricing",
-  "url": "https://paddle.com/pricing",
+  "url": "https://www.paddle.com/pricing",
   "detected_at": "2025-10-13T06:00:18.758Z",
-  "etag": null,
+  "etag": "\"avuyu7nboqdjxh-df\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "ff222721e0ad21c79548caad43262fd61304cb6ed346f22bb6b2bb0005069d5e",
   "commit": "3680760"
 }

@@ -1,11 +1,11 @@
 {
   "vendor": "status.contentful.com",
-  "type": "Other",
-  "url": "https://status.contentful.com",
+  "type": "Homepage",
+  "url": "https://www.contentfulstatus.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:52:12.125Z",
-  "etag": null,
+  "etag": "W/\"f7345d1df82199a5ceb2c00e4235d720\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "f7345d1df82199a5ceb2c00e4235d72016dfbefe082a9163ec556d4bd2ab2171",
   "commit": "3680760"
 }

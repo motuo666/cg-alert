@@ -1,11 +1,11 @@
 {
   "vendor": "status.netlify.com",
-  "type": "Other",
-  "url": "https://status.netlify.com",
+  "type": "Homepage",
+  "url": "https://www.netlifystatus.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:53:58.325Z",
-  "etag": null,
+  "etag": "W/\"81a7a2afd975223c972e78e76f0b0897\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "81a7a2afd975223c972e78e76f0b0897893e4be893a3f0501d9f1dc0ef2d4076",
   "commit": "3680760"
 }

@@ -1,11 +1,11 @@
 {
   "vendor": "dropbox.com",
-  "type": "Other",
-  "url": "https://dropbox.com",
+  "type": "Homepage",
+  "url": "https://dropbox.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:48:00.026Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "commit": "3680760"
 }

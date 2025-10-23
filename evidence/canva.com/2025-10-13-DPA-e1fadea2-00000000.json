@@ -1,11 +1,11 @@
 {
   "vendor": "canva.com",
   "type": "DPA",
-  "url": "https://canva.com/data-processing-addendum",
+  "url": "https://www.canva.com/data-processing-addendum",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:52.917Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "9111c9f87e2c76de563053338d7d23e62b108252778b9bbd57398682556174d2",
   "commit": "3680760"
 }

@@ -1,10 +1,10 @@
 {
   "vendor": "zoho.com",
   "type": "Pricing",
-  "url": "https://zoho.com/pricing",
+  "url": "https://www.zoho.com/pricing/",
   "detected_at": "2025-10-13T06:00:29.421Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "58bf2215b395dcac74c009aa98701854e43cbe54a1cd3a95fee6a647ca9910d4",
   "commit": "3680760"
 }

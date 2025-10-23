@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.sendgrid.com/",
   "detected_at": "2025-10-13T06:01:41.697Z",
-  "etag": "W/\"876577bd1c37b2c2bdb81e92c7866cc2\"",
+  "etag": "W/\"5931684da0ce7ed989f7d24e3df15717\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "5931684da0ce7ed989f7d24e3df157171a81c89249a450bec1eb80af1791841a",
   "commit": "3680760"
 }

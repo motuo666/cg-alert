@@ -1,11 +1,11 @@
 {
   "vendor": "netlify.com",
-  "type": "Other",
-  "url": "https://netlify.com",
+  "type": "Homepage",
+  "url": "https://www.netlify.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:37.316Z",
-  "etag": null,
+  "etag": "\"ef4b8c4afd29322b37201a6e4b5e9058-ssl-df\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "413bfeaed12bcdc93f408199511b8a4b31835620e96bdf77d27b4b45f99909f8",
   "commit": "3680760"
 }

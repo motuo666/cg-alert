@@ -1,11 +1,11 @@
 {
   "vendor": "onelogin.com",
   "type": "DPA",
-  "url": "https://onelogin.com/data-processing-addendum",
+  "url": "https://www.onelogin.com/data-processing-addendum",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:42.807Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Thu, 23 Oct 2025 12:53:49 GMT",
+  "hash": "94f9cdcb1cca1cc4957df91eec9c8f75bd45dca72d01d9fd41c90a154de1be9d",
   "commit": "3680760"
 }

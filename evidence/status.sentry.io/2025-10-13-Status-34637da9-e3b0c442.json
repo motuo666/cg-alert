@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.sentry.io/",
   "detected_at": "2025-10-13T06:01:26.382Z",
-  "etag": "W/\"829a757402f5b9035a962e52e87a7704\"",
+  "etag": "W/\"fc4e846ad9339c7c755463b9b61f6b8a\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "fc4e846ad9339c7c755463b9b61f6b8a0a6ac9bfa7030fb67dca8fb8ead8b5c0",
   "commit": "3680760"
 }

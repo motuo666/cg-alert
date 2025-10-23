@@ -1,11 +1,11 @@
 {
   "vendor": "okta.com",
   "type": "DPA",
-  "url": "https://okta.com/dpa",
+  "url": "https://www.okta.com/sites/default/files/2021-11/OKTA-DPA.pdf",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:41.789Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "\"619408b5-3b770\"",
+  "last_modified": "Tue, 16 Nov 2021 19:38:29 GMT",
+  "hash": "c3b1faad89b8ba1ff16c54953807790c452ddc1517642fd0c11b630c761cde2c",
   "commit": "3680760"
 }

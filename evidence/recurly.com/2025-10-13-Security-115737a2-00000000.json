@@ -4,8 +4,8 @@
   "url": "https://recurly.com/.well-known/security.txt",
   "kind": "baseline",
   "detected_at": "2025-10-13T07:08:22.683Z",
-  "etag": "\"68e94ba6-5e5f3\"",
-  "last_modified": "Fri, 10 Oct 2025 18:08:38 GMT",
-  "hash": null,
+  "etag": "W/\"68f93092-5ed14\"",
+  "last_modified": "Wed, 22 Oct 2025 19:29:22 GMT",
+  "hash": "cfd82bdad91591daf4b169397623aee590f7eadc5b9b83c27b830b95137ef397",
   "commit": "3680760"
 }

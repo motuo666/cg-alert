@@ -3,8 +3,8 @@
   "type": "Pricing",
   "url": "https://supabase.com/pricing",
   "detected_at": "2025-10-13T06:01:30.768Z",
-  "etag": "\"2059966ec58c73f28cabf3c0fdb1a855\"",
-  "last_modified": "Sun, 12 Oct 2025 06:26:04 GMT",
-  "hash": null,
+  "etag": "\"2717524d150a65f7ec2acdc7f3476dd0\"",
+  "last_modified": "Thu, 23 Oct 2025 12:32:18 GMT",
+  "hash": "0e13aa2b7b0e3130eb96da0ad609e323ab9bd0b7e92c4c8c5f3e15c922a490d5",
   "commit": "3680760"
 }

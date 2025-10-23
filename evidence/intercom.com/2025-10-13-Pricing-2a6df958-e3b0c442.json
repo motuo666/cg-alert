@@ -1,10 +1,10 @@
 {
   "vendor": "intercom.com",
   "type": "Pricing",
-  "url": "https://intercom.com/plans",
+  "url": "https://www.intercom.com/plans",
   "detected_at": "2025-10-13T06:00:36.975Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "1c827dddce94af4dbbd2adad99c024a0fb0d5b7aaddd61bd42e7389c8ce83361",
   "commit": "3680760"
 }

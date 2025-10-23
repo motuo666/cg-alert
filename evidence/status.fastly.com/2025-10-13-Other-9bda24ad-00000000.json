@@ -1,11 +1,11 @@
 {
   "vendor": "status.fastly.com",
-  "type": "Other",
-  "url": "https://status.fastly.com",
+  "type": "Homepage",
+  "url": "https://www.fastlystatus.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:52:16.993Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "347b4558e231e492ac8324bf746faf25dd34ac5659df286d6a61f314010cc006",
   "commit": "3680760"
 }

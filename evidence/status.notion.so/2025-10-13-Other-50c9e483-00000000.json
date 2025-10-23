@@ -1,11 +1,11 @@
 {
   "vendor": "status.notion.so",
-  "type": "Other",
-  "url": "https://status.notion.so",
+  "type": "Homepage",
+  "url": "https://www.notion-status.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:53:59.941Z",
-  "etag": null,
+  "etag": "W/\"38075f602a36904258e0f01405f58f09\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "38075f602a36904258e0f01405f58f09f766fb754ec9266e529330f63a2a6576",
   "commit": "3680760"
 }

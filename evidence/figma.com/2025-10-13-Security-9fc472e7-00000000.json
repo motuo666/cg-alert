@@ -1,11 +1,11 @@
 {
   "vendor": "figma.com",
   "type": "Security",
-  "url": "https://figma.com/.well-known/security.txt",
+  "url": "https://www.figma.com/.well-known/security.txt",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:48:08.718Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Tue, 11 Mar 2025 21:54:14 GMT",
+  "hash": "bd81c560ec30c790e5bb1fa4e09a7e3ba44be30503d2d22e3155544dc1f7d1f2",
   "commit": "3680760"
 }

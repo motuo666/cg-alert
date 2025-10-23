@@ -1,9 +1,12 @@
 {
-  "url": "https://algolia.com/trust-center",
+  "url": "https://www.algolia.com/trust-center",
   "type": "Security",
   "status": 200,
   "body_hash": "e3b0c44298fc1c149afbf4c8996fb924",
   "fetched_at": "2025-10-17T15:52:20.621Z",
   "seeded": true,
-  "commit": "3680760"
+  "commit": "3680760",
+  "hash": "a65efc68ba5a99eb631741684979e90c4859e8dd23c4974cc92b954cf05362e1",
+  "etag": null,
+  "last_modified": null
 }

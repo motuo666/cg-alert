@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.adyen.com/",
   "detected_at": "2025-10-13T06:00:14.304Z",
-  "etag": "\"992894e8dacb715f8e450e9d9ff41f98-ssl-df\"",
+  "etag": "W/\"992894e8dacb715f8e450e9d9ff41f98-ssl-df\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "91cb6f7004a3f2a70a4193cdd89db3a9bb739de53851dbe51748b76b1c797f87",
   "commit": "3680760"
 }

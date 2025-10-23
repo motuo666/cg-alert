@@ -1,11 +1,11 @@
 {
   "vendor": "newrelic.com",
-  "type": "Other",
-  "url": "https://newrelic.com",
+  "type": "Homepage",
+  "url": "https://newrelic.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:38.105Z",
-  "etag": "W/\"1760135538\"",
-  "last_modified": null,
-  "hash": null,
+  "etag": "W/\"1761136996\"",
+  "last_modified": "Wed, 22 Oct 2025 12:43:16 GMT",
+  "hash": "388bc77c3b738f55ee1a70dd912e03aeaf44cc32f6308fc9446025102f256f17",
   "commit": "3680760"
 }

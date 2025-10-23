@@ -1,11 +1,11 @@
 {
   "vendor": "mailgun.com",
   "type": "Privacy",
-  "url": "https://mailgun.com/legal/privacy",
+  "url": "https://www.mailgun.com/legal/privacy-policy/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:25.723Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Thu, 31 Jul 2025 08:58:36 GMT",
+  "hash": "cc8f58f612fcb0f518899620b4351d97d8e605b97ba3d373c78362e1df7f60d7",
   "commit": "3680760"
 }

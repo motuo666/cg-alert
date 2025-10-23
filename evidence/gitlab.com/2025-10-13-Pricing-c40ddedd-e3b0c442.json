@@ -1,10 +1,10 @@
 {
   "vendor": "gitlab.com",
   "type": "Pricing",
-  "url": "https://gitlab.com/plans",
+  "url": "https://gitlab.com/users/sign_in",
   "detected_at": "2025-10-13T06:00:41.222Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "cb273bc966cefc9e12b53637b651a90e2fad3337e485a08debeab03247df8c50",
   "commit": "3680760"
 }

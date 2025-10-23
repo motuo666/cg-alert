@@ -1,11 +1,11 @@
 {
   "vendor": "mongodb.com",
   "type": "DPA",
-  "url": "https://mongodb.com/dpa",
+  "url": "https://www.mongodb.com/dpa",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:36.791Z",
-  "etag": null,
+  "etag": "ST62erRTC1rSg8rUXzlaQRLTYMKo3BO3kGTbs+zX2OU=",
   "last_modified": null,
-  "hash": null,
+  "hash": "5c68999cb15af99bd050c2245bbdf051aad0d2249770af19b767e26bf9d653b8",
   "commit": "3680760"
 }

@@ -1,11 +1,11 @@
 {
   "vendor": "intercom.com",
   "type": "Privacy",
-  "url": "https://intercom.com/legal/privacy",
+  "url": "https://www.intercom.com/legal/privacy",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:21.684Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "158b119ea277996fe4656395663a82bf40b7dee88713b979633840363f813815",
   "commit": "3680760"
 }

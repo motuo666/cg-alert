@@ -1,10 +1,10 @@
 {
   "vendor": "hubspot.com",
   "type": "Pricing",
-  "url": "https://hubspot.com/plans",
+  "url": "https://www.hubspot.com/pricing/marketing",
   "detected_at": "2025-10-13T06:00:27.829Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Wed, 22 Oct 2025 20:48:14 UTC",
+  "hash": "256ff0adef1c093f795e126c55c6203ae7a0e17c0e2b80bbc41b22fa3b2e73af",
   "commit": "3680760"
 }

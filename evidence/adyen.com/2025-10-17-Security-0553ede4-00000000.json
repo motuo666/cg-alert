@@ -1,9 +1,12 @@
 {
-  "url": "https://adyen.com/trust",
+  "url": "https://www.adyen.com/trust",
   "type": "Security",
   "status": 200,
   "body_hash": "e3b0c44298fc1c149afbf4c8996fb924",
   "fetched_at": "2025-10-17T03:45:26.441Z",
   "seeded": true,
-  "commit": "3680760"
+  "commit": "3680760",
+  "hash": "8dd5797d679288a86b5f208c08c79a02c87fc8014c713630b92c89b65d9e10fc",
+  "etag": null,
+  "last_modified": null
 }

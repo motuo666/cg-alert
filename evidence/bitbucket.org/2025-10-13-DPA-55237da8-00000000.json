@@ -1,11 +1,11 @@
 {
   "vendor": "bitbucket.org",
   "type": "DPA",
-  "url": "https://bitbucket.org/dpa",
+  "url": "https://bitbucket.org/dpa/workspace/repositories/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:50.128Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "f278c729edfd8a3e273a226233a39800819be6163883c5f4b143b4ad1d436fda",
   "commit": "3680760"
 }

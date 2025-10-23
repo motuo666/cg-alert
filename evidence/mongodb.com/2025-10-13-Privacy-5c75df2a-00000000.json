@@ -1,11 +1,11 @@
 {
   "vendor": "mongodb.com",
   "type": "Privacy",
-  "url": "https://mongodb.com/legal/privacy",
+  "url": "https://www.mongodb.com/legal/privacy",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:37.038Z",
-  "etag": null,
+  "etag": "\"pibqxhrtmp863q\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "3ed56789fed81a9a6725a8d15969534bb08964317d3d75640a1af47c067177f7",
   "commit": "3680760"
 }

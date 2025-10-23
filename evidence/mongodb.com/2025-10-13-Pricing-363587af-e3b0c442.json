@@ -1,10 +1,10 @@
 {
   "vendor": "mongodb.com",
   "type": "Pricing",
-  "url": "https://mongodb.com/plans",
+  "url": "https://www.mongodb.com/plans",
   "detected_at": "2025-10-13T06:01:29.135Z",
-  "etag": null,
+  "etag": "ST62erRTC1rSg8rUXzlaQRLTYMKo3BO3kGTbs+zX2OU=",
   "last_modified": null,
-  "hash": null,
+  "hash": "70a6e71a5a3fbcd6aac878b1028d879494894091c73593ca1c85f8a912a8e4ae",
   "commit": "3680760"
 }

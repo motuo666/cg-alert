@@ -1,10 +1,10 @@
 {
   "vendor": "fastly.com",
   "type": "Pricing",
-  "url": "https://fastly.com/plans",
+  "url": "https://www.fastly.com/plans",
   "detected_at": "2025-10-13T06:01:16.865Z",
-  "etag": null,
+  "etag": "\"525f01a69856515340d5181e861c017c\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "73f2c9f5409aff500573b62a2cbe2896a006065991c89f21293603e9056a05bc",
   "commit": "3680760"
 }

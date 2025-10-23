@@ -1,11 +1,11 @@
 {
   "vendor": "status.bitbucket.org",
-  "type": "Other",
-  "url": "https://status.bitbucket.org",
+  "type": "Homepage",
+  "url": "https://bitbucket.status.atlassian.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:52:04.373Z",
-  "etag": null,
+  "etag": "W/\"b14702905746b4ee61a26cfd2c504854\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "b14702905746b4ee61a26cfd2c5048546cbdae7d126175327d2701d6ebf232bd",
   "commit": "3680760"
 }

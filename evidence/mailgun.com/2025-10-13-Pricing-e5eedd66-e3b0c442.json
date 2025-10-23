@@ -1,10 +1,10 @@
 {
   "vendor": "mailgun.com",
   "type": "Pricing",
-  "url": "https://mailgun.com/plans",
+  "url": "https://www.mailgun.com/plans",
   "detected_at": "2025-10-13T06:01:43.281Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "ef6e77921f29f42f71a9a135c6ae1ef2e754ed9f096c546895a6ca6b17d7c914",
   "commit": "3680760"
 }

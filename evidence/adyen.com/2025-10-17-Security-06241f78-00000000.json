@@ -1,9 +1,12 @@
 {
-  "url": "https://adyen.com/legal/security",
+  "url": "https://www.adyen.com/legal/security",
   "type": "Security",
   "status": 200,
   "body_hash": "e3b0c44298fc1c149afbf4c8996fb924",
   "fetched_at": "2025-10-17T03:45:26.437Z",
   "seeded": true,
-  "commit": "3680760"
+  "commit": "3680760",
+  "hash": "1b79d68825fe66ad1dd2e4972caefcc14f7097d0891650dbdf9312af40942a0f",
+  "etag": null,
+  "last_modified": null
 }

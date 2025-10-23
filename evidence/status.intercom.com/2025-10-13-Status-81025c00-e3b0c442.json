@@ -1,10 +1,10 @@
 {
   "vendor": "status.intercom.com",
   "type": "Status",
-  "url": "https://status.intercom.com/api/v2/summary.json",
+  "url": "https://www.intercomstatus.com/",
   "detected_at": "2025-10-13T06:00:38.027Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "e5e0e47b695548d0fbaba2e1bb939a3210827993e3b8d14d55e816b3c689bc83",
   "commit": "3680760"
 }

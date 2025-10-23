@@ -1,11 +1,11 @@
 {
   "vendor": "braintreepayments.com",
   "type": "DPA",
-  "url": "https://braintreepayments.com/dpa",
+  "url": "https://www.paypal.com/us/braintree",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:52.257Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "43fb0a90be474ab21dd47b8bea73f3d9d7a18b65166e777649343da89c7105bd",
   "commit": "3680760"
 }

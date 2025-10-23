@@ -1,11 +1,11 @@
 {
   "vendor": "heroku.com",
   "type": "Privacy",
-  "url": "https://heroku.com/legal/privacy",
+  "url": "https://www.heroku.com/legal/privacy",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:20.022Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "7f722486e13c4f3af29c296fadba473361cea116172a285f6bd0e135d75edaed",
   "commit": "3680760"
 }

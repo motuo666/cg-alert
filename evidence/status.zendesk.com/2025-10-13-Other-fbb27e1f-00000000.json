@@ -1,11 +1,11 @@
 {
   "vendor": "status.zendesk.com",
-  "type": "Other",
-  "url": "https://status.zendesk.com",
+  "type": "Homepage",
+  "url": "https://status.zendesk.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:55:45.769Z",
   "etag": "W/\"748e3bfbe969a6400e3a8fa8b6fc739b\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "748e3bfbe969a6400e3a8fa8b6fc739baf1bbb1b83a74aeef9e922743a05e2f2",
   "commit": "3680760"
 }

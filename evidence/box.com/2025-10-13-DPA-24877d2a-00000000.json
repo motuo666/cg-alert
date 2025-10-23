@@ -1,11 +1,11 @@
 {
   "vendor": "box.com",
   "type": "DPA",
-  "url": "https://box.com/data-processing-addendum",
+  "url": "https://www.box.com/data-processing-addendum",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:51.300Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "1dcbf679538f95edb6e355cd9b314d5b509d84b82b0f56ea5ee2adecdd922336",
   "commit": "3680760"
 }

@@ -1,11 +1,11 @@
 {
   "vendor": "status.auth0.com",
-  "type": "Other",
-  "url": "https://status.auth0.com",
+  "type": "Homepage",
+  "url": "https://status.auth0.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:52:02.672Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "267170c93f81b13f1a585a16e9aec7a8669748ba06771d98959fbc8d21d51dce",
   "commit": "3680760"
 }

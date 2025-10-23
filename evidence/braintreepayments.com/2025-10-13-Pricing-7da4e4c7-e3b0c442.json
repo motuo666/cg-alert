@@ -1,10 +1,10 @@
 {
   "vendor": "braintreepayments.com",
   "type": "Pricing",
-  "url": "https://braintreepayments.com/pricing",
+  "url": "https://www.paypal.com/us/enterprise/paypal-braintree-fees?utm_campaign=Braintree_Migration&utm_medium=Website&utm_source=Braintree",
   "detected_at": "2025-10-13T06:00:14.707Z",
-  "etag": null,
+  "etag": "W/\"2f67c-HkZgc8z7TK/UeuwBowCfySniV74\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "c69ee35c60a993fc70670c9d2ba86323d7b9cb3632e553b396c5cc7941edf7d9",
   "commit": "3680760"
 }

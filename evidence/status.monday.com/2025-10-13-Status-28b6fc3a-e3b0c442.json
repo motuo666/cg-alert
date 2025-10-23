@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.monday.com/api/v2/summary.json",
   "detected_at": "2025-10-13T06:01:07.262Z",
-  "etag": "W/\"0713ad4de8dcdbb40d1cdb902318cb52\"",
+  "etag": "W/\"8ccb766c13818b00fa6e005f0d714c6f\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "8ccb766c13818b00fa6e005f0d714c6f79c5be092b937dd4e2448d16365e860c",
   "commit": "3680760"
 }

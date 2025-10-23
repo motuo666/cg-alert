@@ -1,11 +1,11 @@
 {
   "vendor": "sanity.io",
   "type": "DPA",
-  "url": "https://sanity.io/legal/dpa",
+  "url": "https://www.sanity.io/legal/dpa",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:52.578Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "817095832c440892709a695712b2e324148508850a7344cbe5695a786135e8dc",
   "commit": "3680760"
 }

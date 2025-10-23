@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.box.com/api/v2/summary.json",
   "detected_at": "2025-10-13T06:01:12.383Z",
-  "etag": "W/\"8d216a47ad758ba6bcd4da1506cbc2d3\"",
+  "etag": "W/\"f25342acd5f952b0f9e6f682ccdaf0b9\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "f25342acd5f952b0f9e6f682ccdaf0b95bc1a25d57fccfd7941e805dacd3107f",
   "commit": "3680760"
 }

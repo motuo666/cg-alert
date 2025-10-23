@@ -1,10 +1,10 @@
 {
   "vendor": "status.canva.com",
   "type": "Status",
-  "url": "https://status.canva.com/",
+  "url": "https://www.canvastatus.com/",
   "detected_at": "2025-10-13T06:02:00.826Z",
-  "etag": null,
+  "etag": "W/\"6be2d9a28b9b5ce618c19f839e3d5538\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "6be2d9a28b9b5ce618c19f839e3d5538c2f334719f449a5fda7a4c163bef666b",
   "commit": "3680760"
 }

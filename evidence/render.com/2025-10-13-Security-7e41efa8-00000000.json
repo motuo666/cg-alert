@@ -4,8 +4,8 @@
   "url": "https://render.com/.well-known/security.txt",
   "kind": "baseline",
   "detected_at": "2025-10-13T07:08:23.675Z",
-  "etag": "W/\"ba-199d0b38128\"",
-  "last_modified": "Sat, 11 Oct 2025 00:37:29 GMT",
-  "hash": null,
+  "etag": "W/\"ba-19a0dc0ab90\"",
+  "last_modified": "Wed, 22 Oct 2025 21:08:42 GMT",
+  "hash": "8d42721f781d83aa07e96ad0e4a2ba00113a5e40cae5e6b368f9e22b1ef3943f",
   "commit": "3680760"
 }

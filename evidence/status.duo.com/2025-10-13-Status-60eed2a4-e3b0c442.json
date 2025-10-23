@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.duo.com/api/v2/summary.json",
   "detected_at": "2025-10-13T05:59:11.542Z",
-  "etag": "W/\"d7f5bc7f929244921b202778171b9e6f\"",
+  "etag": "W/\"1f8cda89706ec2eb59597172c0aa702f\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "1f8cda89706ec2eb59597172c0aa702ff78988f4171de49f24d6de3ddea597a7",
   "commit": "3680760"
 }

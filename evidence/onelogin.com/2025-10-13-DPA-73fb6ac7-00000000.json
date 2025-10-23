@@ -1,11 +1,11 @@
 {
   "vendor": "onelogin.com",
   "type": "DPA",
-  "url": "https://onelogin.com/dpa",
+  "url": "https://www.onelogin.com/dpa",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:51:42.967Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Thu, 23 Oct 2025 12:53:49 GMT",
+  "hash": "3baec82b6e0fde4bd6d3df7e4bf4cb2b89fb33cc6f876a65d636d099080129dc",
   "commit": "3680760"
 }

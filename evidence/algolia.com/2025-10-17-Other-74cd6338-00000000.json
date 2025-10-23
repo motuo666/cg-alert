@@ -1,9 +1,12 @@
 {
-  "url": "https://algolia.com",
+  "url": "https://www.algolia.com/",
   "type": "Other",
   "status": 200,
   "body_hash": "e3b0c44298fc1c149afbf4c8996fb924",
   "fetched_at": "2025-10-17T03:45:26.443Z",
   "seeded": true,
-  "commit": "3680760"
+  "commit": "3680760",
+  "hash": "54bf7cb5498852bb4fa5eb708a6eec5f4d5070126d173d76b993630612e90396",
+  "etag": null,
+  "last_modified": null
 }

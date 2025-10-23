@@ -1,10 +1,10 @@
 {
   "vendor": "microsoft.com",
   "type": "Pricing",
-  "url": "https://microsoft.com/pricing",
+  "url": "https://www.microsoft.com/pricing",
   "detected_at": "2025-10-13T06:01:14.305Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "\"f7c580007972562d77bc632abc5df1b8:1758237368.152234\"",
+  "last_modified": "Thu, 18 Sep 2025 23:16:08 GMT",
+  "hash": "aea1b5ffa595d49b40acfd3599d5c6a9ffeb6e43b9174f6ca2369f1b0951bee0",
   "commit": "3680760"
 }

@@ -3,8 +3,8 @@
   "type": "Status",
   "url": "https://status.mongodb.com/",
   "detected_at": "2025-10-13T06:01:30.169Z",
-  "etag": "W/\"82e69a6b5d6ad20de9220cae6135e006\"",
+  "etag": "W/\"50a33fd3c2635dca17e9c19dc78449cb\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "50a33fd3c2635dca17e9c19dc78449cb2e0cd3c8573087c8c25f9af1da7e43cf",
   "commit": "3680760"
 }

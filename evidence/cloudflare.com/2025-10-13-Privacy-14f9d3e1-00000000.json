@@ -1,11 +1,11 @@
 {
   "vendor": "cloudflare.com",
   "type": "Privacy",
-  "url": "https://cloudflare.com/legal/privacy",
+  "url": "https://www.cloudflare.com/legal/privacy/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:56.179Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "6dce1eebd981712ba7350f58eed58f90c91775aad200c489bf4a1c0485664d84",
   "commit": "3680760"
 }

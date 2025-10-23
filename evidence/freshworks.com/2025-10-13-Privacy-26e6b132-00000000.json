@@ -1,11 +1,11 @@
 {
   "vendor": "freshworks.com",
   "type": "Privacy",
-  "url": "https://freshworks.com/legal/privacy",
+  "url": "https://www.freshworks.com/legal/privacy/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:48:11.229Z",
   "etag": null,
   "last_modified": null,
-  "hash": null,
+  "hash": "f0ca0da246dd14788fe7084acc1373956aa4af626420851f43273ced40bca9a7",
   "commit": "3680760"
 }

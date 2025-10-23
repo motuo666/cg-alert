@@ -1,11 +1,11 @@
 {
   "vendor": "zoho.com",
   "type": "DPA",
-  "url": "https://zoho.com/legal/dpa",
+  "url": "https://www.zoho.com/legal/dpa",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:56:01.067Z",
-  "etag": null,
+  "etag": "W/\"68cb9e41-103f\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "6d879bbee824cbe646614f7e15ba6b93dd45206a174f6a99b449a3f5b761d266",
   "commit": "3680760"
 }

@@ -1,11 +1,11 @@
 {
   "vendor": "status.zoom.us",
-  "type": "Other",
-  "url": "https://status.zoom.us",
+  "type": "Homepage",
+  "url": "https://www.zoomstatus.com/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:55:50.058Z",
-  "etag": null,
+  "etag": "W/\"d603b6e12ca0cfa5c93ed4301ed653e3\"",
   "last_modified": null,
-  "hash": null,
+  "hash": "d603b6e12ca0cfa5c93ed4301ed653e3f9457846ff867c099fba2de249bcc42c",
   "commit": "3680760"
 }

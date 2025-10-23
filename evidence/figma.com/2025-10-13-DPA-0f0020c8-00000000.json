@@ -1,11 +1,11 @@
 {
   "vendor": "figma.com",
   "type": "DPA",
-  "url": "https://figma.com/legal/dpa",
+  "url": "https://www.figma.com/legal/dpa/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:48:09.500Z",
   "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "last_modified": "Wed, 22 Oct 2025 20:41:25 GMT",
+  "hash": "3008fa06cfb2ebed7dbb34cd4fc9d0eb3ee4c9b184d0bf6f74c806b71c6fb867",
   "commit": "3680760"
 }

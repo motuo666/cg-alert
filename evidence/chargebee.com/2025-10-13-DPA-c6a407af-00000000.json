@@ -1,11 +1,11 @@
 {
   "vendor": "chargebee.com",
   "type": "DPA",
-  "url": "https://chargebee.com/data-processing-addendum",
+  "url": "https://www.chargebee.com/data-processing-addendum",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:53.765Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "W/\"13ba32b8135c8df461ccac5eaa06df85\"",
+  "last_modified": "Fri, 17 Oct 2025 08:21:56 GMT",
+  "hash": "b71021fd22f4ef3dbf0b53668bf1b4a179ea9cb30d19638fe3bcb5355f6cf511",
   "commit": "3680760"
 }

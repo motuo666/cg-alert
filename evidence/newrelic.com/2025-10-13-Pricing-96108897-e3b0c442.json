@@ -3,8 +3,8 @@
   "type": "Pricing",
   "url": "https://newrelic.com/pricing",
   "detected_at": "2025-10-13T06:01:21.572Z",
-  "etag": "W/\"1760138203\"",
-  "last_modified": "Fri, 10 Oct 2025 23:16:43 GMT",
-  "hash": null,
+  "etag": "W/\"1761137019\"",
+  "last_modified": "Wed, 22 Oct 2025 12:43:39 GMT",
+  "hash": "1f63a3816922725894da3a6af3e43f26d82f96c246c7e1dea440495c7ff570ff",
   "commit": "3680760"
 }

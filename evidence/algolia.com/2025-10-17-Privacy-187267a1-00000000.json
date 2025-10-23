@@ -1,9 +1,12 @@
 {
-  "url": "https://algolia.com/privacy-policy",
+  "url": "https://www.algolia.com/privacy-policy",
   "type": "Privacy",
   "status": 200,
   "body_hash": "e3b0c44298fc1c149afbf4c8996fb924",
   "fetched_at": "2025-10-17T15:52:20.619Z",
   "seeded": true,
-  "commit": "3680760"
+  "commit": "3680760",
+  "hash": "3ffe2695373ffef571f79c045dc8afc6561db1f5117e36120d57d5a2c4a18603",
+  "etag": null,
+  "last_modified": null
 }

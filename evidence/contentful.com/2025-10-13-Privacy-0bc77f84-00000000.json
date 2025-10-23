@@ -1,11 +1,11 @@
 {
   "vendor": "contentful.com",
   "type": "Privacy",
-  "url": "https://contentful.com/legal/privacy",
+  "url": "https://www.contentful.com/legal/privacy-at-contentful/privacy-notice/",
   "kind": "baseline",
   "detected_at": "2025-10-13T06:47:58.223Z",
-  "etag": null,
-  "last_modified": null,
-  "hash": null,
+  "etag": "\"c698b20cb394e0ce3c02c0822bf6c99e\"",
+  "last_modified": "Thu, 23 Oct 2025 10:06:33 GMT",
+  "hash": "ca887d251cc4f2a3474d6d728c9a025fec0321d1bd262666cf4f9a9866b3416a",
   "commit": "3680760"
 }
