@@ -2,35 +2,70 @@ name: Build Diff Visuals
 
 on:
   workflow_dispatch:
+    inputs:
+      evidence_root:
+        description: "Evidence root relative to repo"
+        required: false
+        default: "public/evidence"
+        type: string
   push:
     paths:
       - 'public/evidence/**'
+      - 'scripts/build_diff_visuals.js'
+      - 'scripts/diff_lcs.js'
+      - '.github/workflows/build-diffs.yml'
 
 permissions:
   contents: write
+
+concurrency:
+  group: build-diffs-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   build-diffs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Generate diff.html for evidence
+
+      - name: Verify scripts exist
+        shell: bash
         run: |
           set -e
+          [[ -f scripts/build_diff_visuals.js ]] || { echo "::error::Missing scripts/build_diff_visuals.js"; exit 1; }
+          [[ -f scripts/diff_lcs.js ]] || { echo "::error::Missing scripts/diff_lcs.js"; exit 1; }
+
+      - name: Generate diff.html for evidence
+        env:
+          EVIDENCE_ROOT: ${{ inputs.evidence_root || 'public/evidence' }}
+        shell: bash
+        run: |
+          set -e
+          ROOT="${EVIDENCE_ROOT:-public/evidence}"
+          if [[ ! -d "$ROOT" ]]; then
+            echo "No evidence dir (${ROOT}); nothing to do." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           node scripts/build_diff_visuals.js
+
       - name: Commit diffs (if any)
+        shell: bash
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
           git add -A public/evidence
           if git diff --cached --quiet; then
-            echo "no diffs to commit"
+            echo "no diffs to commit" | tee -a "$GITHUB_STEP_SUMMARY"
           else
             git commit -m "evidence: add diff visualizations"
             git pull --rebase --autostash || true
             git push
+            echo "Committed and pushed diff visualizations." | tee -a "$GITHUB_STEP_SUMMARY"
           fi
