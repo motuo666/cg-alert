@@ -1,7 +1,9 @@
 /**
  * send_drip.js — drop-in replacement (safe, idempotent-ish)
  * - Lang routing (EN default; fallback to ZH/placeholder if EN missing)
- * - Subject A/B via stable 0/1 bucket from lid/email
+ * - D2 模板级 A/B：稳定二分（varA/varB），写回 profile.ab.d2
+ * - UTM：统一 utm_campaign=drip_<stage>；D2 补 utm_content=varA|varB
+ * - 指标：KV 记 metrics:drip_d2:send:<a|b>:<YYYY-MM-DD>:<email_sha1>
  * - Preheader + List-Unsubscribe headers
  * - Retry with backoff; lightweight per-lead stage lock
  * - Rate limit via SEND_RATE (emails/min), default 20
@@ -34,9 +36,19 @@ const kv = API(CF_ACCOUNT_ID, KV_NAMESPACE_ID, CF_API_TOKEN);
 const NOW = () => new Date().toISOString();
 const HOURS_BETWEEN = (a, b) => (new Date(b).getTime() - new Date(a).getTime()) / 36e5;
 
+// stable 0/1
 function bucket2(seed) {
   const h = crypto.createHash("sha1").update(String(seed || "")).digest();
   return (h[0] ^ h[1] ^ h[2]) & 1; // 0/1
+}
+
+// D2 变体：先读 profile.ab.d2；无则按 lid/email 稳定分桶并写回
+function getOrAssignD2Variant(lead) {
+  lead.ab ||= {};
+  if (lead.ab.d2 === "a" || lead.ab.d2 === "b") return lead.ab.d2;
+  const v = bucket2(lead.lid || lead.email) === 0 ? "a" : "b";
+  lead.ab.d2 = v;
+  return v;
 }
 
 function pickLang(lead) {
@@ -65,7 +77,11 @@ const stageDefs = {
       zh: ["客户如何用我们拿到谈判筹码（真实案例）", "两天回访：把证据卡变现为谈判优势"],
       en: ["How teams use us for renewal leverage (real cases)", "Day 2: Turn evidence cards into negotiation leverage"],
     },
-    file: { zh: "drip_d2.html", en: "en/drip_d2.html" },
+    // 注意：D2 模板从单文件升级为 A/B 两份
+    file: {
+      zh: { a: "drip_d2_a.html", b: "drip_d2_b.html" },
+      en: { a: "en/drip_d2_a.html", b: "en/drip_d2_b.html" },
+    },
   },
   d7: {
     subject: {
@@ -75,6 +91,17 @@ const stageDefs = {
     file: { zh: "drip_d7.html", en: "en/drip_d7.html" },
   },
 };
+
+// 根据 stage/lang/variant 取模板相对路径
+function resolveTemplatePath(stage, lang, variant /* 仅 d2 用 */) {
+  const def = stageDefs[stage]?.file;
+  if (!def) return `en/${stage}.html`;
+  if (stage === "d2") {
+    const map = def[lang] || def["en"];
+    return map[variant || "a"] || (lang === "en" ? "en/drip_d2.html" : "drip_d2.html");
+  }
+  return def[lang] || def["en"];
+}
 
 // safe template loader: EN -> fallback ZH -> placeholder
 function loadTemplate(relPath) {
@@ -180,14 +207,27 @@ async function main() {
       await kv.put(key, JSON.stringify(lead));
 
       const lang = pickLang(lead);
-      const tplHtml = loadTemplate(stageDefs[stage].file[lang]);
+      // ---- D2 变体 & 模板路径
+      let d2Variant = null;
+      if (stage === "d2") d2Variant = getOrAssignD2Variant(lead);
+      const tplRel = resolveTemplatePath(stage, lang, d2Variant);
+      const tplHtml = loadTemplate(tplRel);
+
+      // Subject 仍按稳定 0/1 选第 1/2 个
       const b = bucket2(lead.lid || lead.email);
       const subject = stageDefs[stage].subject[lang][b];
 
+      // 退订
       const unsubToken = hmacHex(UNSUB_HMAC_SECRET, String(lead.email || "").toLowerCase());
       const unsubUrl = `${WORKER_URL}/u?e=${encodeURIComponent(lead.email)}&t=${unsubToken}`;
+
+      // CTA + UTM
       const lid = lead.lid || "";
-      const ctaUrl = `${site}/?utm_source=email&utm_medium=drip&utm_campaign=${stage}&lid=${encodeURIComponent(lid)}`;
+      const utmCampaign = `drip_${stage}`;
+      const utmContent = stage === "d2" ? `var${(d2Variant || "a").toUpperCase()}` : stage;
+      const ctaUrl = `${site}/?utm_source=email&utm_medium=drip&utm_campaign=${utmCampaign}` +
+                     `&utm_content=${utmContent}&lid=${encodeURIComponent(lid)}`;
+
       const preheader =
         lang === "zh"
           ? "用可核验的证据卡跟踪供应商变更，用事实赢下谈判。"
@@ -195,6 +235,7 @@ async function main() {
 
       const html = renderTemplate(tplHtml, {
         lead, cta_url: ctaUrl, unsub_url: unsubUrl, site_origin: site, preheader, stage,
+        variant: d2Variant || undefined,
       });
 
       try {
@@ -215,7 +256,17 @@ async function main() {
         );
 
         // success → record sent & release lock
+        if (stage === "d2" && d2Variant) {
+          // 指标计数（保守起见用 email sha1，避免明文）
+          const day = new Date().toISOString().slice(0,10);
+          await kv.put(`metrics:drip_d2:send:${d2Variant}:${day}:${sha1(lead.email)}`, "1");
+        }
+
+        // 写回 sent & ab（确保 ab.d2 落盘）
         lead.drip.sent = Array.from(new Set([...(lead.drip.sent || []), stage]));
+        if (stage === "d2" && d2Variant) {
+          lead.ab = Object.assign({}, lead.ab, { d2: d2Variant });
+        }
         delete lead.drip.lock;
         lead.updated_at = NOW();
         await kv.put(key, JSON.stringify(lead));
