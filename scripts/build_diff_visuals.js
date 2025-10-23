@@ -1,24 +1,46 @@
+
+// scripts/build_diff_visuals.js
 const fs = require('fs');
 const path = require('path');
-const { diffToHtml } = require('./diff_lcs');
+const { diffLines, renderHtml } = require('./diff_engine');
 
-const ROOT = process.cwd();
-const EVID_ROOT = path.join(ROOT, 'public', 'evidence');
+const EVID_ROOT = process.env.EVIDENCE_ROOT || path.join(process.cwd(), 'public', 'evidence');
+const MAX_BYTES = parseInt(process.env.DIFF_MAX_BYTES || '1500000', 10); // 1.5 MB per snapshot cap
 
-function exists(p) { try { fs.accessSync(p); return true; } catch { return false; } }
-function readText(p) { try { return fs.readFileSync(p, 'utf8'); } catch { return ''; } }
-function stripHtml(html) {
+function exists(p){ try{ fs.accessSync(p); return true; } catch { return false; } }
+function readText(p){ try{ return fs.readFileSync(p, 'utf8'); } catch { return ''; } }
+function stripHtml(html){
   return html.replace(/<script[\s\S]*?<\/script>/gi,'')
              .replace(/<style[\s\S]*?<\/style>/gi,'')
              .replace(/<[^>]+>/g,' ')
              .replace(/\s+/g,' ')
              .trim();
 }
-function readMeta(dir) {
+function readEvidenceText(dir){
+  const cand = ['content.txt','raw.txt','snapshot.txt','body.txt','index.txt'];
+  for (const f of cand) {
+    const p = path.join(dir, f);
+    if (exists(p)) {
+      let s = readText(p);
+      if (s.length > MAX_BYTES) s = s.slice(0, MAX_BYTES);
+      return s;
+    }
+  }
+  const ih = path.join(dir,'index.html');
+  if (exists(ih)) {
+    let s = stripHtml(readText(ih));
+    if (s.length > MAX_BYTES) s = s.slice(0, MAX_BYTES);
+    return s;
+  }
+  return '';
+}
+function readMeta(dir){
   const cand = ['meta.json','proof.json','index.json'];
   for (const f of cand) {
     const p = path.join(dir, f);
-    if (exists(p)) { try { return JSON.parse(readText(p)); } catch {} }
+    if (exists(p)) {
+      try { return JSON.parse(readText(p)); } catch {}
+    }
   }
   const ih = path.join(dir,'index.html');
   if (exists(ih)) {
@@ -28,15 +50,8 @@ function readMeta(dir) {
   }
   return {};
 }
-function readEvidenceText(dir) {
-  const cand = ['content.txt','raw.txt','snapshot.txt','body.txt','index.txt'];
-  for (const f of cand) { const p = path.join(dir,f); if (exists(p)) return readText(p); }
-  const ih = path.join(dir,'index.html');
-  if (exists(ih)) return stripHtml(readText(ih));
-  return '';
-}
-function mtimeOrNow(p) { try { return fs.statSync(p).mtimeMs; } catch { return Date.now(); } }
-function findEvidenceDirs(root) {
+function mtimeOrNow(p){ try { return fs.statSync(p).mtimeMs; } catch { return Date.now(); } }
+function findEvidenceDirs(root){
   const out = [];
   if (!exists(root)) return out;
   const months = fs.readdirSync(root);
@@ -51,10 +66,8 @@ function findEvidenceDirs(root) {
       for (const a of children) {
         const ap = path.join(dp, a);
         if (!fs.statSync(ap).isDirectory()) continue;
-        // either ap is hash leaf (has index.html) or path bucket containing hash leafs
-        const ih = path.join(ap,'index.html');
+        const ih = path.join(ap, 'index.html');
         if (exists(ih)) { out.push(ap); continue; }
-        // nested
         const kids = fs.readdirSync(ap);
         for (const k of kids) {
           const kp = path.join(ap, k);
@@ -65,7 +78,8 @@ function findEvidenceDirs(root) {
   }
   return out;
 }
-function buildCatalog(dirs) {
+
+function buildCatalog(dirs){
   const byUrl = new Map();
   for (const d of dirs) {
     const meta = readMeta(d);
@@ -80,50 +94,47 @@ function buildCatalog(dirs) {
   for (const arr of byUrl.values()) arr.sort((a,b)=>a.ts-b.ts);
   return byUrl;
 }
-function writeDiff(curr, prev) {
-  const { html, stats } = diffToHtml(prev.text, curr.text);
-  const styles = `
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.55; padding: 16px; max-width: 1100px; margin: auto; }
-    header { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap: wrap; }
-    .meta { font-size: 12px; color: #666; }
-    ins { background: #e6ffed; text-decoration: none; border-bottom: 1px solid #8de68d; }
-    del { background: #ffeef0; text-decoration: line-through; }
-    .box { background:#fafafa; border:1px solid #eee; border-radius:12px; padding:14px; }
-    .stats { font-size: 13px; color:#555; }
-    a { color: inherit; }
-    .btn { padding:8px 12px; border:1px solid #ddd; border-radius:8px; text-decoration:none; }
-  </style>`;
-  const head = `<header>
+
+function writeDiff(curr, prev){
+  const ops = diffLines(prev.text, curr.text);
+  const { html, stats } = renderHtml(ops);
+  const htmlOut = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+  <header>
     <div>
       <h2 style="margin:0">Content Diff</h2>
       <div class="meta">${new Date(curr.ts).toISOString()} vs ${new Date(prev.ts).toISOString()}</div>
       <div class="meta"><a href="${curr.url}" target="_blank" rel="noopener">${curr.url}</a></div>
     </div>
     <div><a class="btn" href="./index.html">← Back to Evidence</a></div>
-  </header>`;
-  const summary = `<div class="box stats">Insertions: ${stats.insertions} · Deletions: ${stats.deletions} · Unchanged tokens: ${stats.equals}</div>`;
-  const body = `<div class="box" style="margin-top:12px">${html}</div>`;
-  const htmlOut = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${styles}</head><body>${head}${summary}${body}</body></html>`;
+  </header>
+  ${html}
+  </body></html>`;
   fs.writeFileSync(path.join(curr.dir, 'diff.html'), htmlOut, 'utf8');
   fs.writeFileSync(path.join(curr.dir, 'diff.json'), JSON.stringify(stats, null, 2), 'utf8');
 }
-function main() {
+
+function main(){
   const dirs = findEvidenceDirs(EVID_ROOT);
   if (!dirs.length) { console.log('No evidence dirs found'); return; }
   const catalog = buildCatalog(dirs);
-  let built = 0, skipped = 0;
+  let built=0, skipped=0;
   for (const arr of catalog.values()) {
     for (let i=1;i<arr.length;i++) {
       const prev = arr[i-1], curr = arr[i];
-      const outPath = path.join(curr.dir, 'diff.html');
-      if (exists(outPath)) { skipped++; continue; }
-      if (prev.text && curr.text && prev.text !== curr.text) {
-        writeDiff(curr, prev);
-        built++;
-      } else skipped++;
+      const out = path.join(curr.dir, 'diff.html');
+      if (fs.existsSync(out)) { skipped++; continue; }
+      try {
+        if (prev.text && curr.text && prev.text !== curr.text) {
+          writeDiff(curr, prev);
+          built++;
+        } else skipped++;
+      } catch (e) {
+        console.error('Diff failed for', curr.dir, e);
+        skipped++;
+      }
     }
   }
-  console.log(`Diff Visualizer: built=${built} skipped=${skipped}`);
+  console.log(`Diff Visualizer SAFE: built=${built} skipped=${skipped}`);
 }
+
 if (require.main === module) main();
