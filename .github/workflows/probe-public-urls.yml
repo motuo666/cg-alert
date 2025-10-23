@@ -1,0 +1,23 @@
+name: Probe Public URLs
+on:
+  schedule:
+    - cron: "45 */6 * * *"  # every 6 hours
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe URLs
+        run: |
+          chmod +x scripts/url_probe.sh || true
+          bash scripts/url_probe.sh
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Probe Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- Origin: $SITE_ORIGIN" >> $GITHUB_STEP_SUMMARY
