@@ -1,0 +1,32 @@
+name: Weekly Evidence Hash
+on:
+  schedule:
+    - cron: "15 6 * * 1"  # Mon 06:15 UTC
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  hash:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compute weekly hash
+        run: |
+          chmod +x scripts/compute_weekly_hash.sh || true
+          bash scripts/compute_weekly_hash.sh public/reports/weekly_hash.json
+      - name: Commit + tag + push
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A public/reports/weekly_hash.json
+          if git diff --cached --quiet; then
+            echo "no hash changes"
+          else
+            git commit -m "weekly: evidence aggregate hash"
+          fi
+          git pull --rebase --autostash || true
+          git push --follow-tags || git push --tags || true
+      - name: Summary
+        run: |
+          echo "## Weekly Evidence Hash" >> $GITHUB_STEP_SUMMARY
+          test -f public/reports/weekly_hash.json && cat public/reports/weekly_hash.json >> $GITHUB_STEP_SUMMARY || true
