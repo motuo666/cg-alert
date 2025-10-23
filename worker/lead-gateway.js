@@ -1,23 +1,28 @@
 /**
- * lead-gateway Worker (tight CORS + RL + queues + obs)
+ * lead-gateway Worker (tight CORS + RL + queues + obs + import)
  * Routes:
- *  - POST /lead     : 接受表单/CTA，补齐 UTM/referrer，KV upsert lead:{email}，新线索入队 dripq:d0
- *  - GET  /u        : 一键退订 (?e=&t=HMAC(email))
- *  - POST /stripe   : Stripe webhook (checkout.session.completed)，入队 dripq:d2
- *  - GET  /_stats   : 最近 7 天指标（需 x-obs-key）
+ *  - POST /lead      : 表单/CTA，补 UTM/referrer → KV upsert lead:{email}；新线索入队 dripq:d0
+ *  - GET  /u         : 一键退订（兼容两种参数）
+ *        * 新：/u?e=<email>&t=<HMAC(email)>
+ *        * 旧：/u?u=<HMAC(email)>&email=<email>  或  /u?u=<HMAC(email)>
+ *  - POST /stripe    : Stripe webhook (checkout.session.completed)，入队 dripq:d2
+ *  - GET  /_stats    : 最近 7 天指标（需 x-obs-key）
+ *  - GET  /stats     : 同上（向后兼容）
+ *  - POST /import    : BuildWith/技术画像名单导入（CSV/JSON），需 x-obs-key/x-import-key，入队 dripq:outbound
  *
  * Bindings:
  *  - KV: LEADS
  *  - Vars: ALLOWED_ORIGINS, SITE_ORIGIN(可选)
- *  - Secrets: UNSUB_HMAC_SECRET, STRIPE_WEBHOOK_SECRET, SLACK_WEBHOOK_URL(可选), OBS_KEY(可选)
+ *  - Secrets: UNSUB_HMAC_SECRET, STRIPE_WEBHOOK_SECRET,
+ *             SLACK_WEBHOOK_URL(可选), OBS_KEY(推荐), IMPORT_KEY(可选)
  */
 
 export default {
   async fetch(request, env, ctx) {
-    const url = new URL(request.url);
+    const url  = new URL(request.url);
     const path = url.pathname;
 
-    // ---------- CORS allowlist (for /lead only) ----------
+    // ---------- CORS allowlist (only for /lead) ----------
     const allowedSet = parseAllowed(env.ALLOWED_ORIGINS || env.SITE_ORIGIN || "https://www.cg-alert.com,https://cg-alert.com");
 
     if (path === "/lead") {
@@ -36,18 +41,28 @@ export default {
       return new Response("method not allowed", { status: 405 });
     }
 
+    // 退订（兼容新旧两种参数）
     if (path === "/u" && request.method === "GET") {
       return await handleUnsub(request, env);
     }
 
+    // Stripe Webhook
     if (path === "/stripe") {
       if (request.method !== "POST") return new Response("method not allowed", { status: 405 });
       return await handleStripe(request, env);
     }
 
-    if (path === "/_stats" && request.method === "GET") {
+    // 统计（两个路径都支持）
+    if ((path === "/_stats" || path === "/stats") && request.method === "GET") {
       return await handleStats(request, env);
     }
+
+    // BuildWith / 技术画像导入（CSV/JSON）
+    if (path === "/import" && request.method === "POST") {
+      return await handleImport(request, env);
+    }
+
+    if (path === "/healthz") return jsonOK({ ok: true });
 
     return jsonOK({ ok: true, ping: "lead-gateway" });
   }
@@ -190,7 +205,7 @@ async function handleLead(request, env) {
   const cookies = Object.fromEntries(
     cookieIn.split(";").map(s => s.trim().split("=").map(decodeURIComponent)).filter(x => x[0])
   );
-  let lid = cookies["cg_lead_id"] || body["cg_lead_id"] || crypto.randomUUID();
+  let lid = cookies["cg_lead_id"] || body["cg_lead_id"] || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
 
   // UTM/referrer enrichment
   const utm = {
@@ -238,7 +253,7 @@ async function handleLead(request, env) {
     await env.LEADS.put(`dripq:d0:${hour}:${email}`, '1', { expirationTtl: 7*24*3600 });
   }
 
-  // set readable cookie
+  // set cookie
   const isHttps = (new URL(request.url)).protocol === "https:";
   const cookieFlags = `Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax` + (isHttps ? "; Secure" : "");
   const res = jsonOK({ ok: true, lid, email });
@@ -254,22 +269,34 @@ async function handleUnsub(request, env) {
   await logJSON(request, "info", { event: "unsub_recv" });
 
   const url = new URL(request.url);
-  const e = (url.searchParams.get("e") || "").toLowerCase();
-  const t = url.searchParams.get("t") || "";
-  if (!e || !t) {
-    await logJSON(request, "error", { event: "unsub_missing_params" });
+  // 新：e(email)+t(token)；旧：u(token)+email(email 可选)
+  const eParam = (url.searchParams.get("e") || url.searchParams.get("email") || "").toLowerCase();
+  const tParam = url.searchParams.get("t") || url.searchParams.get("u") || ""; // 兼容 ?u
+  const email = eParam;
+  const token = tParam;
+
+  if (!token) {
+    await logJSON(request, "error", { event: "unsub_missing_token" });
     await incStat(env, "errors", 1);
-    return new Response("Missing params", { status: 400 });
+    return new Response("Missing token", { status: 400 });
   }
 
-  const ok = await hmacVerify(env.UNSUB_HMAC_SECRET, e, t);
+  // 兼容老邮件：若没传 email，则从 KV 逆向容错（不推荐，尽量带上 email）
+  let targetEmail = email;
+  if (!targetEmail) {
+    // 无 email 情况：放弃逆向爆破，直接拒绝更安全
+    await logJSON(request, "error", { event: "unsub_missing_email" });
+    return new Response("Missing email", { status: 400 });
+  }
+
+  const ok = await hmacVerify(env.UNSUB_HMAC_SECRET, targetEmail, token);
   if (!ok) {
     await logJSON(request, "error", { event: "unsub_bad_token" });
     await incStat(env, "errors", 1);
     return new Response("Invalid token", { status: 403 });
   }
 
-  const key = `lead:${e}`;
+  const key = `lead:${targetEmail}`;
   let lead = await env.LEADS.get(key, { type: "json" });
   if (!lead) {
     await logJSON(request, "info", { event: "unsub_no_record" });
@@ -282,7 +309,7 @@ async function handleUnsub(request, env) {
   await env.LEADS.put(key, JSON.stringify(lead), { expirationTtl: 60 * 60 * 24 * 365 * 3 });
 
   await incStat(env, "unsub", 1);
-  await logJSON(request, "info", { event: "unsub_ok", email_hash: await sha1Hex(e), ms: Date.now() - t0 });
+  await logJSON(request, "info", { event: "unsub_ok", email_hash: await sha1Hex(targetEmail), ms: Date.now() - t0 });
   return new Response("You have been unsubscribed. ✔", { headers: { "content-type": "text/plain; charset=utf-8" } });
 }
 
@@ -370,8 +397,74 @@ async function handleStripe(request, env) {
   }
 }
 
+// BuildWith / 技术画像导入：CSV/JSON 批量导入，写 lead:{email} 并入队 dripq:outbound
+async function handleImport(request, env) {
+  const keyHdr = request.headers.get("x-import-key") || request.headers.get("x-obs-key") || "";
+  const allowKey = env.IMPORT_KEY || env.OBS_KEY || "";
+  if (!allowKey || keyHdr !== allowKey) return jsonErr(403, "forbidden");
+
+  const ct = (request.headers.get("content-type") || "").toLowerCase();
+  let items = [];
+  if (ct.includes("application/json")) {
+    const body = await request.json();
+    items = Array.isArray(body) ? body : (body.items || []);
+  } else {
+    const text = await request.text();
+    items = parseCSV(text); // 允许 CSV
+  }
+
+  const hour = new Date().toISOString().slice(0,13).replace(/[-:T]/g,'');
+  let imported = 0, skipped = 0;
+  for (const it of items) {
+    const email = (it.email||"").toLowerCase().trim();
+    if (!email) { skipped++; continue; }
+    const key = `lead:${email}`;
+    let obj = {};
+    try { obj = JSON.parse((await env.LEADS.get(key)) || "{}"); } catch {}
+
+    if (!obj.status || (obj.status!=="unsub" && obj.status!=="suppressed" && obj.status!=="bounced")) {
+      obj.status = obj.status==="new" ? "verified" : (obj.status||"verified");
+    }
+    obj.email = email;
+    obj.company = it.company || obj.company || "";
+    obj.domain  = it.domain  || obj.domain  || "";
+    obj.source  = "buildwith";
+    const a = Array.isArray(obj.tech) ? obj.tech : [];
+    const b = Array.isArray(it.tech) ? it.tech : (it.tech ? [it.tech] : []);
+    obj.tech = Array.from(new Set([...a, ...b].filter(Boolean)));
+    obj.cg_lead_id = obj.cg_lead_id || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`);
+    obj.touches = obj.touches || [];
+    obj.touches.push({ ts: Date.now(), source:"buildwith", domain: obj.domain, company: obj.company });
+
+    await env.LEADS.put(key, JSON.stringify(obj), { expirationTtl: 60 * 60 * 24 * 365 * 3 });
+
+    await env.LEADS.put(`dripq:outbound:${hour}:${email}`, '1', { expirationTtl: 7*24*3600 });
+    imported++;
+  }
+  await incStat(env, "import", imported);
+  return jsonOK({ imported, skipped });
+}
+
+function parseCSV(text) {
+  const lines = String(text||"").split(/\r?\n/).filter(Boolean);
+  if (!lines.length) return [];
+  const head = lines.shift().split(',').map(s=>s.trim().toLowerCase());
+  const idx = k => head.indexOf(k);
+  const out = [];
+  for (const ln of lines) {
+    const cols = ln.split(',');
+    const email   = (cols[idx('email')]  || '').trim().toLowerCase();
+    const domain  = (cols[idx('domain')] || '').trim().toLowerCase();
+    const company = (cols[idx('company')]|| '').trim();
+    const techRaw = (cols[idx('tech')]   || '');
+    const tech = techRaw.split(/;|,/).map(s=>s.trim()).filter(Boolean);
+    if (email) out.push({ email, domain, company, tech });
+  }
+  return out;
+}
+
 async function handleStats(request, env) {
-  // 保护：x-obs-key = env.OBS_KEY（推荐）或 UNSUB_HMAC_SECRET 的前 16 位
+  // 保护：x-obs-key = env.OBS_KEY（推荐）或 UNSUB_HMAC_SECRET 的前 16 位（兜底）
   const provided = request.headers.get("x-obs-key") || "";
   const want = (env.OBS_KEY || env.UNSUB_HMAC_SECRET || "").slice(0, 16);
   if (!want || provided !== want) return new Response("forbidden", { status: 403 });
@@ -379,7 +472,7 @@ async function handleStats(request, env) {
   const out = {};
   for (let i = 0; i < 7; i++) {
     const day = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-    for (const name of ["lead_new", "lead_touch", "unsub", "stripe_ok", "errors", "rate_limited"]) {
+    for (const name of ["lead_new", "lead_touch", "unsub", "stripe_ok", "errors", "rate_limited", "import"]) {
       const k = `stats:${day}:${name}`;
       out[`${day}.${name}`] = parseInt(await env.LEADS.get(k) || "0", 10);
     }
