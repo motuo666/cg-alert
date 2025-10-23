@@ -1,48 +1,85 @@
 name: seo-ping
-
 on:
   workflow_dispatch: {}
-  push:
-    branches: ["main"]
-    paths:
-      - "public/**"
-      - "evidence/**"
-      - "reports/**"
-      - "sitemap.xml"
-      - "public/sitemap.xml"
   schedule:
-    - cron: "17 3 * * *"  # UTC
-
-# 防止并发重复跑
-concurrency:
-  group: seo-ping-${{ github.ref }}
-  cancel-in-progress: true
+    - cron: "21 4 * * *"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   ensure-and-ping:
     runs-on: ubuntu-latest
     env:
-      # 有变量就用变量；没有就稳妥落到 www 版本
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
 
-      - name: Ensure root sitemap.xml
-        run: node scripts/ops/sitemap_sync.js
+      - name: Ensure sitemap locations
+        run: |
+          node scripts/ops/sitemap_sync.js
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A public/seo/sitemap.xml public/robots.txt _redirects package.json || true
+          if ! git diff --cached --quiet; then
+            git commit -m "seo: ensure /seo/sitemap.xml + robots + redirects + ESM"
+            git push
+          else
+            echo "no changes to commit"
+          fi
 
-      - name: Ping Google/Bing (force WWW)
+      - name: Verify remote /sitemap.xml is 200 (retry)
+        shell: bash
         run: |
           set -euo pipefail
           origin="${SITE_ORIGIN:-https://www.cg-alert.com}"
-          # 强制把裸域替换成 www，避免分叉
+          origin="${origin/https:\/\/cg-alert.com/https:\/\/www.cg-alert.com}"
+          url="${origin%/}/sitemap.xml"
+          echo "CHECK URL: ${url}"
+          tries=12
+          ok=0
+          for i in $(seq 1 $tries); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
+            echo "try $i/$tries -> $code"
+            if [[ "$code" == "200" ]]; then ok=1; break; fi
+            sleep 10
+          done
+          if [[ $ok -ne 1 ]]; then
+            echo "::warning::Remote sitemap still not 200. Will skip pings."; echo "PING_SKIP=1" >> $GITHUB_ENV
+          fi
+
+      - name: Ping Google (sitemaps)
+        if: env.PING_SKIP != '1'
+        run: |
+          origin="${SITE_ORIGIN:-https://www.cg-alert.com}"
           origin="${origin/https:\/\/cg-alert.com/https:\/\/www.cg-alert.com}"
           url="${origin%/}/sitemap.xml"
           echo "PING URL: ${url}"
           curl -fsS "https://www.google.com/ping?sitemap=${url}" || echo "::warning::Google ping failed"
-          curl -fsS "https://www.bing.com/ping?sitemap=${url}" || echo "::warning::Bing ping failed"
+
+      - name: IndexNow for Bing/Yandex (preferred)
+        if: env.PING_SKIP != '1'
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: |
+          set -e
+          if [[ -z "${INDEXNOW_KEY:-}" ]]; then
+            echo "::warning::INDEXNOW_KEY not set; skipping IndexNow"
+            exit 0
+          fi
+          host=$(echo "${SITE_ORIGIN:-https://www.cg-alert.com}" | sed -E 's#https?://([^/]+)/?.*#\1#')
+          key="${INDEXNOW_KEY}"
+          keyloc="https://${host}/${key}.txt"
+          echo "$key" > "${key}.txt"
+          mkdir -p public
+          cp -f "${key}.txt" "public/${key}.txt"
+          git add -A "public/${key}.txt"
+          git diff --cached --quiet || { git commit -m "seo: add IndexNow key file"; git push; }
+          payload=$(cat <<JSON
+          { "host": "${host}", "key": "${key}", "keyLocation": "${keyloc}", "urlList": ["https://${host}/sitemap.xml"] }
+JSON
+          )
+          echo "$payload" | curl -fsS -H "Content-Type: application/json; charset=utf-8" -d @- "https://www.bing.com/indexnow" || echo "::warning::IndexNow request failed"
