@@ -1,7 +1,7 @@
 name: Public Change Poller
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
   schedule:
     - cron: "17 */3 * * *"  # 每 3 小时（UTC）
 
@@ -16,12 +16,16 @@ jobs:
   poll:
     runs-on: ubuntu-latest
     env:
-      # 站点根（用于生成外链、RSS 等）。脚本内也会兜底。
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+      # 站点根（用于生成外链、RSS 等）；不存在则兜底为线上域名
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
       # Proof 页基址（供 build_change_pack 使用，指向站内快照目录）
-      PROOF_BASE: ${{ vars.SITE_ORIGIN }}/reports/proof
+      PROOF_BASE: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}/reports/proof
       # 保留页面正文，便于哈希/差异计算
       POLL_SAVE_BODY: "1"
+      # 兼容两种命名（脚本会二次兜底）
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      NODE_OPTIONS: --max_old_space_size=3072
 
     steps:
       - name: Checkout
@@ -32,6 +36,14 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+
+      - name: Prepare env (Slack webhook fallback)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${SLACK_WEBHOOK:-}" && -n "${SLACK_WEBHOOK_URL:-}" ]]; then
+            echo "SLACK_WEBHOOK=${SLACK_WEBHOOK_URL}" >> "$GITHUB_ENV"
+          fi
 
       - name: Install dependencies
         shell: bash
@@ -51,7 +63,7 @@ jobs:
           node scripts/materiality_score.js
           node scripts/build_evidence_index.js
 
-      # ========== 先修 ==========
+      # ========== 先修（脱敏/合规） ==========
       - name: Redact internal fields in evidence
         shell: bash
         run: |
@@ -83,7 +95,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # 注意：build_change_pack.js 里优先用 PROOF_BASE/snapshot 链接
+          # 注意：build_change_pack.js 内优先用 PROOF_BASE/snapshot 链接
           node scripts/build_change_pack.js
           node scripts/build_who_uses.js
           node scripts/build_updates.js
@@ -98,16 +110,33 @@ jobs:
           node scripts/generate_reports_index.js
           node scripts/generate_sitemap_rss.js
 
-      # ========== 日报（可选，不阻断） ==========
-      - name: Daily Ops snapshot (UTC, non-blocking)
+      # ========== 可视化差异（增强，非阻断） ==========
+      - name: Generate visual diffs (non-blocking)
         shell: bash
         run: |
           set -euo pipefail
-          node scripts/daily_ops_report.js || true
-          node scripts/fix_sent_today.js || true
-          if [ -f artifacts/daily_ops.json ]; then
-            echo "## Poller Summary (UTC)" >> "$GITHUB_STEP_SUMMARY"
-            cat artifacts/daily_ops.json >> "$GITHUB_STEP_SUMMARY"
+          if [ -f scripts/generate_diff_html.js ]; then
+            node scripts/generate_diff_html.js public/evidence || true
+          else
+            echo "skip: scripts/generate_diff_html.js not found"
+          fi
+
+      # ========== 站点探针（增强，非阻断） ==========
+      - name: Probe critical URLs (non-blocking)
+        if: always()
+        shell: bash
+        env:
+          SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
+        run: |
+          set -euo pipefail
+          if [ -f scripts/url_probe.sh ]; then
+            bash scripts/url_probe.sh || true
+          else
+            echo "light probe..."
+            for u in "/" "/seo/" "/reports/" "/who-uses/" "/sitemap.xml" "/rss.xml"; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" "${SITE_ORIGIN%/}${u}" || true)
+              echo "[probe] $code ${SITE_ORIGIN%/}${u}"
+            done
           fi
 
       # ========== 提交 ==========
@@ -118,9 +147,23 @@ jobs:
           # 不限定路径，避免 pathspec 错误；确保 evidence/** 被纳入
           git add -A || true
           if [ -n "$(git status --porcelain)" ]; then
-            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "poller: redact+proof+packs+index+sitemap/rss"
+            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "poller: redact+proof+packs+index+sitemap/rss+diffs"
             git pull --rebase --autostash || true
             git push
           else
             echo "no changes to commit"
           fi
+
+      # ========== 摘要 ==========
+      - name: Summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "## Public Change Poller" >> "$GITHUB_STEP_SUMMARY"
+          echo "- SITE_ORIGIN: ${SITE_ORIGIN}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Evidence pages: $(git ls-files 'public/evidence/**/index.html' | wc -l || echo 0)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Reports index.json: $(test -f public/reports/index.json && echo present || echo missing)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Sitemap: $(test -f public/sitemap.xml && echo present || echo missing)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- RSS: $(test -f public/rss.xml && echo present || echo missing)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Diffs generated: $(git ls-files 'public/evidence/**/diff.html' | wc -l || echo 0)" >> "$GITHUB_STEP_SUMMARY"
