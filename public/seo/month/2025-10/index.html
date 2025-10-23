@@ -1,33 +1,94 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Monthly rollup 2025-10</title>
-<meta name="description" content="Metrics rollup 2025-10">
-<link rel="canonical" href="https://www.cg-alert.com/seo/month/2025-10/">
-<meta property="og:title" content="Monthly rollup 2025-10">
-<meta property="og:description" content="Metrics rollup 2025-10">
-<meta property="og:type" content="article">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"Monthly rollup 2025-10","datePublished":"2025-10-23","about":"Vendor change monitoring evidence metrics","publisher":{"@type":"Organization","name":"cg-alert"}}</script>
-<style>
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;line-height:1.6;
-       max-width:880px;margin:48px auto;padding:0 16px;color:#111}
-  h1{font-size:1.9rem;margin:0 0 16px}
-  h2{margin-top:28px}
-  ul{padding-left:20px}
-  code,pre{background:#f6f7f9;border-radius:6px;padding:2px 6px}
-  .muted{color:#666}
-</style>
-</head><body><main><h1>2025-10 rollup</h1><pre>{
-  &quot;endpoints&quot;: 7097,
-  &quot;evidence_total&quot;: 624,
-  &quot;evidence_today&quot;: 30,
-  &quot;changed_vendors_72h&quot;: 2,
-  &quot;hash_ratio&quot;: 0.42467948717948717,
-  &quot;ttd_samples&quot;: 0,
-  &quot;ttd_p50_hours&quot;: 0,
-  &quot;ttd_p95_hours&quot;: 0,
-  &quot;packs_month&quot;: 50,
-  &quot;sent_today&quot;: 0,
-  &quot;dry_today&quot;: 2,
-  &quot;hash_ratio_pct&quot;: 42.5
-}</pre></main></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vendor Change Monitoring – 2025-10</title>
+  <meta name="description" content="Evidence metrics 2025-10">
+  <link rel="canonical" href="https://www.cg-alert.com/seo/month/2025-10/">
+  <meta property="og:title" content="Vendor Change Monitoring – 2025-10">
+  <meta property="og:description" content="Evidence metrics 2025-10">
+  <meta property="og:type" content="article">
+  <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Vendor Change Monitoring \u2013 2025-10", "datePublished": "2025-10-23", "about": "Vendor change monitoring evidence metrics", "publisher": {"@type": "Organization", "name": "cg-alert"}, "url": "https://www.cg-alert.com/seo/month/2025-10/"}</script>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial,'Noto Sans',sans-serif;line-height:1.6;
+         max-width:880px;margin:48px auto;padding:0 16px;color:#111}
+    h1{font-size:1.9rem;margin:0 0 16px}
+    h2{margin-top:28px}
+    ul{padding-left:20px}
+    code,pre{background:#f6f7f9;border-radius:6px;padding:2px 6px}
+    .muted{color:#666}
+    .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:12px 0 8px}
+    .card{border:1px solid #e8e9ec;border-radius:12px;padding:12px}
+    .list{margin:0;padding:0;list-style:none}
+    .list li{padding:8px 0;border-bottom:1px dashed #e7e7e9}
+    .list li:last-child{border-bottom:none}
+  </style>
+</head>
+<body><main>
+<h1>Vendor Change Monitoring – 2025-10</h1>
+
+<div class="kpis">
+  <div class="card"><div class="muted">Evidence (month)</div><div id="evidence-month">—</div></div>
+  <div class="card"><div class="muted">Sent (month)</div><div id="sent-month">—</div></div>
+  <div class="card"><div class="muted">Hash coverage</div><div id="hash-cov">—</div></div>
+  <div class="card"><div class="muted">TTD P95 (h)</div><div id="ttd-p95">—</div></div>
+  <div class="card"><div class="muted">Changed vendors (72h)</div><div id="vendors-72h">—</div></div>
+</div>
+
+<section>
+  <h2>Vendors (sample)</h2>
+  <ul id="vendors-list" class="list"></ul>
+  <p id="vendors-empty" class="muted">No vendor list yet. Pages will grow as data arrives.</p>
+</section>
+
+<section>
+  <h2>Monthly rollup</h2>
+  <p>See <a href="/reports/2025-10/">/reports/2025-10/</a> KPI snapshot. Back to <a href="/seo/">/seo/</a>.</p>
+</section>
+</main>
+
+<script>
+(async function(){
+  try {
+    const mon = await fetch('/reports/2025-10/index.json', {cache:'no-cache'}).then(r=>r.ok?r.json():null);
+    if(!mon) return;
+    const ev = mon.evidence_count ?? mon.total ?? (mon.items? mon.items.length : null);
+    if(ev!=null) document.getElementById('evidence-month').textContent = ev;
+    const sent = mon.sent_count ?? mon.sent ?? null;
+    if(sent!=null) document.getElementById('sent-month').textContent = sent;
+    const cov = mon.hash_coverage ?? (mon.hashed_count!=null && mon.total!=null ? (100*mon.hashed_count/mon.total).toFixed(1)+'%' : null);
+    if(cov) document.getElementById('hash-cov').textContent = cov;
+    const p95 = mon.ttd_p95_h ?? mon.ttd_p95 ?? null;
+    if(p95!=null) document.getElementById('ttd-p95').textContent = p95;
+    const v72 = mon.changed_72h ?? (mon.changed_vendors_72h ?? null);
+    if(v72!=null) document.getElementById('vendors-72h').textContent = v72;
+
+    const list = document.getElementById('vendors-list');
+    document.getElementById('vendors-empty').style.display = 'none';
+    if(mon.vendors && mon.vendors.length) {
+      mon.vendors.slice(0,20).forEach(v=>{
+        const li = document.createElement('li');
+        const name = v.name || v.domain || 'Unknown';
+        li.innerHTML = name;
+        list.appendChild(li);
+      });
+    } else if(mon.items && mon.items.length) {
+      mon.items.slice(0,20).forEach(it=>{
+        const li = document.createElement('li');
+        const dom = it.domain || (it.url? new URL(it.url).hostname : '');
+        li.textContent = dom || (it.vendor_name || 'Unknown vendor');
+        list.appendChild(li);
+      });
+    } else {
+      document.getElementById('vendors-empty').style.display = 'block';
+    }
+  } catch(e) {
+    // keep placeholders
+  }
+})();
+</script>
+</body>
+</html>
