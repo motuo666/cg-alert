@@ -177,7 +177,7 @@ jobs:
       - name: Safe Push (with fallback)
         shell: bash
         env:
-          COMMIT_MSG: report: public monthly ${{ steps.month.outputs.val }}
+          COMMIT_MSG: "report: public monthly ${{ steps.month.outputs.val }}"
         run: |
           set -euo pipefail
           if [ -x scripts/git_safe_push.sh ]; then
