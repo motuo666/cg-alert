@@ -39,7 +39,7 @@ jobs:
       REPLY_TO:    ${{ vars.REPLY_TO    || secrets.REPLY_TO    || 'ops@cg-alert.com' }}
       SENDER_NAME: ${{ vars.SENDER_NAME || 'CG Alerts' }}
 
-      # ---- 运行护栏（send_drip.js 已读取则生效；未读取也不影响）----
+      # ---- 运行护栏（send_drip.js 读取则生效；未读取也不影响）----
       SEND_RATE:    20     # 每分钟最大发送数（域名健康）
       MAX_PER_RUN:  400    # 单次 run 最多处理多少线索
 
@@ -67,6 +67,18 @@ jobs:
           else
             npm init -y -f
             npm install nodemailer --no-audit --no-fund
+          fi
+
+      # 可选：环境自检（缺关键口径时跳过而非报红）
+      - name: Env guard (optional)
+        run: |
+          MISS=0
+          for k in SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS UNSUB_HMAC_SECRET; do
+            v=$(eval echo "\$$k")
+            if [ -z "$v" ]; then echo "::warning::missing $k"; MISS=1; fi
+          done
+          if [ "$MISS" = "1" ]; then
+            echo "Required secrets missing, skipping run"; exit 78; # neutral
           fi
 
       - name: Send drip
