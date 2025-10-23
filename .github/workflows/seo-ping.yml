@@ -1,8 +1,9 @@
 name: seo-ping
+
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
   schedule:
-    - cron: "21 4 * * *"
+    - cron: '21 4 * * *'   # daily
 
 permissions:
   contents: write
@@ -11,16 +12,23 @@ jobs:
   ensure-and-ping:
     runs-on: ubuntu-latest
     env:
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      # 不再在表达式里用 "||"；默认值在脚本里处理
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Ensure sitemap locations
+        shell: bash
         run: |
-          node scripts/ops/sitemap_sync.js
+          set -e
+          # 确保 /seo/sitemap.xml 存在（脚本内部复制 public/sitemap.xml）
+          node scripts/ops/sitemap_sync.js || true
+
+          # 将可能的改动入库（robots/_redirects/package.json/seo-sitemap）
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
           git add -A public/seo/sitemap.xml public/robots.txt _redirects package.json || true
@@ -32,27 +40,33 @@ jobs:
           fi
 
       - name: Verify remote /sitemap.xml is 200 (retry)
+        id: check
         shell: bash
         run: |
           set -euo pipefail
           origin="${SITE_ORIGIN:-https://www.cg-alert.com}"
+          # 强制把裸域替换成 www，避免分叉
           origin="${origin/https:\/\/cg-alert.com/https:\/\/www.cg-alert.com}"
           url="${origin%/}/sitemap.xml"
           echo "CHECK URL: ${url}"
+
           tries=12
-          ok=0
-          for i in $(seq 1 $tries); do
+          for i in $(seq 1 "$tries"); do
             code=$(curl -s -o /dev/null -w "%{http_code}" "$url" || true)
             echo "try $i/$tries -> $code"
-            if [[ "$code" == "200" ]]; then ok=1; break; fi
+            if [[ "$code" == "200" ]]; then
+              echo "PING_SKIP=0" >> "$GITHUB_ENV"
+              exit 0
+            fi
             sleep 10
           done
-          if [[ $ok -ne 1 ]]; then
-            echo "::warning::Remote sitemap still not 200. Will skip pings."; echo "PING_SKIP=1" >> $GITHUB_ENV
-          fi
+
+          echo "::warning::Remote sitemap still not 200. Will skip pings."
+          echo "PING_SKIP=1" >> "$GITHUB_ENV"
 
       - name: Ping Google (sitemaps)
-        if: env.PING_SKIP != '1'
+        if: ${{ env.PING_SKIP != '1' }}
+        shell: bash
         run: |
           origin="${SITE_ORIGIN:-https://www.cg-alert.com}"
           origin="${origin/https:\/\/cg-alert.com/https:\/\/www.cg-alert.com}"
@@ -61,25 +75,29 @@ jobs:
           curl -fsS "https://www.google.com/ping?sitemap=${url}" || echo "::warning::Google ping failed"
 
       - name: IndexNow for Bing/Yandex (preferred)
-        if: env.PING_SKIP != '1'
+        if: ${{ env.PING_SKIP != '1' }}
         env:
           INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        shell: bash
         run: |
           set -e
           if [[ -z "${INDEXNOW_KEY:-}" ]]; then
             echo "::warning::INDEXNOW_KEY not set; skipping IndexNow"
             exit 0
           fi
-          host=$(echo "${SITE_ORIGIN:-https://www.cg-alert.com}" | sed -E 's#https?://([^/]+)/?.*#\1#')
+
+          origin="${SITE_ORIGIN:-https://www.cg-alert.com}"
+          host=$(echo "$origin" | sed -E 's#https?://([^/]+)/?.*#\1#')
           key="${INDEXNOW_KEY}"
           keyloc="https://${host}/${key}.txt"
+
+          # 放置 key 文件
           echo "$key" > "${key}.txt"
           mkdir -p public
           cp -f "${key}.txt" "public/${key}.txt"
-          git add -A "public/${key}.txt"
+          git add -A "public/${key}.txt" || true
           git diff --cached --quiet || { git commit -m "seo: add IndexNow key file"; git push; }
-          payload=$(cat <<JSON
-          { "host": "${host}", "key": "${key}", "keyLocation": "${keyloc}", "urlList": ["https://${host}/sitemap.xml"] }
-JSON
-          )
-          echo "$payload" | curl -fsS -H "Content-Type: application/json; charset=utf-8" -d @- "https://www.bing.com/indexnow" || echo "::warning::IndexNow request failed"
+
+          # 发送 IndexNow 请求（不用 heredoc，避免 YAML 解析歧义）
+          payload=$(printf '{ "host": "%s", "key": "%s", "keyLocation": "%s", "urlList": ["https://%s/sitemap.xml"] }\n' "$host" "$key" "$keyloc" "$host")
+          echo "$payload" | curl -fsS -H "Content-Type: application/json; charset=utf-8" --data @- "https://www.bing.com/indexnow" || echo "::warning::IndexNow request failed"
