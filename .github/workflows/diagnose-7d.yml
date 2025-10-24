@@ -1,11 +1,4 @@
 name: Diagnose 7-Day Deliverability
-true:
-  workflow_dispatch:
-    inputs:
-      fix:
-        description: Normalize suppression logs (add missing timestamps) before diagnosing
-        type: boolean
-        default: false
 permissions:
   contents: write
 jobs:
@@ -36,4 +29,9 @@ jobs:
         \ || true\n  bash scripts/git_safe_push.sh \"chore(diag): 7d deliverability\
         \ report\"\nelse\n  echo \"no changes to commit\"\nfi\n"
 'on':
-  workflow_dispatch: null
+  workflow_dispatch:
+    inputs:
+      fix:
+        description: Normalize suppression logs (add missing timestamps) before diagnosing
+        type: boolean
+        default: false
