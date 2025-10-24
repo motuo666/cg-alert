@@ -1,14 +1,22 @@
 name: Outreach Triggered
-on:
+true:
   workflow_dispatch:
     inputs:
-      dry:       { description: "dry run?", required: true, default: "true" }
-      limit:     { description: "send limit", required: true, default: "40" }
-      window_h:  { description: "primary window hours", required: true, default: "336" }
+      dry:
+        description: dry run?
+        required: true
+        default: 'true'
+      limit:
+        description: send limit
+        required: true
+        default: '40'
+      window_h:
+        description: primary window hours
+        required: true
+        default: '336'
   schedule:
-    - cron: "10 15 * * *"   # 每日 15:10 UTC
-    - cron: "10 23 * * *"   # 每日 23:10 UTC
-
+  - cron: 10 15 * * *
+  - cron: 10 23 * * *
 env:
   SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
   PERSONA_RULES: config/persona_rules.json
@@ -21,64 +29,78 @@ env:
   SMTP_PORT: ${{ secrets.SMTP_PORT }}
   SMTP_USER: ${{ secrets.SMTP_USER }}
   SMTP_PASS: ${{ secrets.SMTP_PASS }}
-  MAIL_FROM:  ${{ secrets.MAIL_FROM }}
-
+  MAIL_FROM: ${{ secrets.MAIL_FROM }}
 jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm i
-      - name: Safety suppression
-        run: |
-          node scripts/normalize_suppression_logs.js || true
-          node scripts/leads_guard.js || true
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - name: Install deps
+      run: npm ci || npm i
+    - name: Safety suppression
+      run: 'node scripts/normalize_suppression_logs.js || true
 
-      - name: Mode
-        id: mode
-        run: |
-          if [ "${{ github.event_name }}" = "schedule" ]; then echo "dry=false" >> $GITHUB_OUTPUT; else echo "dry=${{ inputs.dry }}" >> $GITHUB_OUTPUT; fi
+        node scripts/leads_guard.js || true
 
-      - name: Dry planning (A→E)
-        if: steps.mode.outputs.dry == 'true'
-        run: |
-          set -euo pipefail
-          plan () { node scripts/send_triggered.js --dry=true --limit=999 --window_h="$1" "$2" 2>&1 | tee -a "/tmp/plan_$1.log" | awk '/^DRY SENT /{n++} END{print (n+0)}'; }
-          echo "### Try A (${{ env.WINDOW_H }}h)" >> "$GITHUB_STEP_SUMMARY"; echo "plan=$(plan ${{ env.WINDOW_H }})" >> "$GITHUB_STEP_SUMMARY"
-          echo "### Try B (336h)" >> "$GITHUB_STEP_SUMMARY"; echo "plan=$(plan 336)" >> "$GITHUB_STEP_SUMMARY"
-          echo "### Try C (336h + RELAX_PERSONA=1)" >> "$GITHUB_STEP_SUMMARY"; RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 | tee /tmp/planC.log; echo "plan=$(awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/planC.log)" >> "$GITHUB_STEP_SUMMARY"
-          echo "### Try D (caps)" >> "$GITHUB_STEP_SUMMARY"; echo "plan=$(node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | awk '/^DRY SENT /{n++} END{print (n+0)}')" >> "$GITHUB_STEP_SUMMARY"
-          echo "### Try E (720h + discovered + persona)" >> "$GITHUB_STEP_SUMMARY"; RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=720 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee /tmp/planE.log; echo "plan=$(awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/planE.log)" >> "$GITHUB_STEP_SUMMARY"
+        '
+    - name: Mode
+      id: mode
+      run: 'if [ "${{ github.event_name }}" = "schedule" ]; then echo "dry=false"
+        >> $GITHUB_OUTPUT; else echo "dry=${{ inputs.dry }}" >> $GITHUB_OUTPUT; fi
 
-      - name: Real send (C→E→Force) & accounting
-        if: steps.mode.outputs.dry == 'false'
-        run: |
-          set -euo pipefail
-          RELAX_PERSONA=1 node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 > /tmp/planC.log 2>&1 || true
-          PLAN_C=$(awk '/^DRY SENT /{n++} END{print (n+0)}' /tmp/planC.log)
+        '
+    - name: Dry planning (A→E)
+      if: steps.mode.outputs.dry == 'true'
+      run: 'set -euo pipefail
 
-          if [ "${PLAN_C:-0}" -ge 40 ]; then
-            RELAX_PERSONA=1 node scripts/send_triggered.js --dry=false --limit=40 --window_h=336 | tee /tmp/C.log
-          else
-            RELAX_PERSONA=1 node scripts/send_triggered.js --dry=false --limit=$((PLAN_C>0?PLAN_C:0)) --window_h=336 | tee /tmp/C.log || true
-            RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js --dry=false --limit=$((40-PLAN_C>0?40-PLAN_C:0)) --window_h=720 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee /tmp/E.log
-          fi
+        plan () { node scripts/send_triggered.js --dry=true --limit=999 --window_h="$1"
+        "$2" 2>&1 | tee -a "/tmp/plan_$1.log" | awk ''/^DRY SENT /{n++} END{print
+        (n+0)}''; }
 
-          node scripts/append_sent_from_log.js /tmp/C.log || true
-          node scripts/append_sent_from_log.js /tmp/E.log || true
-          SENT=$(grep -h -c '^SENT ' /tmp/C.log /tmp/E.log 2>/dev/null || true)
-          echo "### TOTAL_SENT=${SENT}" >> "$GITHUB_STEP_SUMMARY"
+        echo "### Try A (${{ env.WINDOW_H }}h)" >> "$GITHUB_STEP_SUMMARY"; echo "plan=$(plan
+        ${{ env.WINDOW_H }})" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Commit sent_log
-        if: steps.mode.outputs.dry == 'false'
-        run: |
-          git add -A data/sent_log.csv || true
-git add public reports || true
-          if [ -n "$(git status --porcelain)" ]; then
-            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "outreach: append sent_log"
-            git pull --rebase --autostash || true
-            git push
-          fi
+        echo "### Try B (336h)" >> "$GITHUB_STEP_SUMMARY"; echo "plan=$(plan 336)"
+        >> "$GITHUB_STEP_SUMMARY"
+
+        echo "### Try C (336h + RELAX_PERSONA=1)" >> "$GITHUB_STEP_SUMMARY"; RELAX_PERSONA=1
+        node scripts/send_triggered.js --dry=true --limit=999 --window_h=336 | tee
+        /tmp/planC.log; echo "plan=$(awk ''/^DRY SENT /{n++} END{print (n+0)}'' /tmp/planC.log)"
+        >> "$GITHUB_STEP_SUMMARY"
+
+        echo "### Try D (caps)" >> "$GITHUB_STEP_SUMMARY"; echo "plan=$(node scripts/send_triggered.js
+        --dry=true --limit=999 --window_h=336 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7
+        --vendor_company_d=7 | awk ''/^DRY SENT /{n++} END{print (n+0)}'')" >> "$GITHUB_STEP_SUMMARY"
+
+        echo "### Try E (720h + discovered + persona)" >> "$GITHUB_STEP_SUMMARY";
+        RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js --dry=true
+        --limit=999 --window_h=720 --domain_cap=4 --domain_window_d=7 --email_cooldown_d=7
+        --vendor_company_d=7 | tee /tmp/planE.log; echo "plan=$(awk ''/^DRY SENT /{n++}
+        END{print (n+0)}'' /tmp/planE.log)" >> "$GITHUB_STEP_SUMMARY"
+
+        '
+    - name: Real send (C→E→Force) & accounting
+      if: steps.mode.outputs.dry == 'false'
+      run: "set -euo pipefail\nRELAX_PERSONA=1 node scripts/send_triggered.js --dry=true\
+        \ --limit=999 --window_h=336 > /tmp/planC.log 2>&1 || true\nPLAN_C=$(awk '/^DRY\
+        \ SENT /{n++} END{print (n+0)}' /tmp/planC.log)\n\nif [ \"${PLAN_C:-0}\" -ge\
+        \ 40 ]; then\n  RELAX_PERSONA=1 node scripts/send_triggered.js --dry=false\
+        \ --limit=40 --window_h=336 | tee /tmp/C.log\nelse\n  RELAX_PERSONA=1 node\
+        \ scripts/send_triggered.js --dry=false --limit=$((PLAN_C>0?PLAN_C:0)) --window_h=336\
+        \ | tee /tmp/C.log || true\n  RELAX_PERSONA=1 INCLUDE_DISCOVERED=1 node scripts/send_triggered.js\
+        \ --dry=false --limit=$((40-PLAN_C>0?40-PLAN_C:0)) --window_h=720 --domain_cap=4\
+        \ --domain_window_d=7 --email_cooldown_d=7 --vendor_company_d=7 | tee /tmp/E.log\n\
+        fi\n\nnode scripts/append_sent_from_log.js /tmp/C.log || true\nnode scripts/append_sent_from_log.js\
+        \ /tmp/E.log || true\nSENT=$(grep -h -c '^SENT ' /tmp/C.log /tmp/E.log 2>/dev/null\
+        \ || true)\necho \"### TOTAL_SENT=${SENT}\" >> \"$GITHUB_STEP_SUMMARY\"\n"
+    - name: Commit sent_log
+      if: steps.mode.outputs.dry == 'false'
+      run: "git add -A data/sent_log.csv || true\nif [ -n \"$(git status --porcelain)\"\
+        \ ]; then\n  git -c user.name=\"cg-bot\" -c user.email=\"bot@cg-alert.com\"\
+        \ commit -m \"outreach: append sent_log\"\n  git pull --rebase --autostash\
+        \ || true\n  git push\nfi\ngit add public reports || true\n"
+'on':
+  workflow_dispatch: null
