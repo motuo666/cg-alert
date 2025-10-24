@@ -7,10 +7,6 @@ permissions:
   contents: write
   pull-requests: write
 
-concurrency:
-  group: vendor-catalog
-  cancel-in-progress: false
-
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -22,14 +18,9 @@ jobs:
         run: |
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-      - name: Update templates
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          # 这里放你真正的批量更新逻辑；暂时占位不做任何修改
-          echo "No-op"
+      - name: Update templates (noop)
+        run: echo "No-op"
       - name: Commit changes (if any)
-        shell: bash
         run: |
           set -Eeuo pipefail
           git add .github/workflows || true
