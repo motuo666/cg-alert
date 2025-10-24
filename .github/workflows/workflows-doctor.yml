@@ -1,0 +1,31 @@
+name: Workflows Doctor
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install YAML parser
+        run: npm i yaml@2
+      - name: Run doctor
+        run: node scripts/workflows_doctor.js
+      - name: Commit fixes (if any)
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add .github/workflows || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "chore: fix workflows yaml (doctor)"
+            git push
+          fi
