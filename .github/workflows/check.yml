@@ -1,6 +1,4 @@
 name: check
-true:
-  workflow_dispatch: {}
 permissions:
   contents: read
 jobs:
@@ -56,4 +54,4 @@ jobs:
           '
         if-no-files-found: warn
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
