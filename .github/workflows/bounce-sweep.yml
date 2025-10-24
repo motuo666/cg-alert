@@ -1,91 +1,102 @@
 name: Bounce Sweep
-
-on:
-  schedule:
-    - cron: "0 */6 * * *"   # 每 6 小时回捞一次
+true:
   workflow_dispatch:
     inputs:
       lookback_hours:
-        description: "回捞窗口（小时），留空则用 Secrets 或默认 168"
+        description: 回捞窗口（小时），留空则用 Secrets 或默认 168
         required: false
-        default: ""
-
+        default: ''
+  schedule:
+  - cron: 0 */6 * * *
 permissions:
   contents: read
-
-# 防并发重叠
 concurrency:
   group: bounce-sweep
   cancel-in-progress: true
-
 env:
   NODE_ENV: production
   TZ: UTC
-
 jobs:
   sweep:
     runs-on: ubuntu-latest
     timeout-minutes: 12
-
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: npm
+    - name: Install deps (imapflow only)
+      run: 'set -e
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
+        npm init -y >/dev/null 2>&1
 
-      - name: Install deps (imapflow only)
-        run: |
-          set -e
-          npm init -y >/dev/null 2>&1
-          npm i --no-audit --no-fund --silent imapflow@1
+        npm i --no-audit --no-fund --silent imapflow@1
 
-      - name: Resolve config (vars/secrets fallback)
-        env:
-          INP_LOOKBACK:  ${{ inputs.lookback_hours }}
-          SEC_LOOKBACK:  ${{ secrets.LOOKBACK_HOURS }}
-          VAR_CF_ID:     ${{ vars.CF_ACCOUNT_ID }}
-          SEC_CF_ID:     ${{ secrets.CF_ACCOUNT_ID }}
-          VAR_KV_ID:     ${{ vars.KV_NAMESPACE_ID }}
-          SEC_KV_ID:     ${{ secrets.KV_NAMESPACE_ID }}
-          SEC_KV_LEADS:  ${{ secrets.KV_LEADS_ID }}
-        run: |
-          set -e
-          # lookback: dispatch > secret > default(168)
-          L="$INP_LOOKBACK"; [ -z "$L" ] && L="$SEC_LOOKBACK"; [ -z "$L" ] && L=168
-          echo "LOOKBACK_HOURS=$L" >> "$GITHUB_ENV"
-          echo "::notice::lookback_h=$L"
+        '
+    - name: Resolve config (vars/secrets fallback)
+      env:
+        INP_LOOKBACK: ${{ inputs.lookback_hours }}
+        SEC_LOOKBACK: ${{ secrets.LOOKBACK_HOURS }}
+        VAR_CF_ID: ${{ vars.CF_ACCOUNT_ID }}
+        SEC_CF_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        VAR_KV_ID: ${{ vars.KV_NAMESPACE_ID }}
+        SEC_KV_ID: ${{ secrets.KV_NAMESPACE_ID }}
+        SEC_KV_LEADS: ${{ secrets.KV_LEADS_ID }}
+      run: 'set -e
 
-          # CF_ACCOUNT_ID: vars优先，退回secrets
-          CFID="$VAR_CF_ID"; [ -z "$CFID" ] && CFID="$SEC_CF_ID"
-          if [ -z "$CFID" ]; then echo "::error::CF_ACCOUNT_ID missing (vars/secrets)"; exit 1; fi
-          echo "CF_ACCOUNT_ID=$CFID" >> "$GITHUB_ENV"
+        # lookback: dispatch > secret > default(168)
 
-          # KV_NAMESPACE_ID: vars > secrets(KV_NAMESPACE_ID) > secrets(KV_LEADS_ID 旧名)
-          KVID="$VAR_KV_ID"; [ -z "$KVID" ] && KVID="$SEC_KV_ID"; [ -z "$KVID" ] && KVID="$SEC_KV_LEADS"
-          if [ -z "$KVID" ]; then echo "::error::KV_NAMESPACE_ID missing (vars/secrets)"; exit 1; fi
-          echo "KV_NAMESPACE_ID=$KVID" >> "$GITHUB_ENV"
+        L="$INP_LOOKBACK"; [ -z "$L" ] && L="$SEC_LOOKBACK"; [ -z "$L" ] && L=168
 
-      - name: Sweep IMAP bounces -> suppress
-        env:
-          IMAP_HOST:        ${{ secrets.IMAP_HOST }}
-          IMAP_USER:        ${{ secrets.IMAP_USER }}
-          IMAP_PASS:        ${{ secrets.IMAP_PASS }}
-          CF_ACCOUNT_ID:    ${{ env.CF_ACCOUNT_ID }}
-          KV_NAMESPACE_ID:  ${{ env.KV_NAMESPACE_ID }}
-          CF_API_TOKEN:     ${{ secrets.CF_API_TOKEN }}
-          LOOKBACK_HOURS:   ${{ env.LOOKBACK_HOURS }}
-        run: |
-          set -e
-          node scripts/imap_bounce_sweep.js | tee sweep.log
+        echo "LOOKBACK_HOURS=$L" >> "$GITHUB_ENV"
 
-      - name: Upload sweep log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: bounce-sweep-log
-          path: sweep.log
-          retention-days: 7
+        echo "::notice::lookback_h=$L"
+
+
+        # CF_ACCOUNT_ID: vars优先，退回secrets
+
+        CFID="$VAR_CF_ID"; [ -z "$CFID" ] && CFID="$SEC_CF_ID"
+
+        if [ -z "$CFID" ]; then echo "::error::CF_ACCOUNT_ID missing (vars/secrets)";
+        exit 1; fi
+
+        echo "CF_ACCOUNT_ID=$CFID" >> "$GITHUB_ENV"
+
+
+        # KV_NAMESPACE_ID: vars > secrets(KV_NAMESPACE_ID) > secrets(KV_LEADS_ID 旧名)
+
+        KVID="$VAR_KV_ID"; [ -z "$KVID" ] && KVID="$SEC_KV_ID"; [ -z "$KVID" ] &&
+        KVID="$SEC_KV_LEADS"
+
+        if [ -z "$KVID" ]; then echo "::error::KV_NAMESPACE_ID missing (vars/secrets)";
+        exit 1; fi
+
+        echo "KV_NAMESPACE_ID=$KVID" >> "$GITHUB_ENV"
+
+        '
+    - name: Sweep IMAP bounces -> suppress
+      env:
+        IMAP_HOST: ${{ secrets.IMAP_HOST }}
+        IMAP_USER: ${{ secrets.IMAP_USER }}
+        IMAP_PASS: ${{ secrets.IMAP_PASS }}
+        CF_ACCOUNT_ID: ${{ env.CF_ACCOUNT_ID }}
+        KV_NAMESPACE_ID: ${{ env.KV_NAMESPACE_ID }}
+        CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        LOOKBACK_HOURS: ${{ env.LOOKBACK_HOURS }}
+      run: 'set -e
+
+        node scripts/imap_bounce_sweep.js | tee sweep.log
+
+        '
+    - name: Upload sweep log
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: bounce-sweep-log
+        path: sweep.log
+        retention-days: 7
+'on':
+  workflow_dispatch: null
