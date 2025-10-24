@@ -1,6 +1,4 @@
 name: Normalize Evidence
-true:
-  workflow_dispatch: {}
 permissions:
   contents: write
 jobs:
@@ -23,4 +21,4 @@ jobs:
         \n  exit 0\nfi\ngit commit -m \"normalize evidence: fill missing hash + snapshots\"\
         \ngit pull --rebase --autostash || true\ngit push\n"
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
