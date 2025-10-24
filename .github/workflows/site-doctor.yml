@@ -1,0 +1,35 @@
+name: Site Doctor
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'reports/**'
+      - 'public/reports/**'
+      - 'scripts/**.js'
+
+permissions:
+  contents: write
+
+jobs:
+  doctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run site doctor
+        run: |
+          node scripts/site_doctor.js
+          node scripts/theme_injector.js
+      - name: Commit (if any)
+        run: |
+          git add -A reports public || true
+          if [ -n "$(git status --porcelain)" ]; then
+            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "site-doctor: dedupe header, enforce css, normalize links"
+            git pull --rebase --autostash || true
+            git push
+          else
+            echo "no changes"
+          fi
