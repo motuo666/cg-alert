@@ -1,32 +1,24 @@
 name: Restore Original Homepage
-
-on:
-  workflow_dispatch:
-
+true:
+  workflow_dispatch: null
 permissions:
   contents: write
-
 jobs:
   restore-home:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+    - name: Restore original homepage
+      run: 'bash scripts/restore_home.sh
 
-      - name: Restore original homepage
-        run: |
-          bash scripts/restore_home.sh
-
-      - name: Commit restoration
-        shell: bash
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add index.html public/index.html _redirects public/_redirects || true
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "chore(home): restore original homepage and remove /->/seo redirect"
-            git pull --rebase --autostash || true
-            git push
-          fi
+        '
+    - name: Commit restoration
+      shell: bash
+      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add index.html public/index.html _redirects public/_redirects\
+        \ || true\nif git diff --cached --quiet; then\n  echo \"No changes to commit.\"\
+        \nelse\n  git commit -m \"chore(home): restore original homepage and remove\
+        \ /->/seo redirect\"\n  git pull --rebase --autostash || true\n  git push\n\
+        fi\n"
+'on':
+  workflow_dispatch: null
