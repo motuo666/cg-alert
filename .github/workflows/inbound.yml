@@ -15,7 +15,7 @@ jobs:
         with: { node-version: 20 }
       - name: Install deps (pinned)
         run: |
-          npm ci || true
+          npm ci
           npm i --no-audit --no-fund imapflow@1 mailparser@3.8.1 csv-parse@5 csv-stringify@6 nodemailer@7 || true
       - name: Poll inbox & update CSV (auto-skip if no IMAP)
         env:
@@ -40,3 +40,9 @@ jobs:
         run: |
           chmod +x scripts/git_safe_push.sh
           bash scripts/git_safe_push.sh "inbound: bounces + heartbeat"
+
+- name: Normalize Slack env
+  shell: bash
+  run: |
+    if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
+    if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
