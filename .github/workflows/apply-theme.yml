@@ -1,0 +1,32 @@
+name: Apply Theme (Unify Pages)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-theme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Apply homepage theme to pages
+        run: node scripts/theme_injector.js
+      - name: Commit themed pages
+        shell: bash
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "ui(theme): unify pages to homepage style (header/footer/stylesheet)"
+            git pull --rebase --autostash || true
+            git push
+          fi
