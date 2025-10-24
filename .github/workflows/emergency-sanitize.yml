@@ -1,6 +1,4 @@
 name: emergency-sanitize
-true:
-  workflow_dispatch: {}
 jobs:
   sanitize:
     runs-on: ubuntu-24.04
@@ -30,4 +28,4 @@ jobs:
 
         '
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
