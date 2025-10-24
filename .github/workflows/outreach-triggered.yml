@@ -76,6 +76,7 @@ jobs:
         if: steps.mode.outputs.dry == 'false'
         run: |
           git add -A data/sent_log.csv || true
+git add public reports || true
           if [ -n "$(git status --porcelain)" ]; then
             git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "outreach: append sent_log"
             git pull --rebase --autostash || true
