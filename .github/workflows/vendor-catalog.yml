@@ -1,30 +1,41 @@
 name: Vendor Catalog
-true:
-  workflow_dispatch: null
-  schedule:
-  - cron: 10 04 * * 1
+
+on:
+  workflow_dispatch:
+
 permissions:
   contents: write
+  pull-requests: write
+
+concurrency:
+  group: vendor-catalog
+  cancel-in-progress: false
+
 jobs:
-  build:
+  update:
     runs-on: ubuntu-latest
-    env:
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
-      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - name: Build vendor catalog
-      run: node scripts/vendor_catalog.js
-    - name: SEO/CTA inject
-      run: node scripts/seo_inject.js || true
-    - name: Safe push
-      run: "chmod +x scripts/git_safe_push.sh || true\ngit add -A data/vendor_catalog.csv\
-        \ vendors updates || true\nif [ -n \"$(git status --porcelain)\" ]; then\n\
-        \  bash scripts/git_safe_push.sh \"vendors: weekly refresh\"\nelse\n  echo\
-        \ \"no changes\"\nfi\ngit add public reports || true\n"
-'on':
-  workflow_dispatch: null
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Git identity
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+      - name: Update templates
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          # 这里放你真正的批量更新逻辑；暂时占位不做任何修改
+          echo "No-op"
+      - name: Commit changes (if any)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git add .github/workflows || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "chore: update workflows from vendor catalog"
+            git push
+          fi
