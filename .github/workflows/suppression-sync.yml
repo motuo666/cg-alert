@@ -1,8 +1,4 @@
 name: Suppression Sync
-true:
-  workflow_dispatch: null
-  schedule:
-  - cron: 5 */6 * * *
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -27,3 +23,5 @@ jobs:
         '
 'on':
   workflow_dispatch: null
+  schedule:
+  - cron: 5 */6 * * *
