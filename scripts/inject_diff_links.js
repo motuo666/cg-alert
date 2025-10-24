@@ -15,7 +15,7 @@ function* walk(dir){
     try{ ents = fs.readdirSync(d,{withFileTypes:true}); } catch{ continue; }
     let hasDiff = exists(path.join(d,'diff.html'));
     let idx = path.join(d,'index.html');
-    if (hasDiff && exists(idx)) yield [idx, path.join(d,'diff.html')];
+    if (hasDiff && exists(idx)) yield [idx];
     for(const e of ents){
       const p = path.join(d,e.name);
       if (e.isDirectory()) stack.push(p);
@@ -24,12 +24,16 @@ function* walk(dir){
 }
 
 let injected=0, skipped=0;
-for (const [idx, diff] of walk(EVID)){
+for (const [idx] of walk(EVID)){
   let html = fs.readFileSync(idx,'utf8');
-  if (html.includes('href="diff.html"') || html.includes('>Diff<')) { skipped++; continue; }
-  const link = `<p><a href="diff.html" rel="nofollow">View change diff</a></p>`;
-  if (html.includes('</body>')){
-    html = html.replace('</body>', `${link}\n</body>`);
+  if (/href="diff\.html"/.test(html)) { skipped++; continue; }
+  const link = `<p><a href="diff.html" rel="nofollow">View change diff (word‑level)</a></p>`;
+  if (html.includes('</h1>')){
+    html = html.replace('</h1>', '</h1>' + link);
+  } else if (html.includes('<main')){
+    html = html.replace(/<main[^>]*>/i, m => m + link);
+  } else if (html.includes('</body>')){
+    html = html.replace('</body>', link + '\n</body>');
   } else {
     html += link;
   }
