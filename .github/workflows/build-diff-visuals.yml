@@ -3,7 +3,7 @@ name: Build Diff Visuals
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 6 * * 1"  # every Monday 06:00 UTC
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: write
@@ -18,6 +18,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Normalize evidence pairs
+        run: node scripts/normalize_evidence_pairs.js
 
       - name: Generate diff visuals
         run: node scripts/generate_diff_visuals.js
@@ -35,7 +38,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No diffs to commit"
           else
-            git commit -m "evidence: add diff.html and inject links"
+            git commit -m "evidence: add word-level diffs and links"
             git pull --rebase --autostash || true
             git push
           fi
