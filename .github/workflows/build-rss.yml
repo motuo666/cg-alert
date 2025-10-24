@@ -1,35 +1,37 @@
-name: Build RSS
+name: build-rss
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "12 * * * *"
+
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Build RSS (no deps)
-      run: 'set -e
-
-        node -v
-
-        node scripts/build_rss.js
-
-        '
-    - name: Commit & Push if changed
-      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \  \"cg-alert-bot\"\ngit add -A public/rss.xml\nif git diff --cached --quiet;\
-        \ then\n  echo \"No RSS changes\"\nelse\n  git commit -m \"chore(rss): update\
-        \ rss.xml\"\n  git pull --rebase --autostash || true\n  git push\nfi\n"
-    - name: Expose in summary
-      run: 'echo "RSS built at: ${SITE_ORIGIN%/}/rss.xml" >> $GITHUB_STEP_SUMMARY
-
-        '
-'on':
-  workflow_dispatch: null
-  schedule:
-  - cron: 0 3 * * *
-  push:
-    paths:
-    - reports/**
-    - public/evidence/**
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build rss.xml (sanitized origin)
+        env:
+          SITE_ORIGIN: "https://www.cg-alert.com"
+        run: |
+          node scripts/build_rss.js
+          echo "Built rss.xml:"
+          grep -n "<link>" public/rss.xml | head -1 || true
+          head -n 20 public/rss.xml || true
+      - name: Commit & push if changed
+        shell: bash
+        run: |
+          set -e
+          git add public/rss.xml || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "rss: rebuild with correct origin (2025-10-24T17:42:30Z)"
+            git push
+          fi
