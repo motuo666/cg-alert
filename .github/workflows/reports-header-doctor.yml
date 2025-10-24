@@ -1,0 +1,31 @@
+name: Reports Header Doctor
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  doctor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run dedupe/fix
+        run: node scripts/reports_dupe_header_fix.js
+      - name: Commit (if any)
+        shell: bash
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add reports public/reports || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "reports: remove duplicate/vertical header; normalize links"
+            git push
+          fi
