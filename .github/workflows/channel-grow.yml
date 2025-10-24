@@ -1,13 +1,4 @@
 name: Channel Grow (weekly)
-true:
-  schedule:
-  - cron: 10 4 * * 1
-  workflow_dispatch:
-    inputs:
-      limit:
-        description: 每周渠道候选上限
-        default: '40'
-        required: true
 permissions:
   contents: write
 concurrency:
@@ -63,4 +54,11 @@ jobs:
         \  echo \"- pushed with limit=${{ steps.resolve.outputs.limit }}\" >> \"$GITHUB_STEP_SUMMARY\"\
         \nfi\ngit add public reports || true\n"
 'on':
-  workflow_dispatch: null
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 每周渠道候选上限
+        default: '40'
+        required: true
+  schedule:
+  - cron: 10 4 * * 1
