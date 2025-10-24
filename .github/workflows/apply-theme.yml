@@ -19,6 +19,6 @@ jobs:
         \  \"cg-alert-bot\"\ngit add -A\nif git diff --cached --quiet; then\n  echo\
         \ \"No changes to commit.\"\nelse\n  git commit -m \"ui(theme): unify pages\
         \ to homepage style (header/footer/stylesheet)\"\n  git pull --rebase --autostash\
-        \ || true\n  git push\nfi\ngit add public reports || true\n"
+        \ || true\n  git push\nfi\n"
 'on':
   workflow_dispatch: null
