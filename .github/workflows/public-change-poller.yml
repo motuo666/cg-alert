@@ -1,34 +1,35 @@
 name: Public Change Poller
 
 on:
-  workflow_dispatch: {}
   schedule:
-    - cron: "17 */3 * * *"  # 每 3 小时（UTC）
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
-concurrency:
-  group: public-change-poller
-  cancel-in-progress: true
-
 jobs:
   poll:
     runs-on: ubuntu-latest
-    env:
-      # 站点根（用于生成外链、RSS 等）；不存在则兜底为线上域名
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-      # Proof 页基址（供 build_change_pack 使用，指向站内快照目录）
-      PROOF_BASE: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}/reports/proof
-      # 保留页面正文，便于哈希/差异计算
-      POLL_SAVE_BODY: "1"
-      # 兼容两种命名（脚本会二次兜底）
-      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      NODE_OPTIONS: --max_old_space_size=3072
-
     steps:
-
-- name: Normalize Slack env
-  shell: bash
-  run: bash scripts/run_public_change_poller.sh
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Normalize Slack env
+        shell: bash
+        run: |
+          if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
+          if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
+      - name: Run change poller
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if [[ -x scripts/run_public_change_poller.sh ]]; then
+            bash scripts/run_public_change_poller.sh
+          elif [[ -f scripts/poll_public_endpoints.js ]]; then
+            node scripts/poll_public_endpoints.js
+          else
+            echo "No public change poller script found" >&2
+            exit 0
+          fi
