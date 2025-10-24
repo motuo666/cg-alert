@@ -1,11 +1,4 @@
 name: Auto Acceptance
-true:
-  workflow_dispatch: {}
-  workflow_run:
-    workflows:
-    - Daily Ops (scheduled)
-    types:
-    - completed
 permissions:
   contents: read
 jobs:
@@ -35,4 +28,9 @@ jobs:
         \ \"$GITHUB_STEP_SUMMARY\"\nelse\n  echo \"_acceptance.md missing — check\
         \ acceptance_check.js execution_\" >> \"$GITHUB_STEP_SUMMARY\"\nfi\n"
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  workflow_run:
+    workflows:
+    - Daily Ops (scheduled)
+    types:
+    - completed
