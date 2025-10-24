@@ -1,8 +1,4 @@
 name: Programmatic SEO Pages
-true:
-  workflow_dispatch: {}
-  schedule:
-  - cron: 30 2 * * *
 permissions:
   contents: write
 jobs:
@@ -32,4 +28,6 @@ jobs:
         \ then\n  echo \"No changes.\"\nelse\n  git commit -m \"chore(seo): daily\
         \ programmatic pages & sitemap\"\n  git push\nfi\n"
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  schedule:
+  - cron: 30 2 * * *
