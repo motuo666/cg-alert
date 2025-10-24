@@ -1,84 +1,19 @@
-name: On Failure Notify
+name: on-failure-notify
 
 on:
   workflow_run:
-    workflows:
-      - Daily Ops
-      - Auto Acceptance
-      - CTA Health Repair
-      - Heartbeat
-      - Programmatic SEO Pages
-      - Weekly Report
+    workflows: ["*"]
     types: [completed]
-
-permissions:
-  contents: read
-  issues: write
+  workflow_dispatch:
 
 jobs:
   notify:
-    # 仅在目标工作流非 success 时触发
     if: ${{ github.event.workflow_run.conclusion != 'success' }}
     runs-on: ubuntu-latest
     steps:
-
-- name: Normalize Slack env
-  shell: bash
-  run: |
-    if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
-    if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
-      - name: Open GitHub Issue
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const wr = context.payload.workflow_run;
-            const wfName = wr.name || 'unknown';
-            const { owner, repo } = context.repo;
-
-            // 确保标签存在（不存在就创建，避免 422）
-            const labelName = 'pipeline-failure';
-            try {
-              await github.rest.issues.getLabel({ owner, repo, name: labelName });
-            } catch {
-              try {
-                await github.rest.issues.createLabel({
-                  owner, repo, name: labelName,
-                  color: 'd73a4a',
-                  description: 'Created by automation'
-                });
-              } catch (e) { /* ignore */ }
-            }
-
-            const title = `❗ Pipeline failed: ${wfName} @ ${wr.head_branch}`;
-            const body = [
-              `Workflow: **${wfName}**`,
-              `Run: ${wr.html_url}`,
-              `Conclusion: ${wr.conclusion}`,
-              `Event: ${wr.event}`,
-              '',
-              'Please triage. This issue was created automatically.'
-            ].join('\n');
-
-            await github.rest.issues.create({
-              owner, repo, title, body, labels: [labelName]
-            });
-
-      - name: Slack (optional)
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          WF_NAME: ${{ github.event.workflow_run.name }}
-          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          RUN_URL: ${{ github.event.workflow_run.html_url }}
-          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+      - name: Echo failure summary
         run: |
-          text="❗ Pipeline failed: $WF_NAME @ $HEAD_BRANCH
-          Run: $RUN_URL
-          Conclusion: $CONCLUSION"
-          # 转义为合法 JSON
-          text_esc=${text//\\/\\\\}
-          text_esc=${text_esc//\"/\\\"}
-          text_esc=${text_esc//$'\n'/\\n}
-          payload="{\"text\":\"$text_esc\"}"
-          curl -sS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL" || echo "Slack post failed"
+          echo "Workflow: ${{ github.event.workflow_run.name }}"
+          echo "Branch:   ${{ github.event.workflow_run.head_branch }}"
+          echo "URL:      ${{ github.event.workflow_run.html_url }}"
+          echo "Result:   ${{ github.event.workflow_run.conclusion }}"
