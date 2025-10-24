@@ -1,8 +1,4 @@
 name: Probe Public URLs
-true:
-  workflow_dispatch: {}
-  schedule:
-  - cron: 45 */6 * * *
 permissions:
   contents: read
 jobs:
@@ -26,4 +22,6 @@ jobs:
 
         '
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  schedule:
+  - cron: 45 */6 * * *
