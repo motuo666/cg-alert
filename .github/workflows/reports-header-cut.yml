@@ -1,0 +1,31 @@
+name: Reports Header Cut
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Cut page headers & normalize links
+        run: node scripts/reports_header_cut.js
+      - name: Commit (if any)
+        shell: bash
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add reports public/reports || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "reports(header): remove page-level headers; ensure CSS; normalize links (2025-10-24T17:42:30Z)"
+            git push
+          fi
