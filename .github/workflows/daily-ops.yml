@@ -1,8 +1,4 @@
 name: Daily Ops (scheduled)
-true:
-  workflow_dispatch: {}
-  schedule:
-  - cron: 12 * * * *
 permissions:
   contents: read
 jobs:
@@ -35,4 +31,6 @@ jobs:
         \ >> \"$GITHUB_STEP_SUMMARY\"\nelse\n  echo '{\"note\":\"no daily_ops.json\
         \ produced\"}' >> \"$GITHUB_STEP_SUMMARY\"\nfi\n"
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  schedule:
+  - cron: 12 * * * *
