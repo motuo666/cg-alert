@@ -53,7 +53,6 @@
 <body>
 <main>
 
-<main>
   <h1>Vendor Change Monitoring — Evidence & Reports</h1>
 
   <div class="kpis">
@@ -88,103 +87,6 @@
   <noscript>
     <p class="muted">JavaScript is off. See <a href="/reports/">/reports/</a> for raw JSON/HTML reports.</p>
   </noscript>
-</main>
-
-<script>
-(async function(){
-  const el = (id)=>document.getElementById(id);
-
-  // helpers
-  const tryJSON = async (url)=> {
-    try { const r = await fetch(url, {cache:'no-cache'}); if(!r.ok) return null; return r.json(); }
-    catch { return null; }
-  };
-  const firstDefined = (...xs)=> xs.find(v=>v!==undefined && v!==null && v!=='');
-  const hostFrom = (u)=> { try { return new URL(u).hostname; } catch { return ''; } };
-  const sanitizeDom = (s)=> (s||'').replace(/^https?:\/\//,'').replace(/[^\w\.\-\:]/g,'');
-  const ymFromISO = (iso)=> {
-    try { const d = new Date(iso); const y=d.getUTCFullYear(); const m=String(d.getUTCMonth()+1).padStart(2,'0'); return `${y}-${m}`; }
-    catch { return null; }
-  };
-
-  // 1) load top-level index
-  const idx = await tryJSON('/reports/index.json');
-
-  // detect latest month
-  let latestMonth = null;
-  if (idx) {
-    if (Array.isArray(idx.months) && idx.months.length) latestMonth = idx.months[0];
-    else if (idx.latestMonth) latestMonth = idx.latestMonth;
-    else if (idx.latest_month) latestMonth = idx.latest_month;
-    else if (idx.by_month) {
-      const keys = Object.keys(idx.by_month).sort().reverse();
-      latestMonth = keys[0] || null;
-    }
-  }
-  if (!latestMonth && idx && idx.items && idx.items.length) {
-    const cand = ymFromISO(firstDefined(idx.items[0].timestamp, idx.items[0].date, idx.items[0].pubDate));
-    if (cand) latestMonth = cand;
-  }
-  if (!latestMonth) latestMonth = '—';
-
-  // paint basic KPIs
-  el('latest-month').innerHTML = `<span class="pill">${latestMonth}</span>`;
-  if (latestMonth !== '—') el('latest-month-link').setAttribute('href', `/reports/${latestMonth}/`);
-
-  // 2) load month detail (best-effort)
-  let mon = null;
-  if (latestMonth !== '—') mon = await tryJSON(`/reports/${latestMonth}/index.json`);
-
-  // KPIs from month
-  if (mon) {
-    const ev = firstDefined(mon.evidence_count, mon.total, (Array.isArray(mon.items) ? mon.items.length : null));
-    if (ev!=null) el('evidence-month').textContent = ev;
-
-    const v72 = firstDefined(mon.changed_72h, mon.changed_vendors_72h, mon.vendors_72h);
-    if (v72!=null) el('vendors-72h').textContent = v72;
-
-    const cov = firstDefined(mon.hash_coverage, (mon.hashed_count!=null && mon.total!=null ? (100*mon.hashed_count/mon.total).toFixed(1)+'%' : null));
-    if (cov) el('hash-cov').textContent = cov;
-  }
-
-  // 3) build recent vendors list (20 max)
-  const list = el('vendors-list');
-  const pushItem = (name, href)=> {
-    const li = document.createElement('li');
-    li.innerHTML = href ? `<a href="${href}" rel="nofollow">${name}</a>` : name;
-    list.appendChild(li);
-  };
-
-  let added = 0;
-  const MAX = 20;
-
-  const takeFrom = (arr)=> {
-    if (!arr) return;
-    for (const it of arr) {
-      if (added >= MAX) break;
-      const domain = firstDefined(it.domain, it.vendor, it.host, (it.url?hostFrom(it.url):'')) || 'unknown';
-      const hash = firstDefined(it.hash, it.guid, it.id, null);
-      const ym = firstDefined(it.yearMonth, it.year_month, latestMonth);
-      let link = firstDefined(it.evidence_url, it.url, null);
-      if (!link && ym && domain && hash) {
-        link = `/evidence/${ym}/${sanitizeDom(domain)}/${hash}/`;
-      }
-      pushItem(domain, link);
-      added++;
-    }
-  };
-
-  if (mon && Array.isArray(mon.items) && mon.items.length) {
-    takeFrom(mon.items);
-  } else if (idx && Array.isArray(idx.items) && idx.items.length) {
-    takeFrom(idx.items);
-  }
-
-  if (!added) {
-    el('vendors-empty').hidden = false;
-  }
-})();
-</script>
 
 </main>
 </body>
