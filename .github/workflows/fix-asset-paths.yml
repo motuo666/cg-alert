@@ -1,6 +1,4 @@
 name: Fix Asset Paths
-true:
-  workflow_dispatch: null
 permissions:
   contents: write
 jobs:
