@@ -1,9 +1,4 @@
 name: Deploy website to GitHub Pages
-true:
-  workflow_dispatch: null
-  push:
-    branches:
-    - main
 permissions:
   contents: read
   pages: write
@@ -43,3 +38,6 @@ jobs:
       uses: actions/deploy-pages@v4
 'on':
   workflow_dispatch: null
+  push:
+    branches:
+    - main
