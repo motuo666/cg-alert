@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>elastic.co Change Pack (2025-10)</title>
+<meta name="description" content="Verifiable public changes for elastic.co in 2025-10">
+<link rel="canonical" href="/reports/2025-10/elastic.co/">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Report","name":"elastic.co Change Pack 2025-10","datePublished":"2025-10-24T09:34:08.441Z","about":"elastic.co"}</script>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial;line-height:1.55;padding:24px;max-width:920px;margin:auto}
+  .cta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0 16px}
+  .btn{display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #ddd;text-decoration:none}
+  .btn.primary{background:#111;color:#fff;border-color:#111}
+  .btn.ghost{background:transparent}
+  .muted{color:#666;text-decoration:none}
+  table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}
+  code{background:#f5f5f5;padding:2px 4px;border-radius:4px}
+  h1{margin:0 0 8px} h3{margin:20px 0 8px}
+  thead th{background:#fafafa}
+  .small{color:#666;font-size:12px}
+</style>
+</head>
+<body>
+<h1>elastic.co — Change Pack (2025-10)</h1>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px">
+  <span style="background:#eef;padding:4px 8px;border-radius:8px">Last change: 2025-10-13</span>
+  <span style="background:#efe;padding:4px 8px;border-radius:8px">Evidence: 8</span>
+  <span style="background:#fdecc8;padding:4px 8px;border-radius:8px">Impact: Medium</span>
+  <span style="background:#e6f4ea;padding:4px 8px;border-radius:8px">Verified • #fbca8388 • 3680760</span>
+</div>
+<div class="cta">
+  <a class="btn ghost" href="https://www.cg-alert.com/">Home</a>
+</div>
+
+<h3>What</h3><ul><li><b>DPA-3b1d3082</b>: 1 change(s) in last 90 days</li><li><b>DPA-9a89fee9</b>: 1 change(s) in last 90 days</li><li><b>DPA-f7c333f0</b>: 1 change(s) in last 90 days</li><li><b>Other-ec505e55</b>: 1 change(s) in last 90 days</li><li><b>Pricing-7f0972fb</b>: 1 change(s) in last 90 days</li><li><b>Pricing-d94381fe</b>: 1 change(s) in last 90 days</li><li><b>Privacy-5046d9d6</b>: 1 change(s) in last 90 days</li><li><b>Security-3f679c7a</b>: 1 change(s) in last 90 days</li></ul>
+<h3>So What</h3><p>Contract/Compliance · Privacy/processing terms</p>
+<h3>Now What</h3><ul><li>Lock pricing / request grandfathering at renewal</li><li>Review arbitration/termination with Legal</li><li>Update internal register &amp; notify stakeholders if material</li></ul>
+<h3>Verifiable evidence</h3>
+<table>
+  <thead><tr><th>Date</th><th>Type</th><th>Hash</th><th>Link</th><th>Excerpt</th></tr></thead>
+  <tbody><tr>
+      <td>2025-10-13</td>
+      <td>DPA-3b1d3082</td>
+      <td><code>#e0b41985</code></td>
+      <td><a href="/evidence/elastic.co/2025-10-13-DPA-3b1d3082-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>DPA-9a89fee9</td>
+      <td><code>#0ae66a07</code></td>
+      <td><a href="/evidence/elastic.co/2025-10-13-DPA-9a89fee9-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>DPA-f7c333f0</td>
+      <td><code>#fc14bcda</code></td>
+      <td><a href="/evidence/elastic.co/2025-10-13-DPA-f7c333f0-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>Other-ec505e55</td>
+      <td><code>#c8c98d26</code></td>
+      <td><a href="/evidence/elastic.co/2025-10-13-Other-ec505e55-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>Pricing-7f0972fb</td>
+      <td><code>#508d3dd0</code></td>
+      <td><a href="/evidence/elastic.co/2025-10-13-Pricing-7f0972fb-e3b0c442.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>Pricing-d94381fe</td>
+      <td><code>#562c8469</code></td>
+      <td><a href="/evidence/elastic.co/2025-10-13-Pricing-d94381fe-e3b0c442.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>Privacy-5046d9d6</td>
+      <td><code>#23f92650</code></td>
+      <td><a href="/evidence/elastic.co/2025-10-13-Privacy-5046d9d6-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>Security-3f679c7a</td>
+      <td><code>#fbca8388</code></td>
+      <td><a href="/evidence/elastic.co/2025-10-13-Security-3f679c7a-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr></tbody>
+</table>
+<p class="small">Only internal evidence JSON links are shown. No build or repository links are exposed.</p>
+</body>
+</html>

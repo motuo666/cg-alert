@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Bitbucket</title>
+    <meta id="bb-bootstrap" data-current-user="{&quot;isAuthenticated&quot;: false, &quot;isKbdShortcutsEnabled&quot;: true, &quot;isSshEnabled&quot;: false}"
+
+
+    data-target-workspace-uuid="eec1595b-97ec-49bb-b23f-c465eab638d4"
+ />
+    <meta name="frontbucket-version" content="926ae6f4e0075f8929f7f63fe123824732249dd4">
+    <meta name="frontbucket-environment" content="bifrost_production">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    
+
+
+<meta name="bb-env" content="production" />
+<meta id="bb-canon-url" name="bb-canon-url" content="https://bitbucket.org">
+<meta name="bb-api-canon-url" content="https://api.bitbucket.org">
+
+
+
+  <meta name="robots" content="noindex, nofollow">
+
+<meta name="bitbucket-commit-hash" content="f689233da507">
+<meta name="bb-app-node" content="9a90d92ac582">
+<meta name="bb-dce-env" content="micros">
+<meta name="bb-view-name" content="bitbucket.apps.bb.views.ProfileRepositories">
+<meta name="ignore-whitespace" content="False">
+<meta name="tab-size" content="None">
+<meta name="locale" content="en">
+<meta name="application-name" content="Bitbucket">
+<meta name="apple-mobile-web-app-title" content="Bitbucket">
+<meta name="slack-app-id" content="A8W8QLZD1">
+<meta name="statuspage-api-host" content="https://bqlf8qjztdtr.statuspage.io">
+
+
+<meta name="theme-color" content="#0049B0">
+<meta name="msapplication-TileColor" content="#0052CC">
+<meta name="msapplication-TileImage" content="https://bbc-object-storage--frontbucket.us-east-1.prod.public.atl-paas.net/f689233da507/img/logos/bitbucket/mstile-150x150.png">
+<link rel="apple-touch-icon" sizes="180x180" type="image/png" href="https://bbc-object-storage--frontbucket.us-east-1.prod.public.atl-paas.net/f689233da507/img/logos/bitbucket/apple-touch-icon.png">
+<link rel="icon" sizes="192x192" type="image/png" href="https://bbc-object-storage--frontbucket.us-east-1.prod.public.atl-paas.net/f689233da507/img/logos/bitbucket/android-chrome-192x192.png">
+
+<link rel="icon" sizes="16x16 24x24 32x32 64x64" type="image/x-icon" href="/favicon.ico?v=2">
+<link rel="mask-icon" href="https://bbc-object-storage--frontbucket.us-east-1.prod.public.atl-paas.net/f689233da507/img/logos/bitbucket/safari-pinned-tab.svg" color="#0052CC">
+
+<link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Bitbucket">
+
+    <meta name="description" content="">
+    <meta name="bb-single-page-app" content="true">
+    
+      <link rel="stylesheet" href="https://bbc-frontbucket-static.prod-east.frontend.public.atl-paas.net/assets/vendor.926ae6f4e0075f8929f7f63fe123824732249dd4.css">
+    
+      <link rel="stylesheet" href="https://bbc-frontbucket-static.prod-east.frontend.public.atl-paas.net/assets/all.compiled.926ae6f4e0075f8929f7f63fe123824732249dd4.css">
+    
+    
+    
+    <link
+  rel="preconnect"
+  href="https://ds-cdn.prod-east.frontend.public.atl-paas.net" />
+<link
+  rel="preload"
+  href="https://ds-cdn.prod-east.frontend.public.atl-paas.net/assets/fonts/atlassian-sans/v3/AtlassianSans-latin.woff2"
+  as="font" type="font/woff2" crossorigin />
+<link
+  rel="preload stylesheet"
+  href="https://ds-cdn.prod-east.frontend.public.atl-paas.net/assets/font-rules/v5/atlassian-fonts.css"
+  as="style" crossorigin />
+    
+
+    <script nonce="RFVneakorYMUAw+HWW5vig==">
+
+if (window.performance) {
+
+  
+  window.performance.okayToSendMetrics = !document.hidden && 'onvisibilitychange' in document;
+
+  if (window.performance.okayToSendMetrics) {
+
+    
+    window.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        window.performance.okayToSendMetrics = false;
+      }
+    });
+  }
+
+  
+  
+}
+</script>
+  </head>
+  <body>
+    <div id="root">
+    <script nonce="RFVneakorYMUAw+HWW5vig==">
+      window.__webpack_public_path__ = "https://bbc-frontbucket-static.prod-east.frontend.public.atl-paas.net";
+    </script>
+    
+    
+    
+    </div>
+    
+    <link rel="preconnect" href="https://bbc-frontbucket-static.prod-east.frontend.public.atl-paas.net"  />
+    <script nonce="RFVneakorYMUAw+HWW5vig==">
+      
+        window.__sentry__ = {"dsn": "https://2dcda83904474d8c86928ebbfa1ab294@o55978.ingest.sentry.io/1480772", "environment": "bifrost_production", "tags": {"dc_location": "Micros-3", "micros_deployment_id": "q1cakudil0ju4kdn", "micros_service": "bbc-website", "micros_envtype": "prod", "micros_service_version": "161288", "micros_instance_id": "i-074bab7ff9eba9617", "micros_zone": "us-east-1.prod.atl-paas.net", "revision": "f689233da507"}};
+      
+      window.__app_data__ = {"navigationIsOpen": true, "tenantId": "eec1595b-97ec-49bb-b23f-c465eab638d4", "features": {"spa-account-settings--settings-index": true, "platform-team25-app-icon-tiles": true, "bbc-navigation-restructure": true, "bbc-skip-old-feature-client": true, "autoreview_repository_settings_page": true, "client-side-links": true, "use-bbc-package-ui": true}, "links": {"backButtonUrl": null, "overviewUrl": "/dpa/workspace/overview/"}, "initialContext": {"workspace": {"type": "workspace", "uuid": "{eec1595b-97ec-49bb-b23f-c465eab638d4}", "name": "DPA team", "slug": "dpa", "is_private": false, "is_privacy_enforced": false, "links": {"avatar": {"href": "https://bitbucket.org/workspaces/dpa/avatar/?ts=1543682918"}, "html": {"href": "https://bitbucket.org/dpa/"}, "self": {"href": "https://bitbucket.org/!api/2.0/workspaces/dpa"}}, "created_on": "2018-12-01T16:48:38.468042+00:00", "forking_mode": "allow_forks"}}, "frontbucket_version": "926ae6f4e0075f8929f7f63fe123824732249dd4", "frontbucket_environment": "bifrost_production"};
+      
+        window.__initial_state__ = {"global": {"is_mobile_user_agent": false, "site_message": "", "needs_marketing_consent": false, "marketing_consent_locale": null, "whats_new_feed": "https://atlassianblog.wpengine.com/wp-json/wp/v2/posts?tags=11972&context=embed&per_page=6&orderby=date&order=desc", "locale": "en", "path": "/dpa/workspace/repositories/", "isFocusedTask": false, "focusedTaskBackButtonUrl": null, "features": {"lookup-pr-approvers-from-prs": true, "log-asap-errors": true, "provisioning-install-pipelines-addon": true, "fd-prs-client-cache-fallback": true, "block-non-pipelines-custom-events-webhooks": true, "read-only-message-migrations": true, "provisioning-skip-workspace-creation": true, "uninstall-dvcs-addon-only-when-jira-is-removed": true, "auth-flow-adg3": true, "workspace-member-set-last-accessed": true, "use-elasticache-lsn-storage": true, "whitelisted_throttle_exemption": true, "bbc-pride-logo": false, "commit-expand-inno": true, "create-workspace-show-recaptcha": true, "spa-account-settings--settings-index": true, "platform-team25-app-icon-tiles": true, "bbc-navigation-restructure": true, "bbc_nav_v4": false, "lazy-diffstat": false, "bbc-rovo-chat": true, "bbc-rovo-data-onboarding-ux": true, "client-side-links": true, "paginate-create-branch-view": true, "pipelines-test-management": false, "workspace-ai-enabled": false, "workspace-settings-ai-editor-features-enabled": false, "workspace-settings-ai-rovo-chat-enabled": false, "pr-code-push-webhook": false, "custom-merge-checks-activated": false, "pr-review-groups": false, "pull-request-labels": false, "use-bbc-package-ui": true, "bbc-packages-tag-deletion": false, "bbc-packages-image-deletion": false}, "isNavigationOpen": true, "flags": [], "horizontalNavigationItems": {"mainItems": [{"id": "pullrequests-tab", "label": "Pull requests", "tab_name": "pullrequests", "anchor": true, "weight": 140, "is_premium": null, "is_beta": null, "is_new": null, "url": "/dpa/workspace/pull-requests/", "target": "_self", "icon_class": "", "badge_label": null, "matching_url_prefixes": [], "analytics_label": "pullrequests", "analytics_payload": {}, "is_client_link": true, "is_external_link": false, "is_dropdown_item": false, "test_id": null, "children": [], "type": "menu_item", "icon": ""}, {"id": "repositories-tab", "label": "Repositories", "tab_name": "repositories", "anchor": true, "weight": 160, "is_premium": null, "is_beta": null, "is_new": null, "url": "/dpa/workspace/repositories/", "target": "_self", "icon_class": "", "badge_label": null, "matching_url_prefixes": [], "analytics_label": "repositories", "analytics_payload": {}, "is_client_link": true, "is_external_link": false, "is_dropdown_item": true, "test_id": null, "children": [], "type": "menu_item", "icon": ""}, {"id": "projects-tab", "label": "Projects", "tab_name": "projects", "anchor": true, "weight": 200, "is_premium": null, "is_beta": null, "is_new": null, "url": "/dpa/workspace/projects/", "target": "_self", "icon_class": "", "badge_label": null, "matching_url_prefixes": [], "analytics_label": "projects", "analytics_payload": {}, "is_client_link": true, "is_external_link": false, "is_dropdown_item": true, "test_id": null, "children": [], "type": "menu_item", "icon": ""}], "secondaryItems": [], "settingsItems": []}, "targetUser": {"display_name": "DPA team", "links": {"self": {"href": "https://bitbucket.org/!api/2.0/workspaces/%7Beec1595b-97ec-49bb-b23f-c465eab638d4%7D"}, "avatar": {"href": "https://bitbucket.org/account/dpa/avatar/"}, "html": {"href": "https://bitbucket.org/%7Beec1595b-97ec-49bb-b23f-c465eab638d4%7D/"}}, "created_on": "2016-09-05T08:57:09.222777+00:00", "is_active": true, "type": "team", "uuid": "{eec1595b-97ec-49bb-b23f-c465eab638d4}", "has_2fa_enabled": null, "properties": {}, "username": "dpa"}, "targetFeatures": {"lookup-pr-approvers-from-prs": true, "log-asap-errors": true, "provisioning-install-pipelines-addon": true, "fd-prs-client-cache-fallback": true, "block-non-pipelines-custom-events-webhooks": true, "view-source-filtering-upon-timeout": true, "read-only-message-migrations": true, "provisioning-skip-workspace-creation": true, "fd-repository-page-loading-error-guard": true, "uninstall-dvcs-addon-only-when-jira-is-removed": true, "auth-flow-adg3": true, "workspace-member-set-last-accessed": true, "use-elasticache-lsn-storage": true, "whitelisted_throttle_exemption": true, "atlassian-editor": true}}, "section": {"profile": {"currentUser": {"display_name": "DPA team", "links": {"self": {"href": "https://bitbucket.org/!api/2.0/workspaces/%7Beec1595b-97ec-49bb-b23f-c465eab638d4%7D"}, "avatar": {"href": "https://bitbucket.org/account/dpa/avatar/"}, "html": {"href": "https://bitbucket.org/%7Beec1595b-97ec-49bb-b23f-c465eab638d4%7D/"}}, "created_on": "2016-09-05T08:57:09.222777+00:00", "is_active": true, "type": "team", "uuid": "{eec1595b-97ec-49bb-b23f-c465eab638d4}", "has_2fa_enabled": null, "properties": {}, "username": "dpa"}, "currentWorkspace": {"type": "workspace", "uuid": "{eec1595b-97ec-49bb-b23f-c465eab638d4}", "name": "DPA team", "slug": "dpa", "is_private": false, "is_privacy_enforced": false, "links": {"avatar": {"href": "https://bitbucket.org/workspaces/dpa/avatar/?ts=1543682918"}, "html": {"href": "https://bitbucket.org/dpa/"}, "self": {"href": "https://bitbucket.org/!api/2.0/workspaces/dpa"}}, "created_on": "2018-12-01T16:48:38.468042+00:00", "forking_mode": "allow_forks", "extra": {"has_premium": false, "is_paid": false, "has_default_free": true}}, "menuItems": [], "activeMenuItem": "repositories"}}, "profile": {"repositories": {}}};
+      
+      window.__settings__ = {"ADMINHUB_BASE_URL": "https://admin.atlassian.com", "API_CANON_URL": "https://api.bitbucket.org", "CANON_URL": "https://bitbucket.org", "LOGIN_URL": "/account/signin/", "SOCIAL_AUTH_ATLASSIANID_LOGIN_PROMPT_URL": "https://id.atlassian.com/login", "SOCIAL_AUTH_ATLASSIANID_LOGOUT_URL": "https://id.atlassian.com/logout", "SOCIAL_AUTH_ATLASSIANID_PROFILE_URL": "https://id.atlassian.com/manage-profile/", "ATLASSIANID_LOGIN_URL": "https://id.atlassian.com/login", "ATLASSIANID_LOGOUT_URL": "https://id.atlassian.com/logout", "ATLASSIANID_MANAGE_PROFILE_URL": "https://id.atlassian.com/manage-profile/", "MARKETPLACE_TERMS_OF_USE_URL": null, "CONSENT_HUB_FRONTEND_BASE_URL": "https://preferences.atlassian.com", "EMOJI_STANDARD_BASE_URL": "https://bitbucket.org/gateway/api/emoji/", "STATUSPAGE_URL": "https://bitbucket.status.atlassian.com/", "RECAPTCHA_PUBLIC_KEY": "6LcRaMMkAAAAAFB-7L-4-1-mdLIrOMAP4H5asuWK", "WAC_CREATE_WORKSPACE_URL": "https://www.atlassian.com/try/cloud/signup?bundle=bitbucket", "ATLASSIAN_PUBSUB_CONNECT_URL": "https://bitbucket.org/gateway/api/bbc-aps/subscriptions", "AGG_WEBSOCKET_SUBSCRIPTIONS_PATH": "/gateway/api/graphql/subscriptions"};
+      window.__webpack_nonce__ = 'RFVneakorYMUAw+HWW5vig==';
+      window.isInitialLoadApdex = true;
+      
+      
+    </script>
+    
+      <script nonce="RFVneakorYMUAw+HWW5vig==" src="https://bbc-frontbucket-static.prod-east.frontend.public.atl-paas.net/assets/ajs.926ae6f4e0075f8929f7f63fe123824732249dd4.js"></script>
+    
+      <script nonce="RFVneakorYMUAw+HWW5vig==" src="https://bbc-frontbucket-static.prod-east.frontend.public.atl-paas.net/assets/app.926ae6f4e0075f8929f7f63fe123824732249dd4.js"></script>
+    
+    
+  </body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>datadoghq.com Change Pack (2025-10)</title>
+<meta name="description" content="Verifiable public changes for datadoghq.com in 2025-10">
+<link rel="canonical" href="/reports/2025-10/datadoghq.com/">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Report","name":"datadoghq.com Change Pack 2025-10","datePublished":"2025-10-24T09:34:08.451Z","about":"datadoghq.com"}</script>
+<style>
+  body{font-family:system-ui,Segoe UI,Arial;line-height:1.55;padding:24px;max-width:920px;margin:auto}
+  .cta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0 16px}
+  .btn{display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #ddd;text-decoration:none}
+  .btn.primary{background:#111;color:#fff;border-color:#111}
+  .btn.ghost{background:transparent}
+  .muted{color:#666;text-decoration:none}
+  table{border-collapse:collapse;width:100%}td,th{border:1px solid #ddd;padding:8px}
+  code{background:#f5f5f5;padding:2px 4px;border-radius:4px}
+  h1{margin:0 0 8px} h3{margin:20px 0 8px}
+  thead th{background:#fafafa}
+  .small{color:#666;font-size:12px}
+</style>
+</head>
+<body>
+<h1>datadoghq.com — Change Pack (2025-10)</h1>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px">
+  <span style="background:#eef;padding:4px 8px;border-radius:8px">Last change: 2025-10-13</span>
+  <span style="background:#efe;padding:4px 8px;border-radius:8px">Evidence: 7</span>
+  <span style="background:#fdecc8;padding:4px 8px;border-radius:8px">Impact: Medium</span>
+  <span style="background:#e6f4ea;padding:4px 8px;border-radius:8px">Verified • #d18a9482 • 3680760</span>
+</div>
+<div class="cta">
+  <a class="btn ghost" href="https://www.cg-alert.com/">Home</a>
+</div>
+
+<h3>What</h3><ul><li><b>DPA-3cf816a5</b>: 1 change(s) in last 90 days</li><li><b>DPA-6dbd7799</b>: 1 change(s) in last 90 days</li><li><b>DPA-6df27ee7</b>: 1 change(s) in last 90 days</li><li><b>Other-2624a9ea</b>: 1 change(s) in last 90 days</li><li><b>Pricing-7134614d</b>: 1 change(s) in last 90 days</li><li><b>Pricing-9d9e38e0</b>: 1 change(s) in last 90 days</li><li><b>Privacy-c2413fcc</b>: 1 change(s) in last 90 days</li></ul>
+<h3>So What</h3><p>Contract/Compliance · Privacy/processing terms</p>
+<h3>Now What</h3><ul><li>Lock pricing / request grandfathering at renewal</li><li>Review arbitration/termination with Legal</li><li>Update internal register &amp; notify stakeholders if material</li></ul>
+<h3>Verifiable evidence</h3>
+<table>
+  <thead><tr><th>Date</th><th>Type</th><th>Hash</th><th>Link</th><th>Excerpt</th></tr></thead>
+  <tbody><tr>
+      <td>2025-10-13</td>
+      <td>DPA-3cf816a5</td>
+      <td><code>#3d1747e6</code></td>
+      <td><a href="/evidence/datadoghq.com/2025-10-13-DPA-3cf816a5-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>DPA-6dbd7799</td>
+      <td><code>#3d1747e6</code></td>
+      <td><a href="/evidence/datadoghq.com/2025-10-13-DPA-6dbd7799-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>DPA-6df27ee7</td>
+      <td><code>#3d1747e6</code></td>
+      <td><a href="/evidence/datadoghq.com/2025-10-13-DPA-6df27ee7-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>Other-2624a9ea</td>
+      <td><code>#638e866b</code></td>
+      <td><a href="/evidence/datadoghq.com/2025-10-13-Other-2624a9ea-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>Pricing-7134614d</td>
+      <td><code>#3d1747e6</code></td>
+      <td><a href="/evidence/datadoghq.com/2025-10-13-Pricing-7134614d-e3b0c442.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>Pricing-9d9e38e0</td>
+      <td><code>#ecc86af9</code></td>
+      <td><a href="/evidence/datadoghq.com/2025-10-13-Pricing-9d9e38e0-e3b0c442.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr><tr>
+      <td>2025-10-13</td>
+      <td>Privacy-c2413fcc</td>
+      <td><code>#d18a9482</code></td>
+      <td><a href="/evidence/datadoghq.com/2025-10-13-Privacy-c2413fcc-00000000.json" rel="nofollow">evidence</a></td>
+      <td></td>
+    </tr></tbody>
+</table>
+<p class="small">Only internal evidence JSON links are shown. No build or repository links are exposed.</p>
+</body>
+</html>

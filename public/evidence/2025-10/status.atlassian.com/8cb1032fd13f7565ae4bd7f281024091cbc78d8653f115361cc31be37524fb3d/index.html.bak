@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- force IE browsers in compatibility mode to use their most aggressive rendering engine -->
+
+    <meta charset="utf-8">
+    <title>Atlassian Status</title>
+    <meta name="description" content="Welcome to Atlassian&#39;s home for real-time and historical data on system performance.">
+
+    <!-- Mobile viewport optimization -->
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+
+    <!-- Time this page was rendered - http://purl.org/dc/terms/issued -->
+    <meta name="issued" content="1761223657">
+
+    <!-- Mobile IE allows us to activate ClearType technology for smoothing fonts for easy reading -->
+    <meta http-equiv="cleartype" content="on">
+
+      <!-- Atlassian Sans & Mono Fonts -->
+<link
+  rel="preconnect"
+  href="https://ds-cdn.prod-east.frontend.public.atl-paas.net" />
+<link
+  rel="preload"
+  href="https://ds-cdn.prod-east.frontend.public.atl-paas.net/assets/fonts/atlassian-sans/v3/AtlassianSans-latin.woff2"
+  as="font" type="font/woff2" crossorigin />
+<link
+  rel="preload"
+  href="https://ds-cdn.prod-east.frontend.public.atl-paas.net/assets/font-rules/v5/atlassian-fonts.css"
+  as="style" crossorigin />
+
+    <style>
+  /* Dynamic Font Stack based on Feature Flag */
+    /* Using Atlassian Sans & Mono */
+    :root {
+      --font-stack-a: "Atlassian Sans", "Helvetica Neue", Helvetica, Arial, Sans-Serif;
+      --font-stack-b: "Atlassian Mono", "SFMono-Medium", "SF Mono", "Segoe UI Mono", "Roboto Mono", "Ubuntu Mono", Menlo, Consolas, Courier, monospace;
+    }
+</style>
+
+
+      <link rel="shortcut icon" type="image/x-icon" href="//dka575ofm4ao0.cloudfront.net/pages-favicon_logos/original/78805/Atlassian-Favicon.png" />
+
+    <link rel="shortcut icon" href='//dka575ofm4ao0.cloudfront.net/pages-favicon_logos/original/78805/Atlassian-Favicon.png'>
+
+    <link rel="alternate" type="application/atom+xml" href="https://status.atlassian.com/history.atom" title="Atlassian Status History - Atom Feed">
+    <link rel="alternate" type="application/rss+xml" href="https://status.atlassian.com/history.rss" title="Atlassian Status History - RSS Feed">
+
+      <!-- Canonical Link to ensure that only the custom domain is indexed when present -->
+      <link rel="canonical" href="https://status.atlassian.com">
+
+    <meta name="_globalsign-domain-verification" content="y_VzfckMy4iePo5oDJNivyYIjh8LffYa4jzUndm_bZ"/>
+
+
+    <link rel="alternate" type="application/atom+xml" title="ATOM" href="https://status.atlassian.com/history.atom" />
+
+    <!-- Le styles -->
+    <link rel="stylesheet" media="screen" href="https://dka575ofm4ao0.cloudfront.net/packs/0.076d36a21dada6e9b8ca.css" />
+    <link rel="stylesheet" media="all" href="https://dka575ofm4ao0.cloudfront.net/assets/status/status_manifest-2291a8db1cf94c3f8b132626924ff7424d9c768ab6e236ad92393af2f5c69f1c.css" />
+
+    <script src="https://dka575ofm4ao0.cloudfront.net/assets/jquery-3.5.1.min-729e416557a365062a8a20f0562f18aa171da57298005d392312670c706c68de.js"></script>
+
+    <script>
+      window.pageColorData = {"blue":"#0052CC","border":"#DFE1E5","body_background":"#ffffff","font":"#172B4D","graph":"#0052CC","green":"#36B37E","light_font":"#6C798F","link":"#0052CC","orange":"#FF8B00","red":"#ff5630","yellow":"#FFC400","no_data":"#b3bac5"};
+    </script>
+    <style>
+  /* BODY BACKGROUND */ /* BODY BACKGROUND */ /* BODY BACKGROUND */ /* BODY BACKGROUND */ /* BODY BACKGROUND */
+  body,
+  .layout-content.status.status-api .section .example-container .example-opener .color-secondary,
+  .grouped-items-selector,
+  .layout-content.status.status-full-history .history-nav a.current,
+  div[id^="subscribe-modal"] .modal-footer,
+  div[id^="subscribe-modal"],
+  div[id^="updates-dropdown"] .updates-dropdown-section,
+  #uptime-tooltip .tooltip-box {
+    background-color:#ffffff;
+  }
+
+  #uptime-tooltip .pointer-container .pointer-smaller {
+    border-bottom-color:#ffffff;
+  }
+
+
+
+
+  /* PRIMARY FONT COLOR */ /* PRIMARY FONT COLOR */ /* PRIMARY FONT COLOR */ /* PRIMARY FONT COLOR */
+  body.status,
+  .color-primary,
+  .color-primary:hover,
+  .layout-content.status-index .status-day .update-title.impact-none a,
+  .layout-content.status-index .status-day .update-title.impact-none a:hover,
+  .layout-content.status-index .timeframes-container .timeframe.active,
+  .layout-content.status-full-history .month .incident-container .impact-none,
+  .layout-content.status.status-index .incidents-list .incident-title.impact-none a,
+  .incident-history .impact-none,
+  .layout-content.status .grouped-items-selector.inline .grouped-item.active,
+  .layout-content.status.status-full-history .history-nav a.current,
+  .layout-content.status.status-full-history .history-nav a:not(.current):hover,
+  div[id^="subscribe-modal"] .modal-header .close,
+  .grouped-item-label,
+  #uptime-tooltip .tooltip-box .tooltip-content .related-events .related-event a.related-event-link {
+    color:#172B4D;
+  }
+
+  .layout-content.status.status-index .components-statuses .component-container .name {
+    color:#172B4D;
+    color:rgba(23,43,77,.8);
+  }
+
+
+
+
+  /* SECONDARY FONT COLOR */ /* SECONDARY FONT COLOR */ /* SECONDARY FONT COLOR */ /* SECONDARY FONT COLOR */
+  small,
+  .layout-content.status .table-row .date,
+  .color-secondary,
+  .layout-content.status .grouped-items-selector.inline .grouped-item,
+  .layout-content.status.status-full-history .history-footer .pagination a.disabled,
+  .layout-content.status.status-full-history .history-nav a,
+  #uptime-tooltip .tooltip-box .tooltip-content .related-events #related-event-header {
+    color:#6C798F;
+  }
+
+
+
+
+  /* BORDER COLOR */  /* BORDER COLOR */  /* BORDER COLOR */  /* BORDER COLOR */  /* BORDER COLOR */  /* BORDER COLOR */
+  body.status .layout-content.status .border-color,
+  hr,
+  .tooltip-base,
+  .markdown-display table,
+  div[id^="subscribe-modal"],
+  #uptime-tooltip .tooltip-box {
+    border-color:#DFE1E5;
+  }
+
+  div[id^="subscribe-modal"] .modal-footer,
+  .markdown-display table td {
+    border-top-color:#DFE1E5;
+  }
+
+  .markdown-display table td + td, .markdown-display table th + th {
+    border-left-color:#DFE1E5;
+  }
+
+  div[id^="subscribe-modal"] .modal-header,
+  #uptime-tooltip .pointer-container .pointer-larger {
+    border-bottom-color:#DFE1E5;
+  }
+
+  #uptime-tooltip .tooltip-box .outage-field {
+    /*
+      Generate the background-color for the outage-field from the css_body_background_color and css_border_color.
+
+      For the default background (#ffffff) and default css_border_color (#e0e0e0), use the luminosity of the default background with a magic number to arrive at
+      the original outage-field background color (#f4f5f7). I used the formula Target Color = Color * alpha + Background * (1 - alpha) to find the magic number of ~0.08.
+
+      For darker css_body_background_color, luminosity values are lower so alpha trends toward becoming transparent (thus outage-field background becomes same as css_body_background_color).
+    */
+    background-color: rgba(223,225,229,0.31);
+
+    /*
+      outage-field border-color alpha is inverse to the luminosity of css_body_background_color.
+      That is to say, with a default white background this border is transparent, but on a black background, it's opaque css_border_color.
+    */
+    border-color: rgba(223,225,229,0.0);
+  }
+
+
+
+
+  /* CSS REDS */ /* CSS REDS */ /* CSS REDS */ /* CSS REDS */ /* CSS REDS */ /* CSS REDS */ /* CSS REDS */
+  .layout-content.status.status-index .status-day .update-title.impact-critical a,
+  .layout-content.status.status-index .status-day .update-title.impact-critical a:hover,
+  .layout-content.status.status-index .page-status.status-critical,
+  .layout-content.status.status-index .unresolved-incident.impact-critical .incident-title,
+  .flat-button.background-red {
+    background-color:#ff5630;
+  }
+
+  .layout-content.status-index .components-statuses .component-container.status-red:after,
+  .layout-content.status-full-history .month .incident-container .impact-critical,
+  .layout-content.status-incident .incident-name.impact-critical,
+  .layout-content.status.status-index .incidents-list .incident-title.impact-critical a,
+  .status-red .icon-indicator,
+  .incident-history .impact-critical,
+  .components-container .component-inner-container.status-red .component-status,
+  .components-container .component-inner-container.status-red .icon-indicator {
+    color:#ff5630;
+  }
+
+  .layout-content.status.status-index .unresolved-incident.impact-critical .updates {
+    border-color:#ff5630;
+  }
+
+
+
+
+  /* CSS ORANGES */ /* CSS ORANGES */ /* CSS ORANGES */ /* CSS ORANGES */ /* CSS ORANGES */ /* CSS ORANGES */
+  .layout-content.status.status-index .status-day .update-title.impact-major a,
+  .layout-content.status.status-index .status-day .update-title.impact-major a:hover,
+  .layout-content.status.status-index .page-status.status-major,
+  .layout-content.status.status-index .unresolved-incident.impact-major .incident-title {
+    background-color:#FF8B00;
+  }
+
+  .layout-content.status-index .components-statuses .component-container.status-orange:after,
+  .layout-content.status-full-history .month .incident-container .impact-major,
+  .layout-content.status-incident .incident-name.impact-major,
+  .layout-content.status.status-index .incidents-list .incident-title.impact-major a,
+  .status-orange .icon-indicator,
+  .incident-history .impact-major,
+  .components-container .component-inner-container.status-orange .component-status,
+  .components-container .component-inner-container.status-orange .icon-indicator {
+    color:#FF8B00;
+  }
+
+  .layout-content.status.status-index .unresolved-incident.impact-major .updates {
+    border-color:#FF8B00;
+  }
+
+
+
+
+  /* CSS YELLOWS */ /* CSS YELLOWS */ /* CSS YELLOWS */ /* CSS YELLOWS */ /* CSS YELLOWS */ /* CSS YELLOWS */
+  .layout-content.status.status-index .status-day .update-title.impact-minor a,
+  .layout-content.status.status-index .status-day .update-title.impact-minor a:hover,
+  .layout-content.status.status-index .page-status.status-minor,
+  .layout-content.status.status-index .unresolved-incident.impact-minor .incident-title,
+  .layout-content.status.status-index .scheduled-incidents-container .tab {
+    background-color:#FFC400;
+  }
+
+  .layout-content.status-index .components-statuses .component-container.status-yellow:after,
+  .layout-content.status-full-history .month .incident-container .impact-minor,
+  .layout-content.status-incident .incident-name.impact-minor,
+  .layout-content.status.status-index .incidents-list .incident-title.impact-minor a,
+  .status-yellow .icon-indicator,
+  .incident-history .impact-minor,
+  .components-container .component-inner-container.status-yellow .component-status,
+  .components-container .component-inner-container.status-yellow .icon-indicator,
+  .layout-content.status.manage-subscriptions .confirmation-infobox .fa {
+    color:#FFC400;
+  }
+
+  .layout-content.status.status-index .unresolved-incident.impact-minor .updates,
+  .layout-content.status.status-index .scheduled-incidents-container {
+    border-color:#FFC400;
+  }
+
+
+
+
+  /* CSS BLUES */ /* CSS BLUES */ /* CSS BLUES */ /* CSS BLUES */ /* CSS BLUES */ /* CSS BLUES */
+  .layout-content.status.status-index .status-day .update-title.impact-maintenance a,
+  .layout-content.status.status-index .status-day .update-title.impact-maintenance a:hover,
+  .layout-content.status.status-index .page-status.status-maintenance,
+  .layout-content.status.status-index .unresolved-incident.impact-maintenance .incident-title,
+  .layout-content.status.status-index .scheduled-incidents-container .tab {
+    background-color:#0052CC;
+  }
+
+  .layout-content.status-index .components-statuses .component-container.status-blue:after,
+  .layout-content.status-full-history .month .incident-container .impact-maintenance,
+  .layout-content.status-incident .incident-name.impact-maintenance,
+  .layout-content.status.status-index .incidents-list .incident-title.impact-maintenance a,
+  .status-blue .icon-indicator,
+  .incident-history .impact-maintenance,
+  .components-container .component-inner-container.status-blue .component-status,
+  .components-container .component-inner-container.status-blue .icon-indicator {
+    color:#0052CC;
+  }
+
+  .layout-content.status.status-index .unresolved-incident.impact-maintenance .updates,
+  .layout-content.status.status-index .scheduled-incidents-container {
+    border-color:#0052CC;
+  }
+
+
+
+
+  /* CSS GREENS */ /* CSS GREENS */ /* CSS GREENS */ /* CSS GREENS */ /* CSS GREENS */ /* CSS GREENS */ /* CSS GREENS */
+  .layout-content.status.status-index .page-status.status-none {
+    background-color:#36B37E;
+  }
+  .layout-content.status-index .components-statuses .component-container.status-green:after,
+  .status-green .icon-indicator,
+  .components-container .component-inner-container.status-green .component-status,
+  .components-container .component-inner-container.status-green .icon-indicator {
+    color:#36B37E;
+  }
+
+
+
+
+  /* CSS LINK COLOR */  /* CSS LINK COLOR */  /* CSS LINK COLOR */  /* CSS LINK COLOR */  /* CSS LINK COLOR */  /* CSS LINK COLOR */
+  a,
+  a:hover,
+  .layout-content.status-index .page-footer span a:hover,
+  .layout-content.status-index .timeframes-container .timeframe:not(.active):hover,
+  .layout-content.status-incident .subheader a:hover {
+    color:#0052CC;
+  }
+
+  .flat-button,
+  .masthead .updates-dropdown-container .show-updates-dropdown,
+  .layout-content.status-full-history .show-filter.open  {
+    background-color:#0052CC;
+  }
+
+
+
+
+  /* CUSTOM COLOR OVERRIDES FOR UPTIME SHOWCASE */
+  .components-section .components-uptime-link {
+    color: #6c798f;
+  }
+
+  .layout-content.status .shared-partial.uptime-90-days-wrapper .legend .legend-item {
+    color: #6c798f;
+    opacity: 1;
+  }
+  .layout-content.status .shared-partial.uptime-90-days-wrapper .legend .legend-item.light {
+    color: #6c798f;
+    opacity: 1;
+  }
+  .layout-content.status .shared-partial.uptime-90-days-wrapper .legend .spacer {
+    background: #6c798f;
+    opacity: 1;
+  }
+</style>
+
+
+    <!-- custom css -->
+        <link rel="stylesheet" type="text/css" href="//dka575ofm4ao0.cloudfront.net/page_display_customizations-custom_css_externals/78657/external20251007-71-k87ky.css">
+
+      <!-- polyfills -->
+        <script crossorigin="anonymous" src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.js"></script>
+
+    <!-- Le HTML5 shim -->
+    <!--[if lt IE 9]>
+      <script src="//html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- injection for static -->
+
+
+    
+  </head>
+
+
+  <body class="status index status-none">
+
+    
+
+
+
+  <div class="layout-content status status-index starter">
+      <div class="custom-header-container">
+    <div class="fake-header">
+  <div class="container">
+    <div id="logo-and-links">
+      <img src="https://wac-cdn.atlassian.com/dam/jcr:5230478a-815c-4230-94c4-873df0d0f926/status-gradient-white@2x">
+      <a href="https://support.atlassian.com/" target="_blank" class="pull-right">Support Portal</a>
+    </div>
+    <div class="row hero-container">
+      <div class="span6 hero-text">
+        <h3>Welcome to Atlassian's status page hub</h3>
+        <p>Below you'll find status information for each of Atlassian's products and services.</p>
+      </div>
+      <div class="span6 hero-img">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 556.89 448.43"><defs><style>.cls-1{fill:#42526e;}.cls-2{fill:url(#linear-gradient);}.cls-3{fill:#00875a;}.cls-4{fill:url(#New_Gradient_Swatch_10);}.cls-5{isolation:isolate;}.cls-6{fill:url(#linear-gradient-2);}.cls-7{opacity:0.6;}.cls-8{fill:url(#linear-gradient-3);}.cls-9{fill:url(#linear-gradient-4);}.cls-10{fill:url(#linear-gradient-5);}.cls-11{fill:url(#linear-gradient-6);}.cls-12{fill:url(#linear-gradient-7);}.cls-13{fill:url(#linear-gradient-8);}.cls-14{fill:url(#linear-gradient-9);}.cls-15{fill:url(#linear-gradient-10);}.cls-16{fill:url(#linear-gradient-11);}.cls-17,.cls-78{fill:#adf8d3;}.cls-18{fill:url(#linear-gradient-12);}.cls-19{fill:url(#linear-gradient-13);}.cls-20{fill:url(#linear-gradient-14);}.cls-21{fill:#2db07c;}.cls-22{fill:url(#linear-gradient-15);}.cls-23,.cls-41,.cls-51,.cls-52,.cls-53,.cls-63{mix-blend-mode:multiply;}.cls-23{fill:url(#linear-gradient-16);}.cls-24{fill:#48cc8c;}.cls-25{clip-path:url(#clip-path);}.cls-26,.cls-63,.cls-78{opacity:0.5;}.cls-27{fill:#99c1ff;}.cls-28,.cls-43{fill:#0065ff;}.cls-28,.cls-36,.cls-37,.cls-38,.cls-39,.cls-40{stroke:#0052cc;}.cls-28,.cls-36,.cls-37,.cls-38,.cls-39,.cls-40,.cls-53,.cls-56{stroke-miterlimit:10;}.cls-28{stroke-width:4.5px;}.cls-29{fill:#2684ff;}.cls-30{fill:#0049b0;}.cls-31{fill:#f7f8f9;}.cls-32{fill:url(#New_Gradient_Swatch_15);}.cls-33{fill:#deebff;}.cls-34{fill:#ffc400;}.cls-35{clip-path:url(#clip-path-2);}.cls-36,.cls-37,.cls-38,.cls-39,.cls-40,.cls-53,.cls-56{stroke-width:3.38px;}.cls-36{fill:url(#linear-gradient-18);}.cls-37{fill:url(#linear-gradient-19);}.cls-38{fill:url(#linear-gradient-20);}.cls-39{fill:url(#linear-gradient-21);}.cls-40{fill:url(#linear-gradient-22);}.cls-41{fill:#c1c7d0;}.cls-42{fill:#0052cc;}.cls-44{fill:#66a3ff;}.cls-45{opacity:0.47;}.cls-46{fill:url(#linear-gradient-23);}.cls-47{opacity:0.7;}.cls-48{fill:url(#linear-gradient-24);}.cls-49{fill:#64e6a4;}.cls-50{fill:#ffab00;}.cls-51{fill:url(#linear-gradient-25);}.cls-52{fill:url(#linear-gradient-26);}.cls-53,.cls-56{fill:none;}.cls-53{stroke:#dfe1e5;}.cls-54{clip-path:url(#clip-path-3);}.cls-55{fill:#fff;}.cls-56{stroke:#4c9aff;}.cls-57{fill:url(#Y400-Y200);}.cls-58{fill:#f5e0cd;}.cls-59{fill:url(#linear-gradient-27);}.cls-60{fill:#253858;}.cls-61{fill:url(#linear-gradient-28);}.cls-62{fill:#172b4d;}.cls-63{fill:url(#linear-gradient-29);}.cls-64{fill:#a27f68;}.cls-65{fill:#72594b;}.cls-66{fill:#ff991f;}.cls-67{fill:url(#Y300-Y100);}.cls-68{fill:#243759;}.cls-69{fill:#0057d8;}.cls-70{fill:#543e36;}.cls-71{fill:url(#linear-gradient-30);}.cls-72{fill:url(#linear-gradient-31);}.cls-73{fill:#f1dad5;}.cls-74{fill:#dfe1e5;}.cls-75{clip-path:url(#clip-path-4);}.cls-76{fill:#b3bac5;}.cls-77{clip-path:url(#clip-path-5);}</style><linearGradient id="linear-gradient" x1="291.34" y1="419.65" x2="291.34" y2="232.71" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#b2d4ff"/><stop offset="1" stop-color="#deebff"/></linearGradient><linearGradient id="New_Gradient_Swatch_10" x1="-221.09" y1="245.43" x2="-127.06" y2="245.43" gradientTransform="matrix(1, 0, 0.3, 1.05, 409.42, 69.43)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#57d9a3"/><stop offset="1" stop-color="#abf5d1"/></linearGradient><linearGradient id="linear-gradient-2" x1="263.39" y1="258.15" x2="532.44" y2="258.15" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#78f0b7"/><stop offset="1" stop-color="#78f0b7" stop-opacity="0"/></linearGradient><linearGradient id="linear-gradient-3" x1="0" y1="237.28" x2="193.13" y2="237.28" xlink:href="#linear-gradient-2"/><linearGradient id="linear-gradient-4" x1="164.93" y1="360.43" x2="164.93" y2="142.73" gradientUnits="userSpaceOnUse"><stop offset="0.2" stop-color="#48cc8c"/><stop offset="1" stop-color="#adf8d3"/></linearGradient><linearGradient id="linear-gradient-5" x1="122" y1="350.43" x2="122" y2="189.38" gradientUnits="userSpaceOnUse"><stop offset="0.45" stop-color="#48cc8c"/><stop offset="1" stop-color="#adf8d3"/></linearGradient><linearGradient id="linear-gradient-6" x1="213.62" y1="330.82" x2="213.62" y2="172.67" xlink:href="#linear-gradient-4"/><linearGradient id="linear-gradient-7" x1="6099.2" y1="354.29" x2="6099.2" y2="193.42" gradientTransform="matrix(1, 0, 0, -1, -5789.21, 547.7)" xlink:href="#linear-gradient-4"/><linearGradient id="linear-gradient-8" x1="6318.57" y1="350.41" x2="6318.57" y2="237.74" gradientTransform="matrix(1, 0, 0, -1, -6227.95, 588.15)" xlink:href="#linear-gradient-4"/><linearGradient id="linear-gradient-9" x1="6062.21" y1="354.33" x2="6062.21" y2="235.9" gradientTransform="matrix(1, 0, 0, -1, -5715.22, 590.23)" xlink:href="#linear-gradient-4"/><linearGradient id="linear-gradient-10" x1="6021.35" y1="354.33" x2="6021.35" y2="273.85" gradientTransform="matrix(1, 0, 0, -1, -5633.5, 628.19)" xlink:href="#linear-gradient-4"/><linearGradient id="linear-gradient-11" x1="261.74" y1="330.82" x2="261.74" y2="107.48" xlink:href="#linear-gradient-4"/><linearGradient id="linear-gradient-12" x1="124.42" y1="476.16" x2="332.49" y2="268.09" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#e2ffee"/><stop offset="0.17" stop-color="#c3f9dc"/><stop offset="0.42" stop-color="#9af1c4"/><stop offset="0.66" stop-color="#7debb2"/><stop offset="0.86" stop-color="#6ae7a8"/><stop offset="1" stop-color="#64e6a4"/></linearGradient><linearGradient id="linear-gradient-13" x1="289.56" y1="419.48" x2="289.56" y2="358.4" xlink:href="#linear-gradient-12"/><linearGradient id="linear-gradient-14" x1="1253.01" y1="866.83" x2="1326.34" y2="866.83" gradientTransform="translate(-330.87 -1022.81) rotate(27.38)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#79f2c0"/><stop offset="0.11" stop-color="#66e0ae"/><stop offset="0.28" stop-color="#51cc99"/><stop offset="0.46" stop-color="#42be8a"/><stop offset="0.68" stop-color="#39b681"/><stop offset="1" stop-color="#36b37e"/></linearGradient><linearGradient id="linear-gradient-15" x1="1961.07" y1="519.34" x2="2021.04" y2="519.34" gradientTransform="matrix(0.6, 0.8, -0.8, 0.6, -333.16, -1531.87)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#79f2c0"/><stop offset="1" stop-color="#36b37e"/></linearGradient><linearGradient id="linear-gradient-16" x1="289.41" y1="411.73" x2="209.65" y2="340.99" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#a5adba"/><stop offset="1" stop-color="#e5e8ec" stop-opacity="0.1"/></linearGradient><clipPath id="clip-path"><polygon id="_Clipping_Path_" data-name="&lt;Clipping Path&gt;" class="cls-2" points="426.14 419.65 239.21 419.65 156.53 232.72 343.46 232.72 426.14 419.65"/></clipPath><linearGradient id="New_Gradient_Swatch_15" x1="154.06" y1="239.36" x2="356.83" y2="239.36" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0065ff"/><stop offset="1" stop-color="#4c9aff"/></linearGradient><clipPath id="clip-path-2"><path id="_Clipping_Path_2" data-name="&lt;Clipping Path&gt;" class="cls-3" d="M355.49,344.26l-94.18-31.08-14,42.4a27.33,27.33,0,0,0-.79,19.57c6.4,20.67,32.54,37.09,58.39,36.69,19.73-.31,33.56-10.34,36.17-24.26l.1,0Z"/></clipPath><linearGradient id="linear-gradient-18" x1="245.1" y1="374.41" x2="341.54" y2="374.41" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0052cc"/><stop offset="0.51" stop-color="#0065ff"/><stop offset="1" stop-color="#0065ff"/></linearGradient><linearGradient id="linear-gradient-19" x1="248.99" y1="362.64" x2="345.43" y2="362.64" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0052cc"/><stop offset="0.45" stop-color="#0064fb"/><stop offset="0.51" stop-color="#0065fe"/><stop offset="1" stop-color="#0060f2"/></linearGradient><linearGradient id="linear-gradient-20" x1="252.88" y1="350.87" x2="349.32" y2="350.87" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0052cc"/><stop offset="0.45" stop-color="#0064fd"/><stop offset="0.51" stop-color="#0064fc"/><stop offset="1" stop-color="#005ce6"/></linearGradient><linearGradient id="linear-gradient-21" x1="256.77" y1="339.1" x2="353.21" y2="339.1" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0052cc"/><stop offset="0.45" stop-color="#0065fe"/><stop offset="0.51" stop-color="#0064fb"/><stop offset="1" stop-color="#0057d9"/></linearGradient><linearGradient id="linear-gradient-22" x1="260.65" y1="327.33" x2="357.09" y2="327.33" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#0052cc"/><stop offset="0.45" stop-color="#0065ff"/><stop offset="0.8" stop-color="#0058db"/><stop offset="1" stop-color="#0052cc"/></linearGradient><linearGradient id="linear-gradient-23" x1="118.43" y1="55.64" x2="514.98" y2="55.64" xlink:href="#linear-gradient-2"/><linearGradient id="linear-gradient-24" x1="257.86" y1="309.02" x2="479" y2="87.88" xlink:href="#linear-gradient-2"/><linearGradient id="linear-gradient-25" x1="149.88" y1="433.45" x2="199.58" y2="433.45" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#e5e8ec" stop-opacity="0.1"/><stop offset="1" stop-color="#cfd4db"/></linearGradient><linearGradient id="linear-gradient-26" x1="319.96" y1="439.56" x2="367.81" y2="439.56" xlink:href="#linear-gradient-25"/><clipPath id="clip-path-3"><path id="_Clipping_Path_3" data-name="&lt;Clipping Path&gt;" class="cls-4" d="M355.67,326.59c6.4,20.67-9.36,37.75-35.2,38.16s-52-16-58.39-36.69,9.36-37.75,35.2-38.16S349.27,305.92,355.67,326.59Z"/></clipPath><linearGradient id="Y400-Y200" x1="-175.17" y1="-77.38" x2="-79.56" y2="-77.38" gradientTransform="translate(329.57 365.1) rotate(-6.8)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ff991f"/><stop offset="1" stop-color="#ffc400"/></linearGradient><linearGradient id="linear-gradient-27" x1="177.17" y1="405.13" x2="192.99" y2="405.13" gradientUnits="userSpaceOnUse"><stop offset="0.11" stop-color="#0065ff"/><stop offset="1" stop-color="#66a3ff"/></linearGradient><linearGradient id="linear-gradient-28" x1="4406.05" y1="366.19" x2="4441.3" y2="366.19" gradientTransform="matrix(-1, 0, 0, 1, 4606.95, 0)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3384ff"/><stop offset="1" stop-color="#0057d8"/></linearGradient><linearGradient id="linear-gradient-29" x1="472.26" y1="442.51" x2="551.93" y2="442.51" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#e5e8ec" stop-opacity="0.1"/><stop offset="1" stop-color="#a5adba"/></linearGradient><linearGradient id="Y300-Y100" x1="4650.65" y1="380.37" x2="4690.85" y2="380.37" gradientTransform="matrix(-1, 0, 0, 1, 5017.45, 0)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffab00"/><stop offset="1" stop-color="#ffd740"/></linearGradient><linearGradient id="linear-gradient-30" x1="515.48" y1="394.59" x2="538.39" y2="394.59" gradientTransform="translate(14.71)" xlink:href="#linear-gradient-28"/><linearGradient id="linear-gradient-31" x1="502.84" y1="344.39" x2="540" y2="381.56" gradientTransform="translate(14.71)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#66a3ff"/><stop offset="1" stop-color="#0065ff"/></linearGradient><clipPath id="clip-path-4"><path id="_Clipping_Path_4" data-name="&lt;Clipping Path&gt;" class="cls-1" d="M545.62,438.56v0c-.08,0-.31-.68-.63-.82-.62-.28-.06,1.57-1.43,2.77a5.12,5.12,0,0,1-1.72,1,.54.54,0,0,0-.31.53v.51h8.33a9.49,9.49,0,0,0-.74-4Z"/></clipPath><clipPath id="clip-path-5"><path id="_Clipping_Path_5" data-name="&lt;Clipping Path&gt;" class="cls-1" d="M526.95,441.75v0c-.08,0-.31-.68-.63-.82-.62-.28-1.64,1.57-3.46,2.77a7.56,7.56,0,0,1-2.27,1,.54.54,0,0,0-.41.53v.51h11a9.49,9.49,0,0,0-.74-4Z"/></clipPath></defs><title>Status Page Light</title><g class="cls-5"><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><path id="_Clipping_Path_6" data-name="&lt;Clipping Path&gt;" class="cls-6" d="M424.14,255.17c-4.32-5.82-18.61-23.53-41.37-26.77-22.28-3.17-39.3,9.44-45,13.63-16.55,12.26-15.57,22-31,33.39-17.51,12.88-42.18,12.69-43.38,13h0l269-1.53A145.76,145.76,0,0,1,509.13,278C482.8,265.38,475.25,252.24,457.4,249,450.25,247.65,439,247.47,424.14,255.17Z"/><g class="cls-7"><path id="_Clipping_Path_7" data-name="&lt;Clipping Path&gt;" class="cls-8" d="M115.39,235.14c-3.1-4.17-13.36-16.89-29.7-19.22-16-2.28-28.21,6.77-32.28,9.79-11.88,8.8-11.18,15.8-22.28,24C18.57,258.93.86,258.79,0,259H0l193.13-1.1a104.63,104.63,0,0,1-16.73-6.35c-18.9-9.07-24.32-18.51-37.14-20.86C134.14,229.75,126.09,229.62,115.39,235.14Z"/><path class="cls-9" d="M189.3,360.43H140.56V169.77a3.43,3.43,0,0,1,1.8-2.95l40.88-23.53c2.61-1.5,6.05.17,6.05,2.95Z"/><rect class="cls-10" x="103.45" y="189.38" width="37.09" height="161.05"/><rect class="cls-11" x="189.25" y="172.67" width="48.74" height="158.15"/><rect class="cls-12" x="285.63" y="193.42" width="48.74" height="160.87" transform="translate(619.99 547.7) rotate(180)"/><rect class="cls-13" x="77.36" y="237.74" width="26.54" height="112.67" transform="translate(181.25 588.15) rotate(180)"/><rect class="cls-14" x="333.72" y="235.9" width="26.54" height="118.44" transform="translate(693.98 590.23) rotate(180)"/><path class="cls-15" d="M360.26,273.85h55.19a0,0,0,0,1,0,0v80.48a0,0,0,0,1,0,0H396a35.76,35.76,0,0,1-35.76-35.76V273.85A0,0,0,0,1,360.26,273.85Z" transform="translate(775.7 628.19) rotate(180)"/><path class="cls-16" d="M260.39,107.48h2.69a23,23,0,0,1,23,23V330.82a0,0,0,0,1,0,0H237.37a0,0,0,0,1,0,0V130.5a23,23,0,0,1,23-23Z"/></g><path id="_Clipping_Path_8" data-name="&lt;Clipping Path&gt;" class="cls-17" d="M68.15,328.75c0,17.41-10.45,31.52-10.45,31.52s-10.45-14.11-10.45-31.52S57.7,297.23,57.7,297.23,68.15,311.34,68.15,328.75Z"/><path class="cls-17" d="M49.36,340.27c0,13.51-8.11,24.46-8.11,24.46s-8.11-10.95-8.11-24.46,8.11-24.46,8.11-24.46S49.36,326.77,49.36,340.27Z"/><path class="cls-18" d="M228.45,323.49A466.77,466.77,0,0,0,20.38,372.12H436.52a466.59,466.59,0,0,0-208.07-48.63Z"/><path class="cls-17" d="M502.62,410.11a22.92,22.92,0,0,0-8.41-9.92,18.49,18.49,0,0,0,2.6-.53A20.26,20.26,0,0,0,508.14,391a22.86,22.86,0,0,0-12.21-5.47c.23-.16.47-.31.69-.47a20.26,20.26,0,0,0,7.5-12.16,23,23,0,0,0-12.31-1,18.37,18.37,0,0,0,1.23-1.51,20.26,20.26,0,0,0,3.47-13.86,22.8,22.8,0,0,0-13.23,3.45,21.3,21.3,0,0,0,.92-8.85,22.92,22.92,0,0,0-12.53,3,20.5,20.5,0,0,0,.47-13,22.78,22.78,0,0,0-12.73,6c0-.08,0-.16.06-.24a20.27,20.27,0,0,0-2.63-14,22.65,22.65,0,0,0-11.27,9.81,21.13,21.13,0,0,0-1,2.15,18.44,18.44,0,0,0-.62-2.42,20.26,20.26,0,0,0-9.2-10.93,23.4,23.4,0,0,0-3.66,6.54,20.48,20.48,0,0,0-8.79-9.81A23.05,23.05,0,0,0,417.51,339a21.28,21.28,0,0,0-8-4.22,23.3,23.3,0,0,0-2.06,9.26,21.13,21.13,0,0,0-2.73-1,22.77,22.77,0,0,0-1.57,14.07,21.55,21.55,0,0,0-6.34-3,22.66,22.66,0,0,0-1.39,14.88c2.64,10.19,11.74,14.41,13,14.95.19-.34.37-.68.54-1a36.68,36.68,0,0,0,.21,7.05,34.8,34.8,0,0,0,2.24,8.79c3.08,6.92,14,5.37,32.8,11.09,12.94,3.94,17.39,7.61,23.58,4.94,4.54-2,7.14-6.09,8.59-9.14a19.83,19.83,0,0,0,12.3,7.48A20.26,20.26,0,0,0,502.62,410.11Z"/><path class="cls-19" d="M289.56,358.4A586.32,586.32,0,0,0,28.21,419.48H550.92A586.09,586.09,0,0,0,289.56,358.4Z"/><path id="_Path_" data-name="&lt;Path&gt;" class="cls-20" d="M434.61,343c1.19,5.94,4.33,5.1,6.38,11.61,4.1,13-5.23,26.57-9.23,32.38-5.57,8.09-11,15.91-18.2,15.55-8.61-.43-16.44-12.27-17.09-22.4-.52-8.09,3.81-11,1.62-17.78-2.42-7.56-10-7.76-10.45-13.58-.41-5.45,5.91-6.27,7.8-13.88,2.17-8.74-4.91-12.7-2.17-20,2.37-6.3,8.33-5.06,10.7-11.44,2.69-7.26-3.85-11.76-1-18.53,2-4.81,7.67-7.72,12.54-7.9,8.38-.31,15.61,7.45,16.74,14.45,1.18,7.3-4.95,11.83-2.26,17.17,2.38,4.72,8,2.79,10.39,7.09C444.24,322.63,432.19,330.95,434.61,343Z"/><path class="cls-21" d="M416,299.95l.23-22.83c-.25,0-.5,0-.76,0l-.55,0-.23,23.18-10.9-16.93a10.4,10.4,0,0,0-.71,1.31l11.59,18-.23,22.76-12.21-19a9.5,9.5,0,0,1-1,.94l13.15,20.43-.38,38.08-19-29.57a13.48,13.48,0,0,1-.63,1.45L414,368.32l-.33,32.49-16.83-26.14c-.13.61-.23,1.26-.31,1.94l16.7,25.94.31,0a9.55,9.55,0,0,0,1.43,0v0l24.36-28.82c.46-1.14.89-2.31,1.26-3.52L415,400.44l.33-32.82L435,344.41a14,14,0,0,1-.35-1.37c0-.07,0-.13,0-.2l-19.21,22.72.39-38.42,14.8-17.51a6.38,6.38,0,0,1-.57-.92c0-.1-.08-.2-.12-.29l-14.09,16.67L416,302l13.88-16.42q-.36-.57-.76-1.13Z"/><path id="_Path_2" data-name="&lt;Path&gt;" class="cls-22" d="M457.72,382c-1.23,4.79,1.37,5.29.57,10.82-1.61,11-13.3,17.7-18.31,20.56-7,4-13.73,7.82-18.93,5-6.19-3.38-7.74-14.89-4.62-22.57,2.49-6.14,6.7-6.71,7.52-12.52.91-6.43-4.61-9.27-2.86-13.71,1.63-4.16,6.58-2.51,10.68-7.45,4.71-5.66.9-11.1,5.51-15.48,4-3.8,7.93-.76,11.95-4.62,4.56-4.38,1.35-10,5.84-14,3.19-2.82,8.39-3,12-1.36,6.28,2.76,8.85,11,7.19,16.59-1.73,5.79-7.85,6.95-7.77,11.84.07,4.32,4.87,4.89,5.13,8.92C472.06,370.37,460.23,372.21,457.72,382Z"/><path class="cls-21" d="M459.37,343.64l8.29-16.73c-.18-.09-.36-.2-.55-.28s-.29-.1-.43-.15l-8.41,17-2-16.34a8.54,8.54,0,0,0-1,.72l2.13,17.36-8.26,16.67-2.24-18.32a7.78,7.78,0,0,1-1,.35l2.41,19.71-13.83,27.91L430.94,363a11,11,0,0,1-1,.85l3.61,29.45-11.8,23.81-3.09-25.23q-.47.61-.92,1.32l3.06,25,.22.14a7.78,7.78,0,0,0,1.07.48l0,0,28.18-12.55c.74-.67,1.46-1.38,2.15-2.13l-29.59,13.17,11.92-24,22.7-10.11a11.27,11.27,0,0,1,.23-1.14l0-.16-22.23,9.9,14-28.15,17.13-7.63a5.27,5.27,0,0,1-.09-.88c0-.09,0-.17,0-.26l-16.31,7.26,8.38-16.92L474.68,338q-.06-.55-.16-1.1Z"/><polygon id="_Path_3" data-name="&lt;Path&gt;" class="cls-23" points="425.38 419.65 237.31 419.65 139.38 391.35 327.45 391.35 425.38 419.65"/><polygon class="cls-24" points="343.46 232.72 343.43 232.72 343.4 232.72 343.37 232.72 343.34 232.72 343.31 232.72 343.29 232.72 343.25 232.72 343.23 232.72 343.2 232.72 343.17 232.72 343.14 232.72 343.11 232.72 343.08 232.72 343.05 232.72 343.02 232.72 342.99 232.72 342.96 232.72 342.93 232.72 342.9 232.72 342.87 232.72 342.84 232.72 342.81 232.72 342.79 232.72 342.76 232.72 342.73 232.72 342.7 232.72 342.67 232.72 342.64 232.72 342.61 232.72 342.58 232.72 342.55 232.72 342.52 232.72 342.49 232.72 342.46 232.72 342.43 232.72 342.4 232.72 342.37 232.72 342.35 232.72 342.32 232.72 342.29 232.72 342.26 232.72 342.23 232.72 342.2 232.72 342.17 232.72 342.14 232.72 342.11 232.72 342.08 232.72 342.05 232.72 342.02 232.72 341.99 232.72 341.96 232.72 341.93 232.72 341.9 232.72 341.88 232.72 341.85 232.72 341.82 232.72 341.79 232.72 341.76 232.72 341.73 232.72 341.7 232.72 341.67 232.72 341.64 232.72 341.61 232.72 341.58 232.72 341.55 232.72 341.52 232.72 341.49 232.72 341.46 232.72 341.44 232.72 341.4 232.72 341.38 232.72 341.35 232.72 341.32 232.72 341.29 232.72 341.26 232.72 341.23 232.72 341.2 232.72 341.17 232.72 341.14 232.72 341.11 232.72 341.08 232.72 341.05 232.72 341.02 232.72 340.99 232.72 340.96 232.72 340.94 232.72 340.91 232.72 340.88 232.72 340.85 232.72 340.82 232.72 340.79 232.72 340.76 232.72 340.73 232.72 340.7 232.72 340.67 232.72 340.64 232.72 340.61 232.72 340.58 232.72 340.55 232.72 340.52 232.72 340.5 232.72 340.47 232.72 340.44 232.72 340.41 232.72 340.38 232.72 340.35 232.72 340.32 232.72 340.29 232.72 340.26 232.72 340.23 232.72 340.2 232.72 340.17 232.72 340.14 232.72 340.11 232.72 340.08 232.72 340.05 232.72 340.02 232.72 340 232.72 339.97 232.72 339.94 232.72 156.53 232.72 153.82 234.56 235.69 419.65 235.72 419.65 235.75 419.65 235.78 419.65 235.81 419.65 235.84 419.65 235.87 419.65 235.89 419.65 235.92 419.65 235.95 419.65 235.98 419.65 236.01 419.65 236.04 419.65 236.07 419.65 236.1 419.65 236.13 419.65 236.16 419.65 236.19 419.65 236.22 419.65 236.25 419.65 236.28 419.65 236.31 419.65 236.34 419.65 236.36 419.65 236.39 419.65 236.42 419.65 236.45 419.65 236.48 419.65 236.51 419.65 236.54 419.65 236.57 419.65 236.6 419.65 236.63 419.65 236.66 419.65 236.69 419.65 236.72 419.65 236.75 419.65 236.78 419.65 236.81 419.65 236.83 419.65 236.86 419.65 236.89 419.65 236.92 419.65 236.95 419.65 236.98 419.65 237.01 419.65 237.04 419.65 237.07 419.65 237.1 419.65 237.13 419.65 237.16 419.65 237.19 419.65 237.22 419.65 237.25 419.65 237.27 419.65 237.3 419.65 237.33 419.65 237.36 419.65 237.39 419.65 237.42 419.65 237.45 419.65 237.48 419.65 237.51 419.65 237.54 419.65 237.57 419.65 237.6 419.65 237.63 419.65 237.66 419.65 237.69 419.65 237.72 419.65 237.74 419.65 237.77 419.65 237.8 419.65 237.83 419.65 237.86 419.65 237.89 419.65 237.92 419.65 237.95 419.65 237.98 419.65 238.01 419.65 238.04 419.65 238.07 419.65 238.1 419.65 238.13 419.65 238.16 419.65 238.19 419.65 238.21 419.65 238.24 419.65 238.27 419.65 238.3 419.65 238.33 419.65 238.36 419.65 238.39 419.65 238.42 419.65 238.45 419.65 238.48 419.65 238.51 419.65 238.54 419.65 238.57 419.65 238.6 419.65 238.63 419.65 238.66 419.65 238.68 419.65 238.71 419.65 238.74 419.65 238.77 419.65 238.8 419.65 238.83 419.65 238.86 419.65 238.89 419.65 238.92 419.65 238.95 419.65 238.98 419.65 239.01 419.65 239.04 419.65 239.07 419.65 239.09 419.65 239.12 419.65 239.15 419.65 239.18 419.65 239.21 419.65 422.62 419.65 422.65 419.65 422.68 419.65 422.71 419.65 422.74 419.65 422.77 419.65 422.8 419.65 422.82 419.65 422.86 419.65 422.88 419.65 422.91 419.65 422.94 419.65 422.97 419.65 423 419.65 423.03 419.65 423.06 419.65 423.09 419.65 423.12 419.65 423.15 419.65 423.18 419.65 423.21 419.65 423.24 419.65 423.27 419.65 423.3 419.65 423.32 419.65 423.35 419.65 423.38 419.65 423.41 419.65 423.44 419.65 423.47 419.65 423.5 419.65 423.53 419.65 423.56 419.65 423.59 419.65 423.62 419.65 423.65 419.65 423.68 419.65 423.71 419.65 423.74 419.65 423.76 419.65 423.79 419.65 423.82 419.65 423.85 419.65 423.88 419.65 423.91 419.65 423.94 419.65 423.97 419.65 424 419.65 424.03 419.65 424.06 419.65 424.09 419.65 424.12 419.65 424.15 419.65 424.18 419.65 424.2 419.65 424.24 419.65 424.26 419.65 424.29 419.65 424.32 419.65 424.35 419.65 424.38 419.65 424.41 419.65 424.44 419.65 424.47 419.65 424.5 419.65 424.53 419.65 424.56 419.65 424.59 419.65 424.62 419.65 424.65 419.65 424.68 419.65 424.7 419.65 424.73 419.65 424.76 419.65 424.79 419.65 424.82 419.65 424.85 419.65 424.88 419.65 424.91 419.65 424.94 419.65 424.97 419.65 425 419.65 425.03 419.65 425.06 419.65 425.09 419.65 425.12 419.65 425.14 419.65 425.18 419.65 425.2 419.65 425.23 419.65 425.26 419.65 425.29 419.65 425.32 419.65 425.35 419.65 425.38 419.65 425.41 419.65 425.44 419.65 425.47 419.65 425.5 419.65 425.53 419.65 425.56 419.65 425.59 419.65 425.62 419.65 425.64 419.65 425.67 419.65 425.7 419.65 425.73 419.65 425.76 419.65 425.79 419.65 425.82 419.65 425.85 419.65 425.88 419.65 425.91 419.65 425.94 419.65 425.97 419.65 426 419.65 426.03 419.65 426.06 419.65 426.08 419.65 426.11 419.65 426.14 419.65 343.46 232.72"/><polygon id="_Clipping_Path_9" data-name="&lt;Clipping Path&gt;" class="cls-2" points="426.14 419.65 239.21 419.65 156.53 232.72 343.46 232.72 426.14 419.65"/><g class="cls-25"><g class="cls-26"><rect class="cls-27" x="183.6" y="385.39" width="269.09" height="34.25"/><path id="_Clipping_Path_10" data-name="&lt;Clipping Path&gt;" class="cls-27" d="M398.08,370.16c-2.93-3.94-12.62-16-28.05-18.15-15.11-2.15-26.65,6.4-30.49,9.25-11.22,8.31-10.56,14.93-21,22.64-11.88,8.73-28.61,8.6-29.42,8.8h0l182.45-1a98.85,98.85,0,0,1-15.81-6c-17.86-8.57-23-17.48-35.08-19.71C415.78,365.06,408.19,364.95,398.08,370.16Z"/><path id="_Clipping_Path_11" data-name="&lt;Clipping Path&gt;" class="cls-27" d="M293.82,370.16c-2.93-3.94-12.62-16-28.05-18.15-15.11-2.15-26.65,6.4-30.49,9.25-11.22,8.31-10.56,14.93-21,22.64-11.88,8.73-28.61,8.6-29.42,8.8h0l182.45-1a98.85,98.85,0,0,1-15.81-6c-17.86-8.57-23-17.48-35.08-19.71C311.53,365.06,303.93,364.95,293.82,370.16Z"/></g><path id="_Path_4" data-name="&lt;Path&gt;" class="cls-28" d="M340.12,374.8c6.4,20.67-9.36,37.75-35.2,38.16s-52-16-58.39-36.69,9.36-37.75,35.2-38.16S333.71,354.13,340.12,374.8Z"/><path class="cls-29" d="M345.82,349.55h0a6.84,6.84,0,0,1,6.84,6.84v70.09a0,0,0,0,1,0,0H339a0,0,0,0,1,0,0V356.39a6.84,6.84,0,0,1,6.84-6.84Z"/><path class="cls-30" d="M341.64,349.55h0a6.84,6.84,0,0,1,6.84,6.84v70.09a0,0,0,0,1,0,0H334.8a0,0,0,0,1,0,0V356.39A6.84,6.84,0,0,1,341.64,349.55Z"/><path class="cls-31" d="M156.53,232.71"/><rect class="cls-32" x="154.06" y="230.08" width="202.78" height="18.57"/><path class="cls-33" d="M175.6,240.39c.76,2.25-.45,4.07-2.72,4.07a6.26,6.26,0,0,1-5.48-4.07c-.76-2.25.45-4.07,2.72-4.07A6.26,6.26,0,0,1,175.6,240.39Z"/><path class="cls-34" d="M189.5,240.39c.76,2.25-.45,4.07-2.72,4.07a6.26,6.26,0,0,1-5.48-4.07c-.76-2.25.45-4.07,2.72-4.07A6.26,6.26,0,0,1,189.5,240.39Z"/><path class="cls-24" d="M203.4,240.39c.76,2.25-.45,4.07-2.72,4.07a6.26,6.26,0,0,1-5.48-4.07c-.76-2.25.45-4.07,2.72-4.07A6.26,6.26,0,0,1,203.4,240.39Z"/><path id="_Clipping_Path_12" data-name="&lt;Clipping Path&gt;" class="cls-3" d="M355.49,344.26l-94.18-31.08-14,42.4a27.33,27.33,0,0,0-.79,19.57c6.4,20.67,32.54,37.09,58.39,36.69,19.73-.31,33.56-10.34,36.17-24.26l.1,0Z"/><g class="cls-35"><path id="_Path_5" data-name="&lt;Path&gt;" class="cls-36" d="M340.12,373.67c6.4,20.67-9.36,37.75-35.2,38.16s-52-16-58.39-36.69,9.36-37.75,35.2-38.16S333.71,353,340.12,373.67Z"/><path class="cls-37" d="M344,361.9c6.4,20.67-9.36,37.75-35.2,38.16s-52-16-58.39-36.69,9.36-37.75,35.2-38.16S337.6,341.23,344,361.9Z"/><path class="cls-38" d="M347.89,350.13c6.4,20.67-9.36,37.75-35.2,38.16s-52-16-58.39-36.69,9.36-37.75,35.2-38.16S341.49,329.46,347.89,350.13Z"/><path class="cls-39" d="M351.78,338.36c6.4,20.67-9.36,37.75-35.2,38.16s-52-16-58.39-36.69,9.36-37.75,35.2-38.16S345.38,317.69,351.78,338.36Z"/><path id="_Path_6" data-name="&lt;Path&gt;" class="cls-40" d="M355.67,326.59c6.4,20.67-9.36,37.75-35.2,38.16s-52-16-58.39-36.69,9.36-37.75,35.2-38.16S349.27,305.92,355.67,326.59Z"/><path class="cls-41" d="M270.65,341.95h0a7.72,7.72,0,0,1,7.72,7.72v66.4a0,0,0,0,1,0,0H262.93a0,0,0,0,1,0,0v-66.4A7.72,7.72,0,0,1,270.65,341.95Z"/></g><path class="cls-42" d="M264.24,341.95h0a7.72,7.72,0,0,1,7.72,7.72v77.66a0,0,0,0,1,0,0H256.52a0,0,0,0,1,0,0V349.66A7.72,7.72,0,0,1,264.24,341.95Z"/><rect class="cls-42" x="259.35" y="341.95" width="5.57" height="58.37"/><path class="cls-43" d="M259.53,341.95h0a7.72,7.72,0,0,1,7.72,7.72v77.66a0,0,0,0,1,0,0H251.81a0,0,0,0,1,0,0V349.66a7.72,7.72,0,0,1,7.72-7.72Z"/><circle class="cls-44" cx="259.53" cy="351.41" r="3.4"/></g><g class="cls-45"><path id="_Clipping_Path_13" data-name="&lt;Clipping Path&gt;" class="cls-46" d="M355.36,51.25c-6.36-8.57-27.42-34.68-61-39.45-32.84-4.67-57.92,13.91-66.27,20.1-24.39,18.07-23,32.45-45.75,49.22-25.81,19-62.17,18.7-63.93,19.13h0L515,98a214.84,214.84,0,0,1-34.35-13c-38.81-18.63-49.94-38-76.25-42.83C393.85,40.16,377.33,39.91,355.36,51.25Z"/></g><g class="cls-47"><polygon class="cls-48" points="261.48 312.63 373.54 55.41 423.96 119.11 505.09 113.96 350.5 354.31 261.48 312.63"/><path class="cls-49" d="M516.32,86.47a73.09,73.09,0,1,1-58.5-85.23A73.09,73.09,0,0,1,516.32,86.47Zm-85.17,20.14,58.7-45.4a3.09,3.09,0,0,0,.55-4.34l-10-12.95a3.09,3.09,0,0,0-4.34-.55L432.7,76.9,419.53,60a3.09,3.09,0,0,0-4.34-.54L402.27,69.47a3.09,3.09,0,0,0-.54,4.34l25.09,32.25A3.09,3.09,0,0,0,431.15,106.62Z"/></g><path class="cls-50" d="M350.5,354.31a1.89,1.89,0,0,1,1.3-1.53,1.74,1.74,0,0,1,1.11.09l5,11.38a49.17,49.17,0,0,1,5.5,7.07c.81,1.27,1.52,2.5,2.14,3.68-.12.09-1.77,1.38-1.9,1.46a9.27,9.27,0,0,0-1.9,1.46,58.14,58.14,0,0,1-7.21-9.86q-1.54-4.76-3-9.8Q351,356.27,350.5,354.31Z"/><ellipse class="cls-51" cx="174.73" cy="433.45" rx="24.85" ry="3.41"/><ellipse class="cls-52" cx="343.89" cy="439.56" rx="23.93" ry="3.67"/><path id="_Path_7" data-name="&lt;Path&gt;" class="cls-53" d="M355.67,330c6.4,20.67-9.36,37.75-35.2,38.16s-52-16-58.39-36.69,9.36-37.75,35.2-38.16S349.27,309.3,355.67,330Z"/><path id="_Clipping_Path_14" data-name="&lt;Clipping Path&gt;" class="cls-4" d="M355.67,326.59c6.4,20.67-9.36,37.75-35.2,38.16s-52-16-58.39-36.69,9.36-37.75,35.2-38.16S349.27,305.92,355.67,326.59Z"/><g class="cls-54"><path class="cls-55" d="M310.47,346,286.6,332.43c-1-.57-1.38-1.57-.86-2.23l5-6.38a2.23,2.23,0,0,1,2.76-.18L306,330.76l16.87-21.3a2.24,2.24,0,0,1,2.76-.17l9.55,5.46c1,.57,1.38,1.57.85,2.23l-22.85,28.84A2.23,2.23,0,0,1,310.47,346Z"/></g><path id="_Path_8" data-name="&lt;Path&gt;" class="cls-56" d="M355.67,326.59c6.4,20.67-9.36,37.75-35.2,38.16s-52-16-58.39-36.69,9.36-37.75,35.2-38.16S349.27,305.92,355.67,326.59Z"/><circle class="cls-57" cx="193.94" cy="303.35" r="47.8" transform="translate(-32.53 23.44) rotate(-6.38)"/><path class="cls-55" d="M215.36,312.88l-12-9.67,9.67-12a.87.87,0,0,0-.13-1.22L204,282.86a.87.87,0,0,0-1.22.13l-9.67,12-12-9.67a.87.87,0,0,0-1.22.13l-7.09,8.83a.87.87,0,0,0,.13,1.22l12,9.67-9.67,12a.87.87,0,0,0,.13,1.22l8.83,7.09a.87.87,0,0,0,1.22-.13l9.67-12,12,9.67a.87.87,0,0,0,1.22-.13l7.09-8.82A.87.87,0,0,0,215.36,312.88Z"/><path class="cls-58" d="M197.2,352.86c-.63-.12-1.13-1.2-.9-2.07a2,2,0,0,1,1-1.21c.51-.27.68-.1,1.28-.3,1.23-.4,1.76-1.52,2-1.36.07,0,.13.16.08.52a.29.29,0,0,1,.21.11c.1.16-.1.45-.2.58a22.91,22.91,0,0,1-1.83,2.4C198,352.45,197.51,352.92,197.2,352.86Z"/><path class="cls-58" d="M197.9,348.14a1.9,1.9,0,0,0-.74.7c-.29.49-1.21,2-.8,2.39.2.17.62,0,.82-.11.38-.23.27-.82.64-1.15l.2-.2c.2-.2.3-.31.28-.37s-.37,0-.48-.19.57-1,.44-1.16S198,348.1,197.9,348.14Z"/><path class="cls-58" d="M200.37,350.44a3.39,3.39,0,0,1-1,.8c-1.25.87-1.9,1.62-2,1.54s.14-.32.24-.47c.84-1.19,2.76-3.49,3.12-3.23C201,349.22,200.74,349.95,200.37,350.44Z"/><polygon class="cls-58" points="196.25 351.56 196.85 354.1 198.87 353.73 198.61 351.56 196.25 351.56"/><path class="cls-58" d="M169.91,346.2c.62.18,1.55-.56,1.75-1.43a2,2,0,0,0-.37-1.55c-.33-.48-.56-.4-1-.85-.91-.92-.88-2.16-1.21-2.15-.08,0-.19.08-.31.43a.29.29,0,0,0-.24,0c-.16.1-.11.44-.09.61a22.91,22.91,0,0,0,.54,3C169.4,345.48,169.61,346.11,169.91,346.2Z"/><path class="cls-58" d="M171.44,341.68a1.9,1.9,0,0,1,.34,1c0,.57.16,2.35-.37,2.49-.26.07-.56-.28-.68-.47-.24-.37.13-.85,0-1.32,0-.1-.06-.16-.09-.27-.09-.27-.13-.41-.08-.46s.35.14.51,0,0-1.16.13-1.23S171.39,341.61,171.44,341.68Z"/><path class="cls-58" d="M168.19,342.6a3.39,3.39,0,0,0,.49,1.15c.72,1.35,1,2.31,1.06,2.27s0-.35,0-.53c-.21-1.44-.87-4.36-1.32-4.29C168.21,341.24,168.09,342,168.19,342.6Z"/><polygon class="cls-58" points="169.34 345.26 168.65 347.18 170.85 347.51 171.66 344.76 169.34 345.26"/><path class="cls-43" d="M176.36,384.73a42.27,42.27,0,0,0-.79,4.39,59.11,59.11,0,0,0-.17,10.23c.08,2.2.2,5,.39,8.3q-.13,2-.21,4.17a147.4,147.4,0,0,0,.26,15.47l3.07,0q.41-6.86,1.14-14.06.27-2.62.57-5.19c.13-1.1.35-2.85.65-5,1.39-9.87,2.32-12.44.79-14.89C181.45,387.2,180,385.57,176.36,384.73Z"/><path class="cls-59" d="M187.16,385.75a107.22,107.22,0,0,1,5.64,41.19l-3.14-.49c-.37-1.73-.83-3.89-1.35-6.39a58.5,58.5,0,0,1-1.33-7.42,31.26,31.26,0,0,1,.09-6.09l-3-3.92c-4.38-5.85-6.57-8.78-6.88-11.56a10,10,0,0,1,1-5.73,9.09,9.09,0,0,1,1.46-2,13.46,13.46,0,0,0,7.46,2.44Z"/><path class="cls-60" d="M193.22,424.7a21.57,21.57,0,0,0,.09,3.53h0a3.72,3.72,0,0,0,2.55,3.14l2.63.85-.06.47-4.37.32c-.37-.14-1.43-.5-1.63-.19,0,.07-.06.19.05.43q-.59,0-1.21,0a.86.86,0,0,1-.84-.73c-.29-1.91-1.08-7.07-1.06-7.78Z"/><path class="cls-60" d="M179.14,425.55c-.09.44-.17,1.58-.23,2.7a4.09,4.09,0,0,0,2.31,3.9L183,433l-.11.42-4-.25c-.32-.17-1.23-.63-1.45-.37,0,.06-.08.17,0,.39-.55-.05-1.13-.13-1.71-.24l-.21-.27c0-.18,0-.4,0-.65.09-2.26,0-6.11.15-6.9Z"/><path class="cls-61" d="M187.46,369.65a85.75,85.75,0,0,1-9.22-1.07l-.47-.21-.23-.11a14,14,0,0,1-5.76-21.07l-3.38-.56a19,19,0,0,0-2.51,12.7,20.36,20.36,0,0,0,5.9,10.73,23.92,23.92,0,0,0,4.16,3.45,20.35,20.35,0,0,1,.23,11.88l11,.35c-1.38-1.63-1.55-2.85-1.44-3.67.23-1.83,2-2.64,2.12-4.82a4.67,4.67,0,0,0-.37-2.06,16.88,16.88,0,0,0,10.5-6.47c5.29-7.31,1.86-15.93,1.65-16.45l-3.4,1.86a15.59,15.59,0,0,1,1,5.78C196.8,365.25,192.17,369.75,187.46,369.65Z"/><path class="cls-58" d="M183.61,361.36a2.84,2.84,0,0,1-.4.21,3,3,0,0,0-1.05.72c-.5.6.13,1.32-.06,2.66a4.11,4.11,0,0,0,0,1,3.94,3.94,0,0,0,.08.5,9.33,9.33,0,0,1-.36,3.25l.53-.31,1.51-1.11c1-1.15,1.23-1.35,1.07-1.92s-.51-1.9-.49-2c.29-.49.78-.7.26-1.06-.29-.2-.52-.35-.59-.39C183.84,362.87,183.6,362.5,183.61,361.36Z"/><path class="cls-62" d="M182.19,362.25a17.42,17.42,0,0,1,1,7.21l0,.24a5.11,5.11,0,0,1-6.39,4.52l-.32-.1-.05,0a3.32,3.32,0,0,1-1.84-4.65,12.6,12.6,0,0,0,1.11-3.17c.55-2.72-.08-4.35,1.27-5.73a6.18,6.18,0,0,1,3.16-1.48,3.23,3.23,0,0,1,1.83,0,3.42,3.42,0,0,1,1.23.83,3.61,3.61,0,0,1,.8,1.31,5.55,5.55,0,0,0-1.76,1Z"/><ellipse class="cls-63" cx="512.09" cy="442.51" rx="39.83" ry="5.91"/><path class="cls-64" d="M327,366.93c.46.13,1-.52,1.2-1a2.1,2.1,0,0,0,.06-1.64c-.29-.68-.75-.62-1.35-1.46s-.6-1.52-.82-1.52-.35.52-.35,1c0,.88.52,1.06.65,2,.1.76-.2.92,0,1.67C326.45,366.24,326.62,366.82,327,366.93Z"/><path class="cls-64" d="M327.83,364s-2.69-1.06-3.05-1.73-.29-1.21-.6-1.23-.24,1.12-.4,1.24-.38,0-.42.34a2.8,2.8,0,0,0,0,1.14,7,7,0,0,0,1.72,2.35c.59.36,1.77,1.17,2.5,1.09s.51-2.63.51-2.63Z"/><path class="cls-62" d="M363,434l-.56,1.65a1.3,1.3,0,0,1-.9.84l-1.2.32-.76.77-.07.89,2.09.45a13.08,13.08,0,0,0,5.19.07h0a.22.22,0,0,0,.18-.2l.13-1.62a3,3,0,0,0-.06-.87l-.52-2.41Z"/><path class="cls-62" d="M346.94,434.7l-.78,1.51a3.64,3.64,0,0,1-2,1.75l-3.33,1.2a3,3,0,0,0-1.59,1.33l-.07.7h12.35v-1.77a11.69,11.69,0,0,0-.37-2.91l-.47-1.81Z"/><path class="cls-65" d="M356.21,370c-.15.52.36.9.4,2.08a4.57,4.57,0,0,1-.4,1.94c3.12,1.2,5.78,1.3,6.46.23a4,4,0,0,0,.23-2.08,4.51,4.51,0,0,0-.49-2.44C361.13,368,356.6,368.64,356.21,370Z"/><path class="cls-66" d="M364.9,390.2c-.18-.32-.38-.65-.38-.65h0c-.14-.22-.27-.41-.39-.56-.26.05-.69.13-1.24.19s-.84.06-1,.07c-1.12.07-3.27.16-9.25.2a11.15,11.15,0,0,0-1,1.22,10.92,10.92,0,0,0-1.84,4.47c-2.35,12.85-2.46,17.72-2.46,17.72q0,2.81-.16,5.7c-.23,6-.68,11.84-1.29,17.37a10.39,10.39,0,0,0,2.24.48,10.54,10.54,0,0,0,4-.39c.61-3.39,1.13-6.37,1.55-8.86.38-2.21.61-3.62.77-5.55a52.09,52.09,0,0,0,.19-5.3,25.65,25.65,0,0,1,3.8-10.81,99.6,99.6,0,0,0,1.18,12.73c.33,2.08.56,3.08,1,5.48.8,4.92,1.16,8.94,1.35,11.6a5.51,5.51,0,0,0,4.85-.37,107,107,0,0,0-.44-14.56c-.13-1.26-.42-3.69-.5-7.07-.07-2.51,0-4.29.13-7C366,406.33,366.55,393.15,364.9,390.2Z"/><path class="cls-67" d="M366.73,376.62c0-.34-.32-2.85-1.64-3.45l-.87-.37c-2.81-1.12-6.18-1.87-17.22-.82l-6.76.66c-2.43-1.43-5-3-7.56-4.88q-2.22-1.57-4.22-3.13L326.61,367a49.55,49.55,0,0,0,12.58,10.21c1.75.45,3.62.88,5.58,1.26,2.17.42,4.23.74,6.19,1a67.19,67.19,0,0,0-1.45,14.93,20.84,20.84,0,0,0,13.65.92,18,18,0,0,0,3-1.2,21.05,21.05,0,0,1-.29-9.74A22.92,22.92,0,0,0,366.73,376.62Z"/><path class="cls-65" d="M357.25,360.87a13.26,13.26,0,0,0-2.17,3.4c-.06.16-.07.23-.39.4s-.74.24-.66.47.55.54.6.75l-.45,3.26,1.31.52,4.44,1.73c-.05-.18-1.68-4.6-1.66-4.86s.06-.78-.23-.92-.76-2.72-.9-3.07a1.3,1.3,0,0,1,0-.92C357.19,361.17,357.25,360.87,357.25,360.87Z"/><path class="cls-68" d="M363.5,369.54l-.68,1.46c-.18-.05-3.79-1.19-4.45-2.91a7.31,7.31,0,0,1-.46-1.72c-.07-.71,0-1.19-.17-1.28s-.37,0-.89.61l-.43-.14a9.24,9.24,0,0,0,.12-1.46,7.58,7.58,0,0,0-.11-1.48,7.66,7.66,0,0,1-.19-1.07,2.73,2.73,0,0,1,0-.35,3.74,3.74,0,0,1,2.13-2,5.38,5.38,0,0,1,5.77,1.17c1.87,2,1.16,4.94,1.08,5.22A40.67,40.67,0,0,1,363.5,369.54Z"/><path class="cls-65" d="M520.19,343.74a2.21,2.21,0,0,0,1.8-.37c.35-.26.79-1-.4-6.62-.48-2.3-.76-3.15-1-3.13s-.22.34-.29.61c-.3,1.22.25,1.82-.09,2.37s-.8.22-1.36.74-.41,1.26-.44,2a3.84,3.84,0,0,0,.47,2Z"/><path class="cls-69" d="M555.63,364.76c.08.25.19.63.3,1.09a31.11,31.11,0,0,1,.73,6.57c.15,3.23,0,2.25.11,3.89s.29,2.91-.35,4.2a4.75,4.75,0,0,1-.72,1.06L544.54,392l-2.88-1.93,10.8-11.79-1.81-13.56,2.6-.69Z"/><path class="cls-65" d="M552,382.54a11,11,0,0,0-1.08-2.83,12.26,12.26,0,0,1-1.3.33c-.49.1-.87.13-1.07.16-1.15.17-3.34.43-9.24.88a17.15,17.15,0,0,0-1.11,1.56,18.44,18.44,0,0,0-2.34,5.63c-4,16.46-4.29,17-4.29,17q-.84,4.74-1.61,9.62c-1,6.43-2.41,18.61-3.17,24.77a2.54,2.54,0,0,0,.75,1.1,2.62,2.62,0,0,0,1.18.54c1.52.21,4.16-7.77,4.16-7.77a71.05,71.05,0,0,0,2.79-16.15,24.92,24.92,0,0,0-.29-4.11q2.59-4.91,5.18-9.89,2-3.87,4-7.72-.05,9.25,0,18.71.09,11.54.36,22.76a1.86,1.86,0,0,0,.73.39,2.22,2.22,0,0,0,1.32-.14,3.81,3.81,0,0,0,1.79-1.08,113.72,113.72,0,0,0,1.78-14.07c.43-6.68-.19-6.21.18-11.61.57-8.2,2.75-19.88,2.17-23.67C552.86,386.32,552.34,383.92,552,382.54Z"/><path class="cls-62" d="M545.39,349.25c-.44-.68-1-1.7-.64-2.22s1.1-.14,3-.06c2.71.1,3-.36,4.39.08a5.21,5.21,0,0,1,2.73,1.89,5.92,5.92,0,0,1,.51,4.88,7.76,7.76,0,0,1-3.53,4.5l-1.48.94-4.17-7.18Z"/><path class="cls-70" d="M550.17,361.79h-5.63a10.47,10.47,0,0,0,.61-6.35l3.44-.17c0,.2.11.5.2.85a2.24,2.24,0,0,0,.37,1c.39.37,1.14.15,1.36.08Z"/><path class="cls-69" d="M551.4,410.62c0-.11,0-.21,0-.32.23-3.27.71-7.08,1.17-10.76.69-5.5,1.35-10.69,1-13.05-.1-.66-.63-3.11-.94-4.45a11.58,11.58,0,0,0-.43-1.43,11.79,11.79,0,0,0-.72-1.57l-.25-.45-.49.15a11.67,11.67,0,0,1-1.23.31c-.35.07-.64.11-.85.13l-.19,0c-1.08.16-3.21.42-9.19.87l-.27,0-.17.21a18,18,0,0,0-1.15,1.61,19,19,0,0,0-2.42,5.82c-3.57,14.68-4.17,16.66-4.26,16.9l0,.05,0,.1c-.23,1.33-.46,2.68-.69,4,1.79,1.47,4.45,1.89,7.08,1.72,1.26-2.4,2.53-4.81,3.79-7.24l2.78-5.37c0,4,0,8,0,11.93A13.43,13.43,0,0,0,551.4,410.62Z"/><path class="cls-71" d="M551.12,390.8a8.67,8.67,0,0,0,1.84-3.86,11.67,11.67,0,0,0-.31-4.9,13.39,13.39,0,0,0-.43-1.43,11.79,11.79,0,0,0-.72-1.57l-.25-.45-.49.15a11.67,11.67,0,0,1-1.23.31c-.35.07-.64.11-.85.13l-.19,0c-1.08.16-3.21.42-9.19.87l-.27,0-.17.21a18,18,0,0,0-1.15,1.61c-2.06,3.26-2.78,7.57-3.78,11.28q-1.13,4.17-2.11,8.38c-.16.7-2,6.8-1.51,7.24,1.79,1.47,4.45,1.89,7.08,1.72,1.26-2.4,2.53-4.81,3.79-7.24,1.53-2.94,2.83-5.72,5.28-8A44.64,44.64,0,0,0,551.12,390.8Z"/><path class="cls-65" d="M545.39,349.25l-.8,1.86-2.4,1.48.59,1-.21,3.69a9.16,9.16,0,0,0,2.35,1.24l.14,0c.66.2,2,.59,2.49.06a1.22,1.22,0,0,0,.23-.48,7.43,7.43,0,0,0,.25-2.3c0-.56.06-1,.11-1.55.11-1.23.14-1.12.13-1.33-.07-1-.88-1.74-1.57-2.6A4.89,4.89,0,0,0,545.39,349.25Z"/><path class="cls-72" d="M527.94,358.54a45.29,45.29,0,0,0,10.26,9.25c0,1.64-.08,3.37-.21,5.18a77.35,77.35,0,0,1-1.16,8.77A23.8,23.8,0,0,0,553.27,383a57.85,57.85,0,0,1,1.7-12.57q.38-1.53.82-2.94a3.85,3.85,0,0,0-1.52-4.35l0,0-.6-.37s-.66-.4-1.35-.74c-2.89-1.44-8.18-1.94-8.18-1.94a12.38,12.38,0,0,1-5.17-.46,12.87,12.87,0,0,1-6.71-5.06l-9.15-12.73-4,1c1.09,2.34,2.33,4.8,3.75,7.34C524.52,353.25,526.24,356,527.94,358.54Z"/><path class="cls-73" d="M549.89,356.07"/><path class="cls-74" d="M549.07,438.87h-4.36c.06-.75.11-1.54.12-2.38q0-.78,0-1.51a11.55,11.55,0,0,1,4.13,0,12.11,12.11,0,0,0,.12,3.85Z"/><path class="cls-74" d="M530.4,442.07H526c0-.77.74-3.13.77-3.91l2.4-.29,2.13-.29c-.19.71-.37,1.46-.54,2.25S530.52,441.35,530.4,442.07Z"/><path id="_Clipping_Path_15" data-name="&lt;Clipping Path&gt;" class="cls-1" d="M545.62,438.56v0c-.08,0-.31-.68-.63-.82-.62-.28-.06,1.57-1.43,2.77a5.12,5.12,0,0,1-1.72,1,.54.54,0,0,0-.31.53v.51h8.33a9.49,9.49,0,0,0-.74-4Z"/><g class="cls-75"><path class="cls-76" d="M548.27,440.56a2.22,2.22,0,0,0-2.21,2.18h2.27v-2.17Z"/><path class="cls-76" d="M548.11,440.56a2.22,2.22,0,0,1,2.21,2.18h-2.27v-2.17Z"/></g><path id="_Clipping_Path_16" data-name="&lt;Clipping Path&gt;" class="cls-1" d="M526.95,441.75v0c-.08,0-.31-.68-.63-.82-.62-.28-1.64,1.57-3.46,2.77a7.56,7.56,0,0,1-2.27,1,.54.54,0,0,0-.41.53v.51h11a9.49,9.49,0,0,0-.74-4Z"/><g class="cls-77"><path class="cls-76" d="M531.12,443.75a2.22,2.22,0,0,0-2.21,2.18h2.27v-2.17Z"/></g><path class="cls-62" d="M542.78,353.61a.91.91,0,0,0-.33,1,3.66,3.66,0,0,0,1.65.4c0,.19,0,.44-.09.75-.11.8-.17.88-.24.92-.26.14-.79-.16-1-.58a1.05,1.05,0,0,1-.1-.49,1.67,1.67,0,0,0-.54.87,1.6,1.6,0,0,0,.22,1.26,2.77,2.77,0,0,0,1.64,1l.23,0a26.32,26.32,0,0,0,3.5.11h0c1.08-.34.75-4,.23-7.32l-1.48-1.35a6.44,6.44,0,0,1-.08,2.56c-.16.66-.28,1.17-.69,1.36s-.83,0-1.86-.28a5.19,5.19,0,0,0-.85-.16Z"/><path class="cls-78" d="M48.57,160.47a19.16,19.16,0,0,0,9.84-3.84c3.92-3.12,4.19-6.26,7.65-8.58a12.75,12.75,0,0,1,7.36-2,16.47,16.47,0,1,1,32.68-3.17c0,.23,0,.45,0,.68a8.17,8.17,0,1,1,3.2,15.74l-30.55.58h0Z"/></g></g></g></svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-statuses-container">
+  <div class="container">
+    <div class="row">
+      
+      <!-- JIRA -->
+      <a href="https://jira-software.status.atlassian.com/" target="_blank" class="page-status-container span6" id="page-7yh3h3y0c0x1">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/a4062k03432374vok1upng5m27k121x8.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Jira</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      <!-- JIRA SERVICE MANAGEMENT -->
+      <a href="https://jira-service-management.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-pv54g7ltsc24">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/c100stu4gb6xcvw2jp1a4f78447igxx4.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Jira Service Management </div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      <!-- JIRA Work Management -->
+      <a href="https://jira-work-management.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-s6f0gm5gcpmy">
+        <div class="logo">
+          <img src="https://wac-cdn.atlassian.com/dam/jcr:03631c38-779e-4a6b-82ca-5f242bfebb49/mark-contained-gradient-blue-jira-work-management">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Jira Work Management</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+     <!-- JIRA Product Discovery-->
+      <a href="http://jira-product-discovery.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-qmzzdxyvmbmk">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/o62212x6ldf5vb821iu2npx7qftsv55v.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Jira Product Discovery  </div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      
+      
+      <!-- CONFLUENCE -->
+      <a href="https://confluence.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-4g2my7tbhjsq">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/pssyv72o5006088fnrki6i1136707vvi.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Confluence</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      <!-- JIRA ALIGN -->
+<a href="https://jira-align.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-jrg4crndtsgz">
+    <div class="logo">
+        <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/a6u512w330e6ctf025071t5g76y0o263.svg">
+    </div>
+    <div class="status-info">
+        <div class="product-name">Jira Align</div>
+        <div class="skeleton-status"></div>
+        <div class="stub-for-status"></div>
+    </div>
+</a>
+      
+      <!-- TRELLO -->
+      <a href="https://www.trellostatus.com/" target="_blank" class="page-status-container span6" id="page-h5frqhb041yq">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/420046an427pus8dxm20531a42s0cj27.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Trello</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      <!-- BITBUCKET -->
+      <a href="https://status.bitbucket.org/" target="_blank" class="page-status-container span6" id="page-bqlf8qjztdtr">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/61y2g1cc0p6umuw3a12ic53p17u68mdn.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Bitbucket</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      <!-- OPSGENIE -->
+      <a href="https://status.opsgenie.com/" target="_blank" class="page-status-container span6" id="page-t05vdsszxwtq">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/alj8c2hukgrgkp0500g0k048l6u65ru2.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Opsgenie</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      <!-- STATUSPAGE -->
+      <a href="https://metastatuspage.com/" target="_blank" class="page-status-container span6" id="page-y2j98763l56x">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/67b31057f8w5m75sp4qnh523s6gm6pw6.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Statuspage</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      <!-- Guard -->
+      <a href="https://guard.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-5qmgwsxwsz78">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/4p7720r08f236j58t5t2776u2in376g7.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Guard</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+            <!-- Compass -->
+      <a href="https://compass.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-6b7xgjptl20c">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/b51ps034fv3t81t6l5vtr3o5nmtem73w.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Compass</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+                  <!-- Atlas -->
+      <a href="https://atlas.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-g0wcwcmyx5lr">
+        <div class="logo">
+          <img src="https://wac-cdn.atlassian.com/dam/jcr:11f96e02-0893-4adb-9d21-9ae06c918009/atlas-statuspage">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Atlas</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+               <!-- Atlassian Analytics -->
+      <a href="https://analytics.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-n7myhlx01bgx">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/58a118a4dvp6o55h1vpr4027ho26btc2.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Atlassian Analytics</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+                     <!-- ROVO -->
+      <a href="https://rovo.status.atlassian.com/" target="_blank" class="page-status-container span6" id="page-ndlwhd94j2lv">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/78r6c133101hts26610u715577x4m7vu.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Rovo</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+                  <!-- ROVO DEV -->
+      <a href="https://rovodev.status.atlassian.com/" target="_blank" class="page-status-container span6" id="page-16gxbt4nsgst">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/8u5riwey8noq1740lmjut80f3kw276k0.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Rovo Dev</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+                  <!-- ATLASSIAN Migrations -->
+      <a href="https://migrations.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-zr773hgyfn2s">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/0df7ao5cg0msdi3k10ed2062qthe1ji0/Data_Migration_icon_161px.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Atlassian Migrations</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+                        <!-- ATLASSIAN Focus -->
+      <a href="https://focus.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-73c2psx3zwgf">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/358n6354m28635276352psd5ntr17530.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Focus</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+                             <!-- LOOM -->
+      <a href="https://loom.status.atlassian.com/" target="_blank" class="page-status-container span6" id="page-j9r9w5bcs26w">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/qvs8gqmi1vvqiu370wbpgdtc23sdyi04.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Loom</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+                <!-- TALENT -->
+      <a href="https://talent.status.atlassian.com/" target="_blank" class="page-status-container span6" id="page-vnj20rkgztf8">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/1875wy0drm82l68556gsk3p281r2d2u7-322x322,Fit.webp">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Talent</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+             <!-- CSM -->
+      <a href="https://customer-service-management.status.atlassian.com/" target="_blank" class="page-status-container span6" id="page-w3zwfhw3ktfq">
+        <div class="logo">
+          <img src="https://dam-cdn.atl.orangelogic.com/AssetLink/x2lbl4a458lpabheov4r70f55t7d5rlr.svg">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Customer Service Management</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      <div class="span12 products-services-divider"></div>
+      
+      <!-- ATLASSIAN SUPPORT -->
+      <a href="https://support.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-3tbw4lb9t3qp">
+        <div class="logo">
+          <img src="https://wac-cdn.atlassian.com/dam/jcr:12c26783-d346-43fa-ac47-a847376c844d/logos-atlassian-icon-contained-gradient-blue-161x161@2x">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Atlassian Support</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      <!-- ATLASSIAN PARTNERS -->
+      <a href="https://partners.status.atlassian.com" target="_blank" class="page-status-container span6" id="page-tfc0vzc0cq1n">
+        <div class="logo">
+          <img src="https://wac-cdn.atlassian.com/dam/jcr:12c26783-d346-43fa-ac47-a847376c844d/logos-atlassian-icon-contained-gradient-blue-161x161@2x">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Atlassian Partners</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      <!-- ATLASSIAN DEVELOPER -->
+      <a href="https://status.developer.atlassian.com/" target="_blank" class="page-status-container span6" id="page-n8766lc3ybbs">
+        <div class="logo">
+          <img src="https://wac-cdn.atlassian.com/dam/jcr:12c26783-d346-43fa-ac47-a847376c844d/logos-atlassian-icon-contained-gradient-blue-161x161@2x">
+        </div>
+        <div class="status-info">
+          <div class="product-name">Atlassian Developers</div>
+          <div class="skeleton-status"></div>
+          <div class="stub-for-status"></div>
+        </div>
+      </a>
+      
+      
+    </div>
+  </div>
+</div>
+      
+  <div class="updates-dropdown-container" data-js-hook="updates-dropdown-container">
+    <a href="#" data-js-hook="show-updates-dropdown" id="show-updates-dropdown" class="show-updates-dropdown" aria-label="Subscribe to updates" aria-expanded="false" aria-haspopup="dialog" role="button">
+
+    </a>
+
+<!--    Accessibility guidelines for tabs: https://www.w3.org/TR/wai-aria-practices-1.1/examples/tabs/tabs-1/tabs.html -->
+    <div class="updates-dropdown" data-js-hook="updates-dropdown" id="updates-dropdown" style="display:none">
+      <div class="updates-dropdown-nav nav-items-4" role="tablist" aria-label="Subscribe to updates">
+          <a href="#updates-dropdown-email" aria-controls="updates-dropdown-email" aria-label="Subscribe via email" role="tab" aria-selected="true" id="updates-dropdown-email-btn">
+            <span class="icon-container email">
+          </a>
+          <a href="#updates-dropdown-sms" aria-controls="updates-dropdown-sms" aria-label="Subscribe via SMS" role="tab" id="updates-dropdown-sms-btn">
+            <span class="icon-container sms">
+          </a>
+          <a href="#updates-dropdown-atom" aria-controls="updates-dropdown-atom" aria-label="Subscribe via RSS" role="tab" id="updates-dropdown-atom-btn">
+            <span class="icon-container rss">
+          </a>
+        <button data-js-hook="updates-dropdown-close" aria-label="Close subscribe form" id="updates-dropdown-close-btn">
+          x
+        </button>
+      </div>
+      <div class="updates-dropdown-sections-container">
+          <div class="updates-dropdown-section email" id="updates-dropdown-email" style="display:none" role="tabpanel" aria-labelledby="updates-dropdown-email-btn">
+            <div class="directions">
+              Get email notifications whenever Atlassian <strong>creates</strong>,  <strong>updates</strong> or <strong>resolves</strong> an incident.
+            </div>
+            <form id="subscribe-form-email" action="/subscriptions/new-email" accept-charset="UTF-8" data-remote="true" method="post">
+              <input type="hidden" name="email_otp_verify_flow" id="email_otp_verify_flow" value="false" autocomplete="off" />
+                <!-- make sure not to put cookie values in here since this gets cached -->
+                <label for="email">Email address:</label>
+                <input name="email" id="email" type="text" class="full-width" data-js-hook="email-notification-field" autocomplete="email">
+                <input name="email_otp_auth_token" type='hidden' id="email-otp-token-field">
+                <div class="opt-container-section" id="email-otp-container", style="display:none" >
+                  <label for="email-otp">Enter OTP:</label>
+                  <input name="otp" id="email-otp" type="text" value="" class="prepend full-width">
+                  <p id="email-otp-timer">Resend OTP in: <span id="email-otp-countdown"></span> seconds </p>
+                  <p id="resend-email-otp">
+                    Didn't receive the OTP?
+                    <a href="#" id="resend-email-otp-btn" >Resend OTP </a>
+                  </p>
+                </div>
+                  <input type="hidden" name="captcha_error" id="captcha_error" value="false" autocomplete="off" />
+                  <input type="submit" value="Subscribe via Email" class="flat-button full-width g-recaptcha" id="subscribe-btn-email" data-disabled-text="Subscribing..." data-sitekey=6LdTS8AUAAAAAOIbCKoCAP4LQku1olYGrywPTaZz data-callback="submitNewEmailSubscriber" data-error-callback="emailSubscriberCaptchaError" >
+                  <div class="terms_and_privacy_information bottom small"> This site is protected by reCAPTCHA and the Google <a target="_blank" rel="noopener" class="accessible-link" href="https://policies.google.com/privacy">Privacy Policy</a> and <a target="_blank" rel="noopener" class="accessible-link" data-js-hook="captcha-terms-of-service-link" href="https://policies.google.com/terms">Terms of Service</a> apply.</div>
+</form>          </div>
+
+          <div class="updates-dropdown-section phone" id="updates-dropdown-sms" style="display:none" role="tabpanel" aria-labelledby="updates-dropdown-sms-btn">
+            <div class="directions">
+                Get text message notifications whenever Atlassian <strong>creates</strong> or <strong>resolves</strong> an incident.
+            </div>
+            <form id="subscribe-form-sms" action="/subscriptions/new-sms" accept-charset="UTF-8" data-remote="true" method="post">
+              <input type="hidden" name="otp_verify_flow" id="otp_verify_flow" value="false" autocomplete="off" />
+              <input type="hidden" name="subscriber_code" id="subscriber_code" value="" autocomplete="off" />
+              <div class="control-group">
+                <div class="controls externalities-sms-container">
+                  <!-- make sure not to put cookie values in here since this gets cached -->
+                  <label for="phone-country">Country code:</label>
+                  <div id="phone-number-country-code" class="phone-country-wrapper"
+                      data-otp-enabled="false">
+                      <select name="phone_country" id="phone-country" data-js-hook="phone-country" class="phone-country"><option value="af" data-otp-enabled="false" >Afghanistan (+93)</option>
+<option value="al" data-otp-enabled="false" >Albania (+355)</option>
+<option value="dz" data-otp-enabled="false" >Algeria (+213)</option>
+<option value="as" data-otp-enabled="false" >American Samoa (+1)</option>
+<option value="ad" data-otp-enabled="false" >Andorra (+376)</option>
+<option value="ao" data-otp-enabled="false" >Angola (+244)</option>
+<option value="ai" data-otp-enabled="false" >Anguilla (+1)</option>
+<option value="ag" data-otp-enabled="false" >Antigua and Barbuda (+1)</option>
+<option value="ar" data-otp-enabled="false" >Argentina (+54)</option>
+<option value="am" data-otp-enabled="false" >Armenia (+374)</option>
+<option value="aw" data-otp-enabled="false" >Aruba (+297)</option>
+<option value="au" data-otp-enabled="false" >Australia/Cocos/Christmas Island (+61)</option>
+<option value="at" data-otp-enabled="false" >Austria (+43)</option>
+<option value="az" data-otp-enabled="false" >Azerbaijan (+994)</option>
+<option value="bs" data-otp-enabled="false" >Bahamas (+1)</option>
+<option value="bh" data-otp-enabled="false" >Bahrain (+973)</option>
+<option value="bd" data-otp-enabled="false" >Bangladesh (+880)</option>
+<option value="bb" data-otp-enabled="false" >Barbados (+1)</option>
+<option value="by" data-otp-enabled="false" >Belarus (+375)</option>
+<option value="be" data-otp-enabled="false" >Belgium (+32)</option>
+<option value="bz" data-otp-enabled="false" >Belize (+501)</option>
+<option value="bj" data-otp-enabled="false" >Benin (+229)</option>
+<option value="bm" data-otp-enabled="false" >Bermuda (+1)</option>
+<option value="bo" data-otp-enabled="false" >Bolivia (+591)</option>
+<option value="ba" data-otp-enabled="false" >Bosnia and Herzegovina (+387)</option>
+<option value="bw" data-otp-enabled="false" >Botswana (+267)</option>
+<option value="br" data-otp-enabled="false" >Brazil (+55)</option>
+<option value="bn" data-otp-enabled="false" >Brunei (+673)</option>
+<option value="bg" data-otp-enabled="false" >Bulgaria (+359)</option>
+<option value="bf" data-otp-enabled="false" >Burkina Faso (+226)</option>
+<option value="bi" data-otp-enabled="false" >Burundi (+257)</option>
+<option value="kh" data-otp-enabled="false" >Cambodia (+855)</option>
+<option value="cm" data-otp-enabled="false" >Cameroon (+237)</option>
+<option value="ca" data-otp-enabled="false" >Canada (+1)</option>
+<option value="cv" data-otp-enabled="false" >Cape Verde (+238)</option>
+<option value="ky" data-otp-enabled="false" >Cayman Islands (+1)</option>
+<option value="cf" data-otp-enabled="false" >Central Africa (+236)</option>
+<option value="td" data-otp-enabled="false" >Chad (+235)</option>
+<option value="cl" data-otp-enabled="false" >Chile (+56)</option>
+<option value="cn" data-otp-enabled="false" >China (+86)</option>
+<option value="co" data-otp-enabled="false" >Colombia (+57)</option>
+<option value="km" data-otp-enabled="false" >Comoros (+269)</option>
+<option value="cg" data-otp-enabled="false" >Congo (+242)</option>
+<option value="cd" data-otp-enabled="false" >Congo, Dem Rep (+243)</option>
+<option value="cr" data-otp-enabled="false" >Costa Rica (+506)</option>
+<option value="hr" data-otp-enabled="false" >Croatia (+385)</option>
+<option value="cy" data-otp-enabled="false" >Cyprus (+357)</option>
+<option value="cz" data-otp-enabled="false" >Czech Republic (+420)</option>
+<option value="dk" data-otp-enabled="false" >Denmark (+45)</option>
+<option value="dj" data-otp-enabled="false" >Djibouti (+253)</option>
+<option value="dm" data-otp-enabled="false" >Dominica (+1)</option>
+<option value="do" data-otp-enabled="false" >Dominican Republic (+1)</option>
+<option value="eg" data-otp-enabled="false" >Egypt (+20)</option>
+<option value="sv" data-otp-enabled="false" >El Salvador (+503)</option>
+<option value="gq" data-otp-enabled="false" >Equatorial Guinea (+240)</option>
+<option value="ee" data-otp-enabled="false" >Estonia (+372)</option>
+<option value="et" data-otp-enabled="false" >Ethiopia (+251)</option>
+<option value="fo" data-otp-enabled="false" >Faroe Islands (+298)</option>
+<option value="fj" data-otp-enabled="false" >Fiji (+679)</option>
+<option value="fi" data-otp-enabled="false" >Finland/Aland Islands (+358)</option>
+<option value="fr" data-otp-enabled="false" >France (+33)</option>
+<option value="gf" data-otp-enabled="false" >French Guiana (+594)</option>
+<option value="pf" data-otp-enabled="false" >French Polynesia (+689)</option>
+<option value="ga" data-otp-enabled="false" >Gabon (+241)</option>
+<option value="gm" data-otp-enabled="false" >Gambia (+220)</option>
+<option value="ge" data-otp-enabled="false" >Georgia (+995)</option>
+<option value="de" data-otp-enabled="false" >Germany (+49)</option>
+<option value="gh" data-otp-enabled="false" >Ghana (+233)</option>
+<option value="gi" data-otp-enabled="false" >Gibraltar (+350)</option>
+<option value="gr" data-otp-enabled="false" >Greece (+30)</option>
+<option value="gl" data-otp-enabled="false" >Greenland (+299)</option>
+<option value="gd" data-otp-enabled="false" >Grenada (+1)</option>
+<option value="gp" data-otp-enabled="false" >Guadeloupe (+590)</option>
+<option value="gu" data-otp-enabled="false" >Guam (+1)</option>
+<option value="gt" data-otp-enabled="false" >Guatemala (+502)</option>
+<option value="gn" data-otp-enabled="false" >Guinea (+224)</option>
+<option value="gy" data-otp-enabled="false" >Guyana (+592)</option>
+<option value="ht" data-otp-enabled="false" >Haiti (+509)</option>
+<option value="hn" data-otp-enabled="false" >Honduras (+504)</option>
+<option value="hk" data-otp-enabled="false" >Hong Kong (+852)</option>
+<option value="hu" data-otp-enabled="false" >Hungary (+36)</option>
+<option value="is" data-otp-enabled="false" >Iceland (+354)</option>
+<option value="in" data-otp-enabled="false" >India (+91)</option>
+<option value="id" data-otp-enabled="false" >Indonesia (+62)</option>
+<option value="iq" data-otp-enabled="false" >Iraq (+964)</option>
+<option value="ie" data-otp-enabled="false" >Ireland (+353)</option>
+<option value="il" data-otp-enabled="false" >Israel (+972)</option>
+<option value="it" data-otp-enabled="false" >Italy (+39)</option>
+<option value="jm" data-otp-enabled="false" >Jamaica (+1)</option>
+<option value="jp" data-otp-enabled="false" >Japan (+81)</option>
+<option value="jo" data-otp-enabled="false" >Jordan (+962)</option>
+<option value="ke" data-otp-enabled="false" >Kenya (+254)</option>
+<option value="kr" data-otp-enabled="false" >Korea, Republic of (+82)</option>
+<option value="xk" data-otp-enabled="false" >Kosovo (+383)</option>
+<option value="kw" data-otp-enabled="false" >Kuwait (+965)</option>
+<option value="kg" data-otp-enabled="false" >Kyrgyzstan (+996)</option>
+<option value="la" data-otp-enabled="false" >Laos (+856)</option>
+<option value="lv" data-otp-enabled="false" >Latvia (+371)</option>
+<option value="lb" data-otp-enabled="false" >Lebanon (+961)</option>
+<option value="ls" data-otp-enabled="false" >Lesotho (+266)</option>
+<option value="lr" data-otp-enabled="false" >Liberia (+231)</option>
+<option value="ly" data-otp-enabled="false" >Libya (+218)</option>
+<option value="li" data-otp-enabled="false" >Liechtenstein (+423)</option>
+<option value="lt" data-otp-enabled="false" >Lithuania (+370)</option>
+<option value="lu" data-otp-enabled="false" >Luxembourg (+352)</option>
+<option value="mo" data-otp-enabled="false" >Macao (+853)</option>
+<option value="mk" data-otp-enabled="false" >Macedonia (+389)</option>
+<option value="mg" data-otp-enabled="false" >Madagascar (+261)</option>
+<option value="mw" data-otp-enabled="false" >Malawi (+265)</option>
+<option value="my" data-otp-enabled="false" >Malaysia (+60)</option>
+<option value="mv" data-otp-enabled="false" >Maldives (+960)</option>
+<option value="ml" data-otp-enabled="false" >Mali (+223)</option>
+<option value="mt" data-otp-enabled="false" >Malta (+356)</option>
+<option value="mq" data-otp-enabled="false" >Martinique (+596)</option>
+<option value="mr" data-otp-enabled="false" >Mauritania (+222)</option>
+<option value="mu" data-otp-enabled="false" >Mauritius (+230)</option>
+<option value="mx" data-otp-enabled="false" >Mexico (+52)</option>
+<option value="mc" data-otp-enabled="false" >Monaco (+377)</option>
+<option value="mn" data-otp-enabled="false" >Mongolia (+976)</option>
+<option value="me" data-otp-enabled="false" >Montenegro (+382)</option>
+<option value="ms" data-otp-enabled="false" >Montserrat (+1)</option>
+<option value="ma" data-otp-enabled="false" >Morocco/Western Sahara (+212)</option>
+<option value="mz" data-otp-enabled="false" >Mozambique (+258)</option>
+<option value="na" data-otp-enabled="false" >Namibia (+264)</option>
+<option value="np" data-otp-enabled="false" >Nepal (+977)</option>
+<option value="nl" data-otp-enabled="false" >Netherlands (+31)</option>
+<option value="nz" data-otp-enabled="false" >New Zealand (+64)</option>
+<option value="ni" data-otp-enabled="false" >Nicaragua (+505)</option>
+<option value="ne" data-otp-enabled="false" >Niger (+227)</option>
+<option value="ng" data-otp-enabled="false" >Nigeria (+234)</option>
+<option value="no" data-otp-enabled="false" >Norway (+47)</option>
+<option value="om" data-otp-enabled="false" >Oman (+968)</option>
+<option value="pk" data-otp-enabled="false" >Pakistan (+92)</option>
+<option value="ps" data-otp-enabled="false" >Palestinian Territory (+970)</option>
+<option value="pa" data-otp-enabled="false" >Panama (+507)</option>
+<option value="py" data-otp-enabled="false" >Paraguay (+595)</option>
+<option value="pe" data-otp-enabled="false" >Peru (+51)</option>
+<option value="ph" data-otp-enabled="false" >Philippines (+63)</option>
+<option value="pl" data-otp-enabled="false" >Poland (+48)</option>
+<option value="pt" data-otp-enabled="false" >Portugal (+351)</option>
+<option value="pr" data-otp-enabled="false" >Puerto Rico (+1)</option>
+<option value="qa" data-otp-enabled="false" >Qatar (+974)</option>
+<option value="re" data-otp-enabled="false" >Reunion/Mayotte (+262)</option>
+<option value="ro" data-otp-enabled="false" >Romania (+40)</option>
+<option value="ru" data-otp-enabled="false" >Russia/Kazakhstan (+7)</option>
+<option value="rw" data-otp-enabled="false" >Rwanda (+250)</option>
+<option value="ws" data-otp-enabled="false" >Samoa (+685)</option>
+<option value="sm" data-otp-enabled="false" >San Marino (+378)</option>
+<option value="sa" data-otp-enabled="false" >Saudi Arabia (+966)</option>
+<option value="sn" data-otp-enabled="false" >Senegal (+221)</option>
+<option value="rs" data-otp-enabled="false" >Serbia (+381)</option>
+<option value="sc" data-otp-enabled="false" >Seychelles (+248)</option>
+<option value="sl" data-otp-enabled="false" >Sierra Leone (+232)</option>
+<option value="sg" data-otp-enabled="false" >Singapore (+65)</option>
+<option value="sk" data-otp-enabled="false" >Slovakia (+421)</option>
+<option value="si" data-otp-enabled="false" >Slovenia (+386)</option>
+<option value="za" data-otp-enabled="false" >South Africa (+27)</option>
+<option value="es" data-otp-enabled="false" >Spain (+34)</option>
+<option value="lk" data-otp-enabled="false" >Sri Lanka (+94)</option>
+<option value="kn" data-otp-enabled="false" >St Kitts and Nevis (+1)</option>
+<option value="lc" data-otp-enabled="false" >St Lucia (+1)</option>
+<option value="vc" data-otp-enabled="false" >St Vincent Grenadines (+1)</option>
+<option value="sd" data-otp-enabled="false" >Sudan (+249)</option>
+<option value="sr" data-otp-enabled="false" >Suriname (+597)</option>
+<option value="sz" data-otp-enabled="false" >Swaziland (+268)</option>
+<option value="se" data-otp-enabled="false" >Sweden (+46)</option>
+<option value="ch" data-otp-enabled="false" >Switzerland (+41)</option>
+<option value="tw" data-otp-enabled="false" >Taiwan (+886)</option>
+<option value="tj" data-otp-enabled="false" >Tajikistan (+992)</option>
+<option value="tz" data-otp-enabled="false" >Tanzania (+255)</option>
+<option value="th" data-otp-enabled="false" >Thailand (+66)</option>
+<option value="tg" data-otp-enabled="false" >Togo (+228)</option>
+<option value="to" data-otp-enabled="false" >Tonga (+676)</option>
+<option value="tt" data-otp-enabled="false" >Trinidad and Tobago (+1)</option>
+<option value="tn" data-otp-enabled="false" >Tunisia (+216)</option>
+<option value="tr" data-otp-enabled="false" >Turkey (+90)</option>
+<option value="tc" data-otp-enabled="false" >Turks and Caicos Islands (+1)</option>
+<option value="ug" data-otp-enabled="false" >Uganda (+256)</option>
+<option value="ua" data-otp-enabled="false" >Ukraine (+380)</option>
+<option value="ae" data-otp-enabled="false" >United Arab Emirates (+971)</option>
+<option value="gb" data-otp-enabled="false" >United Kingdom (+44)</option>
+<option value="us" data-otp-enabled="false" selected>United States (+1)</option>
+<option value="uy" data-otp-enabled="false" >Uruguay (+598)</option>
+<option value="uz" data-otp-enabled="false" >Uzbekistan (+998)</option>
+<option value="ve" data-otp-enabled="false" >Venezuela (+58)</option>
+<option value="vn" data-otp-enabled="false" >Vietnam (+84)</option>
+<option value="vg" data-otp-enabled="false" >Virgin Islands, British (+1)</option>
+<option value="vi" data-otp-enabled="false" >Virgin Islands, U.S. (+1)</option>
+<option value="ye" data-otp-enabled="false" >Yemen (+967)</option>
+<option value="zm" data-otp-enabled="false" >Zambia (+260)</option>
+<option value="zw" data-otp-enabled="false" >Zimbabwe (+263)</option></select>
+                  </div>
+                  <label for="phone-number">Phone number:</label>
+                  <input name="phone_number" id="phone-number" type="text" class="prepend full-width" data-js-hook="sms-notification-field">
+                  <div class="sms-atl-error" id="sms-atl-error"></div>
+                  <div class="clearfix"></div>
+                  <div class="opt-container-section" id="otp-container" style="display:none">
+                    <a href="#" id="btn-subcriber-change-number">Change number</a>
+                    <label for="otp">Enter OTP:</label>
+                    <input name="otp" id="otp" type="text" class="prepend full-width">
+                    <p id="timer">Resend OTP in: <span id="countdown">30</span> seconds </p>
+                    <p id="resend">
+                      Didn't receive the OTP?
+                      <a href="#" id="resend-otp-btn" >Resend OTP </a>
+                    </p>
+                    </div>
+                </div>
+              </div>
+
+                <input type="hidden" name="captcha_error" id="captcha_error" value="false" autocomplete="off" />
+                <input type="submit" value="Subscribe via Text Message" class="flat-button full-width g-recaptcha" id="subscribe-btn-sms" data-disabled-text="Subscribing..." data-sitekey=6LcH-b0UAAAAACVQtMb14LBhflMA9y0Nmu7l_W6d data-callback="submitNewSmsSubscriber" data-error-callback="smsSubscriberCaptchaError">
+              <div class="terms_and_privacy_information bottom small">Message and data rates may apply. By subscribing you agree to the Atlassian <a target="_blank" rel="noopener" class="accessible-link" href="https://www.atlassian.com/legal/product-specific-terms#statuspage-specific-terms">Terms of Service</a>, and the Atlassian <a target="_blank" rel="noopener" class="accessible-link" href="https://www.atlassian.com/legal/privacy-policy">Privacy Policy</a>. This site is protected by reCAPTCHA and the Google <a target="_blank" rel="noopener" class="accessible-link" href="https://policies.google.com/privacy">Privacy Policy</a> and <a target="_blank" rel="noopener" class="accessible-link" data-js-hook="captcha-terms-of-service-link" href="https://policies.google.com/terms">Terms of Service</a> apply.</div>
+</form>          </div>
+
+
+
+
+
+
+          <div class="updates-dropdown-section atom" id="updates-dropdown-atom" role="tabpanel" aria-labelledby="updates-dropdown-atom-btn">
+            Get the <a href="https://status.atlassian.com/history.atom" target="_blank">Atom Feed</a> or <a href="https://status.atlassian.com/history.rss" target="_blank">RSS Feed</a>.
+          </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  $(function () {
+    const phoneNumberInput = $('#phone-number');
+    const errorDiv = $('#sms-atl-error')
+    if(errorDiv.length){
+      function checkSelectedCountry() {
+        const selectedCountry = $('#phone-country').val();
+        const isOtpEnabled = $('#phone-number-country-code').attr('data-otp-enabled') === 'true';
+        const form = document.getElementById('subscribe-form-sms');
+        form.action = '/subscriptions/new-sms';
+        const isOtpFlow = document.getElementById('otp_verify_flow');
+        document.getElementById('otp-container').style.display = "none";
+        if(false && selectedCountry === 'sg') { // Replace 'SG' with the actual value representing Singapore in your select tag
+          phoneNumberInput.prop('disabled', true);
+          errorDiv.html(`Due to new Singapore government regulations, we're currently not supporting text subscriptions in Singapore.<a href="https://community.atlassian.com/t5/Statuspage-articles/Attention-SMS-notifications-will-be-disabled-on-August-1st-2023/ba-p/2424398" target="_blank"> Learn more.</a> <br> Select another method to subscribe.`);
+        } else {
+          phoneNumberInput.prop('readonly', false);
+          errorDiv.html('');
+          if(false){
+            if(isOtpEnabled){
+              document.getElementById('subscribe-btn-sms').value = "Send OTP";
+            }
+            else {
+              isOtpFlow.value = false;
+              document.getElementById('subscribe-btn-sms').value = "Subscribe via Text Message";
+            }
+          }
+        }
+      }
+
+      $('#phone-country').on('change', checkSelectedCountry);
+      checkSelectedCountry();
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const dropdown = document.querySelector('#phone-number-country-code .phone-country');
+    if (dropdown){
+      const wrapperDiv = document.getElementById('phone-number-country-code');
+      const selectedOption = dropdown.options[dropdown.selectedIndex];
+      const otpEnabled = selectedOption.getAttribute('data-otp-enabled');
+
+      wrapperDiv.setAttribute('data-otp-enabled', otpEnabled);
+
+      dropdown.addEventListener('change', function() {
+        const selectedOption = dropdown.options[dropdown.selectedIndex];
+        const otpEnabled = selectedOption.getAttribute('data-otp-enabled');
+
+        wrapperDiv.setAttribute('data-otp-enabled', otpEnabled);
+      });
+    }
+  });
+
+  var countdownTimer;
+  var resendBtn = document.getElementById('resend');
+  var timer = document.getElementById('timer');
+  var form = document.getElementById('subscribe-form-sms');
+  var RESEND_TIMER = 30;
+  $(function() {
+    $('#subscribe-form-sms').on('ajax:success', function(e, data, status, xhr){
+      const form = this;
+      const action = form.getAttribute('action');
+      if (data.type === 'success' && data.otp_flow === true) {
+        document.getElementById('subscriber_code').value = data.subscriber_code
+        document.getElementById('otp-container').style.display = "block";
+        $('#phone-number').prop('readonly', true);
+        var display = document.getElementById('countdown');
+        disableResend();
+        startTimer(RESEND_TIMER, display)
+        document.getElementById('subscribe-btn-sms').value = "Verify OTP and Subscribe";
+        document.getElementById('otp_verify_flow').value = true;
+        form.action = '/subscriptions/verify-otp';
+      } else if (data.type === 'success' && action.includes('verify')){
+        document.getElementById('otp-container').style.display = "none";
+        $('#phone-number').val('').prop('readonly', false);
+        $('#otp').val('');
+        document.getElementById('subscribe-btn-sms').value = "Send OTP";
+        document.getElementById('otp_verify_flow').value = false;
+        form.action = '/subscriptions/new-sms';
+        SP.currentPage.updatesDropdown.hide();
+      }
+    });
+    $("#btn-subcriber-change-number").on('click', () => {
+      document.getElementById('otp-container').style.display = "none";
+      $('#phone-number').prop('readonly', false);
+      document.getElementById('subscribe-btn-sms').value = "Send OTP";
+      form.action = '/subscriptions/new-sms';
+      return false
+    })
+    $('#resend-otp-btn').on('click', function(e) {
+      e.preventDefault();
+      let phoneNumber = $('#phone-number').val();
+      let countryCode = $('.phone-country').val();
+      $.ajax({
+        type: 'POST',
+        url: "/subscriptions/new-sms",
+        data: {
+          phone_number: phoneNumber,
+          phone_country: countryCode,
+          type: 'resend'
+        },
+      }).done(function(data) {
+        var messageOptions = (data.type !== undefined && data.type !== null) ? { cssClass: data.type } : {};
+        HRB.utils.notify(data.text, messageOptions);
+        var display = document.getElementById('countdown');
+        disableResend();
+        timer.style.display = "none"
+        if (data.type === 'success') {
+          startTimer(RESEND_TIMER, display);
+        }
+      })
+    });
+  })
+
+  function startTimer(duration, display){
+    var timer = duration, seconds;
+    clearInterval(countdownTimer);
+    countdownTimer = setInterval(function () {
+      seconds = parseInt(timer % 60, 10);
+      display.textContent = seconds;
+      if(--timer < 0){
+        enableResend();
+        clearInterval(countdownTimer);
+      }
+    }, 1000);
+    disableResend();
+  }
+  function enableResend(){
+    resendBtn.style.display = "block";
+    timer.style.display = "none"
+  }
+  function disableResend(){
+    resendBtn.style.display = "none";
+    timer.style.display = "block"
+  }
+
+  $(function() {
+    $('#subscribe-form-email').on('submit', function() {
+      var tokenField = document.getElementById('email-otp-token-field');
+      let page_code = "0f54fx204jpt"
+      let key = keyForEmailOtpToken($('#email').val(), page_code);
+      tokenField.value = localStorage.getItem(key);
+    });
+  });
+
+  var emailOtpCountdownTimer;
+  var emailOtpResendBtn = document.getElementById('resend-email-otp');
+  var emailOtpTimer = document.getElementById('email-otp-timer');
+  var emailOtpForm = document.getElementById('subscribe-form-email');
+  var EMAIL_OTP_RESEND_TIMER = 600;
+  $(function() {
+    $('#subscribe-form-email').on('ajax:success', function(e, data, status, xhr){
+      const form = this;
+      const action = form.getAttribute('action');
+      if (data.type === 'success' && data.email_otp_verify_flow === true) {
+        document.getElementById('email-otp-container').style.display = "block";
+        var display = document.getElementById('email-otp-countdown');
+        display.textContent = EMAIL_OTP_RESEND_TIMER;
+        disableEmailOtpResend();
+        startEmailOtpTimer(EMAIL_OTP_RESEND_TIMER, display)
+        document.getElementById('subscribe-btn-email').value = "Verify OTP and Subscribe";
+        document.getElementById('email_otp_verify_flow').value = true;
+        form.action = '/subscriptions/verify-email-otp';
+      } else if (data.type === 'success' && action.includes('verify')){
+        let email =  $('#email')
+        let page_code = "0f54fx204jpt"
+        let key = keyForEmailOtpToken(email.val(), page_code);
+        localStorage.setItem(key, data.email_otp_auth_token);
+
+        document.getElementById('email-otp-container').style.display = "none";
+        email.val('').prop('readonly', false);
+        $('#email-otp').val('');
+        document.getElementById('subscribe-btn-email').value = "Send OTP";
+        document.getElementById('email_otp_verify_flow').value = false;
+        form.action = '/subscriptions/new-email';
+        SP.currentPage.updatesDropdown.hide();
+      }
+    });
+    $('#resend-email-otp-btn').on('click', function(e) {
+      e.preventDefault();
+      let email = $('#email').val();
+      $.ajax({
+        type: 'POST',
+        url: "/subscriptions/new-email",
+        data: {
+          email: email
+        },
+      }).done(function(data) {
+        var messageOptions = (data.type !== undefined && data.type !== null) ? { cssClass: data.type } : {};
+        HRB.utils.notify(data.text, messageOptions);
+        if (data.type === 'success') {
+          var display = document.getElementById('email-otp-countdown');
+          display.textContent = EMAIL_OTP_RESEND_TIMER;
+          disableEmailOtpResend();
+          emailOtpTimer.style.display = "none"
+          startEmailOtpTimer(EMAIL_OTP_RESEND_TIMER, display);
+        }
+      })
+    });
+  })
+
+  function startEmailOtpTimer(duration, display){
+    var timer = duration, seconds;
+    clearInterval(emailOtpCountdownTimer);
+    emailOtpCountdownTimer = setInterval(function () {
+      seconds = parseInt(timer, 10);
+      display.textContent = seconds;
+      if(--timer < 0){
+        enableEmailOtpResend();
+        clearInterval(emailOtpCountdownTimer);
+      }
+    }, 1000);
+    disableEmailOtpResend();
+  }
+
+  function enableEmailOtpResend(){
+    emailOtpResendBtn.style.display = "block";
+    emailOtpTimer.style.display = "none"
+  }
+  function disableEmailOtpResend(){
+    emailOtpResendBtn.style.display = "none";
+    emailOtpTimer.style.display = "block"
+  }
+  function keyForEmailOtpToken(email, pageCode) {
+    return email + '|' + pageCode+ '|SUBSCRIBE_VIA_EMAIL';
+  }
+</script>
+
+  </div>
+
+    <div class="container">
+        <div class="page-status status-none">
+          <h2 class="status font-large">
+            All Systems Operational
+          </h2>
+          <span class="last-updated-stamp  font-small"></span>
+        </div>
+
+
+
+      
+
+
+
+
+      <div class="incidents-list format-expanded">
+        <h2 class="font-largest no-link" id="past-incidents">Past Incidents</h2>
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">23</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported today.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">22</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">21</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">20</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">19</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">18</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">17</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">16</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">15</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">14</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">13</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">12</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">11</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date">10</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+          
+  <div class="status-day font-regular no-incidents">
+    <div class="date border-color font-large">Oct <var data-var="date"> 9</var>, <var data-var="year">2025</var></div>
+        <p class="color-secondary">No incidents reported.</p>
+  </div>
+
+      </div>
+
+
+      <div class="page-footer border-color font-small">
+          <a href="/history" class="history-footer-link"><span style="font-family:arial">&larr;</span> Incident History</a>
+
+        <span class="color-secondary powered-by"><a class="color-secondary" target="_blank" rel="noopener noreferrer nofollow" href="https://www.atlassian.com/software/statuspage?utm_campaign=status.atlassian.com&amp;utm_content=SP-notifications&amp;utm_medium=powered-by&amp;utm_source=inapp">Powered by Atlassian Statuspage</a></span>
+      </div>
+    </div>
+
+      <div class="custom-footer-container">
+    <script src="https://cdn.statuspage.io/se-v2.js"></script>
+<script>
+  $(function() {
+    // this function updates an product on the page to reflect what we get back when we pull its status
+    var updateElement = function(pageCode, message, indicator) {
+      // get the parent element for the product
+		      var $elem = $('#page-' + pageCode);
+      
+      // remove the skeleton bar
+      $elem.find('.skeleton-status').remove();
+      
+      // add the text that's passed from the message
+      $elem.find('.stub-for-status').html(message);
+      
+      // give it the class name that defines its styles (mostly just colors)
+      $elem.addClass('status-' + indicator);
+    }
+    
+    // page codes array built for future tweakability
+    allPageCodes = [];
+    allPageCodes.push('7yh3h3y0c0x1'); // JSW
+    allPageCodes.push('pv54g7ltsc24'); // JSM
+    allPageCodes.push('s6f0gm5gcpmy'); // JWM
+    allPageCodes.push('qmzzdxyvmbmk'); // JPD
+    allPageCodes.push('4g2my7tbhjsq'); // Connie
+    allPageCodes.push('jrg4crndtsgz'); // JiraAlign
+    allPageCodes.push('h5frqhb041yq'); // Trello
+    allPageCodes.push('bqlf8qjztdtr'); // Bb
+    allPageCodes.push('t05vdsszxwtq'); // OG
+    allPageCodes.push('y2j98763l56x'); // SP
+    allPageCodes.push('5qmgwsxwsz78'); // Aa
+    allPageCodes.push('6b7xgjptl20c'); // Compass
+    allPageCodes.push('g0wcwcmyx5lr'); // Atlas
+    allPageCodes.push('n7myhlx01bgx'); // Analytics
+    allPageCodes.push('ndlwhd94j2lv'); // Rovo
+    allPageCodes.push('16gxbt4nsgst'); // Rovo Dev
+    allPageCodes.push('vnj20rkgztf8'); // Talent
+    allPageCodes.push('w3zwfhw3ktfq'); // CSM
+
+    allPageCodes.push('3tbw4lb9t3qp'); // Atl Support
+    allPageCodes.push('tfc0vzc0cq1n'); // Atl Partners
+    allPageCodes.push('n8766lc3ybbs'); // Developer
+    allPageCodes.push('zr773hgyfn2s'); // Migrations
+    allPageCodes.push('73c2psx3zwgf'); // Migrations
+    allPageCodes.push('j9r9w5bcs26w'); // Migrations
+    
+    // this is a helper function to find the highest severity incident
+    var getWorstSeverity = function(incidents) {
+      var impacts = [];
+      for (i = 0; i < incidents.length; i++) {
+        impacts.push(incidents[i].impact);
+      }
+      if (impacts.indexOf('critical') != -1) {
+        return 'critical'; 
+      } 
+      else if (impacts.indexOf('major') != -1) {
+        return 'major';
+      } 
+      else if (impacts.indexOf('minor') != -1) {
+        return 'minor';
+      } 
+      // in this case the status page has an open incident but either no affected components or all of the components are green which is wrong. returning critical here on purpose so that it's still clear there's an incident.
+      else if (impacts.indexOf('none') != -1) {
+        return 'none-with-incident';
+      }
+    }
+    
+    // looping through each product, let's hit the Status API to get their status
+    var i;
+    for (i = 0; i < allPageCodes.length; i++) { 
+      
+      // have to do this weird check bc Statuspage's status page lives on a different set of infra than the rest.
+      if (allPageCodes[i] == "y2j98763l56x") {
+        var pageStatus = new StatusPage.page({ page: allPageCodes[i], host: 'metastatuspage.com', secure: true });
+      }
+      else {
+        var pageStatus = new StatusPage.page({ page: allPageCodes[i], secure: true});
+      }
+      
+      // this is the actual call that fetches the status
+      pageStatus.summary({
+        success : function(data) {
+          
+          // define a helper method per iteration for updating the particular product
+          var passMessage= function(message, indicator_override) { 
+            updateElement(data.page.id, message, (indicator_override || data.status.indicator));
+          }
+          
+          // tease out which maintences are actually active
+          var open_maintenances = [];
+          $.each(data.scheduled_maintenances, function() {
+            // if it's not in the scheduled state anymore
+            if (this.status != 'scheduled') {
+              open_maintenances.push(this);
+            }
+          });
+  
+          // as opposed to scheduled for the future
+          var upcoming_maintenances = [];
+          $.each(data.scheduled_maintenances, function() {
+            // if it's scheduled time is less than an hour out
+            if (((Date.parse(this.scheduled_for)/1000) - (Date.now()/1000)) < 3600) {
+              upcoming_maintenances.push(this);
+            }
+          });
+        
+          if (!!data.incidents.length || !!open_maintenances.length || data.status.indicator != 'none' || !!upcoming_maintenances.length) {
+  
+  
+            // if there's an open incident, display that
+            if (!!data.incidents.length) {
+              
+              passMessage("Active Incident", getWorstSeverity(data.incidents));
+            } 
+            // if there's an open scheduled maintenance, display that
+            else if (!!open_maintenances.length) {
+              passMessage("Active Maintenance", "maintenance");
+            }
+            // if there is a degraded component, display that
+            else if (data.status.indicator != 'none') {
+              passMessage("Degraded Infrastructure");
+            }
+            // else there's an upcoming scheduled maintenance
+            else {
+              passMessage("Upcoming Maintenance", "maintenance");
+            }
+          }
+          else {
+            passMessage("Operational", "none");
+          }
+        }
+      });
+    } // end for
+  });
+  
+</script>
+
+
+<div id="custom-footer">
+  <div class="container">
+    <a class="logo" href="https://www.atlassian.com/" target="_blank">
+      <img src="https://wac-cdn.atlassian.com/dam/jcr:ce6d94fe-b69c-4191-b9c6-c7210a31678f/logos-Atlassian-horizontal-neutral-1080x134@2x-rgb">
+    </a>
+    <nav>
+      <a href="https://www.atlassian.com/legal/customer-agreement">Terms of use</a>
+      <a href="https://www.atlassian.com/legal/privacy-policy">Privacy policy</a>
+      <span>Copyright © <script>document.write(new Date().getFullYear())</script>
+
+ Atlassian</span>
+    </nav>
+  </div>
+</div>
+
+<script>
+  !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t,e){var n=document.createElement("script");n.type="text/javascript";n.async=!0;n.src="https://cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(n,a);analytics._loadOptions=e};analytics.SNIPPET_VERSION="4.1.0";
+  analytics.load("9k1yxS8U0hmX1QkNUkyET8NXzHzABbGT");
+  analytics.page();
+  }}();
+</script>
+  </div>
+
+
+  </div>
+
+
+
+
+
+
+
+    <script src="https://dka575ofm4ao0.cloudfront.net/assets/status_manifest-acb69ae7e67a6c4167b2544bef9249ec03b50cdd6c9a198592162f175e04b891.js"></script>
+    <div id="cpt-notification-container"></div>
+    
+
+
+
+
+    <!-- all of the content_for stuff -->
+      <script src="https://dka575ofm4ao0.cloudfront.net/assets/register_subscription_form-589b657fec607087fc5c740c568270907310bc4f6aaa20256e70f01b103025ca.js"></script>
+
+  <script type="text/javascript">
+      $(function() {
+          SP.currentPage.registerSubscriptionForm('email');
+
+          SP.currentPage.registerSubscriptionForm('sms');
+
+
+      });
+
+
+
+
+
+  </script>
+  <script src="https://dka575ofm4ao0.cloudfront.net/assets/status_common-c1b99d73ee7ab0fea796bd170723c1daac1381095a7dd7501a38ce6f333d86b3.js"></script>
+    <script>
+      SP.pollForChanges('/api/v2/status.json');
+    </script>
+
+  <script>
+    $(function() {
+      $('.tool').tooltipster({
+        animationDuration: 100,
+        contentAsHTML: true,
+        delay: 100,
+        theme: 'tooltipster-borderless',
+        functionInit: function (instance, helper) {
+          var $origin = $(helper.origin),
+              dataOptions = $origin.attr('data-tooltip-config');
+          if (dataOptions){
+            dataOptions = JSON.parse(dataOptions);
+            $.each(dataOptions, function(name, option){
+                instance.option(name, option);
+            });
+          }
+        }
+      });
+      // clicks on first tab in subscribe popout since we won't know which is first
+      // upon construction in the ruby code
+      $('.updates-dropdown-nav > a').eq(0).click();
+
+      // twitter follow button needs some margin
+      $('.twitter-follow-button').css('margin-right', '6px');
+    });
+
+    $(function() {
+      // open/close component groups
+      HRB.utils.djshook('component-group-opener').on('click', function() {
+        var groupParentIndicator = $(this).find('.group-parent-indicator');
+        groupParentIndicator.toggleClass('fa-plus-square-o').toggleClass('fa-minus-square-o').end().parent().toggleClass('open');
+        toggleGroup(groupParentIndicator)
+      });
+    });
+
+    $(function() {
+      HRB.utils.djshook('component-group-opener').on('keydown', function(event) {
+        if (event.key !== "Enter" && event.key !== " ") {
+          return;
+        }
+        event.preventDefault()
+        var groupParentIndicator = $(this).find('.group-parent-indicator');
+        groupParentIndicator.toggleClass('fa-plus-square-o').toggleClass('fa-minus-square-o').end().parent().toggleClass('open');
+        toggleGroup(groupParentIndicator)
+      });
+    });
+
+    function toggleGroup(groupParentIndicator) {
+      var isOpen = groupParentIndicator.attr('aria-expanded')
+      if (isOpen == 'false') {
+          groupParentIndicator.attr('aria-expanded', 'true');
+        } else {
+          groupParentIndicator.attr('aria-expanded', 'false');
+        }
+    }
+
+    $(function() {
+      $(document).on('ajax:complete', '.modal.in', function(e) {
+        // Close the active modal.
+        $('.modal.in').modal('hide');
+      });
+    });
+
+  </script>
+
+
+      <script>
+  /** INITIALIZATION **/
+  var recaptchaIds = {}
+
+  // Unfortunately there's no unique selectors on the parent divs that recaptcha adds. The first unique selector
+  // is the iframe rendered 2 levels deep. So this waits until the iframes are added to the page, then finds
+  // the parent div and sets the z index so that it'll render above our modals & dropdowns from the start.
+  function setZIndex(captchaCount, startTime) {
+    // bail after 10s just in case so we don't do this forever if something whaky happens
+    if (new Date() - startTime > 10000) {
+      return;
+    }
+
+    var iframes = document.querySelectorAll('iframe[title="recaptcha challenge"]');
+    if (iframes.length != captchaCount) {
+      setTimeout(function() {
+        setZIndex(captchaCount, startTime);
+      }, 500);
+    }
+
+    for (var i = 0; i < iframes.length; i++) {
+      // incident subscribe modal is 1050, so this has to be above that
+      iframes[i].parentElement.parentElement.style.zIndex = "1100";
+    }
+  }
+
+  function updateCaptchaIframeTitle(captchaCount, startTime, updates=0) {
+
+    if (new Date() - startTime > 10000 || captchaCount === updates) {
+      return;
+    }
+    var iframesWithTitle = document.querySelectorAll('iframe[title="recaptcha challenge expires in two minutes"]');
+
+    if (iframesWithTitle.length != captchaCount) {
+      setTimeout(function() {
+        updateCaptchaIframeTitle(captchaCount, startTime, iframesWithTitle.length + updates);
+      }, 500);
+    }
+
+    for (var i = 0; i < iframesWithTitle.length; i++) {
+      iframesWithTitle[i].title = "recaptcha";
+    }
+  }
+
+  function addIncidentCaptcha() {
+    var incidentCaptcha = document.createElement('div');
+    incidentCaptcha.setAttribute('id', 'subscribe-incident-recaptcha');
+    incidentCaptcha.setAttribute('class', 'g-recaptcha');
+    incidentCaptcha.setAttribute('data-sitekey', '6LcZ-b0UAAAAAENi956aWzynTT2ZJ80dGU3F80Op');
+    incidentCaptcha.setAttribute('data-callback', 'submitIncidentSubscriberSuccess');
+    incidentCaptcha.setAttribute('data-error-callback', 'submitIncidentSubscriberError');
+    incidentCaptcha.setAttribute('data-size', 'invisible');
+    document.body.appendChild(incidentCaptcha);
+    var incidentCode = document.createElement('input');
+    incidentCode.setAttribute('type', 'hidden');
+    incidentCode.setAttribute('id', 'submit_incident_code');
+    document.body.appendChild(incidentCode);
+  }
+
+  var onloadCallback = function() {
+    // if there is an incident, then add incident captcha element
+    if (document.getElementsByClassName('modal-open-incident-subscribe').length > 0) {
+      addIncidentCaptcha();
+    }
+
+    var captchas = document.getElementsByClassName("g-recaptcha");
+
+    for(var i = 0; i < captchas.length; i++) {
+      var elId = captchas[i].id;
+      recaptchaIds[elId] = grecaptcha.enterprise.render(elId);
+    }
+
+    setZIndex(captchas.length, new Date());
+    updateCaptchaIframeTitle(captchas.length, new Date());
+  }
+
+
+  /** SUBSCRIBE DROPDOWN */
+
+  // callbacks for captcha success
+  function submitNewSubscriber(type, error) {
+    if (error) document.querySelector('#subscribe-form-' + type + ' #captcha_error').value = 'true';
+
+    document.getElementById('subscribe-form-' + type).dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));
+    grecaptcha.enterprise.reset(recaptchaIds['subscribe-btn-' + type]);
+  }
+  function submitNewEmailSubscriber(token) {
+    submitNewSubscriber('email');
+  }
+  function submitNewSmsSubscriber(token) {
+    submitNewSubscriber('sms');
+  }
+  function submitNewWebhookSubscriber(token) {
+    submitNewSubscriber('webhook');
+  }
+  function submitIncidentSubscriber(token, error) {
+    var incidentCode = document.getElementById('submit_incident_code').value;
+    var incidentForm = document.getElementById('subscribe-form-' + incidentCode);
+
+    incidentForm.querySelector('input[name="captcha_error"]').value = error;
+    incidentForm.querySelector('input[name="g-recaptcha-response"]').value = token;
+    incidentForm.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true}));
+    grecaptcha.enterprise.reset(recaptchaIds['subscribe-incident-recaptcha']);
+  }
+  function submitIncidentSubscriberSuccess(token) {
+    submitIncidentSubscriber(token, 'false');
+  }
+
+  // callbacks if we get captcha network errors
+  function emailSubscriberCaptchaError(token) {
+    submitNewSubscriber('email', true);
+  }
+  function smsSubscriberCaptchaError(token) {
+    submitNewSubscriber('sms', true);
+  }
+  function webhookSubscriberCaptchaError(token) {
+    submitNewSubscriber('webhook', true);
+  }
+  function submitIncidentSubscriberError(token) {
+    submitIncidentSubscriber(token, 'true');
+  }
+
+  // tracking clicks
+  ['email', 'sms', 'webhook'].forEach(function(type) {
+    var el = document.getElementById('subscribe-btn-' + type);
+    el && el.addEventListener("click", function() {
+      $.ajax({
+        type: "POST",
+        url: "/subscriptions/track_attempt",
+        data: {
+          type: type
+        }
+      })
+    })
+  })
+
+  // form submission success callbacks
+  $('#subscribe-form-email').on('ajax:success', function(e, data, status, xhr){
+    if (data.type === 'success') {
+      SP.currentPage.updatesDropdown.hide();
+      document.getElementById('email').value = '';
+    }
+  });
+  $('#subscribe-form-sms').on('ajax:success', function(e, data, status, xhr){
+    if (data.type === 'success' && data.otp_flow !== true) {
+      SP.currentPage.updatesDropdown.hide();
+      document.getElementById('phone-number').value = '';
+    }
+  });
+  $('#subscribe-form-webhook').on('ajax:success', function(e, data, status, xhr){
+    if (data.type === 'success') {
+      SP.currentPage.updatesDropdown.hide();
+      document.getElementById('endpoint-webhooks').value = '';
+      document.getElementById('email-webhooks').value = '';
+    }
+  });
+
+  $('a.subscribe').on('click', function() {
+    document.body.style.overflow = "hidden";
+    document.body.style.height = "100vh";
+  });
+
+  $('div.modal-open-incident-subscribe').on('hidden', function(){
+    document.body.style.overflow = "";
+    document.body.style.height = "";
+  });
+
+  function submitCaptchaIncidentSubscribe(event) {
+    var incidentCode = event.target.id.split('-')[2];
+    event.preventDefault();
+
+    $.ajax({
+      type: "POST",
+      url: "/subscriptions/track_attempt",
+      data: {
+        type: 'incident'
+      }
+    })
+
+    document.getElementById('submit_incident_code').value = incidentCode;
+    grecaptcha.enterprise.execute(recaptchaIds['subscribe-incident-recaptcha']);
+  }
+</script>
+
+<script src='https://www.recaptcha.net/recaptcha/enterprise.js?onload=onloadCallback&render=explicit' async defer></script>
+
+
+    
+  <script src="https://dka575ofm4ao0.cloudfront.net/packs/common-4d053c18cbeef079deb0.chunk.js"></script>
+  <script src="https://dka575ofm4ao0.cloudfront.net/packs/globals-f39f1afbe40d8b149e0b.chunk.js"></script>
+
+    <script src="https://dka575ofm4ao0.cloudfront.net/packs/runtime-315523c15b4d55375eca.js"></script>
+    
+    
+
+
+    <script>
+  window.addEventListener('load', function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const messageToken = urlParams.get('slack_message_token');
+    const channelName = escape(urlParams.get('channel_name'));
+
+    if(!!messageToken) {
+      switch(messageToken) {
+        case 'slack_auth_error':
+          HRB.utils.notify('The Slack authorization attempt was unsuccessful. Try again.', {cssClass:'error'});
+          break;
+        case 'subscribers_disabled_error':
+          HRB.utils.notify('Slack subscriptions are not enabled on this page.', {cssClass:'error'});
+          break;
+        case 'direct_message_channel_error':
+          HRB.utils.notify('Subscriptions aren’t supported in direct messages. Try subscribing again and choose a channel instead.', {cssClass:'error'});
+          break
+        case 'duplicate_error':
+          HRB.utils.notify("You're already subscribed to get Slack notifications in that channel.", {cssClass:'error'});
+          break;
+        case 'duplicate_private_channel_error':
+          HRB.utils.notify(`You're already subscribed to get Slack notifications in #${channelName}. Invite the @Statuspage app to that channel to start getting status updates.`, {cssClass: 'error'});
+          break;
+        case 'default_success':
+          HRB.utils.notify("You're now subscribed to get Statuspage updates in Slack!", {cssClass:'success'});
+          break;
+        case 'private_channel_success':
+          HRB.utils.notify(`IMPORTANT: Invite the @Statuspage app to your Slack channel #${channelName} to start getting status updates.`, {cssClass:'success'});
+          break;
+      }
+    }
+  });
+</script>
+
+    
+<!-- FOR FLASH NOTICES -->
+
+<!-- FOR ERROR -->
+
+
+    <script>
+  $(function() {
+    var $link = $('<span class="color-secondary powered-by"><a class="color-secondary" target="_blank" rel="noopener noreferrer nofollow" href="https://www.atlassian.com/software/statuspage?utm_campaign=status.atlassian.com&amp;utm_content=SP-notifications&amp;utm_medium=powered-by&amp;utm_source=inapp">Powered by Atlassian Statuspage</a></span>');
+
+  	var setPoweredByStyles = function() {
+  		if (!$('.powered-by').length) {
+  			$link.appendTo($('.page-footer'))
+  		}
+  		$('.powered-by').attr('style', 'display: inline !important; visibility:visible !important; opacity: 1 !important; position:static !important; text-indent:0px !important; transform:scale(1) !important');
+  	}
+
+  	setInterval(setPoweredByStyles, 1000);
+  });
+</script>
+
+
+
+
+
+  </body>
+</html>

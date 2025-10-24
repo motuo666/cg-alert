@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="index,follow">
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <style>
+    body{font-family:system-ui,Arial;max-width:800px;margin:auto;padding:24px;line-height:1.6}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .card{border:1px solid #e5e7eb;border-radius:12px;padding:12px}
+    a{color:#222;text-decoration:underline}
+    .btn{display:inline-block;padding:8px 12px;border-radius:10px;border:1px solid #222;text-decoration:none}
+    .secondary{border-color:#777}
+  </style>
+
+  <!-- CG-SEO-INJECT START -->
+  <title>Who Uses — Template</title>
+  <meta name="description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals &amp; compliance.">
+  <!-- 规范化到 apex，避免 www 与 apex 重复收录 -->
+  <link rel="canonical" href="https://cg-alert.com/who-uses/_template.html">
+
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebPage",
+    "name":"Who Uses — Template",
+    "url":"https://cg-alert.com/who-uses/_template.html",
+    "description":"Monitor vendor public changes and receive verifiable evidence cards for renewals & compliance."
+  }
+  </script>
+
+  <meta property="og:title" content="Who Uses — Template">
+  <meta property="og:description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals &amp; compliance.">
+  <meta property="og:url" content="https://cg-alert.com/who-uses/_template.html">
+  <meta property="og:site_name" content="CG Alert">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://cg-alert.com/og/default.png?slug=_template">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Who Uses — Template">
+  <meta name="twitter:description" content="Monitor vendor public changes and receive verifiable evidence cards for renewals &amp; compliance.">
+  <meta name="twitter:image" content="https://cg-alert.com/og/default.png?slug=_template">
+  <!-- CG-SEO-INJECT END -->
+
+  <!-- 预连接 Stripe，轻微降 TTFB -->
+  <link rel="preconnect" href="https://buy.stripe.com">
+</head>
+<body>
+  <h1>Who Uses: {{NAME}}</h1>
+
+  <!-- CG-CTA-INJECT START -->
+  <div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+    <a id="cg-enable-alerts" class="btn" rel="nofollow noopener noreferrer"
+       href="https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform">
+       Enable alerts
+    </a>
+    <!-- 统一 UTM；lid 运行时自动补齐 -->
+    <a id="cg-buy-portfolio" class="btn secondary" rel="nofollow noopener noreferrer"
+       href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801?utm_source=site&utm_medium=cta&utm_campaign=buy">
+       Buy Portfolio
+    </a>
+  </div>
+
+  <div class="grid">
+    {{LIST}}
+  </div>
+  <p><a href="/who-uses/">Back to index</a></p>
+
+  <!-- 先加载采集脚本；defer 避免阻塞渲染 -->
+  <script defer src="/public/js/lead.js"></script>
+
+  <!-- 统一追加页面级 UTM；自动给 Stripe/表单链接补 lid（幂等、不中断） -->
+  <script>
+  (function () {
+    "use strict";
+    function getCookie(name){
+      var m = document.cookie.match(new RegExp('(?:^|;\\s*)'+name+'=([^;]+)'));
+      return m ? decodeURIComponent(m[1]) : '';
+    }
+    // 只补缺失参数，不覆盖已有值；保持幂等
+    function mergeParams(url, defaults){
+      try{
+        var u = new URL(url, location.origin);
+        var page = new URL(location.href);
+        // 把页面上的 utm_* 补到链接（链接已有则不覆盖）
+        page.searchParams.forEach(function(v,k){
+          if(/^utm_/.test(k) && !u.searchParams.has(k) && v) u.searchParams.set(k,v);
+        });
+        // 追加默认值
+        for (var k in defaults){
+          if (Object.prototype.hasOwnProperty.call(defaults,k) && !u.searchParams.has(k) && defaults[k] !== ''){
+            u.searchParams.set(k, defaults[k]);
+          }
+        }
+        return u.toString();
+      }catch(e){ return url; }
+    }
+
+    var lid = getCookie('cg_lead_id'); // 无则由 lead.js 创建；这里不强制
+    // —— 1) 标准购买按钮（保留你原有的 ID）
+    var buy = document.getElementById('cg-buy-portfolio');
+    if (buy && buy.href){
+      buy.href = mergeParams(buy.href, {utm_source:'site',utm_medium:'cta',utm_campaign:'buy'});
+      if (lid) {
+        try {
+          var u = new URL(buy.href, location.origin);
+          if (!u.searchParams.get('lid')) u.searchParams.set('lid', lid);
+          buy.href = u.toString();
+        } catch(e){}
+      }
+    }
+
+    // —— 2) 给页面内所有 Stripe 链接兜底补齐（避免漏网之鱼）
+    try {
+      var links = document.querySelectorAll('a[href*="buy.stripe.com"]');
+      links.forEach(function(a){
+        a.href = mergeParams(a.href, {utm_source:'site',utm_medium:'cta',utm_campaign:'buy'});
+        if (lid) {
+          var u3 = new URL(a.href, location.origin);
+          if (!u3.searchParams.get('lid')) u3.searchParams.set('lid', lid);
+          a.href = u3.toString();
+        }
+      });
+    } catch(e){}
+
+    // —— 3) 可选：给 Google Form 也带上页面级 UTM 与 lid（便于回填关联）
+    var enable = document.getElementById('cg-enable-alerts');
+    if (enable && enable.href){
+      enable.href = mergeParams(enable.href, {});
+      if (lid){
+        try{
+          var u2 = new URL(enable.href, location.origin);
+          if (!u2.searchParams.get('lid')) u2.searchParams.set('lid', lid);
+          enable.href = u2.toString();
+        }catch(e){}
+      }
+    }
+  })();
+  </script>
+  <!-- CG-CTA-INJECT END -->
+</body>
+</html>

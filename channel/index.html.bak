@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  
+  
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;color:#111;background:#fff}
+    .wrap{max-width:860px;margin:0 auto;padding:40px 20px}
+    h1{font-size:32px;margin:0 0 12px}
+    p{line-height:1.6}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:24px 0}
+    .card{border:1px solid #eee;border-radius:16px;padding:16px}
+    .btn{display:inline-block;padding:12px 18px;border-radius:10px;border:1px solid #222;text-decoration:none;color:#111}
+    .btn:hover{background:#111;color:#fff}
+    footer{margin-top:40px;color:#666;font-size:14px}
+  </style>
+  <script type="application/ld+json">{
+    "@context":"https://schema.org",
+    "@type":"Offer",
+    "name":"CG Alert Channel Program",
+    "priceSpecification":{"@type":"PriceSpecification","priceCurrency":"USD","price":"25000"},
+    "url":"https://www.cg-alert.com/channel/",
+    "seller":{"@type":"Organization","name":"CG Alert"}
+  }</script>
+<!-- CG-SEO-INJECT START -->
+  <title>Channel Partners — CG Alert</title>
+  <meta name="description" content="Partner with CG Alert for co-branded evidence-backed vendor change alerts.">
+  <link rel="canonical" href="https://www.cg-alert.com/channel/">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Channel Partners — CG Alert","url":"https://www.cg-alert.com/channel/","description":"Partner with CG Alert for co-branded evidence-backed vendor change alerts."}</script>
+  <meta property="og:title" content="Channel Partners — CG Alert">
+  <meta property="og:description" content="Partner with CG Alert for co-branded evidence-backed vendor change alerts.">
+  <meta property="og:url" content="https://www.cg-alert.com/channel/">
+  <meta property="og:site_name" content="CG Alert">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.cg-alert.com/og/default.png?slug=channel">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Channel Partners — CG Alert">
+  <meta name="twitter:description" content="Partner with CG Alert for co-branded evidence-backed vendor change alerts.">
+  <meta name="twitter:image" content="https://www.cg-alert.com/og/default.png?slug=channel">
+<!-- CG-SEO-INJECT END -->
+</head>
+<body>
+  <div class="wrap">
+    <a href="/" aria-label="Home">← Home</a>
+    <h1>Channel Partners</h1>
+<!-- CG-CTA-INJECT START -->
+<div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
+<a id="cg-enable-alerts" class="btn" rel="nofollow" href="https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform">Enable alerts</a>
+<a id="cg-buy-portfolio" class="btn secondary" rel="nofollow" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801">Buy Portfolio</a>
+</div>
+<script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-enable-alerts","cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>
+<!-- CG-CTA-INJECT END -->
+    <p>Co-branded, evidence-backed vendor change alerts. Monthly CSV and Slack-ready reports for your customers.</p>
+
+    <div class="grid">
+      <div class="card"><b>License + revenue share</b><br>Resell to your base with light-touch setup.</div>
+      <div class="card"><b>Co-branded monthly report</b><br>CSV + summary suitable for audits.</div>
+      <div class="card"><b>API / SSO (Enterprise)</b><br>Integrate alerts into your platform.</div>
+    </div>
+
+    <p><a class="btn" href="https://forms.gle/TCaom33BRJGbcJ3r5" target="_blank" rel="noopener">Apply as a Partner</a></p>
+
+    <footer>© 2025 CG Alert</footer>
+  </div>
+</body>
+</html>

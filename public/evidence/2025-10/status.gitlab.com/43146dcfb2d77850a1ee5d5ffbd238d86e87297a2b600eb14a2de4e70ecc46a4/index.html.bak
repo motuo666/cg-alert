@@ -1,0 +1,489 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="This status page is exclusively intended for monitoring GitLab.com and its associated services. If there are any performance or service interruptions, an update will be posted here. If you are encountering service interruptions on GitLab Dedicated, please submit a support request."><meta name="author" content=""><meta http-equiv="refresh" content="300"><link rel="shortcut icon" type="image/x-icon" href="//image.status.io/ilSwEMyDYjCM.ico"><link rel="icon" type="image/x-icon" href="//image.status.io/ilSwEMyDYjCM.ico"><title>GitLab System Status</title><!-- Bootstrap--><link rel="stylesheet" href="//static.status.io/public/statuspage/css/bootstrap.min.css"><!-- Fonts--><link href="//static.status.io/public/statuspage/fonts/font-awesome/css/font-awesome.min.css" rel="stylesheet"><!-- Page Style--><link rel="stylesheet" href="//static.status.io/public/statuspage/css/statuspage-default.css?v=3"><link rel="stylesheet" href="//static.status.io/public/statuspage/css/statuspage-100.css?v=3"><noscript><style>#statusio_metrics {
+  display: none;
+}
+</style></noscript><noscript><style>#section_locations {
+  display: none;
+}
+
+</style></noscript><style>.brand img { 
+  display: block !important; 
+}
+.img { 
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+  border: 0;
+}
+.navbar .brand {
+  font-size: 20px;
+  font-weight: 200;
+  color: #555555;
+  text-shadow: 0 1px 0 #ffffff;
+}
+.navbar .nav {
+  position: relative;
+  left: 0;
+  display: block;
+  float: left;
+  margin: 0 10px 0 0;
+}
+.navbar .nav > li {
+  float: left;
+}
+.nav > li > a:hover,
+.nav > li > a:focus {
+  text-decoration: none;
+  background: none;
+  color: #2C3E50;
+  background-color: #F2F3F4;
+}
+
+.top_bar .panel-body {
+  height: 52px;
+}
+
+.event_inner_text {
+  font-size: 14px;
+}
+
+.event_inner_title {
+  font-size: 16px;
+}
+</style><!-- Custom Style--><style>body {
+  color: #2e2e2e;
+  background-color: #ffffff;
+}
+a:link {
+  color: #262626;
+  text-decoration: none;
+}
+a:visited {
+  color: #262626;
+  text-decoration: none;
+}
+a:hover {
+  color: #262626;
+  text-decoration: none;
+  background-color: transparent;
+}
+a:active {
+  color: #262626;
+  text-decoration: none;
+}
+hr { 
+  border-top: 1px solid #ffffff;
+}
+.top_bar {
+  background-color: #363636;
+}
+.text {
+  color: #2e2e2e;
+}
+.section_border_0 {
+  background-color: #ffffff;
+  border: 0px solid #ffffff;
+}
+.section_border_1 {
+  background-color: #ffffff;
+  border: 1px solid #ffffff;
+}
+.status_td {
+  color: #363434;
+  background-color: #ffffff;
+}
+.external_service {
+  color: #2e2e2e;
+}
+
+a.external_service:link {
+  color: #2e2e2e;
+  text-decoration: none;
+}
+a.external_service:visited {
+  color: #2e2e2e;
+  text-decoration: none;
+}
+
+
+#statuspage_name {
+  color: #2e2e2e;
+}
+
+/* overrides */
+.no_top_border {
+  border-top-width: 0px;
+}
+</style><!-- Custom CSS--><style>#statusio_header {
+  margin-bottom: 16px!important;
+}
+
+#statuspage_logo {
+  max-width: 250px;
+}</style><!-- IE10 viewport hack for Surface/desktop Windows 8 bug --><script src="//static.status.io/public/statuspage/js/ie10-viewport-bug-workaround.min.js"></script><!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries --><!-- WARNING: Respond.js doesn't work if you view the page via file:// --><!--if lt IE 9script(src='https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js')
+script(src='https://oss.maxcdn.com/respond/1.4.2/respond.min.js')
+--><!-- Clicky Analytics--><script>var clicky_site_ids = clicky_site_ids || [];
+clicky_site_ids.push('100794436');</script><script async="" src="//static.getclicky.com/js"></script></head><body><!-- Scripts--><script src="//static.status.io/public/statuspage/js/jquery.min.js"></script><script src="//static.status.io/public/statuspage/js/bootstrap.min.js"></script><script src="//static.status.io/public/statuspage/js/Autolinker.min.js"></script><div class="container"><!-- Header logo--><div class="header" id="statusio_header"><div class="row"><div class="col-md-10 col-sm-10 col-xs-12"><p><a href="https://gitlab.com"><img id="statuspage_logo" src="//image.status.io/nqtlHHE8M647.png" alt="Logo"></a></p></div><div class="col-md-2 col-sm-2"><ul class="nav nav-pills pull-right"><li class="active"><button class="btn btn-default make_round hidden-xs" id="subscribe_button" data-toggle="modal" data-target="#subscribeModal">SUBSCRIBE</button><button class="btn btn-default make_round visible-xs-block" id="subscribe_button" data-toggle="modal" data-target="#subscribeModal" style="margin-bottom:20px;">SUBSCRIBE</button></li></ul></div></div></div><div class="panel panel-default top_bar make_round" id="statusio_status_bar" style="background:#27ae60; border-bottom:0;"><div class="panel-body" style="vertical-align: middle;"><div class="row"><div class="col-md-8 col-sm-6 col-xs-12"><strong id="statusbar_text">All Systems Operational</strong></div><div class="col-md-4 col-sm-6 hidden-xs"><p class="pull-right white" id="updated_ago">Updated a few seconds ago</p></div></div></div></div><div class="panel panel-default top_bar make_round visible-xs-block" id="statusio_last_updated_bar_xs" style="background:#27ae60; border-bottom:0;"><div class="panel-body" style="vertical-align: middle;"><div class="row"><div class="col-xs-12"><p class="white" id="updated_ago">Updated a few seconds ago</p></div></div></div></div><div class="page_section" id="statusio_about_text"><div class="panel panel-default section_border_1 make_round"><div class="panel-body"><h5 class="text-center" style="max-width: 98%;">This status page is exclusively intended for monitoring GitLab.com and its associated services. If there are any performance or service interruptions, an update will be posted here. If you are encountering service interruptions on GitLab Dedicated, please submit a support request.</h5></div></div></div><script>$(document).ready(function(){
+  var autolinker = new Autolinker( [ ] );
+  var myTextEl = document.getElementById( 'statusio_about_text' );
+  myTextEl.innerHTML = autolinker.link( myTextEl.innerHTML );
+});</script><div class="page_section" id="statusio_components"><!-- first component--><div class="component component_first status_td" id="component_5b36dc6502d06804c0834a07" style="border-top: 1px solid #ffffff; border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">Website<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Availability and performance of GitLab.com"> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5b36dc6502d06804c0834a07" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5b36e05f02d06804c0834a09" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">API<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Requests from the GitLab REST, SCIM, and GraphQL APIs."> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5b36e05f02d06804c0834a09" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5d2f74932676bc45e4927ead" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">Git Operations<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Performance and availability of git operations via SSH and HTTPS on GitLab.com repositories"> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5d2f74932676bc45e4927ead" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5b36e07afc1f0804be9d754d" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">Container Registry<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Performance of push and pull operations to the GitLab.com Container Registry"> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5b36e07afc1f0804be9d754d" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5b371ffc1d4f0004bf746dbf" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">GitLab Pages<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Availability and performance of Pages sites hosted on GitLab SaaS"> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5b371ffc1d4f0004bf746dbf" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_67ea346990c050053ab18e89" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">CI/CD</p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-67ea346990c050053ab18e89" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5b36e06c633e9004b3d624ad" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">CI/CD - Hosted runners on Linux<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Job queue status for groups and projects using Hosted Runners on GitLab.com"> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5b36e06c633e9004b3d624ad" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5e29c1403f4deb04c0d7f035" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">CI/CD - Hosted runners on Windows<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Job queue status for groups and projects using Windows Hosted Runners on GitLab.com"> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5e29c1403f4deb04c0d7f035" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_650c87fbadb04b052efa2bc9" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">CI/CD - Hosted runners on macOS</p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <label class="label label-success container_name make_round" style="background-color:#27ae60;">AWS</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-650c87fbadb04b052efa2bc9" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_60a6dc9479914205363d3b09" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">CI/CD - Hosted runners for GitLab community contributions<span data-toggle="tooltip" data-placement="top" title="" data-original-title="CI/CD job, artifact, and variable delivery for private Runners registered with GitLab.com"> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-60a6dc9479914205363d3b09" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_67861f10346bb505d1b042c4" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">CI/CD - Self-managed runners</p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Self-Managed Runner Connectivity</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-67861f10346bb505d1b042c4" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_61118ed2b2684c099775f18d" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">SAML SSO - GitLab SaaS<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Authentication and authorization as it relates to SAML SSO for GitLab SaaS groups."> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-61118ed2b2684c099775f18d" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5b371ff2ab905c04b1de922e" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">Background Processing<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Sidekiq jobs"> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5b371ff2ab905c04b1de922e" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5d02cb79b2e5f00a022b5fb4" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">GitLab Customers Portal<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Availability of the GitLab license and subscription management portal"> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5d02cb79b2e5f00a022b5fb4" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5c38362c5495bf472f8dfbae" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">Support Services<span data-toggle="tooltip" data-placement="top" title="" data-original-title="Availability of GitLab Support and the support ticketing system"> <i class="fa fa-info-circle"></i></span></p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Zendesk</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5c38362c5495bf472f8dfbae" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5c7d5bb83efc3204ba5f53c3" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">packages.gitlab.com</p><label class="label label-success container_name make_round" style="background-color:#27ae60;">AWS</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5c7d5bb83efc3204ba5f53c3" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5d31c2f251014050f413e808" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">version.gitlab.com</p><label class="label label-success container_name make_round" style="background-color:#27ae60;">AWS</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5d31c2f251014050f413e808" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5d93c0defdc75b69cf385b1f" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">forum.gitlab.com</p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Digital Ocean</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5d93c0defdc75b69cf385b1f" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_63dc247523b01e05870db1ab" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">docs.gitlab.com</p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-63dc247523b01e05870db1ab" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_5ed145987f9dc304bf8a9164" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">Canary</p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-5ed145987f9dc304bf8a9164" style="color: #27ae60;">Operational</p></div></div></div><!-- middle component--><div class="component component_middle status_td" id="component_665dc42bfed67f1785216865" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">GitLab Duo</p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-665dc42bfed67f1785216865" style="color: #27ae60;">Operational</p></div></div></div><!-- last component--><div class="component component_last status_td" id="component_67b59a18afe271058bf2f410" style="border-left: 1px solid #ffffff; border-right: 1px solid #ffffff; border-bottom: 1px solid #ffffff;"><div class="row"><div class="col-md-8 col-sm-8 col-xs-8"><p class="component_name">GitLab agent server for Kubernetes</p><label class="label label-success container_name make_round" style="background-color:#27ae60;">Google Compute Engine</label>  <br><br></div><div class="col-md-4 col-sm-4 col-xs-4"><br><p class="pull-right component-status" id="status_text-67b59a18afe271058bf2f410" style="color: #27ae60;">Operational</p></div></div></div></div><!-- Metrics--><!-- Map--><!-- Footer--><div class="page_section" id="section_page_links"><div class="row"><div class="col-sm-9"><div id="bottom_menu"><strong><a class="pull-left margin-right-20" href="/pages/5b36dc6502d06804c08349f7">Status</a></strong><a class="pull-left margin-right-20" href="/pages/history/5b36dc6502d06804c08349f7">History</a></div></div><div class="col-sm-3"></div></div></div><!-- Subscriber modal--><div class="modal fade" id="subscribeModal" tabindex="-1" role="dialog" aria-labelledby="subscribeModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content make_round modal-text"><div class="modal-body"><div class="row"><div class="col-md-12"><ul class="nav nav-pills" role="tablist"><li id="tab_menu_email" style="padding-top:5px;"><a title="Email" href="#tab_email" role="tab" data-toggle="tab"><span><i class="fa fa-envelope"></i></span></a></li><li id="tab_menu_webhook" style="padding-top:5px;"><a title="Webhook" href="#tab_webhook" role="tab" data-toggle="tab"><span><i class="fa fa-code"></i></span></a></li><li id="tab_menu_rss" style="padding-top:5px;"><a title="RSS" href="#tab_rss" role="tab" data-toggle="tab"><span><i class="fa fa-rss"></i></span></a></li><li id="tab_menu_msteams" style="padding-top:5px;"><a title="Microsoft Teams" href="#tab_msteams" role="tab" data-toggle="tab"><span><i class="fa fa-windows"></i></span></a></li><li id="tab_menu_slack" style="padding-top:5px;"><a title="Slack" href="#tab_slack" role="tab" data-toggle="tab"><span><i class="fa fa-slack">                   </i></span></a></li><li id="tab_menu_twitter" style="padding-top:5px;"><a title="Twitter" href="#tab_twitter" role="tab" data-toggle="tab"><span><i class="fa fa-twitter"></i></span></a></li><li id="tab_menu_ical" style="padding-top:5px;"><a title="Calendar" href="#tab_ical" role="tab" data-toggle="tab"><span><i class="fa fa-calendar"></i></span></a></li></ul></div></div><div class="row margin-top-40"><div class="col-md-12"><div class="tab-content"> <div class="tab-pane" id="tab_email"><div class="row"><div class="col-sm-12"><h4 class="text-center" id="subscribe_email_text_content">Subscribe to receive status updates by email</h4></div></div><br><div class="row margin-top-20"><div class="col-md-3"></div><div class="col-md-6"><input class="form-control make_round" id="subscribe_email_address" type="text" placeholder="Email" name="subscribe_email_address" autofocus="autofocus"><input class="form-control" type="hidden" placeholder="Email" name="email"></div></div><div class="row" id="recaptcha_block_email"><div class="col-md-12" style="text-align:center;"></div></div><div class="row subscribe-modal-footer"><div class="row"><div class="col-md-6"><div class="pull-left" id="result_subscribe_email" style="text-align:left;"></div></div><div class="col-md-6"><button class="btn btn-default make_round" type="button" data-dismiss="modal">Close</button><button class="btn btn-default make_round" id="subscribe_button_email" type="button">Subscribe</button><button class="btn btn-default make_round" id="manage_button_email" type="button" style="display:none;">Manage Subscription</button></div></div><div class="row"><div class="col-md-12" style="text-align:center;"><br><small id="manage_subscription_email" style="cursor:pointer;">Manage Existing Subscription</small><small id="dont_manage_subscription_email" style="display:none;cursor:pointer;">Create New Subscription</small></div></div></div></div><div class="tab-pane" id="tab_webhook"><div class="row"><div class="col-sm-12"><h4 class="text-center" id="subscribe_webhook_text_content">Subscribe to receive status updates by webhook</h4></div></div><br><div class="row margin-top-20"><div class="col-md-2"></div><div class="col-md-8"><input class="form-control make_round" type="text" name="subscribe_webhook_address" id="subscribe_webhook_address" placeholder="http://example.com/hook"><p class="help-block">Each status update will POST a JSON payload to this URL</p></div></div><br><div class="row margin-top-20"><div class="col-md-2"></div><div class="col-md-8"><input class="form-control make_round" type="text" name="subscribe_webhook_address_email" id="subscribe_webhook_address_email" placeholder="Email"><p class="help-block">Email address for managing webhook</p></div></div><div class="row" id="recaptcha_block_webhook"><div class="col-md-12" style="text-align:center;"></div></div><div class="row subscribe-modal-footer"><div class="row"><div class="col-md-6"><div class="pull-left" id="result_subscribe_webhook" style="text-align:left;"></div></div><div class="col-md-6"><button class="btn btn-default make_round" type="button" data-dismiss="modal">Close</button><button class="btn btn-default make_round" id="subscribe_button_webhook" type="button">Subscribe</button><button class="btn btn-default make_round" id="manage_button_webhook" type="button" style="display:none;">Manage Subscription</button></div></div><div class="row"><div class="col-md-12" style="text-align:center;"><br><small id="manage_subscription_webhook" style="cursor:pointer;">Manage Existing Subscription</small><small id="dont_manage_subscription_webhook" style="display:none;cursor:pointer;">Create New Subscription</small></div></div></div></div><div class="tab-pane" id="tab_msteams"><div class="row"><div class="col-sm-12"><h4 class="text-center" id="subscribe_msteams_text_content">Subscribe to receive status updates in Microsoft Teams</h4></div></div><br><div class="row margin-top-20"><div class="col-md-2"></div><div class="col-md-8"><input class="form-control make_round" type="text" name="subscribe_msteams_address" id="subscribe_msteams_address" placeholder="https://example.webhook.office.com/webhook-id"><p class="help-block">Enter your Microsoft Teams webhook. <a id="msteams_documentation_link" href="https://docs.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook#add-an-incoming-webhook-to-a-teams-channel" target="_blank">View Instructions</a></p></div></div><br><div class="row margin-top-20"><div class="col-md-2"></div><div class="col-md-8"><input class="form-control make_round" type="text" name="subscribe_msteams_address_email" id="subscribe_msteams_address_email" placeholder="Email"><p class="help-block">Email address for managing subscription</p></div></div><div class="row" id="recaptcha_block_msteams"><div class="col-md-12" style="text-align:center;"></div></div><div class="row subscribe-modal-footer"><div class="row"><div class="col-md-6"><div class="pull-left" id="result_subscribe_msteams" style="text-align:left;"></div></div><div class="col-md-6"><button class="btn btn-default make_round" type="button" data-dismiss="modal">Close</button><button class="btn btn-default make_round" id="subscribe_button_msteams" type="button">Subscribe</button><button class="btn btn-default make_round" id="manage_button_msteams" type="button" style="display:none;">Manage Subscription</button></div></div><div class="row"><div class="col-md-12" style="text-align:center;"><br><small id="manage_subscription_msteams" style="cursor:pointer;">Manage Existing Subscription</small><small id="dont_manage_subscription_msteams" style="display:none;cursor:pointer;">Create New Subscription</small></div></div></div></div><div class="tab-pane" id="tab_rss"><div class="row"><div class="col-sm-12"><h4 class="text-center">Subscribe to receive status updates via RSS</h4></div></div><br><div class="row margin-top-20"><div class="col-md-2"></div><div class="col-md-8 text-center"><a class="btn btn-lg btn-default make_round" id="subscribe_link_rss" href="https://status.gitlab.com/pages/5b36dc6502d06804c08349f7/rss" target="_blank" style="color:#000; font-size: 20px;">RSS Feed</a></div></div><div class="row subscribe-modal-footer"><div class="col-md-6"></div><div class="col-md-6"><button class="btn btn-default make_round" type="button" data-dismiss="modal">Close</button></div></div></div><div class="tab-pane" id="tab_twitter"><div class="row"><div class="col-sm-12"><h4 class="text-center">Follow our status updates on Twitter</h4></div></div><br><div class="row margin-top-20"><div class="col-md-2"></div><div class="col-md-8 text-center"><a class="btn btn-lg btn-default make_round" id="subscribe_link_twitter" href="https://twitter.com/gitlabstatus" target="_blank" style="color:#000; font-size: 20px;">@gitlabstatus</a></div></div><div class="row subscribe-modal-footer"><div class="col-md-6"></div><div class="col-md-6"><button class="btn btn-default make_round" type="button" data-dismiss="modal">Close</button></div></div></div><div class="tab-pane" id="tab_slack"><div class="row"><div class="col-sm-12"><div class="h4 text-center" id="subscribe_slack_text_content">Subscribe to receive status updates in Slack</div></div></div><br><div class="row margin-top-20"><div class="col-md-2"></div><div class="col-md-8 text-center"><a id="subscribe_link_slack" href="https://slack.com/oauth/v2/authorize?client_id=656052646563.656045388978&amp;scope=incoming-webhook&amp;redirect_uri=https://status.io/pages/5b36dc6502d06804c08349f7/slack_auth" target="_blank"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x"></a></div></div><br><div class="row margin-top-20" id="slack_manage_channel_div" style="display:none;"><div class="col-md-2"></div><div class="col-md-8"><input class="form-control make_round" type="text" name="manage_slack_channel" id="manage_slack_channel" placeholder="C03SKGJ1P"><p class="help-block">Slack channel ID</p><p class="help-block"><strong>Find the channel ID: </strong>Select the channel in your Slack workspace. The channel ID is displayed in the browser URL.</p><p class="help-block" style="font-size:12px;"><strong>Example: </strong>https://app.slack.com/client/T04SJBK1C/<strong>C03SKGJ1P</strong></p></div></div><br><div class="row margin-top-20" id="slack_manage_email_address_div" style="display:none;"><div class="col-md-2"></div><div class="col-md-8"><input class="form-control make_round" type="text" name="manage_slack_address_email" id="manage_slack_address_email" placeholder="Email"><p class="help-block">Email address</p></div></div><div class="row subscribe-modal-footer"><div class="row"><div class="col-md-6"><div class="pull-left" id="result_subscribe_slack" style="text-align:left;"></div></div><div class="col-md-6"><button class="btn btn-default make_round" type="button" data-dismiss="modal">Close</button><button class="btn btn-default make_round" id="manage_button_slack" type="button" style="display:none;">Manage Subscription</button></div></div><div class="row"><div class="col-md-12" style="text-align:center;"><br><small id="manage_subscription_slack" style="cursor:pointer;">Manage Existing Subscription</small><small id="dont_manage_subscription_slack" style="display:none;cursor:pointer;">Create New Subscription</small></div></div></div></div><div class="tab-pane" id="tab_ical"><div class="row"><div class="col-sm-12"><h4 class="text-center">Subscribe to receive status updates via iCalendar</h4></div></div><br><div class="row margin-top-20"><div class="col-md-2"></div><div class="col-md-8 text-center"><a class="btn btn-lg btn-default make_round" id="subscribe_link_icalendar" href="webcal://status.gitlab.com/pages/5b36dc6502d06804c08349f7/calendar/all.ics" target="_blank" style="color:#000; font-size: 20px;">iCalendar Feed</a></div></div><div class="row subscribe-modal-footer"><div class="col-md-6"></div><div class="col-md-6"><button class="btn btn-default make_round" type="button" data-dismiss="modal">Close</button></div></div></div></div></div></div></div></div></div></div></div><!-- Subscriber scripts--><script>$(document).ready(function(){
+  $('#tab_email').addClass('active');
+  $('#tab_menu_email').addClass('active');
+});</script><script>$("#subscribe_button_email").click(function (event) {
+  event.preventDefault();
+  var address = $("#subscribe_email_address").val();
+  var email = $("#email").val();
+  if (false == true) {
+    var recaptcha = grecaptcha.getResponse(RecaptchaEmail);      
+  } else {
+    var recaptcha = '';
+  }    
+  $.ajax({
+    url: '/subscriber/add',
+    type: "POST",
+    data: ({
+      statuspage_id: "5b36dc6502d06804c08349f7",
+      method: "email",
+      address: address,
+      email: email,
+      recaptcha: recaptcha
+    }),
+    success: function(data){
+      if (false == true) { grecaptcha.reset(RecaptchaEmail); }
+      var message_text = data.status.message;
+      $("#result_subscribe_email").html("<span class=\"help-block\">"+message_text+"</span>");
+      $("#result_subscribe_email").show();
+      setTimeout(function(){
+        $("#result_subscribe_email").fadeOut("slow", function () {
+        $("#result_subscribe_email").hide();
+            });
+      }, 5000);
+    }
+  });
+})
+</script><script>$("#subscribe_button_sms").click(function (event) {
+  event.preventDefault();
+  var address = $("#subscribe_sms_country_code").val() + $("#subscribe_sms_number").val();
+  if (false == true) {
+    var recaptcha = grecaptcha.getResponse(RecaptchaSms);      
+  } else {
+    var recaptcha = '';
+  }    
+  $.ajax({
+    url: '/subscriber/add',
+    type: "POST",
+    data: ({
+      statuspage_id: "5b36dc6502d06804c08349f7",
+      method: "sms",
+      address: address,
+      recaptcha: recaptcha
+    }),
+    success: function(data){
+      if (false == true) { grecaptcha.reset(RecaptchaSms); }
+      var message_text = data.status.message;
+      $("#result_subscribe_sms").html("<span class=\"help-block\">"+message_text+"</span>");
+      $("#result_subscribe_sms").show();
+      setTimeout(function(){
+        $("#result_subscribe_sms").fadeOut("slow", function () {
+        $("#result_subscribe_sms").hide();
+            });
+      }, 8000);
+    }
+  });
+})
+</script><script>$("#subscribe_button_webhook").click(function (event) {
+  event.preventDefault();
+  var address = $("#subscribe_webhook_address").val();
+  var address_email = $("#subscribe_webhook_address_email").val();
+  if (false == true) {
+    var recaptcha = grecaptcha.getResponse(RecaptchaWebhook);      
+  } else {
+    var recaptcha = '';
+  }    
+  $.ajax({
+    url: '/subscriber/add',
+    type: "POST",
+    data: ({
+      statuspage_id: "5b36dc6502d06804c08349f7",
+      method: "webhook",
+      address: address,
+      address_email: address_email,
+      recaptcha: recaptcha
+    }),
+    success: function(data){
+      if (false == true) { grecaptcha.reset(RecaptchaWebhook); }
+      var message_text = data.status.message;
+      $("#result_subscribe_webhook").html("<span class=\"help-block\">"+message_text+"</span>");
+      $("#result_subscribe_webhook").show();
+      setTimeout(function(){
+        $("#result_subscribe_webhook").fadeOut("slow", function () {
+        $("#result_subscribe_webhook").hide();
+            });
+      }, 5000);
+    }
+  });
+})
+</script><script>$("#subscribe_button_msteams").click(function (event) {
+  event.preventDefault();
+  var address = $("#subscribe_msteams_address").val();
+  var address_email = $("#subscribe_msteams_address_email").val();
+  if (false == true) {
+    var recaptcha = grecaptcha.getResponse(RecaptchaMsteams);      
+  } else {
+    var recaptcha = '';
+  }    
+  $.ajax({
+    url: '/subscriber/add',
+    type: "POST",
+    data: ({
+      statuspage_id: "5b36dc6502d06804c08349f7",
+      method: "msteams",
+      address: address,
+      address_email: address_email,
+      recaptcha: recaptcha
+    }),
+    success: function(data){
+      if (false == true) { grecaptcha.reset(RecaptchaMsteams); }
+      var message_text = data.status.message;
+      $("#result_subscribe_msteams").html("<span class=\"help-block\">"+message_text+"</span>");
+      $("#result_subscribe_msteams").show();
+      setTimeout(function(){
+        $("#result_subscribe_msteams").fadeOut("slow", function () {
+        $("#result_subscribe_msteams").hide();
+            });
+      }, 5000);
+    }
+  });
+})
+</script><script>$('#subscribeModal').on('shown.bs.modal', function() {
+  $(this).find('input:first').focus();
+});  
+
+
+
+</script><script>$("#manage_subscription_email").click(function (event) {
+  event.preventDefault();
+  $("#recaptcha_block_email").hide();
+  $("#manage_subscription_email").hide();
+  $("#subscribe_button_email").hide();
+  $("#manage_button_email").show();
+  $("#subscribe_email_text_content").html("Enter the email address you subscribed with");
+  $("#dont_manage_subscription_email").show();
+})
+</script><script>$("#dont_manage_subscription_email").click(function (event) {
+  event.preventDefault();
+  $("#dont_manage_subscription_email").hide();
+  $("#recaptcha_block_email").show();
+  $("#subscribe_button_email").show();
+  $("#manage_button_email").hide();
+  $("#subscribe_email_text_content").html("Subscribe to receive status updates by email");
+  $("#manage_subscription_email").show();
+})
+</script><script>$("#manage_button_email").click(function (event) {
+  event.preventDefault();
+  var address = $("#subscribe_email_address").val();
+  var email = $("#email").val();
+  $.ajax({
+    url: '/subscriber/email/request_manage_link',
+    type: "POST",
+    data: ({
+      statuspage_id: "5b36dc6502d06804c08349f7",
+      method: "email",
+      address: address,
+      email: email
+    }),
+    success: function(data){
+      var message_text = data.status.message;
+      $("#result_subscribe_email").html("<span class=\"help-block\">"+message_text+"</span>");
+      $("#result_subscribe_email").show();
+      setTimeout(function(){
+        $("#result_subscribe_email").fadeOut("slow", function () {
+        $("#result_subscribe_email").hide();
+            });
+      }, 5000);
+    }
+  });
+})
+
+
+
+</script><script>$("#manage_subscription_webhook").click(function (event) {
+  event.preventDefault();
+  $("#recaptcha_block_webhook").hide();
+  $("#manage_subscription_webhook").hide();
+  $("#subscribe_button_webhook").hide();
+  $("#manage_button_webhook").show();
+  $("#subscribe_webhook_text_content").html("Enter the webhook URL and email address you subscribed with");
+  $("#dont_manage_subscription_webhook").show();
+})
+</script><script>$("#dont_manage_subscription_webhook").click(function (event) {
+  event.preventDefault();
+  $("#dont_manage_subscription_webhook").hide();
+  $("#recaptcha_block_webhook").show();
+  $("#subscribe_button_webhook").show();
+  $("#manage_button_webhook").hide();
+  $("#subscribe_webhook_text_content").html("Subscribe to receive status updates by webhook");
+  $("#manage_subscription_webhook").show();
+})
+</script><script>$("#manage_button_webhook").click(function (event) {
+  event.preventDefault();
+  var address = $("#subscribe_webhook_address").val();
+  var address_email = $("#subscribe_webhook_address_email").val();
+  $.ajax({
+    url: '/subscriber/webhook/request_manage_link',
+    type: "POST",
+    data: ({
+      statuspage_id: "5b36dc6502d06804c08349f7",
+      method: "webhook",
+      address: address,
+      address_email: address_email
+    }),
+    success: function(data){
+      var message_text = data.status.message;
+      $("#result_subscribe_webhook").html("<span class=\"help-block\">"+message_text+"</span>");
+      $("#result_subscribe_webhook").show();
+      setTimeout(function(){
+        $("#result_subscribe_webhook").fadeOut("slow", function () {
+        $("#result_subscribe_webhook").hide();
+            });
+      }, 5000);
+    }
+  });
+})
+</script><script>$("#manage_subscription_msteams").click(function (event) {
+  event.preventDefault();
+  $("#recaptcha_block_msteams").hide();
+  $("#manage_subscription_msteams").hide();
+  $("#subscribe_button_msteams").hide();
+  $("#manage_button_msteams").show();
+  $("#subscribe_msteams_text_content").html("Enter the Microsoft Teams Webhook and email address you subscribed with");
+  $("#dont_manage_subscription_msteams").show();
+})
+</script><script>$("#dont_manage_subscription_msteams").click(function (event) {
+  event.preventDefault();
+  $("#dont_manage_subscription_msteams").hide();
+  $("#recaptcha_block_msteams").show();
+  $("#subscribe_button_msteams").show();
+  $("#manage_button_msteams").hide();
+  $("#subscribe_msteams_text_content").html("Subscribe to receive status updates in Microsoft Teams");
+  $("#manage_subscription_msteams").show();
+})
+</script><script>$("#manage_button_msteams").click(function (event) {
+  event.preventDefault();
+  var address = $("#subscribe_msteams_address").val();
+  var address_email = $("#subscribe_msteams_address_email").val();
+  $.ajax({
+    url: '/subscriber/msteams/request_manage_link',
+    type: "POST",
+    data: ({
+      statuspage_id: "5b36dc6502d06804c08349f7",
+      method: "msteams",
+      address: address,
+      address_email: address_email
+    }),
+    success: function(data){
+      var message_text = data.status.message;
+      $("#result_subscribe_msteams").html("<span class=\"help-block\">"+message_text+"</span>");
+      $("#result_subscribe_msteams").show();
+      setTimeout(function(){
+        $("#result_subscribe_msteams").fadeOut("slow", function () {
+        $("#result_subscribe_msteams").hide();
+            });
+      }, 5000);
+    }
+  });
+})
+
+</script><script>$("#manage_subscription_slack").click(function (event) {
+  event.preventDefault();
+  $("#manage_subscription_slack").hide();
+  $("#subscribe_link_slack").hide();
+  $("#slack_manage_channel_div").show();
+  $("#slack_manage_email_address_div").show();
+  $("#manage_button_slack").show();
+  $("#subscribe_slack_text_content").html("Enter the Slack channel and email address you subscribed with");
+  $("#dont_manage_subscription_slack").show();
+})
+</script><script>$("#dont_manage_subscription_slack").click(function (event) {
+  event.preventDefault();
+  $("#dont_manage_subscription_slack").hide();
+  $("#subscribe_link_slack").show();
+  $("#slack_manage_channel_div").hide();
+  $("#slack_manage_email_address_div").hide();
+  $("#manage_button_slack").hide();
+  $("#subscribe_slack_text_content").html("Receive status notifications in your Slack channel");
+  $("#manage_subscription_slack").show();
+})
+</script><script>$("#manage_button_slack").click(function (event) {
+  event.preventDefault();
+  var channel = $("#manage_slack_channel").val();
+  var address_email = $("#manage_slack_address_email").val();
+  $.ajax({
+    url: '/subscriber/slack/request_manage_link',
+    type: "POST",
+    data: ({
+      statuspage_id: "5b36dc6502d06804c08349f7",
+      channel: channel,
+      address_email: address_email
+    }),
+    success: function(data){
+      var message_text = data.status.message;
+      $("#result_subscribe_slack").html("<span class=\"help-block\">"+message_text+"</span>");
+      $("#result_subscribe_slack").show();
+      setTimeout(function(){
+        $("#result_subscribe_slack").fadeOut("slow", function () {
+        $("#result_subscribe_slack").hide();
+            });
+      }, 5000);
+    }
+  });
+})
+
+
+
+</script><script>$("#manage_subscription_sms").click(function (event) {
+  event.preventDefault();
+  $("#recaptcha_block_sms").hide();
+  $("#manage_subscription_sms").hide();
+  $("#subscribe_button_sms").hide();
+  $("#manage_button_sms").show();
+  $("#subscribe_sms_text_content").html("Enter the number you subscribed with");
+  $("#dont_manage_subscription_sms").show();
+})
+</script><script>$("#dont_manage_subscription_sms").click(function (event) {
+  event.preventDefault();
+  $("#dont_manage_subscription_sms").hide();
+  $("#recaptcha_block_sms").show();
+  $("#subscribe_button_sms").show();
+  $("#manage_button_sms").hide();
+  $("#subscribe_sms_text_content").html("Subscribe to receive status updates by text message");
+  $("#manage_subscription_sms").show();
+})
+</script><script>$("#manage_button_sms").click(function (event) {
+  event.preventDefault();
+  var address = $("#subscribe_sms_country_code").val() + $("#subscribe_sms_number").val();
+  var sms = $("#sms").val();
+  $.ajax({
+    url: '/subscriber/sms/request_manage_link',
+    type: "POST",
+    data: ({
+      statuspage_id: "5b36dc6502d06804c08349f7",
+      method: "sms",
+      address: address
+    }),
+    success: function(data){
+      var message_text = data.status.message;
+      $("#result_subscribe_sms").html("<span class=\"help-block\">"+message_text+"</span>");
+      $("#result_subscribe_sms").show();
+      setTimeout(function(){
+        $("#result_subscribe_sms").fadeOut("slow", function () {
+        $("#result_subscribe_sms").hide();
+            });
+      }, 5000);
+    }
+  });
+})
+</script><script>$(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip({'placement': 'top'});
+});
+</script></body></html>

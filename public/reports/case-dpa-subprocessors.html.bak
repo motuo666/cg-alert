@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>DPA/Subprocessors update — instant legal review — CG Alert</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="DPA/Subprocessors update — instant legal review — real, verifiable changes captured as evidence cards.">
+  <link rel="canonical" href="https://www.cg-alert.com/reports/case-dpa-subprocessors.html">
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial,sans-serif;line-height:1.6;margin:0;padding:0;}
+    header,footer{padding:16px 20px;background:#f7f7f7;}
+    main{max-width:840px;margin:24px auto;padding:0 16px;}
+    .card{border:1px solid #eee;border-radius:12px;padding:16px;margin:16px 0;}
+    .btn{display:inline-block;padding:10px 16px;border-radius:10px;border:1px solid #222;text-decoration:none}
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/" style="text-decoration:none;color:#111;"><strong>CG Alert</strong></a>
+  </header>
+  <main>
+    <h1>DPA/Subprocessors update — instant legal review</h1>
+    <p>This page shows a simplified, sanitized version of evidence cards. Actual customers see full diffs and signed timestamps.</p>
+    <div class="card">
+      <ul>
+        <li>Vendor Y added two new sub-processors in the DPA.</li>
+<li>Slack alert tagged #legal minutes after the change.</li>
+<li>Legal approved with notes; audit trail archived.</li>
+      </ul>
+    </div>
+    <p>Ready to use verifiable changes as leverage?</p>
+    <p>
+      <a id="cta" class="btn" href="https://buy.stripe.com/your_portfolio_link?utm_source=site&utm_medium=case&utm_campaign=case_dpa&lid=">Start with Portfolio</a>
+      &nbsp;
+      <a id="cta-biz" class="btn" href="https://buy.stripe.com/your_business_link?utm_source=site&utm_medium=case&utm_campaign=case_dpa&lid=">Start with Business</a>
+    </p>
+    <p>Not sure yet? <a href="/">See more samples</a> or <a href="/intake">book a 15-minute walkthrough</a>.</p>
+  </main>
+  <footer>
+    &copy; 2025 CG Alert — Evidence-first vendor change monitoring.
+  </footer>
+  <script src="/public/js/lead.js"></script>
+  <script>
+    (function(){
+      function getCookie(name){
+        var m = document.cookie.match(new RegExp('(^| )'+name+'=([^;]+)')); 
+        return m ? decodeURIComponent(m[2]) : null;
+      }
+      var lid = getCookie('cg_lead_id') || (window.__cgLead && window.__cgLead.getLid && window.__cgLead.getLid()) || '';
+      function appendLid(id){
+        var a = document.getElementById(id);
+        if(!a) return;
+        try {
+          var u = new URL(a.href);
+          if (lid && !u.searchParams.get('lid')) u.searchParams.set('lid', lid);
+          a.href = u.toString();
+        } catch(e){}
+      }
+      appendLid('cta'); appendLid('cta-biz');
+    })();
+  </script>
+</body>
+</html>
