@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <!-- CSP：允许表单直连 Worker；允许内联脚本；保留 Stripe/Google Forms -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https:; connect-src *; frame-src https://buy.stripe.com https://forms.gle; form-action 'self' https://buy.stripe.com https://forms.gle https://lead-gateway.manningtopps.workers.dev;">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.webmanifest">
+
+  <!-- Canonical and favicon links -->
+  
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  
+  <!-- Preconnect for external links -->
+  <link rel="preconnect" href="https://buy.stripe.com" crossorigin>
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#0b0d12">
+  
+  <!-- Open Graph meta tags for social media -->
+  
+  
+  
+  
+  <link rel="image_src" href="/og.png">
+  
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/styles.css">
+<!-- CG-SEO-INJECT START -->
+  <title>Reports — CG Alert</title>
+  <meta name="description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
+  <link rel="canonical" href="https://www.cg-alert.com/">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"CG Alert — Evidence-backed vendor change alerts","url":"https://www.cg-alert.com/","description":"Monitor public vendor pages and get high-signal alerts with verifiable evidence."}</script>
+  <meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
+  <meta property="og:description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
+  <meta property="og:url" content="https://www.cg-alert.com/">
+  <meta property="og:site_name" content="CG Alert">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.cg-alert.com/og/default.png?slug=index">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CG Alert — Evidence-backed vendor change alerts">
+  <meta name="twitter:description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
+  <meta name="twitter:image" content="https://www.cg-alert.com/og/default.png?slug=index">
+<!-- CG-SEO-INJECT END -->
+
+</head>
+<body>
+<main>
+<h1>Reports</h1>
+<p>Evidence-backed reports and case studies.</p>
+<section class="reports-grid">
+<a class="report-card" href="/public/reports/2025-WWW.html">
+  <div class="report-title">Weekly Vendor Change Report 2025-WWW</div>
+  <div class="report-meta">Updated 2025-10-24</div>
+</a>
+<a class="report-card" href="/public/reports/case-dpa-subprocessors.html">
+  <div class="report-title">DPA/Subprocessors update — instant legal review</div>
+  <div class="report-meta">Updated 2025-10-24</div>
+</a>
+<a class="report-card" href="/public/reports/case-pricing-leverage.html">
+  <div class="report-title">Price increase notice — turn it into negotiation leverage</div>
+  <div class="report-meta">Updated 2025-10-24</div>
+</a>
+<a class="report-card" href="/public/reports/case-renewal-history.html">
+  <div class="report-title">Renewal leverage from change history</div>
+  <div class="report-meta">Updated 2025-10-24</div>
+</a>
+</section>
+
+<style>
+main{max-width:960px;margin:40px auto;padding:0 16px}
+.reports-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.report-card{display:block;padding:14px;border:1px solid #eee;border-radius:12px;text-decoration:none}
+.report-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.report-title{font-weight:600;margin-bottom:6px}
+.report-meta{font-size:12px;color:#6b7280}
+</style>
+
+</main>
+</body>
+</html>
