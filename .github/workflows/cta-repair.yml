@@ -1,8 +1,8 @@
 name: CTA Connectivity Probe
-on:
+true:
   workflow_dispatch: {}
   schedule:
-    - cron: "*/30 * * * *" # every 30 minutes
+  - cron: '*/30 * * * *'
 permissions:
   contents: read
 jobs:
@@ -12,18 +12,30 @@ jobs:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
       INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
     steps:
-      - name: GET site
-        shell: bash
-        run: |
-          set -euo pipefail
-          code=$(curl -sS -o /dev/null -w "%{http_code}" "$SITE_ORIGIN" || echo 000)
-          echo "GET $SITE_ORIGIN -> $code" >> "$GITHUB_STEP_SUMMARY"
-          test "$code" -ge 200 && test "$code" -lt 400
-      - name: POST intake form (synthetic)
-        shell: bash
-        run: |
-          set -euo pipefail
-          payload='{"email":"probe+'$(date +%s)'@example.com","name":"Probe Bot","note":"healthcheck"}'
-          code=$(curl -sS -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" -d "$payload" "$INTAKE_FORM_URL" || echo 000)
-          echo "POST $INTAKE_FORM_URL -> $code" >> "$GITHUB_STEP_SUMMARY"
-          test "$code" -ge 200 && test "$code" -lt 400
+    - name: GET site
+      shell: bash
+      run: 'set -euo pipefail
+
+        code=$(curl -sS -o /dev/null -w "%{http_code}" "$SITE_ORIGIN" || echo 000)
+
+        echo "GET $SITE_ORIGIN -> $code" >> "$GITHUB_STEP_SUMMARY"
+
+        test "$code" -ge 200 && test "$code" -lt 400
+
+        '
+    - name: POST intake form (synthetic)
+      shell: bash
+      run: 'set -euo pipefail
+
+        payload=''{"email":"probe+''$(date +%s)''@example.com","name":"Probe Bot","note":"healthcheck"}''
+
+        code=$(curl -sS -o /dev/null -w "%{http_code}" -H "Content-Type: application/json"
+        -d "$payload" "$INTAKE_FORM_URL" || echo 000)
+
+        echo "POST $INTAKE_FORM_URL -> $code" >> "$GITHUB_STEP_SUMMARY"
+
+        test "$code" -ge 200 && test "$code" -lt 400
+
+        '
+'on':
+  workflow_dispatch: null
