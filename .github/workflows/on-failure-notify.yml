@@ -21,6 +21,12 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion != 'success' }}
     runs-on: ubuntu-latest
     steps:
+
+- name: Normalize Slack env
+  shell: bash
+  run: |
+    if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
+    if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
       - name: Open GitHub Issue
         uses: actions/github-script@v7
         with:
