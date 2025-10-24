@@ -1,13 +1,10 @@
 name: Vendor Catalog
-
-on:
-  workflow_dispatch:
+true:
+  workflow_dispatch: null
   schedule:
-    - cron: "10 04 * * 1"  # 周一 04:10 UTC
-
+  - cron: 10 04 * * 1
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,23 +13,18 @@ jobs:
       INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
       STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-
-      - name: Build vendor catalog
-        run: node scripts/vendor_catalog.js
-
-      - name: SEO/CTA inject
-        run: node scripts/seo_inject.js || true
-
-      - name: Safe push
-        run: |
-          chmod +x scripts/git_safe_push.sh || true
-          git add -A data/vendor_catalog.csv vendors updates || true
-git add public reports || true
-          if [ -n "$(git status --porcelain)" ]; then
-            bash scripts/git_safe_push.sh "vendors: weekly refresh"
-          else
-            echo "no changes"
-          fi
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Build vendor catalog
+      run: node scripts/vendor_catalog.js
+    - name: SEO/CTA inject
+      run: node scripts/seo_inject.js || true
+    - name: Safe push
+      run: "chmod +x scripts/git_safe_push.sh || true\ngit add -A data/vendor_catalog.csv\
+        \ vendors updates || true\nif [ -n \"$(git status --porcelain)\" ]; then\n\
+        \  bash scripts/git_safe_push.sh \"vendors: weekly refresh\"\nelse\n  echo\
+        \ \"no changes\"\nfi\ngit add public reports || true\n"
+'on':
+  workflow_dispatch: null
