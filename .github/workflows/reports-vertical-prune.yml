@@ -1,0 +1,31 @@
+name: Reports Vertical Prune
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Prune duplicate/vertical brand and fix links
+        run: node scripts/reports_vertical_prune.js
+      - name: Commit (if any)
+        shell: bash
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add public/reports || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "reports: remove vertical brand; normalize evidence/report links"
+            git push
+          fi
