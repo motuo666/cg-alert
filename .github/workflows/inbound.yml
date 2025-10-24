@@ -1,48 +1,41 @@
 name: Inbound (poll inbox)
+
 on:
-  schedule: [ { cron: "*/15 * * * *" } ]   # 每 15 分钟
-  workflow_dispatch: {}
-permissions: { contents: write }
-concurrency: { group: inbound-poll, cancel-in-progress: false }
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: inbound-poll
+  cancel-in-progress: false
+
 jobs:
   poll:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - name: Install deps (pinned)
+        with:
+          node-version: "20"
+      - name: Normalize Slack env
+        shell: bash
         run: |
-          npm ci
-          npm i --no-audit --no-fund imapflow@1 mailparser@3.8.1 csv-parse@5 csv-stringify@6 nodemailer@7 || true
-      - name: Poll inbox & update CSV (auto-skip if no IMAP)
-        env:
-          IMAP_HOST: ${{ secrets.IMAP_HOST }}
-          IMAP_PORT: ${{ secrets.IMAP_PORT || 993 }}
-          IMAP_USER: ${{ secrets.IMAP_USER || secrets.SMTP_USER }}
-          IMAP_PASS: ${{ secrets.IMAP_PASS || secrets.SMTP_PASS }}
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-        run: node scripts/poll_inbox.js --dry=0
-      - name: Heartbeat
-        if: success()
+          if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
+          if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
+      - name: Poll inbox / change poller (script if present)
+        shell: bash
         run: |
-          mkdir -p data
-          date -u +"%FT%TZ" > data/last_poll.txt
-      - name: Safe Push
-        if: always()
-        run: |
-          chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "inbound: bounces + heartbeat"
-
-- name: Normalize Slack env
-  shell: bash
-  run: |
-    if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
-    if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
+          set -Eeuo pipefail
+          if [[ -x scripts/run_public_change_poller.sh ]]; then
+            bash scripts/run_public_change_poller.sh
+          elif [[ -f scripts/poll_public_endpoints.js ]]; then
+            node scripts/poll_public_endpoints.js
+          else
+            echo "No poller script found; skipping." >&2
+          fi
