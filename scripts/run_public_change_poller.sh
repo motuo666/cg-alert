@@ -1,53 +1,150 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
-echo "[poller] start $(date -Is)"
+# Extracted from public-change-poller.yml (largest run block). Functional parity.
+# Do not edit inline in workflow; edit this file instead.
 
-# Unify Slack webhook naming (accept either env)
-if [[ -z "${SLACK_WEBHOOK:-}" && -n "${SLACK_WEBHOOK_URL:-}" ]]; then
-  export SLACK_WEBHOOK="${SLACK_WEBHOOK_URL}"
-fi
+trap 'echo "[ERROR] line $LINENO exit $?: see logs" >&2' ERR
 
-export SITE_ORIGIN="${SITE_ORIGIN:-https://www.cg-alert.com}"
-export NODE_OPTIONS="--max_old_space_size=3072"
+if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
+if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
+  - name: Checkout
+    uses: actions/checkout@v4
 
-# Install deps if package.json exists
-if [[ -f package.json ]]; then
-  echo "[poller] npm ci (if lock present)"
-  (npm ci || npm i) >/dev/null 2>&1 || true
-fi
+  - name: Setup Node
+    uses: actions/setup-node@v4
+    with:
+      node-version: '20'
+      cache: 'npm'
 
-# Run poller — try known entrypoints, fail if none
-if [[ -f scripts/build_change_pack.js ]]; then
-  echo "[poller] node scripts/build_change_pack.js"
-  node scripts/build_change_pack.js
-elif [[ -f scripts/public_change_poller.js ]]; then
-  echo "[poller] node scripts/public_change_poller.js"
-  node scripts/public_change_poller.js
-elif [[ -f scripts/public_change_poller.mjs ]]; then
-  echo "[poller] node scripts/public_change_poller.mjs"
-  node scripts/public_change_poller.mjs
-else
-  echo "::error::No poller entrypoint found (scripts/build_change_pack.js or scripts/public_change_poller.*)"
-  exit 1
-fi
+  - name: Prepare env (Slack webhook fallback)
+    shell: bash
+    run: |
+      set -euo pipefail
+      if [[ -z "${SLACK_WEBHOOK:-}" && -n "${SLACK_WEBHOOK_URL:-}" ]]; then
+        echo "SLACK_WEBHOOK=${SLACK_WEBHOOK_URL}" >> "$GITHUB_ENV"
+      fi
 
-# Generate visual diffs when prev/curr exist
-if [[ -f scripts/generate_diff_html.js ]]; then
-  echo "[poller] node scripts/generate_diff_html.js public/evidence"
-  node scripts/generate_diff_html.js public/evidence || true
-fi
+  - name: Install dependencies
+    shell: bash
+    run: |
+      set -euo pipefail
+      npm ci || npm i
 
-# Commit any new evidence/reports
-git config user.email "bot@cg-alert.com"
-git config user.name  "cg-alert-bot"
-git add -A public/evidence public/reports public/rss.xml public/sitemap.xml || true
-if git diff --cached --quiet; then
-  echo "[poller] no changes to commit"
-else
-  git commit -m "evidence: poller outputs + diffs"
-  git pull --rebase --autostash || true
-  git push || true
-fi
+  # ========== 采集 & 预处理 ==========
+  - name: Poll public endpoints & normalize
+    shell: bash
+    run: |
+      set -euo pipefail
+      node scripts/poll_public_endpoints.js
+      node scripts/normalize_evidence.js
+      node scripts/evidence_enrich_provenance.js
+      node scripts/extract_diff_excerpt.js
+      node scripts/materiality_score.js
+      node scripts/build_evidence_index.js
 
-echo "[poller] done $(date -Is)"
+  # ========== 先修（脱敏/合规） ==========
+  - name: Redact internal fields in evidence
+    shell: bash
+    run: |
+      set -euo pipefail
+      node scripts/redact_public_fields.js
+
+  # 生成站内 Proof（非阻断；自动适配 .mjs/.js）
+  - name: Build local proof snapshots (non-blocking)
+    shell: bash
+    run: |
+      set -euo pipefail
+      if [ -f scripts/build_proof_from_evidence.mjs ]; then
+        node scripts/build_proof_from_evidence.mjs || true
+      elif [ -f scripts/build_proof_from_evidence.js ]; then
+        node scripts/build_proof_from_evidence.js || true
+      else
+        echo "skip: build_proof_from_evidence not found"
+      fi
+
+  # （可选）一次性清理历史页面中的 GitHub run 链接
+  - name: Sanitize legacy report pages (non-blocking)
+    shell: bash
+    run: |
+      set -euo pipefail
+      node scripts/sanitize_reports.js || true
+
+  # ========== 再展示 ==========
+  - name: Build change packs & monthly rollups
+    shell: bash
+    run: |
+      set -euo pipefail
+      # 注意：build_change_pack.js 内优先用 PROOF_BASE/snapshot 链接
+      node scripts/build_change_pack.js
+      node scripts/build_who_uses.js
+      node scripts/build_updates.js
+      node scripts/monthly_checksum.js
+
+  - name: Public index / sitemap / RSS
+    shell: bash
+    env:
+      SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
+    run: |
+      set -euo pipefail
+      node scripts/generate_reports_index.js
+      node scripts/generate_sitemap_rss.js
+
+  # ========== 可视化差异（增强，非阻断） ==========
+  - name: Generate visual diffs (non-blocking)
+    shell: bash
+    run: |
+      set -euo pipefail
+      if [ -f scripts/generate_diff_html.js ]; then
+        node scripts/generate_diff_html.js public/evidence || true
+      else
+        echo "skip: scripts/generate_diff_html.js not found"
+      fi
+
+  # ========== 站点探针（增强，非阻断） ==========
+  - name: Probe critical URLs (non-blocking)
+    if: always()
+    shell: bash
+    env:
+      SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
+    run: |
+      set -euo pipefail
+      if [ -f scripts/url_probe.sh ]; then
+        bash scripts/url_probe.sh || true
+      else
+        echo "light probe..."
+        for u in "/" "/seo/" "/reports/" "/who-uses/" "/sitemap.xml" "/rss.xml"; do
+          code=$(curl -s -o /dev/null -w "%{http_code}" "${SITE_ORIGIN%/}${u}" || true)
+          echo "[probe] $code ${SITE_ORIGIN%/}${u}"
+        done
+      fi
+
+  # ========== 提交 ==========
+  - name: Commit changes (if any)
+    shell: bash
+    run: |
+      set -euo pipefail
+      # 不限定路径，避免 pathspec 错误；确保 evidence/** 被纳入
+      git add -A || true
+      if [ -n "$(git status --porcelain)" ]; then
+        git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "poller: redact+proof+packs+index+sitemap/rss+diffs"
+        git pull --rebase --autostash || true
+        git push
+      else
+        echo "no changes to commit"
+      fi
+
+  # ========== 摘要 ==========
+  - name: Summary
+    if: always()
+    shell: bash
+    run: |
+      set -euo pipefail
+      echo "## Public Change Poller" >> "$GITHUB_STEP_SUMMARY"
+      echo "- SITE_ORIGIN: ${SITE_ORIGIN}" >> "$GITHUB_STEP_SUMMARY"
+      echo "- Evidence pages: $(git ls-files 'public/evidence/**/index.html' | wc -l || echo 0)" >> "$GITHUB_STEP_SUMMARY"
+      echo "- Reports index.json: $(test -f public/reports/index.json && echo present || echo missing)" >> "$GITHUB_STEP_SUMMARY"
+      echo "- Sitemap: $(test -f public/sitemap.xml && echo present || echo missing)" >> "$GITHUB_STEP_SUMMARY"
+      echo "- RSS: $(test -f public/rss.xml && echo present || echo missing)" >> "$GITHUB_STEP_SUMMARY"
+      echo "- Diffs generated: $(git ls-files 'public/evidence/**/diff.html' | wc -l || echo 0)" >> "$GITHUB_STEP_SUMMARY"
+
