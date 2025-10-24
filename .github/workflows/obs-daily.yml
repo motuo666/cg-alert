@@ -1,29 +1,23 @@
 name: obs-daily
+
 on:
   schedule:
-    - cron: "7 23 * * *"   # 每天 UTC 23:07
+    - cron: "15 01 * * *"
+  workflow_dispatch:
+
 jobs:
-  pull:
+  obs:
     runs-on: ubuntu-latest
     steps:
-
-- name: Normalize Slack env
-  shell: bash
-  run: |
-    if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
-    if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
-      - name: Fetch stats
-        env:
-          OBS_URL: ${{ vars.WORKER_URL }}/_stats
-          OBS_KEY: ${{ secrets.UNSUB_HMAC_SECRET }}   # 或单独建 OBS_KEY
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - uses: actions/checkout@v4
+      - name: Run daily checks (if script exists)
+        shell: bash
         run: |
-          set -e
-          KEY=$(echo "$OBS_KEY" | cut -c1-16)
-          RESP=$(curl -sS -H "x-obs-key: $KEY" "$OBS_URL")
-          echo "stats=$RESP"
-          # 可选：发 Slack
-          if [ -n "$SLACK_WEBHOOK_URL" ]; then
-            echo "{\"text\":\"obs daily: $RESP\"}" | \
-            curl -sS -X POST -H "content-type: application/json" --data @- "$SLACK_WEBHOOK_URL"
+          set -Eeuo pipefail
+          if [[ -x scripts/obs_daily.sh ]]; then
+            bash scripts/obs_daily.sh
+          elif [[ -f scripts/obs_daily.js ]]; then
+            node scripts/obs_daily.js
+          else
+            echo "No obs_daily script found; skipping."
           fi
