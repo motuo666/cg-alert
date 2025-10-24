@@ -1,8 +1,4 @@
 name: Build Diff Visuals
-true:
-  workflow_dispatch: null
-  schedule:
-  - cron: 0 6 * * 1
 permissions:
   contents: write
 jobs:
@@ -29,3 +25,5 @@ jobs:
         \  git push\nfi\n"
 'on':
   workflow_dispatch: null
+  schedule:
+  - cron: 0 6 * * 1
