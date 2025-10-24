@@ -22,11 +22,13 @@ const html = `<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CG Alert — Reports</title>
 <link rel="canonical" href="https://www.cg-alert.com/reports/">
-<style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:24px}h1{margin:0 0 16px}section{margin:24px 0}ul{line-height:1.8}</style>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/assets/cg-theme.css">
 </head><body>
 <h1>Vendor Change Packs</h1>
-<p>Verified change packs by month and vendor. All times in UTC.</p>
-${months.map(m => `<section><h2>${m.ym}</h2><ul>${m.vendors.map(v => `<li><a href="./${m.ym}/${encodeURIComponent(v)}/">${v}</a></li>`).join('')}</ul></section>`).join('')}
+<p class="sub">Verified change packs by month and vendor. All times in UTC.</p>
+${months.map(m => `<section><h2>${m.ym}</h2><ul>${m.vendors.map(v => `<li><a href="/reports/${m.ym}/${v}/">${v}</a></li>`).join('')}</ul></section>`).join('')}
 </body></html>`;
+
 fs.writeFileSync(path.join(reportsDir, 'index.html'), html);
-console.log(`reports index generated: months=${months.length}`);
+console.log('reports/index.html rebuilt with css links, months=', months.length);
