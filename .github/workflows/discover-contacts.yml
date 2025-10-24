@@ -1,8 +1,4 @@
 name: Discover Public Contacts
-true:
-  workflow_dispatch: {}
-  schedule:
-  - cron: 8 15 * * 1-5
 permissions:
   contents: write
 concurrency:
@@ -40,4 +36,6 @@ jobs:
 
         '
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  schedule:
+  - cron: 8 15 * * 1-5
