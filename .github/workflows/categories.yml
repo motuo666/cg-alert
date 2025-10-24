@@ -1,8 +1,4 @@
 name: Categories Build
-true:
-  workflow_dispatch: {}
-  schedule:
-  - cron: 12 15 * * 1
 permissions:
   contents: write
 concurrency:
@@ -30,4 +26,6 @@ jobs:
 
         '
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  schedule:
+  - cron: 12 15 * * 1
