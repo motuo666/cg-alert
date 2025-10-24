@@ -1,32 +1,24 @@
 name: Fix Asset Paths
-
-on:
-  workflow_dispatch:
-
+true:
+  workflow_dispatch: null
 permissions:
   contents: write
-
 jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Rewrite asset paths to root-absolute
-        run: node scripts/absolute_assets.js
-      - name: Commit fixed HTML (if any)
-        shell: bash
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add public || true
-          if git diff --cached --quiet; then
-            echo "No changes"
-          else
-            git commit -m "fix: make asset/script links root-absolute"
-            git push
-          fi
+    - uses: actions/checkout@v4
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Rewrite asset paths to root-absolute
+      run: node scripts/absolute_assets.js
+    - name: Commit fixed HTML (if any)
+      shell: bash
+      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add public || true\nif git diff --cached --quiet;\
+        \ then\n  echo \"No changes\"\nelse\n  git commit -m \"fix: make asset/script\
+        \ links root-absolute\"\n  git push\nfi\n"
+'on':
+  workflow_dispatch: null
