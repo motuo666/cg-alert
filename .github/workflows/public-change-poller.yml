@@ -28,6 +28,12 @@ jobs:
       NODE_OPTIONS: --max_old_space_size=3072
 
     steps:
+
+- name: Normalize Slack env
+  shell: bash
+  run: |
+    if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
+    if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
       - name: Checkout
         uses: actions/checkout@v4
 
