@@ -1,28 +1,4 @@
 name: Build Diff Visuals
-true:
-  workflow_dispatch:
-    inputs:
-      evidence_root:
-        description: Evidence root relative to repo
-        required: false
-        default: public/evidence
-        type: string
-      max_lines:
-        description: 'Guardrail: max lines per side (fallback to coarse)'
-        required: false
-        default: '5000'
-        type: string
-      max_ms:
-        description: 'Guardrail: max ms per pair (fallback to coarse)'
-        required: false
-        default: '5000'
-        type: string
-  push:
-    paths:
-    - public/evidence/**
-    - scripts/build_diff_visuals.js
-    - scripts/diff_engine.js
-    - .github/workflows/build-diffs.yml
 permissions:
   contents: write
 concurrency:
@@ -57,4 +33,26 @@ jobs:
         \ pull --rebase --autostash || true\n  git push\n  echo \"Committed and pushed\
         \ diff visualizations.\" | tee -a \"$GITHUB_STEP_SUMMARY\"\nfi\n"
 'on':
-  workflow_dispatch: null
+  workflow_dispatch:
+    inputs:
+      evidence_root:
+        description: Evidence root relative to repo
+        required: false
+        default: public/evidence
+        type: string
+      max_lines:
+        description: 'Guardrail: max lines per side (fallback to coarse)'
+        required: false
+        default: '5000'
+        type: string
+      max_ms:
+        description: 'Guardrail: max ms per pair (fallback to coarse)'
+        required: false
+        default: '5000'
+        type: string
+  push:
+    paths:
+    - public/evidence/**
+    - scripts/build_diff_visuals.js
+    - scripts/diff_engine.js
+    - .github/workflows/build-diffs.yml
