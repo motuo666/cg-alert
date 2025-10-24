@@ -1,37 +1,33 @@
 name: seo-ping
-
-on:
+true:
   workflow_dispatch: {}
   push:
-    branches: ["main"]
+    branches:
+    - main
     paths:
-      - "public/**"
-      - "evidence/**"
-      - "reports/**"
-      - "sitemap.xml"
-      - "public/sitemap.xml"
+    - public/**
+    - evidence/**
+    - reports/**
+    - sitemap.xml
+    - public/sitemap.xml
   schedule:
-    - cron: "17 3 * * *"  # UTC
-
-# 防止并发重复跑
+  - cron: 17 3 * * *
 concurrency:
   group: seo-ping-${{ github.ref }}
   cancel-in-progress: true
-
 permissions:
   contents: read
-
 jobs:
   ensure-and-ping:
     runs-on: ubuntu-latest
     env:
-      # 有变量就用变量；没有就稳妥落到 www 版本
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Ensure root sitemap.xml
-        run: node scripts/ops/sitemap_sync.js
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Ensure root sitemap.xml
+      run: node scripts/ops/sitemap_sync.js
+'on':
+  workflow_dispatch: null
