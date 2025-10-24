@@ -5,28 +5,31 @@ on:
 
 permissions:
   contents: write
-  workflows: write
 
 jobs:
   fix:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
       - name: Install YAML parser
         run: npm i yaml@2
+
       - name: Run doctor
         run: node scripts/workflows_doctor.js
-      - name: Commit fixes (if any)
-        run: |
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add .github/workflows || true
-          if git diff --cached --quiet; then
-            echo "No changes"
-          else
-            git commit -m "chore: fix workflows yaml (doctor v2)"
-            git push
-          fi
+
+      # 不能直接 push 改 workflows，改走 PR（GITHUB_TOKEN 允许）
+      - name: Create PR with fixes
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: 'chore: fix workflows yaml (doctor v2)'
+          branch: bot/workflows-doctor
+          title: 'Fix workflows yaml (doctor v2)'
+          body: 'Automated fixes for YAML (remove stray true/false at top, tabs→spaces, ensure on.workflow_dispatch & name, drop top-level git lines).'
+          labels: 'automation'
+          delete-branch: true
