@@ -1,53 +1,46 @@
 name: Monthly Public Report
-
-on:
+true:
   workflow_dispatch:
     inputs:
       month:
-        description: "YYYY-MM（空=当前月）"
+        description: YYYY-MM（空=当前月）
         required: false
         type: string
-        default: ""
+        default: ''
   workflow_call:
     inputs:
       month:
         required: false
         type: string
   schedule:
-    - cron: "10 15 1 * *"   # 每月 1 日 15:10 UTC
-
+  - cron: 10 15 1 * *
 permissions:
   contents: write
-
 concurrency:
   group: monthly-public-report
   cancel-in-progress: true
-
 jobs:
   report:
     runs-on: ubuntu-latest
     env:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install deps (best effort)
-        run: npm ci || npm i --no-audit --no-fund || true
-
-      - name: Ensure artifacts dir
-        run: mkdir -p artifacts
-
-      - name: Compute month
-        id: month
-        shell: bash
-        run: bash scripts/run_monthly_public_report.sh
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: npm
+    - name: Install deps (best effort)
+      run: npm ci || npm i --no-audit --no-fund
+    - name: Ensure artifacts dir
+      run: mkdir -p artifacts
+    - name: Compute month
+      id: month
+      shell: bash
+      run: bash scripts/run_monthly_public_report.sh
+'on':
+  workflow_dispatch: null
