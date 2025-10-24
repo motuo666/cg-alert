@@ -1,16 +1,13 @@
 name: SEO Tighten
-
-on:
-  workflow_dispatch:
+true:
+  workflow_dispatch: null
   push:
     paths:
-      - "vendors/**"
-      - "updates/**"
-      - "seo_inject.js"
-
+    - vendors/**
+    - updates/**
+    - seo_inject.js
 permissions:
   contents: write
-
 jobs:
   tighten:
     runs-on: ubuntu-latest
@@ -19,56 +16,41 @@ jobs:
       INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
       STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Use Node 18
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18
+    - name: Run SEO & CTA inject (idempotent)
+      run: 'node ./seo_inject.js | tee /tmp/seo_inject.log
 
-      - name: Use Node 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+        echo "-----"
 
-      - name: Run SEO & CTA inject (idempotent)
-        run: |
-          node ./seo_inject.js | tee /tmp/seo_inject.log
-          echo "-----"
-          cat /tmp/seo_inject.log
+        cat /tmp/seo_inject.log
 
-      - name: Generate Sitemap and RSS
-        run: |
-          node scripts/sitemaps_full.cjs
-        working-directory: ./
+        '
+    - name: Generate Sitemap and RSS
+      run: 'node scripts/sitemaps_full.cjs
 
-      - name: Safe push (include vendors/updates/reports & indices)
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A vendors reports updates data/evidence.ndx data/materiality.csv data/vendor_catalog.csv evidence public/who-uses public/sitemap.xml public/rss.xml || true
-          if git diff --cached --quiet; then
-            echo "no changes to commit"
-          else
-            git commit -m "SEO Tighten: inject SEO + CTA + generate Sitemap/RSS [skip ci]"
-            chmod +x ./git_safe_push.sh || true
-            if [ -f ./git_safe_push.sh ]; then
-              ./git_safe_push.sh
-            else
-              # 兜底直推（仅当仓库策略允许）
-              git pull --rebase --autostash || true
-              git push
-            fi
-          fi
-
-      # 可选：部署后校验（命中 CDN 缓存时，只告警不失败）
-      - name: Post-deploy check (optional)
-        if: ${{ always() }}
-        run: |
-          set -e
-          PAGES="${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}"
-          for P in "/vendors/zendesk.com/" "/updates/"; do
-            echo "check $PAGES$P"
-            if curl -fsSL "$PAGES$P?v=${{ github.sha }}" | grep -q "CG-CTA-INJECT"; then
-              echo "ok: CTA visible on $PAGES$P"
-            else
-              echo "::warning::CTA not visible on $PAGES$P (likely caching/deploy lag)"
-            fi
-          done
+        '
+      working-directory: ./
+    - name: Safe push (include vendors/updates/reports & indices)
+      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add -A vendors reports updates data/evidence.ndx\
+        \ data/materiality.csv data/vendor_catalog.csv evidence public/who-uses public/sitemap.xml\
+        \ public/rss.xml || true\nif git diff --cached --quiet; then\n  echo \"no\
+        \ changes to commit\"\nelse\n  git commit -m \"SEO Tighten: inject SEO + CTA\
+        \ + generate Sitemap/RSS [skip ci]\"\n  chmod +x ./git_safe_push.sh || true\n\
+        \  if [ -f ./git_safe_push.sh ]; then\n    ./git_safe_push.sh\n  else\n  \
+        \  # 兜底直推（仅当仓库策略允许）\n    git pull --rebase --autostash || true\n    git push\n\
+        \  fi\nfi\n"
+    - name: Post-deploy check (optional)
+      if: ${{ always() }}
+      run: "set -e\nPAGES=\"${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}\"\
+        \nfor P in \"/vendors/zendesk.com/\" \"/updates/\"; do\n  echo \"check $PAGES$P\"\
+        \n  if curl -fsSL \"$PAGES$P?v=${{ github.sha }}\" | grep -q \"CG-CTA-INJECT\"\
+        ; then\n    echo \"ok: CTA visible on $PAGES$P\"\n  else\n    echo \"::warning::CTA\
+        \ not visible on $PAGES$P (likely caching/deploy lag)\"\n  fi\ndone\n"
+'on':
+  workflow_dispatch: null
