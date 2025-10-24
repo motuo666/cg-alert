@@ -1,45 +1,37 @@
 name: Build RSS
-
-on:
-  workflow_dispatch:
+true:
+  workflow_dispatch: null
   schedule:
-    - cron: "0 3 * * *"
+  - cron: 0 3 * * *
   push:
     paths:
-      - "reports/**"
-      - "public/evidence/**"
-
+    - reports/**
+    - public/evidence/**
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+    - name: Build RSS (no deps)
+      run: 'set -e
 
-      - name: Build RSS (no deps)
-        run: |
-          set -e
-          node -v
-          node scripts/build_rss.js
+        node -v
 
-      - name: Commit & Push if changed
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A public/rss.xml
-          if git diff --cached --quiet; then
-            echo "No RSS changes"
-          else
-            git commit -m "chore(rss): update rss.xml"
-            git pull --rebase --autostash || true
-            git push
-          fi
+        node scripts/build_rss.js
 
-      - name: Expose in summary
-        run: |
-          echo "RSS built at: ${SITE_ORIGIN%/}/rss.xml" >> $GITHUB_STEP_SUMMARY
+        '
+    - name: Commit & Push if changed
+      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add -A public/rss.xml\nif git diff --cached --quiet;\
+        \ then\n  echo \"No RSS changes\"\nelse\n  git commit -m \"chore(rss): update\
+        \ rss.xml\"\n  git pull --rebase --autostash || true\n  git push\nfi\n"
+    - name: Expose in summary
+      run: 'echo "RSS built at: ${SITE_ORIGIN%/}/rss.xml" >> $GITHUB_STEP_SUMMARY
+
+        '
+'on':
+  workflow_dispatch: null
