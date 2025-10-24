@@ -1,8 +1,8 @@
 name: Weekly Report
-on:
-  schedule:
-    - cron: "10 3 * * 1"   # 周一 03:10 UTC
+true:
   workflow_dispatch: {}
+  schedule:
+  - cron: 10 3 * * 1
 permissions:
   contents: write
 jobs:
@@ -12,23 +12,18 @@ jobs:
       group: weekly-report
       cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install deps
-        run: npm i dayjs fs-extra
-      - name: Build weekly report
-        run: node scripts/weekly_report.js
-      - name: Commit report
-        run: |
-          set -e
-          git config user.name "bot"
-          git config user.email "bot@users.noreply.github.com"
-          git add -A public/reports
-          if git diff --staged --quiet; then
-            echo "No new report."
-          else
-            git commit -m "chore(report): publish weekly"
-            git push
-          fi
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - name: Install deps
+      run: npm i dayjs fs-extra
+    - name: Build weekly report
+      run: node scripts/weekly_report.js
+    - name: Commit report
+      run: "set -e\ngit config user.name \"bot\"\ngit config user.email \"bot@users.noreply.github.com\"\
+        \ngit add -A public/reports\nif git diff --staged --quiet; then\n  echo \"\
+        No new report.\"\nelse\n  git commit -m \"chore(report): publish weekly\"\n\
+        \  git push\nfi\n"
+'on':
+  workflow_dispatch: null
