@@ -1,8 +1,4 @@
 name: buildwith-import
-true:
-  workflow_dispatch: null
-  schedule:
-  - cron: 0 2 * * *
 jobs:
   import:
     runs-on: ubuntu-latest
@@ -23,3 +19,5 @@ jobs:
       run: node scripts/import_buildwith.js
 'on':
   workflow_dispatch: null
+  schedule:
+  - cron: 0 2 * * *
