@@ -1,32 +1,24 @@
 name: Reports Repair
-
-on:
-  workflow_dispatch:
-
+true:
+  workflow_dispatch: null
 permissions:
   contents: write
-
 jobs:
   repair:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Deduplicate headers/footers in report pages
-        run: node scripts/reports_repair.js
-      - name: Commit repaired pages (if any)
-        shell: bash
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add public/reports || true
-          if git diff --cached --quiet; then
-            echo "No changes"
-          else
-            git commit -m "reports: dedupe headers/footers; unify shell"
-            git push
-          fi
+    - uses: actions/checkout@v4
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Deduplicate headers/footers in report pages
+      run: node scripts/reports_repair.js
+    - name: Commit repaired pages (if any)
+      shell: bash
+      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add public/reports || true\nif git diff --cached\
+        \ --quiet; then\n  echo \"No changes\"\nelse\n  git commit -m \"reports: dedupe\
+        \ headers/footers; unify shell\"\n  git push\nfi\n"
+'on':
+  workflow_dispatch: null
