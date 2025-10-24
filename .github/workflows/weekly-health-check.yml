@@ -1,34 +1,32 @@
 name: Weekly Health Check
-
-on:
-  workflow_dispatch:
+true:
+  workflow_dispatch: null
   schedule:
-    - cron: "20 0 * * 0"  # 每周日 00:20 UTC
-
+  - cron: 20 0 * * 0
 jobs:
   health:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install deps
-        run: npm ci || npm i
-      - name: Radar & Index
-        env: 
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-        run: |
-          node scripts/generate_reports_index.js
-          node scripts/generate_sitemap_rss.js
-          echo "### Weekly Radar/Index regenerated" >> "$GITHUB_STEP_SUMMARY"
-      - name: Commit (if any)
-        run: |
-          git add -A reports public || true
-          if [ -n "$(git status --porcelain)" ]; then
-            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "weekly: radar/index/sitemap/rss"
-            git pull --rebase --autostash || true
-            git push
-          else
-            echo "no changes to commit"
-          fi
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - name: Install deps
+      run: npm ci || npm i
+    - name: Radar & Index
+      env:
+        SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      run: 'node scripts/generate_reports_index.js
+
+        node scripts/generate_sitemap_rss.js
+
+        echo "### Weekly Radar/Index regenerated" >> "$GITHUB_STEP_SUMMARY"
+
+        '
+    - name: Commit (if any)
+      run: "git add -A reports public || true\nif [ -n \"$(git status --porcelain)\"\
+        \ ]; then\n  git -c user.name=\"cg-bot\" -c user.email=\"bot@cg-alert.com\"\
+        \ commit -m \"weekly: radar/index/sitemap/rss\"\n  git pull --rebase --autostash\
+        \ || true\n  git push\nelse\n  echo \"no changes to commit\"\nfi\n"
+'on':
+  workflow_dispatch: null
