@@ -1,8 +1,4 @@
 name: Heartbeat
-true:
-  workflow_dispatch: {}
-  schedule:
-  - cron: 0 * * * *
 permissions:
   contents: read
 jobs:
@@ -20,4 +16,6 @@ jobs:
         HB_MAX_HOURS: '26'
       run: node scripts/heartbeat_check.js
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  schedule:
+  - cron: 0 * * * *
