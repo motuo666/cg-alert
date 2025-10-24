@@ -1,13 +1,4 @@
 name: Bounce Sweep
-true:
-  workflow_dispatch:
-    inputs:
-      lookback_hours:
-        description: 回捞窗口（小时），留空则用 Secrets 或默认 168
-        required: false
-        default: ''
-  schedule:
-  - cron: 0 */6 * * *
 permissions:
   contents: read
 concurrency:
@@ -99,4 +90,11 @@ jobs:
         path: sweep.log
         retention-days: 7
 'on':
-  workflow_dispatch: null
+  workflow_dispatch:
+    inputs:
+      lookback_hours:
+        description: 回捞窗口（小时），留空则用 Secrets 或默认 168
+        required: false
+        default: ''
+  schedule:
+  - cron: 0 */6 * * *
