@@ -1,28 +1,34 @@
 name: Promote Intakes
-on:
-  schedule: [ { cron: "*/15 * * * *" } ]
+true:
   workflow_dispatch: {}
-permissions: { contents: write, pull-requests: write }
-concurrency: { group: promote-intakes, cancel-in-progress: false }
+  schedule:
+  - cron: '*/15 * * * *'
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: promote-intakes
+  cancel-in-progress: false
 jobs:
   promote:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm ci || npm i --no-audit --no-fund || true
-      - name: Promote
-        run: |
-          if [ -f scripts/promote-intakes.js ]; then
-            node scripts/promote-intakes.js
-          elif [ -f scripts/promote_intakes.js ]; then
-            node scripts/promote_intakes.js
-          else
-            echo "promote-intakes script not found"; exit 1
-          fi
-      - name: Safe Push
-        run: |
-          chmod +x scripts/git_safe_push.sh
-          bash scripts/git_safe_push.sh "promote: intakes -> customers"
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - run: npm ci || npm i --no-audit --no-fund
+    - name: Promote
+      run: "if [ -f scripts/promote-intakes.js ]; then\n  node scripts/promote-intakes.js\n\
+        elif [ -f scripts/promote_intakes.js ]; then\n  node scripts/promote_intakes.js\n\
+        else\n  echo \"promote-intakes script not found\"; exit 1\nfi\n"
+    - name: Safe Push
+      run: 'chmod +x scripts/git_safe_push.sh
+
+        bash scripts/git_safe_push.sh "promote: intakes -> customers"
+
+        '
+'on':
+  workflow_dispatch: null
