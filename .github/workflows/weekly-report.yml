@@ -1,8 +1,4 @@
 name: Weekly Report
-true:
-  workflow_dispatch: {}
-  schedule:
-  - cron: 10 3 * * 1
 permissions:
   contents: write
 jobs:
@@ -26,4 +22,6 @@ jobs:
         No new report.\"\nelse\n  git commit -m \"chore(report): publish weekly\"\n\
         \  git push\nfi\n"
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  schedule:
+  - cron: 10 3 * * 1
