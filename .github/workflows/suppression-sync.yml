@@ -1,23 +1,29 @@
 name: Suppression Sync
-on:
-  workflow_dispatch:
+true:
+  workflow_dispatch: null
   schedule:
-    - cron: "5 */6 * * *"   # 每 6 小时
-
+  - cron: 5 */6 * * *
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - name: Install deps
-        run: npm ci || npm i
-      - name: Normalize & Guard
-        run: |
-          node scripts/normalize_suppression_logs.js
-          node scripts/leads_guard.js
-      - name: Step Summary
-        run: |
-          echo "### Suppression Sync" >> "$GITHUB_STEP_SUMMARY"
-          echo "- unsub/bounce/complaint normalized & applied" >> "$GITHUB_STEP_SUMMARY"
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - name: Install deps
+      run: npm ci || npm i
+    - name: Normalize & Guard
+      run: 'node scripts/normalize_suppression_logs.js
+
+        node scripts/leads_guard.js
+
+        '
+    - name: Step Summary
+      run: 'echo "### Suppression Sync" >> "$GITHUB_STEP_SUMMARY"
+
+        echo "- unsub/bounce/complaint normalized & applied" >> "$GITHUB_STEP_SUMMARY"
+
+        '
+'on':
+  workflow_dispatch: null
