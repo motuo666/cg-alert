@@ -1,8 +1,4 @@
 name: Weekly Health Check
-true:
-  workflow_dispatch: null
-  schedule:
-  - cron: 20 0 * * 0
 jobs:
   health:
     runs-on: ubuntu-latest
@@ -30,3 +26,5 @@ jobs:
         \ || true\n  git push\nelse\n  echo \"no changes to commit\"\nfi\n"
 'on':
   workflow_dispatch: null
+  schedule:
+  - cron: 20 0 * * 0
