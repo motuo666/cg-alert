@@ -1,11 +1,4 @@
 name: SEO Tighten
-true:
-  workflow_dispatch: null
-  push:
-    paths:
-    - vendors/**
-    - updates/**
-    - seo_inject.js
 permissions:
   contents: write
 jobs:
@@ -54,3 +47,8 @@ jobs:
         \ not visible on $PAGES$P (likely caching/deploy lag)\"\n  fi\ndone\n"
 'on':
   workflow_dispatch: null
+  push:
+    paths:
+    - vendors/**
+    - updates/**
+    - seo_inject.js
