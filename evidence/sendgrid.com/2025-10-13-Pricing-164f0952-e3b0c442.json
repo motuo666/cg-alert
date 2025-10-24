@@ -7,5 +7,7 @@
   "last_modified": "Thu, 23 Oct 2025 12:42:35 GMT",
   "hash": "f0ce0553ebf07940055181db9e6fcc368f84dffee7918f241bd4e79891f17cf2",
   "commit": "3680760",
-  "sha256": "f0ce0553ebf07940055181db9e6fcc368f84dffee7918f241bd4e79891f17cf2"
+  "sha256": "f0ce0553ebf07940055181db9e6fcc368f84dffee7918f241bd4e79891f17cf2",
+  "diff_excerpt_before": "cument.title.replace(emailRegex, _C.REDA",
+  "diff_excerpt_after": "cument.title.replace(emailRegex, _C.REDA"
 }
