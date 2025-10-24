@@ -1,8 +1,4 @@
 name: Weekly Evidence Hash
-true:
-  workflow_dispatch: {}
-  schedule:
-  - cron: 15 6 * * 1
 permissions:
   contents: write
 jobs:
@@ -30,4 +26,6 @@ jobs:
 
         '
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  schedule:
+  - cron: 15 6 * * 1
