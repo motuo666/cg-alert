@@ -30,6 +30,7 @@ jobs:
         run: |
           chmod +x scripts/git_safe_push.sh || true
           git add -A data/vendor_catalog.csv vendors updates || true
+git add public reports || true
           if [ -n "$(git status --porcelain)" ]; then
             bash scripts/git_safe_push.sh "vendors: weekly refresh"
           else
