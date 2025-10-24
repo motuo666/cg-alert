@@ -1,13 +1,4 @@
 name: Domain Grow (daily)
-true:
-  workflow_dispatch:
-    inputs:
-      new_domains:
-        description: 新增域上限
-        default: '60'
-        required: true
-  schedule:
-  - cron: 25 3 * * *
 permissions:
   contents: write
 concurrency:
@@ -41,4 +32,11 @@ jobs:
 
         '
 'on':
-  workflow_dispatch: null
+  workflow_dispatch:
+    inputs:
+      new_domains:
+        description: 新增域上限
+        default: '60'
+        required: true
+  schedule:
+  - cron: 25 3 * * *
