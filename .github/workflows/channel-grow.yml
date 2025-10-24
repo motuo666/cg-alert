@@ -83,6 +83,7 @@ jobs:
 
           # 全量安全提交（仅在有变更时推送）
           git add -A || true
+git add public reports || true
           if git diff --cached --quiet; then
             echo "no changes to commit"
             echo "### Commit" >> "$GITHUB_STEP_SUMMARY"
