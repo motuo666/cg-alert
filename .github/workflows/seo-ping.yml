@@ -1,17 +1,4 @@
 name: seo-ping
-true:
-  workflow_dispatch: {}
-  push:
-    branches:
-    - main
-    paths:
-    - public/**
-    - evidence/**
-    - reports/**
-    - sitemap.xml
-    - public/sitemap.xml
-  schedule:
-  - cron: 17 3 * * *
 concurrency:
   group: seo-ping-${{ github.ref }}
   cancel-in-progress: true
@@ -30,4 +17,15 @@ jobs:
     - name: Ensure root sitemap.xml
       run: node scripts/ops/sitemap_sync.js
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  push:
+    branches:
+    - main
+    paths:
+    - public/**
+    - evidence/**
+    - reports/**
+    - sitemap.xml
+    - public/sitemap.xml
+  schedule:
+  - cron: 17 3 * * *
