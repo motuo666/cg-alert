@@ -1,8 +1,4 @@
 name: Promote Intakes
-true:
-  workflow_dispatch: {}
-  schedule:
-  - cron: '*/15 * * * *'
 permissions:
   contents: write
   pull-requests: write
@@ -31,4 +27,6 @@ jobs:
 
         '
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  schedule:
+  - cron: '*/15 * * * *'
