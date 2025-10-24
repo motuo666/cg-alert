@@ -1,35 +1,30 @@
 name: Public Change Poller
-
-on:
-  schedule:
-    - cron: "*/30 * * * *"
-  workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
   poll:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-      - name: Normalize Slack env
-        shell: bash
-        run: |
-          if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
-          if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
-      - name: Run change poller
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          if [[ -x scripts/run_public_change_poller.sh ]]; then
-            bash scripts/run_public_change_poller.sh
-          elif [[ -f scripts/poll_public_endpoints.js ]]; then
-            node scripts/poll_public_endpoints.js
-          else
-            echo "No public change poller script found" >&2
-            exit 0
-          fi
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Normalize Slack env
+      shell: bash
+      run: 'if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then
+        echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
+
+        if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo
+        "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
+
+        '
+    - name: Run change poller
+      shell: bash
+      run: "set -Eeuo pipefail\nif [[ -x scripts/run_public_change_poller.sh ]]; then\n\
+        \  bash scripts/run_public_change_poller.sh\nelif [[ -f scripts/poll_public_endpoints.js\
+        \ ]]; then\n  node scripts/poll_public_endpoints.js\nelse\n  echo \"No public\
+        \ change poller script found\" >&2\n  exit 0\nfi\n"
+'on':
+  workflow_dispatch: null
+  schedule:
+  - cron: '*/30 * * * *'
