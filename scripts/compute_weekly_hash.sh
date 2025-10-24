@@ -32,7 +32,7 @@ printf '{"sha256":"%s","iso_week":"%s","timestamp":"%s"}\n' "$sha" "$week" "$ts"
 if ! git config user.email >/dev/null 2>&1 || [[ -z "$(git config user.email || true)" ]]; then
   git config user.email "bot@cg-alert.com"
 fi
-if ! git config user.name  >/devnull 2>&1 || [[ -z "$(git config user.name  || true)" ]]; then
+if ! git config user.name  >/dev/null 2>&1 || [[ -z "$(git config user.name  || true)" ]]; then
   git config user.name  "cg-alert-bot"
 fi
 
