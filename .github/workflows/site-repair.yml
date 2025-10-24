@@ -1,0 +1,26 @@
+name: Site Repair
+true:
+  workflow_dispatch: null
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Make asset paths absolute
+      run: node scripts/absolute_assets.js
+    - name: Dedupe headers/footers in report pages
+      run: node scripts/reports_dedupe.js
+    - name: Commit repairs (if any)
+      shell: bash
+      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add public || true\nif git diff --cached --quiet;\
+        \ then\n  echo \"No changes\"\nelse\n  git commit -m \"site: absolute assets\
+        \ + dedupe report shells\"\n  git push\nfi\n"
+'on':
+  workflow_dispatch: null
