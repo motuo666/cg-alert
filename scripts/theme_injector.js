@@ -1,44 +1,39 @@
 #!/usr/bin/env node
 /**
- * Theme Injector — apply homepage look to all target pages.
- * Idempotent: running multiple times is safe.
+ * Theme Injector (dedupe edition)
+ * - Ensures single app header by REMOVING any existing <header> blocks first
+ * - Ensures /assets/cg-theme.css in <head>
+ * - Idempotent
  */
-const fs = require('fs');
-const path = require('path');
-
+const fs = require('fs'); const path = require('path');
 const ROOT = process.cwd();
-const TARGET_DIRS = ['.', 'public', 'reports', 'who-uses', 'seo', 'evidence']; // add more as needed
-const EXCLUDE_DIRS = new Set(['node_modules','.git','.github','.next','.vercel','.vscode']);
+const TARGET_DIRS = ['.', 'public', 'reports', 'who-uses', 'seo', 'evidence'];
+const EXCLUDE = new Set(['node_modules','.git','.github','.next','.vercel','.vscode']);
 const EXT = /\.html?$/i;
 
-function* walk(dir) {
-  const st = fs.statSync(dir);
-  if (!st.isDirectory()) return;
-  const ents = fs.readdirSync(dir, { withFileTypes: true });
-  for (const e of ents) {
-    const p = path.join(dir, e.name);
-    if (e.isDirectory()) {
-      if (!EXCLUDE_DIRS.has(e.name)) yield* walk(p);
-    } else if (EXT.test(e.name)) {
-      yield p;
+function* walk(dir){ const st=fs.statSync(dir); if(!st.isDirectory()) return;
+  let ents=[]; try{ ents = fs.readdirSync(dir,{withFileTypes:true}); } catch { return; }
+  for(const e of ents){
+    if(e.isDirectory()){
+      if(EXCLUDE.has(e.name)) continue;
+      yield* walk(path.join(dir,e.name));
+    } else if (e.isFile() && EXT.test(e.name)){
+      yield path.join(dir,e.name);
     }
   }
 }
 
-function has(str, pattern) { return new RegExp(pattern, 'i').test(str); }
+function has(s, re){ return new RegExp(re,'i').test(s); }
 
-function ensureHeadLink(html) {
-  if (has(html, '<link[^>]+cg-theme\\.css')) return html;
-  if (!has(html, '</head>')) return html;
-  const link = '\n<link rel="stylesheet" href="/assets/cg-theme.css">';
-  return html.replace(/<\/head>/i, link + '\n</head>');
+function stripHeaders(html){
+  return html.replace(/<header\b[^>]*>[\s\S]*?<\/header>/ig, '');
 }
-
-function ensureThemeColor(html) {
-  if (has(html, 'name=[\'"]theme-color[\'"]')) return html;
-  if (!has(html, '</head>')) return html;
-  const meta = '\n<meta name="theme-color" content="#0b0">';
-  return html.replace(/<\/head>/i, meta + '\n</head>');
+function ensureCgCss(html){
+  let s = html;
+  if (!has(s, '<link[^>]+cg-theme\\.css')){
+    s = s.replace(/<\/head>/i, '\n<link rel="stylesheet" href="/assets/cg-theme.css">\n</head>');
+  }
+  return s;
 }
 
 const HEADER = `
@@ -51,66 +46,25 @@ const HEADER = `
   </div>
 </header>`;
 
-const FOOTER = `
-<footer class="container">© CG Alert — Evidence-backed vendor change alerts.</footer>`;
-
-function ensureHeader(html) {
-  if (has(html, 'class=[\'"]app-header[\'"]')) return html;
-  if (!has(html, '<body')) return html;
+function injectHeader(html){
+  if (!/<body/i.test(html)) return html;
   return html.replace(/<body[^>]*>/i, m => m + HEADER);
 }
 
-function ensureFooter(html) {
-  if (has(html, '<footer[^>]*>')) return html;
-  if (!has(html, '</body>')) return html;
-  return html.replace(/<\/body>/i, FOOTER + '\n</body>');
-}
-
-function ensureMainClasses(html) {
-  // Add "main container" to <main> if missing
-  if (!has(html, '<main')) return html;
-  return html.replace(/<main([^>]*)>/i, (m, attrs) => {
-    const hasClass = /class\s*=\s*["'][^"']*["']/i.test(attrs);
-    if (hasClass) {
-      // append classes if not present
-      return m.replace(/class\s*=\s*["']([^"']*)["']/i, (mm, cls) => {
-        const set = new Set(cls.split(/\s+/).filter(Boolean));
-        set.add('main'); set.add('container');
-        return `class="${Array.from(set).join(' ')}"`;
-      });
-    } else {
-      return `<main class="main container"${attrs}>`;
-    }
-  });
-}
-
-function processFile(fp) {
-  const src = fs.readFileSync(fp, 'utf8');
-  let out = src;
-  out = ensureHeadLink(out);
-  out = ensureThemeColor(out);
-  out = ensureHeader(out);
-  out = ensureFooter(out);
-  out = ensureMainClasses(out);
-  if (out !== src) {
-    // backup once
-    const bak = fp + '.bak';
-    if (!fs.existsSync(bak)) fs.writeFileSync(bak, src, 'utf8');
-    fs.writeFileSync(fp, out, 'utf8');
-    return true;
-  }
+function processFile(fp){
+  let s = fs.readFileSync(fp,'utf8');
+  const before = s;
+  s = stripHeaders(s);         // remove any page-local headers first
+  s = ensureCgCss(s);          // ensure theme css present
+  s = injectHeader(s);         // inject our header
+  if (s !== before){ fs.writeFileSync(fp,s,'utf8'); return true; }
   return false;
 }
 
-let changed = 0, scanned = 0;
-for (const base of TARGET_DIRS) {
+let scanned=0, changed=0;
+for (const base of TARGET_DIRS){
   const abs = path.join(ROOT, base);
   if (!fs.existsSync(abs)) continue;
-  for (const fp of walk(abs)) {
-    scanned++;
-    // skip our SEO landing if any user wants to keep minimal
-    changed += processFile(fp) ? 1 : 0;
-  }
+  for (const file of walk(abs)){ scanned++; if (processFile(file)) changed++; }
 }
-console.log(`theme_injector: scanned=${scanned} changed=${changed}`);
-process.exit(0);
+console.log(`theme_injector (dedupe): scanned=${scanned} changed=${changed}`);
