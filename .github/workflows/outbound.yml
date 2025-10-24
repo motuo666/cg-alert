@@ -1,8 +1,4 @@
 name: outbound
-true:
-  workflow_dispatch: null
-  schedule:
-  - cron: 0 * * * *
 jobs:
   send:
     runs-on: ubuntu-latest
@@ -32,3 +28,5 @@ jobs:
       run: node scripts/send_outbound.js
 'on':
   workflow_dispatch: null
+  schedule:
+  - cron: 0 * * * *
