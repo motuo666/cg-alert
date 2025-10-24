@@ -1,8 +1,4 @@
 name: CTA Connectivity Probe
-true:
-  workflow_dispatch: {}
-  schedule:
-  - cron: '*/30 * * * *'
 permissions:
   contents: read
 jobs:
@@ -38,4 +34,6 @@ jobs:
 
         '
 'on':
-  workflow_dispatch: null
+  workflow_dispatch: {}
+  schedule:
+  - cron: '*/30 * * * *'
