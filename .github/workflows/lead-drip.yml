@@ -2,100 +2,22 @@ name: lead-drip
 
 on:
   schedule:
-    - cron: "*/30 * * * *"   # 每 30 分钟
-  workflow_dispatch: {}
-
-# 防止并发重叠（上一轮没跑完就不再触发）
-concurrency:
-  group: lead-drip
-  cancel-in-progress: false
-
-permissions:
-  contents: read
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
 
 jobs:
   drip:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    env:
-      # ---- Cloudflare / 站点口径（变量优先）----
-      CF_ACCOUNT_ID:   ${{ vars.CF_ACCOUNT_ID }}
-      KV_NAMESPACE_ID: ${{ vars.KV_NAMESPACE_ID }}
-      WORKER_URL:      ${{ vars.WORKER_URL }}
-      SITE_ORIGIN:     ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-
-      # ---- 密钥（只放 Secrets）----
-      CF_API_TOKEN:       ${{ secrets.CF_API_TOKEN }}
-      SMTP_HOST:          ${{ secrets.SMTP_HOST }}
-      SMTP_PORT:          ${{ secrets.SMTP_PORT }}
-      SMTP_USER:          ${{ secrets.SMTP_USER }}
-      SMTP_PASS:          ${{ secrets.SMTP_PASS }}
-      UNSUB_HMAC_SECRET:  ${{ secrets.UNSUB_HMAC_SECRET }}
-      SLACK_WEBHOOK_URL:  ${{ secrets.SLACK_WEBHOOK_URL }}
-
-      # ---- 发件身份（变量优先，回退到 Secrets，再回退到默认）----
-      MAIL_FROM:   ${{ vars.MAIL_FROM   || secrets.MAIL_FROM   || 'CG Alerts <ops@cg-alert.com>' }}
-      REPLY_TO:    ${{ vars.REPLY_TO    || secrets.REPLY_TO    || 'ops@cg-alert.com' }}
-      SENDER_NAME: ${{ vars.SENDER_NAME || 'CG Alerts' }}
-
-      # ---- 运行护栏（send_drip.js 读取则生效；未读取也不影响）----
-      SEND_RATE:    20     # 每分钟最大发送数（域名健康）
-      MAX_PER_RUN:  400    # 单次 run 最多处理多少线索
-
-      # ---- 运行时一致性 ----
-      TZ: UTC
-      NODE_OPTIONS: --unhandled-rejections=strict
-
     steps:
-
-- name: Normalize Slack env
-  shell: bash
-  run: |
-    if [[ -n "${SLACK_WEBHOOK:-}" && -z "${SLACK_WEBHOOK_URL:-}" ]]; then echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK" >> $GITHUB_ENV; fi
-    if [[ -n "${SLACK_WEBHOOK_URL:-}" && -z "${SLACK_WEBHOOK:-}" ]]; then echo "SLACK_WEBHOOK=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV; fi
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      # 依赖安装兜底：有 lock 用 ci；没有就安装最小依赖
-      - name: Install deps (smart)
+      - uses: actions/checkout@v4
+      - name: Run lead drip (if script exists)
+        shell: bash
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci --no-audit --no-fund
-          elif [ -f package.json ]; then
-            npm install --no-audit --no-fund
+          set -Eeuo pipefail
+          if [[ -x scripts/lead_drip.sh ]]; then
+            bash scripts/lead_drip.sh
+          elif [[ -f scripts/lead_drip.js ]]; then
+            node scripts/lead_drip.js
           else
-            npm init -y -f
-            npm install nodemailer --no-audit --no-fund
-          fi
-
-      # 可选：环境自检（缺关键口径时跳过而非报红）
-      - name: Env guard (optional)
-        run: |
-          MISS=0
-          for k in SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS UNSUB_HMAC_SECRET; do
-            v=$(eval echo "\$$k")
-            if [ -z "$v" ]; then echo "::warning::missing $k"; MISS=1; fi
-          done
-          if [ "$MISS" = "1" ]; then
-            echo "Required secrets missing, skipping run"; exit 78; # neutral
-          fi
-
-      - name: Send drip
-        run: node scripts/send_drip.js
-
-      # 失败告警（配了 SLACK_WEBHOOK_URL 才会发）
-      - name: Notify failure (Slack)
-        if: failure()
-        run: |
-          if [ -n "${SLACK_WEBHOOK_URL}" ]; then
-            curl -sS -X POST -H 'Content-type: application/json' \
-              --data "{\"text\":\"lead-drip ❌ failed on ${GITHUB_REPOSITORY}@${GITHUB_REF_NAME} (run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})\"}" \
-              "${SLACK_WEBHOOK_URL}" || true
+            echo "No lead drip script found; skipping."
           fi
