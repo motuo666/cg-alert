@@ -7,5 +7,7 @@
   "last_modified": null,
   "hash": "e95a58d03dab96eecd41e0c132b9329a48e98a276f137e309abf309ebc60e529",
   "commit": "3680760",
-  "sha256": "e95a58d03dab96eecd41e0c132b9329a48e98a276f137e309abf309ebc60e529"
+  "sha256": "e95a58d03dab96eecd41e0c132b9329a48e98a276f137e309abf309ebc60e529",
+  "diff_excerpt_before": "HAHOeAL+PRzqcZh3TLvO59cO4ywmJ7Sx\"></scri",
+  "diff_excerpt_after": "rg/scripttemplates/otSDKStub.js\" nonce=\""
 }
