@@ -1,6 +1,4 @@
 name: Site Repair
-true:
-  workflow_dispatch: null
 permissions:
   contents: write
 jobs:
