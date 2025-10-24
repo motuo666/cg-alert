@@ -1,11 +1,4 @@
 name: Vendors Slug Unify (one-shot)
-true:
-  workflow_dispatch:
-    inputs:
-      dry:
-        description: 试运行(DRY=1，不落地)
-        required: true
-        default: 'false'
 permissions:
   contents: write
 concurrency:
@@ -41,4 +34,9 @@ jobs:
 
         '
 'on':
-  workflow_dispatch: null
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: 试运行(DRY=1，不落地)
+        required: true
+        default: 'false'
