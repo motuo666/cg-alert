@@ -520,15 +520,12 @@
           hubspot.require(["raven-hubspot/configure"],(r=>{configureLogFetchErrors(r,config)}));
         })();</script><link href="//static.hsappstatic.net/pricing-pages-ui-public-app/static-1.9383/sass/project.css" rel="stylesheet" type="text/css"/><script id="whisper-core-embed" type="module" data-static-domain="//static.hsappstatic.net">window.Whisper={debug(){},shutdown(){},get:()=>null};const isDevMode=(()=>{try{return"true"===localStorage.getItem("WHISPER_CORE_DEV")}catch(e){return!1}})();function log(...e){isDevMode&&console.log(...e)}const environment=(()=>{const e=window.location.hostname;return e.startsWith("local.")?isDevMode?"LOCAL":"LOCAL-QA":e.includes("qa")?"QA":"PROD"})(),whisperCoreUrl=(()=>{let e="LOCAL"===environment?"//local.hsappstatic.net":"//static.hsappstatic.net";const t=document.getElementById("whisper-core-embed");if("LOCAL-QA"!==environment&&t&&t instanceof HTMLScriptElement&&t.dataset.staticDomain){e=t.dataset.staticDomain;t.removeAttribute("data-static-domain");delete t.dataset.staticDomain}return{LOCAL:`https:${e}/whisper-core/static/whisper-core.js`,"LOCAL-QA":`https:${e}/whisper-core/ex/whisper-core-qa.js`,QA:`https:${e}/whisper-core/ex/whisper-core-qa.js`,PROD:`https:${e}/whisper-core/ex/whisper-core.js`}[environment]})(),loadWhisperCoreScript=()=>{log("[whisper-core-embed] Start loading whisper-core from %s on %s",whisperCoreUrl,window.location.origin+window.location.pathname);return new Promise(((e,t)=>{const o=whisperCoreUrl,r=document.createElement("script");r.src=o;r.defer=!0;r.onload=()=>{log("[whisper-core-embed] Load complete");e()};r.onerror=()=>{t(new Error(`Failed to load script from ${o}.`))};document.head.appendChild(r)}))};!async function(){try{await loadWhisperCoreScript();log("[whisper-core-embed] Initialized and ready to use")}catch(e){log("[whisper-core-embed] Failed initialization with error:",e)}}();</script><meta name="author" content="HubSpot, Inc."/><link rel="apple-touch-icon" sizes="180x180" href="//static.hsappstatic.net/StyleGuideUI/static-3.473/img/sprocket/apple-touch-icon.png"/><link rel="icon" type="image/png" sizes="32x32" href="//static.hsappstatic.net/StyleGuideUI/static-3.473/img/sprocket/favicon-32x32.png"/><link rel="icon" type="image/png" sizes="16x16" href="//static.hsappstatic.net/StyleGuideUI/static-3.473/img/sprocket/favicon-16x16.png"/><link rel="mask-icon" href="//static.hsappstatic.net/StyleGuideUI/static-3.473/img/sprocket/safari-pinned-tab.svg" color="#FF7A59"/><meta name="msapplication-TileColor" content="#2b5797"/>
 <link rel="stylesheet" href="/assets/cg-theme.css">
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="color-scheme" content="light">
 </head><body class="hubspot">
-<header class="app-header">
-  <div class="nav container">
-    <a class="logo" href="/"><img src="/icon.svg" alt="CG Alert">CG Alert</a>
-    <a href="/reports/">Reports</a>
-    <a href="/who-uses/">Who Uses</a>
-    <a href="/rss.xml" rel="nofollow">RSS</a>
-  </div>
-</header>
+<!--APP_HEADER-->
+
+
 
 
 
