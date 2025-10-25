@@ -3,33 +3,120 @@ name: Site Doctor
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - 'reports/**'
-      - 'public/reports/**'
-      - 'scripts/**.js'
+      - 'public/**'
+      - 'evidence/**'
+      - '_redirects'
+      - 'public/_redirects'
+      - 'scripts/**'
+      - '.github/workflows/site-doctor.yml'
 
 permissions:
   contents: write
 
+concurrency:
+  group: site-doctor
+  cancel-in-progress: true
+
 jobs:
   doctor:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          node-version: '20'
-      - name: Run site doctor
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # 1. 同步 reports → public/reports 确保线上一定有 /reports/*
+      - name: Sync reports into public/reports
+        shell: bash
         run: |
+          set -Eeuo pipefail
+          mkdir -p public/reports
+          if [ -d reports ]; then
+            rsync -av --delete reports/ public/reports/
+          fi
+          test -d public/reports
+
+      # 2. 确保 /feed 指向的 /updates/rss.xml 存在
+      #    我们把 public/reports.rss.xml 复制成 public/updates/rss.xml
+      #    如果 public/reports.rss.xml 不存在，则直接 fail（这意味着你的周/月报还没生成）
+      - name: Ensure RSS alias for /feed
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p public/updates
+          if [ -f public/reports.rss.xml ]; then
+            cp public/reports.rss.xml public/updates/rss.xml
+          fi
+          test -f public/updates/rss.xml
+
+      # 3. 清理所有 *.bak，防止被爬/稀释 SEO
+      - name: Prune backup garbage (*.bak)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          find reports public evidence -type f -name '*.bak' -print -delete || true
+
+      # 4. 跑站点规范修整（header、主题注入、链接归一化等）
+      - name: Normalize pages (site_doctor.js / theme_injector.js)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
           node scripts/site_doctor.js
           node scripts/theme_injector.js
-      - name: Commit (if any)
+
+      # 5. 基础健康检查（直接 fail，防止静默坏站）
+      - name: Sanity checks
+        shell: bash
         run: |
-          git add -A reports public || true
-          if [ -n "$(git status --porcelain)" ]; then
-            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "site-doctor: dedupe header, enforce css, normalize links"
+          set -Eeuo pipefail
+
+          # 必须存在的核心入口页
+          test -f public/seo/index.html
+          test -f public/who-uses/index.html
+
+          # 必须存在的 sitemap
+          test -f public/sitemap.xml
+          test -f public/seo/sitemap.xml
+
+          # 必须存在的 reports 区
+          test -d public/reports
+          ls -1 public/reports | head -n 1
+
+          # 必须存在的证据与差异图（至少一条）
+          test -d public/evidence
+          find public/evidence -maxdepth 5 -type f -name index.html | head -n 1 | grep . 
+          find public/evidence -maxdepth 6 -type f -name diff.html   | head -n 1 | grep .
+
+          # RSS alias (feed)
+          test -f public/updates/rss.xml
+
+      # 6. 提交回主分支（只有在有变更时）
+      - name: Commit & push (if changes)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+
+          git add -A reports public evidence
+
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "site-doctor: sync reports/, ensure feed rss, prune *.bak, normalize theme"
+            # rebase 失败不算致命，允许 fallback
             git pull --rebase --autostash || true
             git push
-          else
-            echo "no changes"
           fi
