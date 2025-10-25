@@ -209,3 +209,39 @@ body {
     border-color: #ddd;
   }
 }
+/* ==== CG Alert HOTFIX START =====================================
+   目的：
+   1. 头部品牌只保留一份，彻底干掉“两个 CG Alert”
+   2. 强行禁用深色模式下的近黑背景，修掉/reports 子页那种一圈黑壳/大黑边
+   =============================================================== */
+
+.logo img,
+.logo .badge {
+  /* 一刀切隐藏图标版徽章，只保留文字版品牌 */
+  display: none !important;
+}
+
+/* 浏览器是暗黑模式的时候，原来把整页背景搞成接近黑色。
+   我们直接强制回到浅色，保证整站都是白底+浅灰边，像主页那样。 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #fff;
+    --ink: #0b1020;
+    --border: #e5e7eb;
+    --brand: #111827;
+    --radius-card: 12px;
+  }
+
+  body {
+    background: var(--bg) !important;
+    color: var(--ink) !important;
+  }
+}
+
+/* 双保险：不管暗/亮模式，背景都白，文字走主色 */
+body {
+  background: #fff !important;
+  color: var(--ink, #0b1020) !important;
+}
+
+/* ==== CG Alert HOTFIX END ======================================= */
