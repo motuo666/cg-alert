@@ -1,101 +1,77 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-
-
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
-
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy · CG Alert</title>
+<meta name="description" content="How CG Alert collects, stores, and deletes data. Public-only sources. Opt-out in 72 hours.">
+<link rel="canonical" href="https://www.cg-alert.com/privacy.html">
 <link rel="manifest" href="/manifest.webmanifest">
-<link rel="preconnect" href="https://buy.stripe.com" crossorigin>
 <meta name="theme-color" content="#0b0d12">
-
-
-
-<link rel="image_src" href="/og.png">
-
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self';">
 <link rel="stylesheet" href="/styles.css">
-  <!-- CG-SEO-INJECT START -->
-  <title>CG Alert — Evidence-backed vendor change alerts</title>
-  <meta name="description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
-  <link rel="canonical" href="https://www.cg-alert.com/privacy.html">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"CG Alert — Evidence-backed vendor change alerts","url":"https://www.cg-alert.com/privacy.html","description":"Monitor public vendor pages and get high-signal alerts with verifiable evidence."}</script>
-  <meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
-  <meta property="og:description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
-  <meta property="og:url" content="https://www.cg-alert.com/privacy.html">
-  <meta property="og:site_name" content="CG Alert">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="https://www.cg-alert.com/og/default.png?slug=privacy">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="CG Alert — Evidence-backed vendor change alerts">
-  <meta name="twitter:description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
-  <meta name="twitter:image" content="https://www.cg-alert.com/og/default.png?slug=privacy">
-<!-- CG-SEO-INJECT END -->
-
 <link rel="stylesheet" href="/assets/cg-theme.css">
-</head><body>
+</head>
+<body>
+
 <header class="app-header">
   <div class="nav container">
-    <a class="logo" href="/"><img src="/icon.svg" alt="CG Alert">CG Alert</a>
+    <a class="logo" href="/">CG Alert</a>
     <a href="/reports/">Reports</a>
     <a href="/who-uses/">Who Uses</a>
     <a href="/rss.xml" rel="nofollow">RSS</a>
   </div>
 </header>
-<a href="#main" class="skip-link">Skip to content</a>
-<div class="nav" role="navigation" aria-label="Primary">
-  <div class="container nav-inner">
-    <a class="logo" href="/"><div class="logo-badge" aria-hidden="true"><span>CG</span></div><span>CG Alert</span></a>
-    <div class="nav-links">
-      <a href="/#product">Product</a>
-      <a href="/#how">How it works</a>
-      <a href="/#security">Security</a>
-      <a href="/#samples">Samples</a>
-      <a href="/#pricing">Pricing</a>
-      <a href="/privacy.html">Privacy</a>
-      <a href="/terms.html">Terms</a>
-    </div>
-  </div>
-</div>
+
 <main class="main container" id="main">
-<div class="section"><div class="container">
-  <h1>Privacy</h1>
-<!-- CG-CTA-INJECT START -->
-<div class="cg-cta" style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
-<a id="cg-enable-alerts" class="btn" rel="nofollow" href="https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform">Enable alerts</a>
-<a id="cg-buy-portfolio" class="btn secondary" rel="nofollow" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801">Buy Portfolio</a>
-</div>
-<script>(function(){try{var qs=location.search;if(qs&&/utm_/i.test(qs)){["cg-enable-alerts","cg-buy-portfolio"].forEach(function(id){var el=document.getElementById(id);if(!el||!el.href)return;if(el.href.indexOf("?")===-1){el.href+=qs;}else{el.href+="&"+qs.slice(1);}})}}catch(e){}})();</script>
-<!-- CG-CTA-INJECT END -->
-  <p>We only use public sources. We store minimal data necessary to render evidence cards
-  (short excerpt ≤300 chars, source URL, timestamp, diff hash). No personal data is required
-  for core functionality. We honor removal/opt-out requests within 72 hours.</p>
-  <h3>Outbound email</h3>
-  <p>We send alert digests and service messages from our domain with DKIM/SPF/DMARC enforced.</p>
-  <h3>Data retention</h3>
-  <p>Evidence cards and logs can be exported or deleted upon request.</p>
-</div></div>
+  <div class="section"><div class="container">
 
+    <h1 class="h1">Privacy</h1>
+    <p class="sub">Plain-language summary of what we collect, why, and how to make us delete it.</p>
+
+    <div class="card">
+      <h2 class="h1" style="font-size:16px;margin:0 0 8px 0;">Data sources</h2>
+      <ul class="clean" style="margin:0;padding-left:20px;line-height:1.6;font-size:14px;">
+        <li>We monitor only public-facing vendor pages (Pricing, Terms/ToS/MSA, DPA, Subprocessors, Status). We <b>never</b> monitor behind login or paywall.</li>
+        <li>For each observed change we store: URL, timestamp (UTC), short text excerpt (≤300 chars), and a cryptographic hash of the diff for audit.</li>
+        <li>We do <b>not</b> ingest customer data, credentials, or internal system traffic. Monitoring is passive, public-source only.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2 class="h1" style="font-size:16px;margin:0 0 8px 0;">Outbound email / alerts</h2>
+      <ul class="clean" style="margin:0;padding-left:20px;line-height:1.6;font-size:14px;">
+        <li>We may email Procurement, Legal Ops, Finance, RevOps, Security, etc., if we believe you handle vendor risk or renewal negotiations.</li>
+        <li>Every outreach comes from a monitored domain with SPF/DKIM/DMARC, with a working reply-to address.</li>
+        <li>Every alert links to an evidence card (timestamp + hash + URL) so you can document internally.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2 class="h1" style="font-size:16px;margin:0 0 8px 0;">Retention &amp; deletion</h2>
+      <ul class="clean" style="margin:0;padding-left:20px;line-height:1.6;font-size:14px;">
+        <li>Evidence cards (URL, timestamp, hash, short excerpt) are snapshotted and backed up daily for integrity / audit.</li>
+        <li>We will remove specific evidence excerpts that include personal data or confidential info that should not be public.</li>
+        <li>Opt-out / suppression: email <a class="link" href="mailto:[email protected]">[email protected]</a> with your domain / role and “OPT-OUT” in the subject. We target 72h removal from future outreach.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2 class="h1" style="font-size:16px;margin:0 0 8px 0;">Security contact</h2>
+      <p class="sub" style="margin:0 0 12px 0;font-size:14px;line-height:1.5;">
+        To report abuse, request deletion, or raise a security concern: email
+        <a class="link" href="mailto:[email protected]">[email protected]</a>.
+        You can also use <code>/.well-known/security.txt</code>.
+      </p>
+      <p class="sub" style="margin:0;font-size:12px;color:var(--muted);">
+        CG Alert is not legal counsel. These alerts are directional risk signals for Procurement / Legal Ops / Finance, not final legal advice.
+      </p>
+    </div>
+
+  </div></div>
 </main>
-<div class="footer"><div class="container inner"><hr>
-  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <div>© 2025 CG Alert. All rights reserved.</div>
-    <div><a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a></div>
-  </div>
-</div></div>
-<script>
-(function(){
-  var links=[].slice.call(document.querySelectorAll('.nav-links a[href^="/#"]'));
-  var map=new Map(links.map(function(a){return [a.getAttribute('href').slice(2),a];}));
-  if(!('IntersectionObserver'in window)) return;
-  var obs=new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      var id=e.target.id, a=map.get(id); if(!a) return;
-      if(e.isIntersecting){ links.forEach(function(el){el.classList.remove('active')}); a.classList.add('active'); }
-    });
-  },{rootMargin:'-45% 0% -45% 0%',threshold:0.1});
-  ['product','how','security','samples','pricing'].forEach(function(id){ var el=document.getElementById(id); if(el) obs.observe(el); });
-})();
-</script>
 
-<footer class="container">© CG Alert — Evidence-backed vendor change alerts.</footer>
-</body></html>
+<footer class="container">© 2025 CG Alert. All rights reserved.</footer>
+</body>
+</html>
