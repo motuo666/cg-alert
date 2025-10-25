@@ -15,10 +15,10 @@ function esc(s){
 }
 
 function renderCard(vendor, baseName, data){
-  const whenUTC = data.detected_at || data.timestamp || '';
+  const whenUTC   = data.detected_at || data.timestamp || '';
   const dateShort = whenUTC ? whenUTC.slice(0,10) : '';
-  const shaFull = data.sha256 || data.hash || '';
-  const shaShort = shaFull.slice(0,8);
+  const shaFull   = data.sha256 || data.hash || '';
+  const shaShort  = shaFull.slice(0,8);
 
   const HEADER = `
 <header class="app-header">
@@ -38,13 +38,17 @@ function renderCard(vendor, baseName, data){
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Evidence — ${esc(vendor)} — ${esc(data.type || data.kind || '')} — ${esc(dateShort)} · CG Alert</title>
-<meta name="description" content="Timestamped evidence card for ${esc(vendor)} ${esc(data.type || data.kind || '')} change on ${esc(dateShort)} (UTC). Includes source URL and cryptographic hash for audit; public sources only.">
+<meta name="description" content="Timestamped evidence card for ${esc(vendor)} ${esc(data.type || data.kind || '')} change on ${esc(dateShort)} (UTC). Includes source URL and cryptographic hash for audit. Public-source only.">
 <link rel="canonical" href="/evidence/${esc(vendor)}/${esc(baseName)}.html">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0b0d12">
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/assets/cg-theme.css">
 <style>
+html,body{
+  background:#fff !important;
+  color:#0b0d12;
+}
 .table-meta{
   width:100%;
   border-collapse:collapse;
@@ -85,12 +89,19 @@ pre.evidence-json{
   line-height:1.4;
   margin-top:8px;
 }
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
 </style>
 </head>
 <body>
 ${HEADER}
+
 <main class="main container" id="main">
   <div class="section"><div class="container">
+
     <h1 class="h1">Evidence Card — ${esc(vendor)}</h1>
     <p class="sub">Captured <strong>${esc(whenUTC)}</strong> (UTC)</p>
 
@@ -115,12 +126,15 @@ ${HEADER}
     </div>
 
     <div class="card">
-      <a class="btn ghost" href="/reports/">All Reports</a>
-      <a class="btn ghost" href="/rss.xml" rel="nofollow">RSS</a>
+      <div class="btn-row">
+        <a class="btn ghost" href="/reports/">All Reports</a>
+        <a class="btn ghost" href="/rss.xml" rel="nofollow">RSS</a>
+      </div>
     </div>
 
   </div></div>
 </main>
+
 <footer class="container">© CG Alert — Evidence-backed vendor change alerts.</footer>
 </body>
 </html>`;
@@ -131,16 +145,19 @@ function buildAll(){
   for(const vendor of fs.readdirSync(EVIDENCE_DIR)){
     const vDir = path.join(EVIDENCE_DIR, vendor);
     if(!fs.statSync(vDir).isDirectory()) continue;
+
     for(const f of fs.readdirSync(vDir)){
       if(!f.endsWith('.json')) continue;
-      const base = f.replace(/\.json$/,'');
+
+      const baseName = f.replace(/\.json$/,'');
       let data;
       try{
         data = JSON.parse(fs.readFileSync(path.join(vDir,f),'utf8'));
       }catch{ continue; }
-      const html = renderCard(vendor, base, data);
-      fs.writeFileSync(path.join(vDir, base+'.html'), html, 'utf8');
-      console.log('evidence page built:', vendor, base);
+
+      const html = renderCard(vendor, baseName, data);
+      fs.writeFileSync(path.join(vDir, baseName+'.html'), html, 'utf8');
+      console.log('built evidence page:', vendor, baseName);
     }
   }
 }
