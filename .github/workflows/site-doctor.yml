@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   doctor:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
@@ -36,7 +36,8 @@ jobs:
         with:
           node-version: 20
 
-      # 1. 同步 reports → public/reports 确保线上一定有 /reports/*
+      # 1. 同步 reports → public/reports
+      #    确保线上一定有 /reports/* 目录（这一块就是我们对外卖的“证据货架”）
       - name: Sync reports into public/reports
         shell: bash
         run: |
@@ -48,8 +49,8 @@ jobs:
           test -d public/reports
 
       # 2. 确保 /feed 指向的 /updates/rss.xml 存在
-      #    我们把 public/reports.rss.xml 复制成 public/updates/rss.xml
-      #    如果 public/reports.rss.xml 不存在，则直接 fail（这意味着你的周/月报还没生成）
+      #    我们用 public/reports.rss.xml 作为源，复制成 public/updates/rss.xml
+      #    如果源不存在，就 fail：说明你还没生成公开周/月报，不允许继续发布站点
       - name: Ensure RSS alias for /feed
         shell: bash
         run: |
@@ -60,14 +61,15 @@ jobs:
           fi
           test -f public/updates/rss.xml
 
-      # 3. 清理所有 *.bak，防止被爬/稀释 SEO
+      # 3. 清理所有 *.bak，防止脏草稿/重复内容被爬，也防止法务风险
       - name: Prune backup garbage (*.bak)
         shell: bash
         run: |
           set -Eeuo pipefail
           find reports public evidence -type f -name '*.bak' -print -delete || true
 
-      # 4. 跑站点规范修整（header、主题注入、链接归一化等）
+      # 4. 站点规范修整（header 统一、主题注入、链接归一化等）
+      #    假设 scripts/site_doctor.js + scripts/theme_injector.js 都是幂等的
       - name: Normalize pages (site_doctor.js / theme_injector.js)
         shell: bash
         run: |
@@ -75,33 +77,68 @@ jobs:
           node scripts/site_doctor.js
           node scripts/theme_injector.js
 
-      # 5. 基础健康检查（直接 fail，防止静默坏站）
+      # 5. 基础健康检查（硬性验收，不通过就直接 fail）
+      #    - 核心入口页必须存在
+      #    - sitemap 必须存在
+      #    - reports 目录必须有内容
+      #    - evidence 必须能找到 index.html 和 diff.html 这种可展示的证据/差分
+      #    - RSS alias (/updates/rss.xml) 必须存在
+      #    - _redirects 必须存在并且包含 / -> /seo/ 301 和 /feed -> /updates/rss.xml 301
+      #    - 所有 .bak 必须已经被清干净
       - name: Sanity checks
         shell: bash
         run: |
           set -Eeuo pipefail
 
-          # 必须存在的核心入口页
+          echo "[check] core landing pages"
           test -f public/seo/index.html
           test -f public/who-uses/index.html
 
-          # 必须存在的 sitemap
+          echo "[check] sitemap"
           test -f public/sitemap.xml
           test -f public/seo/sitemap.xml
 
-          # 必须存在的 reports 区
+          echo "[check] reports dir (public/reports)"
           test -d public/reports
-          ls -1 public/reports | head -n 1
+          ls -1 public/reports | head -n 1 | grep .
 
-          # 必须存在的证据与差异图（至少一条）
+          echo "[check] evidence dir with at least one index.html and one diff.html (provable deltas)"
           test -d public/evidence
-          find public/evidence -maxdepth 5 -type f -name index.html | head -n 1 | grep . 
+          find public/evidence -maxdepth 5 -type f -name index.html | head -n 1 | grep .
           find public/evidence -maxdepth 6 -type f -name diff.html   | head -n 1 | grep .
 
-          # RSS alias (feed)
+          echo "[check] rss alias (/updates/rss.xml)"
           test -f public/updates/rss.xml
 
-      # 6. 提交回主分支（只有在有变更时）
+          echo "[check] no leftover .bak after prune"
+          if find public reports evidence -type f -name '*.bak' | grep . ; then
+            echo "ERROR: .bak files still present after prune"
+            exit 1
+          fi
+
+          echo "[check] redirects file exists (root / -> /seo/ 301 and /feed -> /updates/rss.xml 301)"
+          if [ -f _redirects ]; then
+            REDIR_FILE="_redirects"
+          elif [ -f public/_redirects ]; then
+            REDIR_FILE="public/_redirects"
+          else
+            echo "ERROR: no _redirects or public/_redirects found"
+            exit 1
+          fi
+
+          echo "[check] /feed redirect rule"
+          grep -E '^[[:space:]]*/feed[[:space:]]+/updates/rss\.xml[[:space:]]+301' "$REDIR_FILE"
+
+          echo "[check] / (root) redirect rule"
+          # 解释：我们要求 / → /seo/ 301
+          grep -E '^[[:space:]]*/[[:space:]]+/seo/[[:space:]]+301' "$REDIR_FILE"
+
+      # 6. 自动提交回 main（只有在有变更时才提交）
+      #    关键点：
+      #      - 包含 public/updates/rss.xml
+      #      - 包含我们刚才 prune 后的状态（.bak 已删）
+      #      - 包含 theme/doctor 正规化后的页面
+      #    这样 main 分支永远保持“对客户可直接发出去”的状态
       - name: Commit & push (if changes)
         shell: bash
         run: |
@@ -110,13 +147,14 @@ jobs:
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
 
-          git add -A reports public evidence
+          # 把我们可能动到的东西全部纳入
+          git add -A reports public evidence _redirects public/_redirects || true
 
           if git diff --cached --quiet; then
             echo "no changes"
           else
-            git commit -m "site-doctor: sync reports/, ensure feed rss, prune *.bak, normalize theme"
-            # rebase 失败不算致命，允许 fallback
+            git commit -m "site-doctor: sync reports, ensure feed rss, prune *.bak, normalize theme, enforce redirects"
+            # rebase 冲突不当成致命，尽量把清理结果推上去
             git pull --rebase --autostash || true
             git push
           fi
