@@ -12,21 +12,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - name: Install deps
-        run: npm ci || npm i
-      - name: Radar & Index
-        env:
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
         run: |
+          npm ci || npm install
+
+      - name: Rebuild static site pages (reports/vendor/evidence/rss)
+        run: |
+          node scripts/build_change_pack.js
+          node scripts/build_evidence_pages.js
           node scripts/generate_reports_index.js
           node scripts/generate_sitemap_rss.js
-      - name: Apply Theme (inject single header/css)
-        run: node scripts/theme_injector.js
-      - name: Commit (if any)
+          node scripts/build_rss.js
+
+      - name: Commit updated pages
         run: |
-          git add -A reports public || true
+          git add -A reports evidence public || true
           if [ -n "$(git status --porcelain)" ]; then
-            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "weekly: radar/index/sitemap/rss + theme"
+            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "weekly: rebuild site pages (reports/evidence/rss)"
             git pull --rebase --autostash || true
             git push
           else
