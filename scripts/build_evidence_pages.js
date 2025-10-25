@@ -6,21 +6,21 @@ const path = require('path');
 
 const EVIDENCE_DIR = path.join(process.cwd(), 'evidence');
 
-function esc(s) {
-  return String(s ?? '')
+function esc(s){
+  return String(s||'')
     .replace(/&/g,'&amp;')
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
 }
 
-function renderEvidencePage(vendor, baseName, data) {
-  const detectedUTC = data.detected_at || '';
-  const shortDate = detectedUTC ? detectedUTC.slice(0,10) : '';
-  const sha256 = data.sha256 || data.hash || '';
-  const shaShort = sha256.slice(0,8);
+function renderCard(vendor, baseName, data){
+  const whenUTC = data.detected_at || data.timestamp || '';
+  const dateShort = whenUTC ? whenUTC.slice(0,10) : '';
+  const shaFull = data.sha256 || data.hash || '';
+  const shaShort = shaFull.slice(0,8);
 
-  const HEADER_BLOCK = `
+  const HEADER = `
 <header class="app-header">
   <div class="nav container">
     <a class="logo" href="/">CG Alert</a>
@@ -30,15 +30,15 @@ function renderEvidencePage(vendor, baseName, data) {
   </div>
 </header>`.trim();
 
-  const prettyJson = JSON.stringify(data, null, 2);
+  const prettyJson = JSON.stringify(data,null,2);
 
-  const html = `<!doctype html>
+  return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Evidence — ${esc(vendor)} — ${esc(data.type || '')} — ${esc(shortDate)} · CG Alert</title>
-<meta name="description" content="Timestamped evidence card for ${esc(vendor)} ${esc(data.type || '')} change on ${esc(shortDate)} (UTC). Includes source URL and cryptographic hash.">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evidence — ${esc(vendor)} — ${esc(data.type || data.kind || '')} — ${esc(dateShort)} · CG Alert</title>
+<meta name="description" content="Timestamped evidence card for ${esc(vendor)} ${esc(data.type || data.kind || '')} change on ${esc(dateShort)} (UTC). Includes source URL and cryptographic hash for audit; public sources only.">
 <link rel="canonical" href="/evidence/${esc(vendor)}/${esc(baseName)}.html">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0b0d12">
@@ -85,39 +85,26 @@ pre.evidence-json{
   line-height:1.4;
   margin-top:8px;
 }
-.section-block{margin:24px 0;}
-.kv{display:flex;flex-wrap:wrap;gap:10px;margin:.5rem 0 1rem;}
-.kv span{
-  display:inline-block;
-  background:var(--bg);
-  border:1px solid var(--border);
-  border-radius:999px;
-  padding:.2rem .55rem;
-  font-size:12px;
-  color:var(--muted);
-}
 </style>
 </head>
 <body>
-${HEADER_BLOCK}
+${HEADER}
 <main class="main container" id="main">
   <div class="section"><div class="container">
-
     <h1 class="h1">Evidence Card — ${esc(vendor)}</h1>
-    <p class="sub">Captured <strong>${esc(detectedUTC)}</strong> (UTC)</p>
+    <p class="sub">Captured <strong>${esc(whenUTC)}</strong> (UTC)</p>
 
     <div class="card">
       <table class="table-meta">
         <tr><th>Vendor</th><td>${esc(vendor)}</td></tr>
-        <tr><th>Type</th><td>${esc(data.type || '')}</td></tr>
-        <tr><th>Kind</th><td>${esc(data.kind || '')}</td></tr>
+        <tr><th>Type</th><td>${esc(data.type || data.kind || '')}</td></tr>
         <tr><th>Source URL</th><td><a class="link" href="${esc(data.url || '')}" rel="nofollow noopener noreferrer" target="_blank">${esc(data.url || '')}</a></td></tr>
         <tr><th>SHA256</th><td><code>#${esc(shaShort)}</code></td></tr>
         <tr><th>Commit</th><td><code>${esc(data.commit || '')}</code></td></tr>
       </table>
       <p class="small">
-        Public-source only. We store minimal text (≤300 chars), URL, timestamp, and a cryptographic hash
-        so Procurement / Legal Ops / Finance can audit vendor changes internally.
+        Public-source only. We snapshot minimal public text, URL, timestamp, and a cryptographic hash.
+        This is for Procurement / Legal Ops / Finance to audit vendor changes and pricing leverage.
         Not legal advice.
       </p>
     </div>
@@ -127,7 +114,7 @@ ${HEADER_BLOCK}
       <pre class="evidence-json">${esc(prettyJson)}</pre>
     </div>
 
-    <div class="section-block">
+    <div class="card">
       <a class="btn ghost" href="/reports/">All Reports</a>
       <a class="btn ghost" href="/rss.xml" rel="nofollow">RSS</a>
     </div>
@@ -137,27 +124,23 @@ ${HEADER_BLOCK}
 <footer class="container">© CG Alert — Evidence-backed vendor change alerts.</footer>
 </body>
 </html>`;
-
-  return html;
 }
 
-function buildAll() {
-  if (!fs.existsSync(EVIDENCE_DIR)) return;
-  for (const vendor of fs.readdirSync(EVIDENCE_DIR)) {
-    const vendorDir = path.join(EVIDENCE_DIR, vendor);
-    if (!fs.statSync(vendorDir).isDirectory()) continue;
-
-    for (const fname of fs.readdirSync(vendorDir)) {
-      if (!fname.endsWith('.json')) continue;
-      const baseName = fname.replace(/\.json$/,'');
-      const raw = fs.readFileSync(path.join(vendorDir, fname), 'utf8');
+function buildAll(){
+  if(!fs.existsSync(EVIDENCE_DIR)) return;
+  for(const vendor of fs.readdirSync(EVIDENCE_DIR)){
+    const vDir = path.join(EVIDENCE_DIR, vendor);
+    if(!fs.statSync(vDir).isDirectory()) continue;
+    for(const f of fs.readdirSync(vDir)){
+      if(!f.endsWith('.json')) continue;
+      const base = f.replace(/\.json$/,'');
       let data;
-      try { data = JSON.parse(raw); } catch { continue; }
-
-      const html = renderEvidencePage(vendor, baseName, data);
-      const outPath = path.join(vendorDir, baseName + '.html');
-      fs.writeFileSync(outPath, html, 'utf8');
-      console.log('built evidence page:', outPath);
+      try{
+        data = JSON.parse(fs.readFileSync(path.join(vDir,f),'utf8'));
+      }catch{ continue; }
+      const html = renderCard(vendor, base, data);
+      fs.writeFileSync(path.join(vDir, base+'.html'), html, 'utf8');
+      console.log('evidence page built:', vendor, base);
     }
   }
 }
