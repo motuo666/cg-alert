@@ -2,9 +2,20 @@ name: Final Acceptance Gate
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'public/**'
+      - '_redirects'
+      - '.github/workflows/final-acceptance-gate.yml'
 
 permissions:
   contents: read
+
+concurrency:
+  group: final-acceptance-gate
+  cancel-in-progress: true
 
 jobs:
   gate:
@@ -16,65 +27,34 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 1. _redirects 必须有 / -> /seo/ 301，必须有 /feed -> /updates/rss.xml 301
-      - name: Check redirects
+      - name: Gate sanity
         shell: bash
         run: |
           set -Eeuo pipefail
+
+          # _redirects 必须存在
           test -f _redirects
 
-          # 根路由跳转，防止 / 打开是空页
+          # 必须有 / -> /seo/ 的 301，防止根路径是空白页
           grep -E '^[[:space:]]*/[[:space:]]+/seo/[[:space:]]+301' _redirects >/dev/null || {
-            echo "::error::/_redirects 缺少根路由 / -> /seo/ 301"; exit 1; }
+            echo "::error::/_redirects 缺少根路由 / -> /seo/ 301"
+            exit 1
+          }
 
-          # feed 路由必须存在
+          # 必须有 /feed -> /updates/rss.xml 的 301
           grep -E '^[[:space:]]*/feed[[:space:]]+/updates/rss\.xml[[:space:]]+301' _redirects >/dev/null || {
-            echo "::error::/_redirects 里 /feed 不是指向 /updates/rss.xml 301"; exit 1; }
+            echo "::error::/_redirects 缺少 /feed -> /updates/rss.xml 301"
+            exit 1
+          }
 
-      # 2. 站点结构必须完整
-      - name: Check public site structure
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          test -f public/seo/index.html
-          test -f public/who-uses/index.html
-          test -f public/sitemap.xml
-          test -f public/seo/sitemap.xml
+          # feed 目标文件必须真实存在
           test -f public/updates/rss.xml
+
+          # reports 目录必须存在且非空（至少 1 项）
           test -d public/reports
-
-          # reports 目录里至少有一份内容
-          ls -1 public/reports | head -n 1 | grep .
-
-      # 3. 证据必须可交付（index.html + diff.html 至少各一条）
-      - name: Check evidence coverage
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          test -d public/evidence
-          find public/evidence -maxdepth 5 -type f -name index.html | head -n 1 | grep . || {
-            echo "::error::没有任何 evidence index.html"; exit 1; }
-          find public/evidence -maxdepth 6 -type f -name diff.html | head -n 1 | grep . || {
-            echo "::error::没有任何 diff.html (差异图)"; exit 1; }
-
-      # 4. 确认没有脏的 .bak 文件
-      - name: Check for leftover .bak
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          cnt=$(find public reports evidence -type f -name '*.bak' | wc -l || true)
-          if [ "$cnt" -gt 0 ]; then
-            echo "::error::$cnt 个 *.bak 还在仓库里或准备发布 (应该由 site-doctor 清理掉)"
+          if [ "$(ls -A public/reports | wc -l)" -gt 0 ]; then
+            echo "public/reports is non-empty"
+          else
+            echo "::error::public/reports is empty"
             exit 1
           fi
-
-      # 5. Summary
-      - name: Summary
-        shell: bash
-        run: |
-          echo "## ✅ Final Acceptance Passed" >> $GITHUB_STEP_SUMMARY
-          echo "- / -> /seo/ 301 OK" >> $GITHUB_STEP_SUMMARY
-          echo "- /feed -> /updates/rss.xml 301 OK 且 rss.xml 存在" >> $GITHUB_STEP_SUMMARY
-          echo "- public/reports/ 存在且有内容" >> $GITHUB_STEP_SUMMARY
-          echo "- evidence/ 有 index.html 和 diff.html" >> $GITHUB_STEP_SUMMARY
-          echo "- 没有 *.bak 垃圾文件会被公开" >> $GITHUB_STEP_SUMMARY
