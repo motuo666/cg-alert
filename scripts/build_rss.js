@@ -1,84 +1,109 @@
 #!/usr/bin/env node
-'use strict';
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
+const glob = require("glob");
 
-const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
-const EVIDENCE_DIR = path.join(process.cwd(), 'evidence');
-const OUT_PATH = path.join(process.cwd(), 'public', 'rss.xml');
+const ROOT = path.resolve(__dirname, "..");
+const SRC_DIR = path.join(ROOT, "evidence");
+const OUT_FILE = path.join(ROOT, "public", "rss.xml");
 
-function walkEvidence() {
-  const out = [];
-  if (!fs.existsSync(EVIDENCE_DIR)) return out;
-  for (const vendor of fs.readdirSync(EVIDENCE_DIR)) {
-    const vDir = path.join(EVIDENCE_DIR, vendor);
-    if (!fs.statSync(vDir).isDirectory()) continue;
-    for (const f of fs.readdirSync(vDir)) {
-      if (!f.endsWith('.json')) continue;
-      const filePath = path.join(vDir, f);
-      let data;
-      try {
-        data = JSON.parse(fs.readFileSync(filePath,'utf8'));
-      } catch {
-        continue;
-      }
-      const ts = Date.parse(data.detected_at || data.timestamp || Date.now());
-      const baseName = f.replace(/\.json$/,'');
-      // We'll link to .html evidence card since it's human-friendly.
-      const humanHref = `${ORIGIN}/evidence/${encodeURIComponent(vendor)}/${encodeURIComponent(baseName)}.html`;
-      out.push({
-        vendor,
-        baseName,
-        humanHref,
-        when: new Date(ts),
-        kind: data.type || data.kind || 'change'
-      });
+// 小工具
+function escapeXml(str = "") {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// 哪些 vendor 我们不想放进公开 feed
+function shouldPublishVendor(vendor = "") {
+  if (!vendor) return false;
+  if (vendor.startsWith("_")) return false;        // _seed
+  if (vendor === "acme") return false;            // demo
+  if (vendor.startsWith("status.")) return false; // status.* 内部噪音
+  if (vendor === "status.domain") return false;
+  return true;
+}
+
+function loadAllEvidenceMeta() {
+  const files = glob.sync(path.join(SRC_DIR, "**/*.json"));
+  const list = [];
+
+  files.forEach(fp => {
+    try {
+      const raw = fs.readFileSync(fp, "utf8");
+      const data = JSON.parse(raw);
+      data.__slug = path.basename(fp).replace(/\.json$/i, ".html"); // e.g. 2025-10-13-DPA-xxxx.html
+      data.__vendor = data.vendor;
+      list.push(data);
+    } catch (e) {
+      console.error("skip invalid json:", fp);
     }
-  }
-  // newest first
-  out.sort((a,b)=>b.when - a.when);
-  return out;
+  });
+
+  // 依照 detected_at DESC 排序
+  list.sort((a, b) => {
+    const da = new Date(a.detected_at || 0).getTime();
+    const db = new Date(b.detected_at || 0).getTime();
+    return db - da;
+  });
+
+  return list;
 }
 
-function esc(s){
-  return String(s||'')
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;');
-}
+function buildRssXml(items) {
+  const now = new Date().toUTCString();
 
-function build() {
-  const items = walkEvidence();
+  const rssItems = items.slice(0, 60).map(it => {
+    const vendor = it.__vendor || "";
+    const slug = it.__slug || "unknown.html";
 
-  const head = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>CG Alert — Evidence Feed</title>
-    <link>${ORIGIN}/</link>
-    <atom:link href="${ORIGIN}/rss.xml" rel="self" type="application/rss+xml"/>
-    <description>High-signal vendor change evidence with cryptographic hash, captured from public sources only (Pricing, ToS/MSA, DPA, Subprocessors, Status). Timestamped for Procurement / Legal Ops / Finance audit. Not legal advice.</description>
-    <language>en-us</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`;
+    // permalink：指向我们刚才生成的 pretty evidence 页面
+    const permalink = `https://www.cg-alert.com/evidence/${vendor}/${slug}`;
 
-  const body = items.slice(0,100).map(it => {
-    const title = `${it.vendor} ${it.kind} (${it.when.toISOString().slice(0,10)})`;
+    const detectedDate = (it.detected_at || "").split("T")[0] || "";
+    const title = `${vendor} ${it.type || ""} (${detectedDate})`;
+    const pubDate = new Date(it.detected_at || Date.now()).toUTCString();
+
     return [
-      '<item>',
-      `  <title>${esc(title)}</title>`,
-      `  <link>${esc(it.humanHref)}</link>`,
-      `  <guid isPermaLink="false">${esc(it.vendor + '/' + it.baseName + '.html')}</guid>`,
-      `  <pubDate>${it.when.toUTCString()}</pubDate>`,
-      '</item>'
-    ].join('\n');
-  }).join('\n');
+      "<item>",
+      `<title>${escapeXml(title)}</title>`,
+      `<link>${escapeXml(permalink)}</link>`,
+      `<guid isPermaLink="false">${escapeXml(`${vendor}/${slug}`)}</guid>`,
+      `<pubDate>${escapeXml(pubDate)}</pubDate>`,
+      "</item>"
+    ].join("\n");
+  }).join("\n");
 
-  const tail = `
-  </channel>
-</rss>
-`;
+  const header = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
+    "<channel>",
+    "<title>CG Alert — Evidence Feed</title>",
+    "<link>https://www.cg-alert.com/</link>",
+    '<atom:link href="https://www.cg-alert.com/rss.xml" rel="self" type="application/rss+xml"/>',
+    "<description>",
+    "High-signal vendor change evidence with cryptographic hash, captured from public sources only (Pricing, ToS/MSA, DPA, Subprocessors, Status). Timestamped for Procurement / Legal Ops / Finance audit. Not legal advice.",
+    "</description>",
+    "<language>en-us</language>",
+    `<lastBuildDate>${escapeXml(now)}</lastBuildDate>`
+  ].join("\n");
 
-  fs.writeFileSync(OUT_PATH, head+'\n'+body+tail, 'utf8');
-  console.log('rss built:', OUT_PATH, 'items=', items.length);
+  const footer = [
+    "</channel>",
+    "</rss>"
+  ].join("\n");
+
+  return header + "\n" + rssItems + "\n" + footer + "\n";
 }
 
-build();
+// 主逻辑
+(function main(){
+  const all = loadAllEvidenceMeta();
+  const filtered = all.filter(it => shouldPublishVendor(it.vendor));
+  const rssXml = buildRssXml(filtered);
+  fs.writeFileSync(OUT_FILE, rssXml, "utf8");
+  console.log("✅ rss.xml generated with", filtered.length, "items");
+})();
