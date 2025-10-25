@@ -1,109 +1,80 @@
 #!/usr/bin/env node
+import fs from 'fs';
+import path from 'path';
+import glob from 'glob';
 
-const fs = require("fs");
-const path = require("path");
-const glob = require("glob");
+const ROOT = path.resolve(new URL('.', import.meta.url).pathname, '..');
+const SRC_DIR = path.join(ROOT, 'evidence');
+const OUT_FILE = path.join(ROOT, 'public', 'rss.xml');
 
-const ROOT = path.resolve(__dirname, "..");
-const SRC_DIR = path.join(ROOT, "evidence");
-const OUT_FILE = path.join(ROOT, "public", "rss.xml");
+const escapeXml = (s='') => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');
 
-// 小工具
-function escapeXml(str = "") {
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-// 哪些 vendor 我们不想放进公开 feed
-function shouldPublishVendor(vendor = "") {
-  if (!vendor) return false;
-  if (vendor.startsWith("_")) return false;        // _seed
-  if (vendor === "acme") return false;            // demo
-  if (vendor.startsWith("status.")) return false; // status.* 内部噪音
-  if (vendor === "status.domain") return false;
+const shouldPublishVendor = (v='') => {
+  if(!v) return false;
+  if(v.startsWith('_')) return false;
+  if(v==='acme') return false;
+  if(v.startsWith('status.')) return false;
+  if(v==='status.domain') return false;
   return true;
-}
+};
 
-function loadAllEvidenceMeta() {
-  const files = glob.sync(path.join(SRC_DIR, "**/*.json"));
+function loadAll() {
+  const files = glob.sync(path.join(SRC_DIR, '**/*.json'));
   const list = [];
-
   files.forEach(fp => {
     try {
-      const raw = fs.readFileSync(fp, "utf8");
-      const data = JSON.parse(raw);
-      data.__slug = path.basename(fp).replace(/\.json$/i, ".html"); // e.g. 2025-10-13-DPA-xxxx.html
-      data.__vendor = data.vendor;
-      list.push(data);
-    } catch (e) {
-      console.error("skip invalid json:", fp);
-    }
+      const d = JSON.parse(fs.readFileSync(fp,'utf8'));
+      d.__slug = path.basename(fp).replace(/\.json$/i,'.html');
+      d.__vendor = d.vendor;
+      list.push(d);
+    } catch {}
   });
-
-  // 依照 detected_at DESC 排序
-  list.sort((a, b) => {
-    const da = new Date(a.detected_at || 0).getTime();
-    const db = new Date(b.detected_at || 0).getTime();
-    return db - da;
-  });
-
+  list.sort((a,b) => new Date(b.detected_at||0) - new Date(a.detected_at||0));
   return list;
 }
 
-function buildRssXml(items) {
+function buildRss(items){
   const now = new Date().toUTCString();
-
   const rssItems = items.slice(0, 60).map(it => {
-    const vendor = it.__vendor || "";
-    const slug = it.__slug || "unknown.html";
-
-    // permalink：指向我们刚才生成的 pretty evidence 页面
+    const vendor = it.__vendor || '';
+    const slug = it.__slug || 'unknown.html';
     const permalink = `https://www.cg-alert.com/evidence/${vendor}/${slug}`;
-
-    const detectedDate = (it.detected_at || "").split("T")[0] || "";
-    const title = `${vendor} ${it.type || ""} (${detectedDate})`;
-    const pubDate = new Date(it.detected_at || Date.now()).toUTCString();
-
+    const dateStr = (it.detected_at||'').split('T')[0] || '';
+    const title = `${vendor} ${it.type||''} (${dateStr})`;
+    const pub = new Date(it.detected_at||Date.now()).toUTCString();
     return [
-      "<item>",
+      '<item>',
       `<title>${escapeXml(title)}</title>`,
       `<link>${escapeXml(permalink)}</link>`,
       `<guid isPermaLink="false">${escapeXml(`${vendor}/${slug}`)}</guid>`,
-      `<pubDate>${escapeXml(pubDate)}</pubDate>`,
-      "</item>"
-    ].join("\n");
-  }).join("\n");
+      `<pubDate>${escapeXml(pub)}</pubDate>`,
+      '</item>'
+    ].join('\n');
+  }).join('\n');
 
-  const header = [
+  return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
-    "<channel>",
-    "<title>CG Alert — Evidence Feed</title>",
-    "<link>https://www.cg-alert.com/</link>",
+    '<channel>',
+    '<title>CG Alert — Evidence Feed</title>',
+    '<link>https://www.cg-alert.com/</link>',
     '<atom:link href="https://www.cg-alert.com/rss.xml" rel="self" type="application/rss+xml"/>',
-    "<description>",
-    "High-signal vendor change evidence with cryptographic hash, captured from public sources only (Pricing, ToS/MSA, DPA, Subprocessors, Status). Timestamped for Procurement / Legal Ops / Finance audit. Not legal advice.",
-    "</description>",
-    "<language>en-us</language>",
-    `<lastBuildDate>${escapeXml(now)}</lastBuildDate>`
-  ].join("\n");
-
-  const footer = [
-    "</channel>",
-    "</rss>"
-  ].join("\n");
-
-  return header + "\n" + rssItems + "\n" + footer + "\n";
+    '<description>',
+    'High-signal vendor change evidence with cryptographic hash, captured from public sources only (Pricing, ToS/MSA, DPA, Subprocessors, Status). Timestamped for Procurement / Legal Ops / Finance audit. Not legal advice.',
+    '</description>',
+    '<language>en-us</language>',
+    `<lastBuildDate>${escapeXml(now)}</lastBuildDate>`,
+    rssItems,
+    '</channel>',
+    '</rss>',
+    ''
+  ].join('\n');
 }
 
-// 主逻辑
 (function main(){
-  const all = loadAllEvidenceMeta();
+  const all = loadAll();
   const filtered = all.filter(it => shouldPublishVendor(it.vendor));
-  const rssXml = buildRssXml(filtered);
-  fs.writeFileSync(OUT_FILE, rssXml, "utf8");
-  console.log("✅ rss.xml generated with", filtered.length, "items");
+  const xml = buildRss(filtered);
+  fs.writeFileSync(OUT_FILE, xml, 'utf8');
+  console.log('✅ rss.xml generated with', filtered.length, 'items');
 })();
