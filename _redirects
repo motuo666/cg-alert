@@ -1,7 +1,14 @@
-/intake         https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform?usp=sf_link&utm_source=cg-alert&utm_medium=site&utm_campaign=intake 302
-/buy/portfolio  https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801?utm_source=cg-alert&utm_medium=site&utm_campaign=portfolio 302
-/buy/business   https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800?utm_source=cg-alert&utm_medium=site&utm_campaign=business 302
-/enterprise     https://forms.gle/TCaom33BRJGbcJ3r5?utm_source=cg-alert&utm_medium=site&utm_campaign=enterprise 302
-/channel        https://forms.gle/TCaom33BRJGbcJ3r5?utm_source=cg-alert&utm_medium=site&utm_campaign=channel 302
+/intake         <保持你现有的Google Forms长URL> 302
+/buy/portfolio  <保持你现有的Stripe Portfolio支付链接> 302
+/buy/business   <保持你现有的Stripe Business支付链接> 302
+/enterprise     <保持你现有的Enterprise表单URL> 302
+/channel        <保持你现有的Channel表单URL> 302
+
+# RSS 订阅
 /feed           /updates/rss.xml 301
-/sitemap.xml   /seo/sitemap.xml   200
+
+# sitemap 直通（某些爬虫会直接打 /sitemap.xml）
+/sitemap.xml    /seo/sitemap.xml 200
+
+# 根域名一律丢去 /seo/ ，保证访客和Google都看到有内容的落地页
+/               /seo/ 301
