@@ -14,7 +14,13 @@
     "imapflow": "^1.0.199",
     "mailparser": "3.7.5",
     "minimist": "^1.2.8",
-    "nodemailer": "^6.10.1"
+    "nodemailer": "^6.10.1",
+    "glob": "^10.3.1"  
   },
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build_pretty_evidence.js && node scripts/site_doctor.js && node scripts/theme_injector.js && node scripts/build_rss.js",
+    "start": "node server.js",    
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
 }
