@@ -1,36 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"><channel>
-<title>CG Alert — Weekly Vendor Change Radar</title>
-<link>https://www.cg-alert.com/reports/</link>
-<description>Top recent vendor change packs</description>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/freshworks.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/gitlab.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/globex.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/google.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/helpscout.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/heroku.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/hubspot.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/intercom.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/linear.app/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/mailgun.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/microsoft.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/miro.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/mongodb.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/netlify.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/newrelic.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/notion.so/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/okta.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/onelogin.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/paddle.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/recurly.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/salesforce.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/sanity.io/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/sentry.io/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/snowflake.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/stripe.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/supabase.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/twilio.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/vercel.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/zendesk.com/</link></item>
-<item><title>Vendor Change</title><link>https://www.cg-alert.com/reports/2025-10/zoho.com/</link></item>
-</channel></rss>
+<rss version="2.0">
+  <channel>
+    <title>cg-alert public change feed</title>
+    <link>https://cg-alert.com/reports/</link>
+    <description>
+      Live capture of vendor-facing changes: pricing shifts, legal/DPA updates,
+      security/incident status, and evidence snapshots. Daily ops health
+      + 7-day diagnostics + per-vendor proof bundles. This feed exists so buyers,
+      audit, and procurement can prove "what changed, when".
+    </description>
+    <language>en-us</language>
+
+    <!-- housekeeping for feed consumers -->
+    <lastBuildDate>Sat, 25 Oct 2025 12:00:00 GMT</lastBuildDate>
+    <pubDate>Sat, 25 Oct 2025 12:00:00 GMT</pubDate>
+    <ttl>60</ttl>
+
+    <!-- 1. Monthly vendor evidence bundle -->
+    <item>
+      <title>Vendor Evidence Snapshot · 2025-10</title>
+      <link>https://cg-alert.com/reports/2025-10/index.html</link>
+      <guid isPermaLink="true">https://cg-alert.com/reports/2025-10/index.html</guid>
+      <pubDate>Fri, 17 Oct 2025 12:00:00 GMT</pubDate>
+      <description>
+        Full capture for 2025-10 across vendors (Adyen, Algolia, Atlassian, AWS,
+        Box, Cloudflare, Datadog, Snowflake, Stripe, etc). Includes Pricing/*,
+        DPA/*, Privacy/*, Security/*, Status/*, Subprocessors/*, ToS/*.
+      </description>
+    </item>
+
+    <!-- 2. Per-vendor proof bundle example (Adyen) -->
+    <item>
+      <title>Adyen evidence bundle · DPA / Pricing / Security / Status</title>
+      <link>https://cg-alert.com/reports/proof/adyen.com/2025-10/index.html</link>
+      <guid isPermaLink="true">https://cg-alert.com/reports/proof/adyen.com/2025-10/index.html</guid>
+      <pubDate>Fri, 17 Oct 2025 12:10:00 GMT</pubDate>
+      <description>
+        Timestamped HTML snapshots for adyen.com (DPA, Pricing, Privacy,
+        Security, Subprocessors, Status, ToS) including multiple same-day
+        captures like 2025-10-13 and 2025-10-17 for diffable audit trail.
+      </description>
+    </item>
+
+    <!-- 3. Ops daily health check -->
+    <item>
+      <title>Ops Daily Check · 2025-10-18</title>
+      <link>https://cg-alert.com/reports/ops/2025-10-18/index.html</link>
+      <guid isPermaLink="true">https://cg-alert.com/reports/ops/2025-10-18/index.html</guid>
+      <pubDate>Sat, 18 Oct 2025 07:00:00 GMT</pubDate>
+      <description>
+        Daily ops surface for 2025-10-18: system state, crawl status, intake
+        pipeline sanity, outbound proof generation, and alertability.
+      </description>
+    </item>
+
+    <!-- 4. Rolling 7-day diagnostic -->
+    <item>
+      <title>7-Day Diagnostic Window</title>
+      <link>https://cg-alert.com/reports/ops/diag-7d/index.html</link>
+      <guid isPermaLink="true">https://cg-alert.com/reports/ops/diag-7d/index.html</guid>
+      <pubDate>Sat, 25 Oct 2025 12:00:00 GMT</pubDate>
+      <description>
+        Aggregated 7-day ops diagnostics (crawl coverage, diff generation,
+        evidence tagging, public publish health). Meant for buyers who want to
+        confirm this feed is alive, not screenshots from last quarter.
+      </description>
+    </item>
+
+  </channel>
+</rss>
