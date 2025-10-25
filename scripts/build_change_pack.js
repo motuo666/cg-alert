@@ -7,102 +7,88 @@ const path = require('path');
 const REPORTS_DIR = path.join(process.cwd(), 'reports');
 const EVIDENCE_DIR = path.join(process.cwd(), 'evidence');
 
-function esc(s) {
-  return String(s ?? '')
+function esc(s){
+  return String(s||'')
     .replace(/&/g,'&amp;')
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
     .replace(/"/g,'&quot;');
 }
 
-// 把旧 vendor index.html 里的摘要段落抠出来，避免丢掉人工信号
-// <h3>What</h3> ... <h3>So What</h3>
-// <h3>So What</h3> ... <h3>Now What</h3>
-// <h3>Now What</h3> ... <h3>Verifiable evidence</h3>
-function extractSummaryBlocks(oldHtml) {
-  function grab(a, b) {
-    const re = new RegExp(a + '([\\s\\S]*?)' + b, 'i');
-    const m = oldHtml.match(re);
-    return m ? m[1].trim() : '';
+// Pull narrative blocks (What / So What / Now What) from old vendor HTML so we keep your human analysis.
+function extractNarrative(html) {
+  function between(a,b){
+    const re=new RegExp(a+'([\\s\\S]*?)'+b,'i');
+    const m=html.match(re);
+    return m?m[1].trim():'';
   }
-  const whatHtml   = grab('<h3>\\s*What\\s*</h3>',        '<h3>\\s*So\\s*What\\s*</h3>');
-  const soWhatHtml = grab('<h3>\\s*So\\s*What\\s*</h3>',  '<h3>\\s*Now\\s*What\\s*</h3>');
-  const nowWhatHtml= grab('<h3>\\s*Now\\s*What\\s*</h3>', '<h3>\\s*Verifiable\\s*evidence\\s*</h3>');
-  return { whatHtml, soWhatHtml, nowWhatHtml };
+  return {
+    what:   between('<h3>\\s*What\\s*</h3>',        '<h3>\\s*So\\s*What\\s*</h3>'),
+    soWhat: between('<h3>\\s*So\\s*What\\s*</h3>',  '<h3>\\s*Now\\s*What\\s*</h3>'),
+    nowWhat:between('<h3>\\s*Now\\s*What\\s*</h3>', '<h3>\\s*Verifiable\\s*evidence\\s*</h3>')
+  };
 }
 
-// 读取 evidence/<vendor>/YYYY-MM-*.json -> 构造表格行
-function collectEvidenceFor(vendor, month) {
+// Build evidence rows for a specific vendor+month.
+function collectEvidence(vendor, month){
   const dir = path.join(EVIDENCE_DIR, vendor);
-  const rows = [];
-  if (fs.existsSync(dir)) {
-    for (const fname of fs.readdirSync(dir)) {
-      if (!fname.endsWith('.json')) continue;
-      if (!fname.startsWith(month + '-')) continue;
-      const fpath = path.join(dir, fname);
+  const rows=[];
+  if(fs.existsSync(dir)){
+    for(const f of fs.readdirSync(dir)){
+      if(!f.endsWith('.json')) continue;
+      if(!f.startsWith(month+'-')) continue; // only that YYYY-MM
       let data;
-      try {
-        data = JSON.parse(fs.readFileSync(fpath,'utf8'));
-      } catch {
-        continue;
-      }
-      // filename like 2025-10-17-DPA-37cd4f93-00000000.json
-      const parts = fname.replace(/\.json$/,'').split('-');
-      // parts[0]=YYYY parts[1]=MM parts[2]=DD parts[3]=Type parts[4]=sig
+      try{ data=JSON.parse(fs.readFileSync(path.join(dir,f),'utf8')); }
+      catch{ continue; }
+
+      // filename sample: 2025-10-13-DPA-76e76fef-00000000.json
+      const base = f.replace(/\.json$/,'');
+      const parts = base.split('-'); // [YYYY,MM,DD,Type,...sig]
       const dateStr = parts.slice(0,3).join('-');
-      const kind = parts[3] + (parts[4] ? '-' + parts[4] : '');
-      const hashFull = data.hash || data.sha256 || '';
-      const hashShort = hashFull.slice(0,8);
+      const typeStr = parts.slice(3).join('-');
+
+      const shaFull = data.sha256 || data.hash || '';
+      const hashShort = shaFull.slice(0,8);
 
       rows.push({
         when: dateStr,
-        kind,
+        typ: typeStr,
         hashShort,
-        file: fname,
-        note: '' // placeholder; can be filled later if you add excerpts
+        hrefBase: base,
+        excerpt: '' // reserved for future diff summary
       });
     }
   }
 
-  // 最新的排在上面
   rows.sort((a,b)=>{
-    if (a.when < b.when) return 1;
-    if (a.when > b.when) return -1;
-    return a.kind.localeCompare(b.kind);
+    if(a.when < b.when) return 1;
+    if(a.when > b.when) return -1;
+    return a.typ.localeCompare(b.typ);
   });
 
-  const lastChange      = rows.length ? rows[0].when : '';
-  const evidenceCount   = rows.length;
+  const lastChange = rows[0]?.when || '';
+  const evidenceCount = rows.length;
   let verifiedHash = '';
   let commitId = '';
-  if (rows.length) {
-    const firstData = JSON.parse(
-      fs.readFileSync(path.join(dir, rows[0].file),'utf8')
-    );
-    const hfull = firstData.hash || firstData.sha256 || '';
+  if(rows.length){
+    const firstJson = rows[0].hrefBase + '.json';
+    const obj = JSON.parse(fs.readFileSync(path.join(EVIDENCE_DIR,vendor,firstJson),'utf8'));
+    const hfull = obj.sha256 || obj.hash || '';
     verifiedHash = hfull.slice(0,8);
-    commitId = firstData.commit || '';
+    commitId = obj.commit || '';
   }
 
-  return {
-    rows,
-    lastChange,
-    evidenceCount,
-    verifiedHash,
-    commitId
-  };
+  return { rows, lastChange, evidenceCount, verifiedHash, commitId };
 }
 
-function labelImpact(evidenceCount) {
-  if (evidenceCount >= 20) return 'High';
-  if (evidenceCount >= 6)  return 'Medium';
+function impactFromCount(n){
+  if(n>=20) return 'High';
+  if(n>=6)  return 'Medium';
   return 'Low';
 }
 
-// 生成最终 HTML（统一导航 + 白底 + 卡片）
-// 和线上 cg-alert.com 风格保持一致：顶部横向导航 + 合规/审计语气，企业风。
-function renderVendorPage(vendor, month, blocks, ev) {
-  const HEADER_BLOCK = `
+function renderVendorPage(vendor, month, nar, ev){
+  const HEADER = `
 <header class="app-header">
   <div class="nav container">
     <a class="logo" href="/">CG Alert</a>
@@ -112,37 +98,65 @@ function renderVendorPage(vendor, month, blocks, ev) {
   </div>
 </header>`.trim();
 
-  const impact = labelImpact(ev.evidenceCount);
-  const verifiedChip = ev.verifiedHash
-    ? `Verified • #${esc(ev.verifiedHash)}${ev.commitId ? ' • ' + esc(ev.commitId) : ''}`
-    : '';
+  const chips = [
+    ev.lastChange && `Last change: ${esc(ev.lastChange)}`,
+    `Evidence: ${esc(ev.evidenceCount)}`,
+    `Impact: ${esc(impactFromCount(ev.evidenceCount))}`,
+    ev.verifiedHash && `Verified • #${esc(ev.verifiedHash)}${ev.commitId?` • ${esc(ev.commitId)}`:''}`
+  ].filter(Boolean);
 
   const tableRowsHtml = ev.rows.map(r => {
-    // Evidence 链接改成 .html（我们会用 build_evidence_pages.js 生成）
-    const evHref = `/evidence/${encodeURIComponent(vendor)}/${r.file.replace(/\.json$/,'')}.html`;
-    return `
-      <tr>
-        <td>${esc(r.when)}</td>
-        <td>${esc(r.kind)}</td>
-        <td><code>#${esc(r.hashShort)}</code></td>
-        <td><a class="link" href="${evHref}" rel="nofollow">evidence</a></td>
-        <td>${esc(r.note || '')}</td>
-      </tr>`;
+    // point to .html evidence card (not raw .json)
+    const evHref = `/evidence/${encodeURIComponent(vendor)}/${r.hrefBase}.html`;
+    return `<tr>
+      <td>${esc(r.when)}</td>
+      <td>${esc(r.typ)}</td>
+      <td><code>#${esc(r.hashShort)}</code></td>
+      <td><a class="link" href="${evHref}" rel="nofollow">evidence</a></td>
+      <td>${esc(r.excerpt)}</td>
+    </tr>`;
   }).join('');
 
-  const html = `<!doctype html>
+  return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${esc(vendor)} — Change Pack (${esc(month)}) · CG Alert</title>
-<meta name="description" content="Evidence-backed public changes for ${esc(vendor)} in ${esc(month)}. Includes timestamp, hash, commit for audit.">
+<meta name="description" content="Evidence-backed public changes for ${esc(vendor)} in ${esc(month)}. Timestamped, hashed, commit-referenced. For Procurement / Legal Ops / Finance. Not legal advice.">
 <link rel="canonical" href="/reports/${esc(month)}/${esc(vendor)}/">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0b0d12">
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/assets/cg-theme.css">
 <style>
+html,body{
+  background:#fff !important;
+  color:#0b0d12;
+}
+.kv{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:.75rem 0 1.25rem;
+}
+.kv span{
+  display:inline-block;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:.3rem .6rem;
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.4;
+}
+.card + .card{margin-top:16px;}
+.card h2.h1{
+  font-size:16px;
+  margin:0 0 8px 0;
+  font-weight:600;
+  color:var(--ink);
+}
 .table-changes{
   width:100%;
   border-collapse:collapse;
@@ -178,104 +192,102 @@ code{
   line-height:1.4;
   margin-top:8px;
 }
-.section-block{margin:24px 0;}
-.section-block .card{margin-bottom:16px;}
-.kv{display:flex;flex-wrap:wrap;gap:10px;margin:.5rem 0 1rem;}
-.kv span{
-  display:inline-block;
-  background:var(--bg);
-  border:1px solid var(--border);
-  border-radius:999px;
-  padding:.2rem .55rem;
-  font-size:12px;
-  color:var(--muted);
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
 }
 </style>
 </head>
 <body>
-${HEADER_BLOCK}
+${HEADER}
 <main class="main container" id="main">
   <div class="section"><div class="container">
 
     <h1 class="h1">${esc(vendor)} — Change Pack (${esc(month)})</h1>
-    <div class="kv">
-      ${ev.lastChange ? `<span>Last change: ${esc(ev.lastChange)}</span>` : ''}
-      <span>Evidence: ${esc(ev.evidenceCount)}</span>
-      <span>Impact: ${esc(impact)}</span>
-      ${verifiedChip ? `<span>${verifiedChip}</span>` : ''}
-    </div>
 
-    <div class="section-block">
-      <div class="card">
-        <h2 class="h1" style="font-size:16px;margin:0 0 8px 0;">What</h2>
-        ${blocks.whatHtml || '<p class="sub">No summary.</p>'}
-      </div>
-      <div class="card">
-        <h2 class="h1" style="font-size:16px;margin:0 0 8px 0;">So What</h2>
-        ${blocks.soWhatHtml || '<p class="sub">No summary.</p>'}
-      </div>
-      <div class="card">
-        <h2 class="h1" style="font-size:16px;margin:0 0 8px 0;">Now What</h2>
-        ${blocks.nowWhatHtml || '<p class="sub">No summary.</p>'}
-      </div>
+    <div class="kv">
+      ${chips.map(t=>`<span>${t}</span>`).join('')}
     </div>
 
     <div class="card">
-      <h2 class="h1" style="font-size:16px;margin:0 0 12px 0;">Verifiable Evidence</h2>
+      <h2 class="h1">What</h2>
+      ${nar.what || '<p class="sub">No summary.</p>'}
+    </div>
+
+    <div class="card">
+      <h2 class="h1">So What</h2>
+      ${nar.soWhat || '<p class="sub">No summary.</p>'}
+    </div>
+
+    <div class="card">
+      <h2 class="h1">Now What</h2>
+      ${nar.nowWhat || '<p class="sub">No summary.</p>'}
+    </div>
+
+    <div class="card">
+      <h2 class="h1" style="margin-bottom:12px;">Verifiable Evidence</h2>
       <table class="table-changes">
         <thead>
-          <tr><th>Date</th><th>Type</th><th>Hash</th><th>Link</th><th>Excerpt</th></tr>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Hash</th>
+            <th>Link</th>
+            <th>Excerpt</th>
+          </tr>
         </thead>
         <tbody>
           ${tableRowsHtml}
         </tbody>
       </table>
       <p class="small">
-        Evidence cards are generated from public pages only. We store timestamp, URL,
-        and a cryptographic hash for audit. Not legal advice.
+        Public-source only (Pricing, ToS/MSA, DPA, Subprocessors, Status, etc.).
+        We store the timestamp, URL, and a cryptographic hash so Procurement / Legal Ops / Finance can audit.
+        Not legal advice.
       </p>
     </div>
 
-    <div class="section-block">
-      <a class="btn" href="/">Back to Home</a>
-      <a class="btn ghost" href="/reports/">All Reports</a>
-      <a class="btn ghost" href="/rss.xml" rel="nofollow">RSS</a>
+    <div class="card">
+      <div class="btn-row">
+        <a class="btn" href="/">Home</a>
+        <a class="btn ghost" href="/reports/">All Reports</a>
+        <a class="btn ghost" href="/rss.xml" rel="nofollow">RSS</a>
+      </div>
     </div>
 
   </div></div>
 </main>
+
 <footer class="container">© CG Alert — Evidence-backed vendor change alerts.</footer>
 </body>
 </html>`;
-
-  return html;
 }
 
-function rebuildAllVendors() {
-  if (!fs.existsSync(REPORTS_DIR)) return;
-  for (const ym of fs.readdirSync(REPORTS_DIR)) {
-    if (!/^\d{4}-\d{2}$/.test(ym)) continue;
-    const ymDir = path.join(REPORTS_DIR, ym);
-    if (!fs.statSync(ymDir).isDirectory()) continue;
+function rebuild() {
+  if(!fs.existsSync(REPORTS_DIR)) return;
+  for(const month of fs.readdirSync(REPORTS_DIR)){
+    if(!/^\d{4}-\d{2}$/.test(month)) continue;
+    const monthDir = path.join(REPORTS_DIR, month);
+    if(!fs.statSync(monthDir).isDirectory()) continue;
 
-    for (const vendor of fs.readdirSync(ymDir)) {
-      const vendorDir = path.join(ymDir, vendor);
-      if (!fs.statSync(vendorDir).isDirectory()) continue;
+    for(const vendor of fs.readdirSync(monthDir)){
+      const vendorDir = path.join(monthDir, vendor);
+      if(!fs.statSync(vendorDir).isDirectory()) continue;
 
-      const idxPath = path.join(vendorDir, 'index.html');
-      let oldHtml = '';
-      if (fs.existsSync(idxPath)) {
-        oldHtml = fs.readFileSync(idxPath,'utf8');
-      }
+      const idxPath = path.join(vendorDir,'index.html');
+      const oldHtml = fs.existsSync(idxPath)
+        ? fs.readFileSync(idxPath,'utf8')
+        : '';
 
-      const blocks = extractSummaryBlocks(oldHtml);
-      const ev = collectEvidenceFor(vendor, ym);
+      const nar = extractNarrative(oldHtml);
+      const ev  = collectEvidence(vendor, month);
 
-      const html = renderVendorPage(vendor, ym, blocks, ev);
+      const html = renderVendorPage(vendor, month, nar, ev);
       fs.writeFileSync(idxPath, html, 'utf8');
       console.log('rebuilt vendor page:', idxPath);
     }
   }
 }
 
-rebuildAllVendors();
+rebuild();
