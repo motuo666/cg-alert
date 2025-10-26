@@ -14,7 +14,7 @@ jobs:
         '
     - name: Commit + tag + push
       run: "git config user.email \"bot@cg-alert.com\"\ngit config user.name  \"cg-alert-bot\"\
-        \ngit add -A public/reports/weekly_hash.json\nif git diff --cached --quiet;\
+        git add -A public vendors reports updates _redirects _headers || true
         \ then\n  echo \"no hash changes\"\nelse\n  git commit -m \"weekly: evidence\
         \ aggregate hash\"\nfi\ngit pull --rebase --autostash || true\ngit push --follow-tags\
         \ || git push --tags || true\n"
