@@ -1,0 +1,47 @@
+\
+name: Stabilize P0 (repair pages + commit)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *' # hourly
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stabilize-p0
+  cancel-in-progress: true
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Repair broken static pages (head$1, "..." etc)
+        run: node scripts/repair_pages.js
+
+      - name: Ensure acceptance script references new worker path
+        run: |
+          if grep -q "worker/lead-gateway.js" scripts/run_acceptance.sh; then
+            sed -i 's#worker/lead-gateway.js#lead-gateway/src/index.js#g' scripts/run_acceptance.sh
+          fi
+
+      - name: Commit & push if changed
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          if git diff --quiet; then
+            echo "no changes"
+          else
+            git add -A
+            git commit -m "stabilize: repair static pages + align acceptance script"
+            git pull --rebase --autostash || true
+            git push
+          fi
