@@ -1,10 +1,9 @@
-\
-name: Stabilize P0 (repair pages + commit)
+name: "stabilize-p0"
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}
   schedule:
-    - cron: '0 * * * *' # hourly
+    - cron: "0 * * * *"  # hourly
 
 permissions:
   contents: write
@@ -17,16 +16,18 @@ jobs:
   repair:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
-      - name: Repair broken static pages (head$1, "..." etc)
+      - name: Repair static pages (sanitize head and remove ellipsis)
         run: node scripts/repair_pages.js
 
-      - name: Ensure acceptance script references new worker path
+      - name: Align acceptance script worker path
         run: |
           if grep -q "worker/lead-gateway.js" scripts/run_acceptance.sh; then
             sed -i 's#worker/lead-gateway.js#lead-gateway/src/index.js#g' scripts/run_acceptance.sh
