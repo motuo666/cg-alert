@@ -8,13 +8,15 @@
 <link rel="canonical" href="/reports/2025-10/twilio.com/">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0b0d12">
+
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/assets/cg-theme.css">
+
 <style>
-html,body{
-  background:#fff !important;
-  color:#0b0d12;
-}
+/* page-specific tightening: consistent with cg-theme.css tone */
 .kv{
   display:flex;
   flex-wrap:wrap;
@@ -23,7 +25,7 @@ html,body{
 }
 .kv span{
   display:inline-block;
-  background:var(--bg);
+  background:var(--card);
   border:1px solid var(--border);
   border-radius:999px;
   padding:.3rem .6rem;
@@ -78,42 +80,50 @@ code{
   flex-wrap:wrap;
   gap:8px;
 }
+footer.container{
+  margin-top:32px;
+  padding:24px 16px;
+  font-size:13px;
+  color:var(--muted);
+  text-align:center;
+}
 </style>
+
+<meta property="og:title" content="twilio.com — Change Pack (2025-10) · CG Alert">
+<meta property="og:description" content="Evidence-backed public changes for twilio.com in 2025-10. Timestamped, hashed, commit-referenced.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.cg-alert.com/reports/2025-10/twilio.com/">
 </head>
 <body>
+
 <header class="app-header">
   <div class="nav container">
-    <a class="logo" href="/">CG Alert</a>
+    <a class="logo" href="/"><img src="/icon.svg" alt="CG Alert" />CG Alert</a>
     <a href="/reports/">Reports</a>
     <a href="/who-uses/">Who Uses</a>
-    <a href="/rss.xml" rel="nofollow">RSS</a>
+    <a href="/pricing/">Pricing</a>
+    <a href="/terms">Terms</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/rss" rel="nofollow">RSS</a>
   </div>
 </header>
-<main class="main container" id="main">
-  <div class="section"><div class="container">
 
-    <h1 class="h1">twilio.com — Change Pack (2025-10)</h1>
+<main class="main container" id="main">
+  <div class="section"><div class="container" style="max-width:720px;margin:0 auto;padding:24px 16px">
+
+    <h1 class="h1" style="margin:0 0 12px;">twilio.com — Change Pack (2025-10)</h1>
 
     <div class="kv">
       <span>Evidence: </span><span>Impact: Low</span>
     </div>
 
+    
     <div class="card">
-      <h2 class="h1">What</h2>
-      <p class="sub">No summary.</p>
+      <h2 class="h1">Summary</h2>
+      <p>We observed public changes for <strong>twilio.com</strong> in <strong>2025-10</strong> (latest: 2025-10). Impact score: Low. Evidence below includes timestamp, source URL, and cryptographic hash so Procurement / Legal Ops / Finance can prove it at renewal. Not legal advice.</p>
     </div>
 
-    <div class="card">
-      <h2 class="h1">So What</h2>
-      <p class="sub">No summary.</p>
-    </div>
-
-    <div class="card">
-      <h2 class="h1">Now What</h2>
-      <p class="sub">No summary.</p>
-    </div>
-
-    <div class="card">
+    <div class="card" style="margin-top:24px;">
       <h2 class="h1" style="margin-bottom:12px;">Verifiable Evidence</h2>
       <table class="table-changes">
         <thead>
@@ -131,22 +141,39 @@ code{
       </table>
       <p class="small">
         Public-source only (Pricing, ToS/MSA, DPA, Subprocessors, Status, etc.).
-        We store the timestamp, URL, and a cryptographic hash so Procurement / Legal Ops / Finance can audit.
+        We capture timestamp, source URL, and cryptographic hash so Procurement / Legal Ops / Finance can prove it at renewal.
         Not legal advice.
       </p>
     </div>
 
-    <div class="card">
+    
+  <section class="cta-block" style="margin-top:24px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow)">
+    <h2 style="margin:0 0 8px;font-size:16px;font-weight:600;color:var(--ink)">Want this mapped to <em>your</em> vendor list?</h2>
+    <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted)">
+      We watch pricing / ToS/MSA / DPA / subprocessors / status pages.
+      You get timestamped, hash-backed change packs aligned to renewal windows.
+      Procurement and Legal Ops get leverage before the call, not after.
+    </p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <a class="btn primary" href="/intake" style="display:inline-block;padding:8px 12px;border-radius:8px;background:#111;color:#fff;border:1px solid #111;text-decoration:none">Enable alerts</a>
+      <a class="btn ghost" href="/buy/portfolio" style="display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #111;text-decoration:none;color:#111;background:transparent">Buy Portfolio · $2,988/yr</a>
+    </div>
+  </section>
+
+    <div class="card" style="margin-top:24px;">
       <div class="btn-row">
         <a class="btn" href="/">Home</a>
         <a class="btn ghost" href="/reports/">All Reports</a>
-        <a class="btn ghost" href="/rss.xml" rel="nofollow">RSS</a>
+        <a class="btn ghost" href="/rss" rel="nofollow">RSS</a>
       </div>
     </div>
 
   </div></div>
 </main>
 
-<footer class="container">© CG Alert — Evidence-backed vendor change alerts.</footer>
+<footer class="container">
+  © CG Alert — Evidence-backed vendor change alerts.
+</footer>
+
 </body>
 </html>
