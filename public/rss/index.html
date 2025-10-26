@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CG Alert RSS · Evidence Feed</title>
+<meta name="description" content="Live vendor change feed. Pricing / ToS / DPA / Subprocessors / Status shifts captured with timestamp + hash.">
+<meta name="theme-color" content="#0b0d12">
+
+<!-- This advertises the machine-readable feed to browsers / readers -->
+<link rel="alternate" type="application/rss+xml" href="/rss.xml">
+
+<!-- Unified brand -->
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+<!-- Core styles (same as homepage + other new pages) -->
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/assets/cg-theme.css">
+
+<meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
+<meta property="og:description" content="We notify you when vendors change pricing, ToS/MSA, DPA, subprocessors, or status. Timestamped, hashed, audit-ready evidence for Procurement / Legal Ops / Finance.">
+<meta property="og:url" content="https://www.cg-alert.com/">
+<meta property="og:type" content="website">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="nav container">
+    <a class="logo" href="/"><img src="/icon.svg" alt="CG Alert" />CG Alert</a>
+    <a href="/reports/">Reports</a>
+    <a href="/who-uses/">Who Uses</a>
+    <a href="/pricing/">Pricing</a>
+    <a href="/terms">Terms</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/rss" aria-current="page">RSS</a>
+  </div>
+</header>
+
+<main class="main container" id="main">
+  <div class="section">
+    <div class="container" style="max-width:720px;margin:0 auto;padding:24px 16px">
+
+      <h1 class="h1" style="margin:0 0 12px;">Evidence Feed (RSS)</h1>
+
+      <p style="margin:0 0 24px;font-size:14px;line-height:1.5;color:var(--muted)">
+        Subscribe to
+        <code style="font-size:13px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:2px 4px;white-space:nowrap;">https://www.cg-alert.com/rss.xml</code>
+        in Slack, your email digest bot, or any RSS reader.<br><br>
+
+        We publish high-signal vendor changes:
+        Pricing, ToS / MSA, DPA / data processing terms,
+        subprocessor lists, and status/incidents.<br><br>
+
+        For every change we attach:
+        timestamp,
+        public source URL,
+        and a cryptographic hash of the captured content.
+        That gives Procurement / Legal Ops / Finance leverage
+        before renewal — not after someone signs.
+      </p>
+
+      <section class="cta-block"
+        style="margin-top:24px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow)">
+        <h2 style="margin:0 0 8px;font-size:16px;font-weight:600;color:var(--ink)">
+          Want alerts mapped to <em>your</em> vendor list?
+        </h2>
+
+        <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted)">
+          Portfolio (up to 25 vendors) starts at $2,988/yr.
+          Enterprise covers 200+ vendors and aligns to your renewal calendar.
+        </p>
+
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <a class="btn primary" href="/intake"
+            style="display:inline-block;padding:8px 12px;border-radius:8px;background:#111;color:#fff;border:1px solid #111;text-decoration:none">
+            Enable alerts
+          </a>
+
+          <a class="btn ghost" href="/buy/portfolio"
+            style="display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #111;text-decoration:none;color:#111;background:transparent">
+            Buy Portfolio · $2,988/yr
+          </a>
+        </div>
+      </section>
+
+      <section style="margin-top:32px;font-size:12px;line-height:1.5;color:var(--muted);border-top:1px solid var(--border);padding-top:16px;">
+        <p style="margin:0 0 12px;">
+          What you get in the feed:
+        </p>
+        <ul style="margin:0 0 16px 16px;padding:0;font-size:12px;line-height:1.5;color:var(--muted);">
+          <li style="margin-bottom:8px;">
+            <strong style="color:var(--ink);font-weight:500;">Vendor</strong> —
+            which SaaS/infrastructure provider changed something.
+          </li>
+          <li style="margin-bottom:8px;">
+            <strong style="color:var(--ink);font-weight:500;">Change type</strong> —
+            Pricing, ToS/MSA clause, DPA obligation shift,
+            new/removed subprocessors, SLA / incident language downgrade, etc.
+          </li>
+          <li style="margin-bottom:8px;">
+            <strong style="color:var(--ink);font-weight:500;">Detected time (UTC)</strong> —
+            when we caught it.
+          </li>
+          <li style="margin-bottom:8px;">
+            <strong style="color:var(--ink);font-weight:500;">Impact label</strong> —
+            Low / Medium / High. This is procurement leverage, not legal advice.
+          </li>
+          <li style="margin-bottom:8px;">
+            <strong style="color:var(--ink);font-weight:500;">Link to evidence pack</strong> —
+            a page on cg-alert.com with timestamp, public source URL,
+            and hash so you can prove it later.
+          </li>
+        </ul>
+
+        <p style="margin:0 0 12px;">
+          We do <em>not</em> guess intent and we don't modify vendor text.
+          We snapshot what's public, hash it, and alert you fast.
+        </p>
+
+        <p style="margin:0;font-size:11px;color:var(--muted);">
+          Not legal advice. For due diligence / renewal leverage / internal escalation only.
+        </p>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<footer class="container"
+  style="margin-top:32px;padding:24px 16px;font-size:13px;color:var(--muted);text-align:center">
+  © CG Alert — Evidence-backed vendor change alerts.
+</footer>
+
+</body>
+</html>
