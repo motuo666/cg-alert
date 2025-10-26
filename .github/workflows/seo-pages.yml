@@ -24,7 +24,7 @@ jobs:
         '
     - name: Commit SEO pages
       run: "set -e\ngit config user.name \"bot\"\ngit config user.email \"bot@users.noreply.github.com\"\
-        \ngit add -A public/seo public/sitemap.xml\nif git diff --staged --quiet;\
+        git add -A public vendors reports updates _redirects _headers || true
         \ then\n  echo \"No changes.\"\nelse\n  git commit -m \"chore(seo): daily\
         \ programmatic pages & sitemap\"\n  git push\nfi\n"
 'on':
