@@ -1,0 +1,7 @@
+\
+# 需要手工删除的旧/冲突文件或配置
+#
+# 删这些是为了确保只有一份真源，不让巡检脚本/工作流自相矛盾。
+#
+wrangler.toml   # 仓库根目录的这个文件。它指向 main="src/worker.js"，这是旧版 Worker。
+                # 真正在线的 Worker 是 lead-gateway/ 下的 wrangler.toml + src/index.js。
