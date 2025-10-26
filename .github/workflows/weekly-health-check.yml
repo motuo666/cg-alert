@@ -27,7 +27,7 @@ jobs:
 
       - name: Commit updated pages
         run: |
-          git add -A reports evidence public || true
+          git add -A public vendors reports updates _redirects _headers || true
           if [ -n "$(git status --porcelain)" ]; then
             git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "weekly: rebuild site pages (reports/evidence/rss)"
             git pull --rebase --autostash || true
