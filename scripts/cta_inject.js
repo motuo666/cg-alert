@@ -11,11 +11,14 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const TARGETS = [
-  path.join(ROOT, 'updates', 'index.html'),
+const TARGETS = [path.join(ROOT, 'updates', 'index.html'),
   path.join(ROOT, 'vendors'),
   path.join(ROOT, 'reports'),
-];
+  path.join(ROOT, 'public', 'updates', 'index.html'),
+  path.join(ROOT, 'public', 'vendors'),
+  path.join(ROOT, 'public', 'reports'),
+  path.join(ROOT, 'public', 'who-uses', 'index.html'),
+  path.join(ROOT, 'public', 'categories')];
 const MARK_START = '<!-- CG-CTA-INJECT START -->';
 const MARK_END = '<!-- CG-CTA-INJECT END -->';
 
