@@ -45,14 +45,14 @@ jobs:
     - name: Safe commit & push
       shell: bash
       run: "set -euo pipefail\ngit config user.email \"bot@cg-alert.com\"\ngit config\
-        \ user.name  \"cg-alert-bot\"\n\n# 全量安全提交（仅在有变更时推送）\ngit add -A || true\n\
+        git add -A public vendors reports updates _redirects _headers || true
         if git diff --cached --quiet; then\n  echo \"no changes to commit\"\n  echo\
         \ \"### Commit\" >> \"$GITHUB_STEP_SUMMARY\"\n  echo \"- no changes\" >> \"\
         $GITHUB_STEP_SUMMARY\"\nelse\n  git commit -m \"channel: weekly partner targets\
         \ (limit=${{ steps.resolve.outputs.limit }})\"\n  git pull --rebase --autostash\
         \ || true\n  git push\n  echo \"### Commit\" >> \"$GITHUB_STEP_SUMMARY\"\n\
         \  echo \"- pushed with limit=${{ steps.resolve.outputs.limit }}\" >> \"$GITHUB_STEP_SUMMARY\"\
-        \nfi\ngit add public reports || true\n"
+        git add -A public vendors reports updates _redirects _headers || true
 'on':
   workflow_dispatch:
     inputs:
