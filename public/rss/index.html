@@ -1,33 +1,20 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-
-  <title>CG Alert RSS · Evidence Feed</title>
-  <meta name="description" content="Live vendor change feed. We track Pricing / ToS / DPA / subprocessors / status incidents, capture timestamp + source URL + hash, and hand Procurement / Legal Ops leverage before renewal.">
-  <meta name="theme-color" content="#0b0d12">
-
-  <!-- canonical for sharing / SEO hygiene -->
-  <link rel="canonical" href="https://www.cg-alert.com/rss/">
-
-  <!-- advertise machine-readable RSS to browsers/feed readers -->
-  <link rel="alternate" type="application/rss+xml" href="/rss.xml">
-
-  <!-- unified brand -->
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-
-  <!-- core site styles -->
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/assets/cg-theme.css">
-
-  <!-- social unfurl -->
-  <meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
-  <meta property="og:description" content="We notify you when vendors change pricing, ToS/MSA, DPA, subprocessors, or status. Timestamped, hashed, audit-ready evidence for Procurement / Legal Ops / Finance.">
-  <meta property="og:url" content="https://www.cg-alert.com/rss/">
-  <meta property="og:type" content="website">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CG Alert · CG Alert</title>
+<meta name="description" content="CG Alert gives Procurement / Legal Ops / Finance timestamped, hash-backed evidence of vendor pricing / ToS / DPA / subprocessors / status changes.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0b0d12">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/assets/cg-theme.css">
+<meta property="og:title" content="CG Alert · CG Alert">
+<meta property="og:description" content="Evidence-backed vendor change alerts with cryptographic proof, aligned to your renewal calendar.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.cg-alert.com/">
 </head>
 <body>
 
@@ -39,107 +26,34 @@
     <a href="/pricing/">Pricing</a>
     <a href="/terms">Terms</a>
     <a href="/privacy">Privacy</a>
-    <a href="/rss" aria-current="page">RSS</a>
+    <a href="/rss">RSS</a>
   </div>
 </header>
 
 <main class="main container" id="main">
-  <div class="section">
-    <div class="container" style="max-width:720px;margin:0 auto;padding:24px 16px">
+  <div class="section"><div class="container" style="max-width:720px;margin:0 auto;padding:24px 16px">
 
-      <h1 class="h1" style="margin:0 0 12px;">Evidence Feed (RSS)</h1>
+    <h1 class="h1" style="margin:0 0 12px;">CG Alert</h1>
 
-      <p style="margin:0 0 24px;font-size:14px;line-height:1.5;color:var(--muted)">
-        Subscribe to
-        <code style="font-size:13px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:2px 4px;white-space:nowrap;">https://www.cg-alert.com/rss.xml</code>
-        in Slack, an email digest bot, or any RSS reader.
-        <br><br>
+    <p>...</p>
 
-        We publish high-signal vendor changes:
-        Pricing, ToS / MSA language, DPA / data processing terms,
-        subprocessor list updates, and status / incident wording.
-        <br><br>
-
-        Every change comes with:
-        timestamp,
-        the public source URL,
-        and a cryptographic hash of the captured content.
-        That gives Procurement / Legal Ops / Finance leverage
-        before renewal — not after someone signs.
+    
+    <section class="cta-block" style="margin-top:32px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow)">
+      <h2 style="margin:0 0 8px;font-size:16px;font-weight:600;color:var(--ink)">Want this mapped to <em>your</em> vendor list?</h2>
+      <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted)">
+        We watch pricing / ToS/MSA / DPA / subprocessors / status pages and send timestamped, hash-backed change packs aligned to your renewal windows. Procurement / Legal Ops get leverage before the call, not after.
       </p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <a class="btn primary" href="/intake" style="display:inline-block;padding:8px 12px;border-radius:8px;background:#111;color:#fff;border:1px solid #111;text-decoration:none">Enable alerts</a>
+        <a class="btn ghost" href="/buy/portfolio" style="display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #111;text-decoration:none;color:#111;background:transparent">Buy Portfolio · $2,988/yr</a>
+      </div>
+    </section>
+    
 
-      <!-- CTA block (must convert, not just "info") -->
-      <section class="cta-block"
-        style="margin-top:24px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow)">
-        <h2 style="margin:0 0 8px;font-size:16px;font-weight:600;color:var(--ink)">
-          Want alerts mapped to <em>your</em> vendor list?
-        </h2>
-
-        <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted)">
-          Portfolio (up to 25 vendors) starts at $2,988/yr.
-          Enterprise covers 200+ vendors and aligns to your renewal calendar.
-        </p>
-
-        <div style="display:flex;flex-wrap:wrap;gap:8px;">
-          <a class="btn primary" href="/intake"
-            style="display:inline-block;padding:8px 12px;border-radius:8px;background:#111;color:#fff;border:1px solid #111;text-decoration:none">
-            Enable alerts
-          </a>
-
-          <a class="btn ghost" href="/buy/portfolio"
-            style="display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #111;text-decoration:none;color:#111;background:transparent">
-            Buy Portfolio · $2,988/yr
-          </a>
-        </div>
-      </section>
-
-      <!-- Feature bullets: tells security/procurement "this is audit-grade evidence", not gossip -->
-      <section style="margin-top:32px;font-size:12px;line-height:1.5;color:var(--muted);border-top:1px solid var(--border);padding-top:16px;">
-        <p style="margin:0 0 12px;">
-          What shows up in the feed:
-        </p>
-        <ul style="margin:0 0 16px 16px;padding:0;font-size:12px;line-height:1.5;color:var(--muted);">
-          <li style="margin-bottom:8px;">
-            <strong style="color:var(--ink);font-weight:500;">Vendor</strong> —
-            which SaaS / infra provider changed something.
-          </li>
-          <li style="margin-bottom:8px;">
-            <strong style="color:var(--ink);font-weight:500;">Change type</strong> —
-            Pricing, ToS/MSA clause shift, DPA obligation tweak,
-            new / removed subprocessors, SLA / incident downgrade, etc.
-          </li>
-          <li style="margin-bottom:8px;">
-            <strong style="color:var(--ink);font-weight:500;">Detected time (UTC)</strong> —
-            when we caught it.
-          </li>
-          <li style="margin-bottom:8px;">
-            <strong style="color:var(--ink);font-weight:500;">Impact label</strong> —
-            Low / Medium / High. This is procurement leverage, not legal advice.
-          </li>
-          <li style="margin-bottom:8px;">
-            <strong style="color:var(--ink);font-weight:500;">Evidence pack link</strong> —
-            a cg-alert.com page with timestamp, public source URL,
-            and hash so you can prove it during renewal or audit.
-          </li>
-        </ul>
-
-        <p style="margin:0 0 12px;">
-          We do <em>not</em> rewrite vendor language.
-          We don't guess intent.
-          We snapshot what's public, hash it, and ship it fast.
-        </p>
-
-        <p style="margin:0;font-size:11px;color:var(--muted);">
-          Not legal advice. For diligence / renewal leverage / internal escalation only.
-        </p>
-      </section>
-
-    </div>
-  </div>
+  </div></div>
 </main>
 
-<footer class="container"
-  style="margin-top:32px;padding:24px 16px;font-size:13px;color:var(--muted);text-align:center">
+<footer class="container" style="margin-top:32px;padding:24px 16px;font-size:13px;color:var(--muted);text-align:center">
   © CG Alert — Evidence-backed vendor change alerts.
 </footer>
 
