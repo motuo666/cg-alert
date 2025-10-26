@@ -1,60 +1,61 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0b0">
-<title>CG Alert — Evidence-backed vendor change alerts</title>
-<style>
-:root{--brand:#0b0;--bg:#fff;--ink:#0b1020;--muted:#6b7280;--card:#f7f8fa;--border:#e5e7eb;--radius:14px;--shadow:0 6px 20px rgba(0,0,0,.08)}
-@media (prefers-color-scheme: dark){:root{--bg:#0b0f1a;--ink:#e5eef5;--muted:#9aa6b2;--card:#0f1524;--border:#1f2937;--shadow:0 8px 24px rgba(0,0,0,.35)}}
-*{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.6 ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
-a{color:var(--ink);text-decoration:none}a:hover{opacity:.9}.container{max-width:980px;margin:0 auto;padding:16px}
-.app-header{position:sticky;top:0;background:rgba(255,255,255,.7);backdrop-filter:saturate(180%) blur(8px);border-bottom:1px solid var(--border);z-index:20}
-@media (prefers-color-scheme: dark){ .app-header{background:rgba(11,15,26,.6);} }
-.nav{display:flex;align-items:center;gap:16px;padding:12px 16px}.logo{display:flex;align-items:center;gap:10px;font-weight:700}
-.logo img{width:22px;height:22px}.badge{display:inline-block;background:var(--brand);color:#001b08;font-weight:700;padding:.25rem .5rem;border-radius:999px;margin-left:6px}
-.main{padding:24px 16px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px}
-.h1{font-size:22px;margin:0 0 6px 0}.sub{color:var(--muted);font-size:14px;margin:0 0 12px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
-.tile{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px}
-.btn{display:inline-block;background:var(--brand);color:#001b08;font-weight:700;padding:.55rem .9rem;border-radius:10px;border:1px solid rgba(0,0,0,.15)}
-.btn:hover{filter:brightness(0.95)}.link{color:var(--ink);text-decoration:underline;text-underline-offset:2px}
-footer{color:var(--muted);font-size:12px;padding:24px 16px;border-top:1px solid var(--border);margin-top:28px}
-</style>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CG Alert · CG Alert</title>
+<meta name="description" content="CG Alert gives Procurement / Legal Ops / Finance timestamped, hash-backed evidence of vendor pricing / ToS / DPA / subprocessors / status changes.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0b0d12">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="canonical" href="/seo/">
-<meta name="description" content="Evidence-backed alerts for vendor Pricing/ToS/DPA/Subprocessors/Status changes.">
-
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/assets/cg-theme.css">
-</head><body>
+<meta property="og:title" content="CG Alert · CG Alert">
+<meta property="og:description" content="Evidence-backed vendor change alerts with cryptographic proof, aligned to your renewal calendar.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.cg-alert.com/">
+</head>
+<body>
+
 <header class="app-header">
   <div class="nav container">
-    <a class="logo" href="/seo/"><img src="/icon.svg" alt="CG Alert">CG Alert</a>
+    <a class="logo" href="/"><img src="/icon.svg" alt="CG Alert" />CG Alert</a>
     <a href="/reports/">Reports</a>
     <a href="/who-uses/">Who Uses</a>
-    <a href="/rss.xml" rel="nofollow">RSS</a>
+    <a href="/pricing/">Pricing</a>
+    <a href="/terms">Terms</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/rss">RSS</a>
   </div>
 </header>
-<main class="main container">
-  <div class="card">
-    <h1 class="h1">Evidence-backed vendor change alerts</h1>
-    <p class="sub">Every alert ships with URL, timestamp, excerpt, and content hash — ready for procurement, legal, and security.</p>
-    <div class="grid">
-      <div class="tile">
-        <strong>Evidence Reports</strong><br>
-        Monthly index of material vendor changes with links to verifiable evidence.<br>
-        <a class="btn" href="/reports/">Open Reports</a>
+
+<main class="main container" id="main">
+  <div class="section"><div class="container" style="max-width:720px;margin:0 auto;padding:24px 16px">
+
+    <h1 class="h1" style="margin:0 0 12px;">CG Alert</h1>
+
+    <p>...</p>
+
+    
+    <section class="cta-block" style="margin-top:32px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow)">
+      <h2 style="margin:0 0 8px;font-size:16px;font-weight:600;color:var(--ink)">Want this mapped to <em>your</em> vendor list?</h2>
+      <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted)">
+        We watch pricing / ToS/MSA / DPA / subprocessors / status pages and send timestamped, hash-backed change packs aligned to your renewal windows. Procurement / Legal Ops get leverage before the call, not after.
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <a class="btn primary" href="/intake" style="display:inline-block;padding:8px 12px;border-radius:8px;background:#111;color:#fff;border:1px solid #111;text-decoration:none">Enable alerts</a>
+        <a class="btn ghost" href="/buy/portfolio" style="display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #111;text-decoration:none;color:#111;background:transparent">Buy Portfolio · $2,988/yr</a>
       </div>
-      <div class="tile">
-        <strong>Sitemap (XML)</strong><br>
-        Search-engine and buyer-friendly index of key pages (reports & evidence).<br>
-        <a class="link" href="/sitemap.xml">/sitemap.xml</a>
-      </div>
-      <div class="tile">
-        <strong>RSS Feed</strong><br>
-        Subscribe to changes as they are published, with evidence links in-line.<br>
-        <a class="link" href="/rss.xml" rel="nofollow">/rss.xml</a>
-      </div>
-    </div>
-  </div>
+    </section>
+    
+
+  </div></div>
 </main>
-<footer class="container">© CG Alert — Evidence-backed vendor change alerts.</footer>
-</body></html>
+
+<footer class="container" style="margin-top:32px;padding:24px 16px;font-size:13px;color:var(--muted);text-align:center">
+  © CG Alert — Evidence-backed vendor change alerts.
+</footer>
+
+</body>
+</html>
