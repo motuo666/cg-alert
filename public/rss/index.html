@@ -1,28 +1,33 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CG Alert RSS · Evidence Feed</title>
-<meta name="description" content="Live vendor change feed. Pricing / ToS / DPA / Subprocessors / Status shifts captured with timestamp + hash.">
-<meta name="theme-color" content="#0b0d12">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<!-- This advertises the machine-readable feed to browsers / readers -->
-<link rel="alternate" type="application/rss+xml" href="/rss.xml">
+  <title>CG Alert RSS · Evidence Feed</title>
+  <meta name="description" content="Live vendor change feed. We track Pricing / ToS / DPA / subprocessors / status incidents, capture timestamp + source URL + hash, and hand Procurement / Legal Ops leverage before renewal.">
+  <meta name="theme-color" content="#0b0d12">
 
-<!-- Unified brand -->
-<link rel="manifest" href="/manifest.webmanifest">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <!-- canonical for sharing / SEO hygiene -->
+  <link rel="canonical" href="https://www.cg-alert.com/rss/">
 
-<!-- Core styles (same as homepage + other new pages) -->
-<link rel="stylesheet" href="/styles.css">
-<link rel="stylesheet" href="/assets/cg-theme.css">
+  <!-- advertise machine-readable RSS to browsers/feed readers -->
+  <link rel="alternate" type="application/rss+xml" href="/rss.xml">
 
-<meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
-<meta property="og:description" content="We notify you when vendors change pricing, ToS/MSA, DPA, subprocessors, or status. Timestamped, hashed, audit-ready evidence for Procurement / Legal Ops / Finance.">
-<meta property="og:url" content="https://www.cg-alert.com/">
-<meta property="og:type" content="website">
+  <!-- unified brand -->
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+  <!-- core site styles -->
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/assets/cg-theme.css">
+
+  <!-- social unfurl -->
+  <meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
+  <meta property="og:description" content="We notify you when vendors change pricing, ToS/MSA, DPA, subprocessors, or status. Timestamped, hashed, audit-ready evidence for Procurement / Legal Ops / Finance.">
+  <meta property="og:url" content="https://www.cg-alert.com/rss/">
+  <meta property="og:type" content="website">
 </head>
 <body>
 
@@ -47,20 +52,23 @@
       <p style="margin:0 0 24px;font-size:14px;line-height:1.5;color:var(--muted)">
         Subscribe to
         <code style="font-size:13px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:2px 4px;white-space:nowrap;">https://www.cg-alert.com/rss.xml</code>
-        in Slack, your email digest bot, or any RSS reader.<br><br>
+        in Slack, an email digest bot, or any RSS reader.
+        <br><br>
 
         We publish high-signal vendor changes:
-        Pricing, ToS / MSA, DPA / data processing terms,
-        subprocessor lists, and status/incidents.<br><br>
+        Pricing, ToS / MSA language, DPA / data processing terms,
+        subprocessor list updates, and status / incident wording.
+        <br><br>
 
-        For every change we attach:
+        Every change comes with:
         timestamp,
-        public source URL,
+        the public source URL,
         and a cryptographic hash of the captured content.
         That gives Procurement / Legal Ops / Finance leverage
         before renewal — not after someone signs.
       </p>
 
+      <!-- CTA block (must convert, not just "info") -->
       <section class="cta-block"
         style="margin-top:24px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow)">
         <h2 style="margin:0 0 8px;font-size:16px;font-weight:600;color:var(--ink)">
@@ -85,19 +93,20 @@
         </div>
       </section>
 
+      <!-- Feature bullets: tells security/procurement "this is audit-grade evidence", not gossip -->
       <section style="margin-top:32px;font-size:12px;line-height:1.5;color:var(--muted);border-top:1px solid var(--border);padding-top:16px;">
         <p style="margin:0 0 12px;">
-          What you get in the feed:
+          What shows up in the feed:
         </p>
         <ul style="margin:0 0 16px 16px;padding:0;font-size:12px;line-height:1.5;color:var(--muted);">
           <li style="margin-bottom:8px;">
             <strong style="color:var(--ink);font-weight:500;">Vendor</strong> —
-            which SaaS/infrastructure provider changed something.
+            which SaaS / infra provider changed something.
           </li>
           <li style="margin-bottom:8px;">
             <strong style="color:var(--ink);font-weight:500;">Change type</strong> —
-            Pricing, ToS/MSA clause, DPA obligation shift,
-            new/removed subprocessors, SLA / incident language downgrade, etc.
+            Pricing, ToS/MSA clause shift, DPA obligation tweak,
+            new / removed subprocessors, SLA / incident downgrade, etc.
           </li>
           <li style="margin-bottom:8px;">
             <strong style="color:var(--ink);font-weight:500;">Detected time (UTC)</strong> —
@@ -108,19 +117,20 @@
             Low / Medium / High. This is procurement leverage, not legal advice.
           </li>
           <li style="margin-bottom:8px;">
-            <strong style="color:var(--ink);font-weight:500;">Link to evidence pack</strong> —
-            a page on cg-alert.com with timestamp, public source URL,
-            and hash so you can prove it later.
+            <strong style="color:var(--ink);font-weight:500;">Evidence pack link</strong> —
+            a cg-alert.com page with timestamp, public source URL,
+            and hash so you can prove it during renewal or audit.
           </li>
         </ul>
 
         <p style="margin:0 0 12px;">
-          We do <em>not</em> guess intent and we don't modify vendor text.
-          We snapshot what's public, hash it, and alert you fast.
+          We do <em>not</em> rewrite vendor language.
+          We don't guess intent.
+          We snapshot what's public, hash it, and ship it fast.
         </p>
 
         <p style="margin:0;font-size:11px;color:var(--muted);">
-          Not legal advice. For due diligence / renewal leverage / internal escalation only.
+          Not legal advice. For diligence / renewal leverage / internal escalation only.
         </p>
       </section>
 
