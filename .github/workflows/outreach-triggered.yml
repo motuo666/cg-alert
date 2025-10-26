@@ -80,10 +80,10 @@ jobs:
         \ || true)\necho \"### TOTAL_SENT=${SENT}\" >> \"$GITHUB_STEP_SUMMARY\"\n"
     - name: Commit sent_log
       if: steps.mode.outputs.dry == 'false'
-      run: "git add -A data/sent_log.csv || true\nif [ -n \"$(git status --porcelain)\"\
+      git add -A public vendors reports updates _redirects _headers || true
         \ ]; then\n  git -c user.name=\"cg-bot\" -c user.email=\"bot@cg-alert.com\"\
         \ commit -m \"outreach: append sent_log\"\n  git pull --rebase --autostash\
-        \ || true\n  git push\nfi\ngit add public reports || true\n"
+        git add -A public vendors reports updates _redirects _headers || true
 'on':
   workflow_dispatch:
     inputs:
