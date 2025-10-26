@@ -1,215 +1,61 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- CSP: allow Stripe checkout, intake worker/form endpoints, inline CSS for now -->
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' https: data: blob:;
-                 img-src 'self' https: data: blob:;
-                 style-src 'self' 'unsafe-inline' https:;
-                 script-src 'self' 'unsafe-inline' https:;
-                 connect-src *;
-                 frame-src https://buy.stripe.com https://forms.gle;
-                 form-action 'self' https://buy.stripe.com https://forms.gle https://lead-gateway.manningtopps.workers.dev;">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-
-  <!-- PWA / identity -->
-  <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#0b0d12">
-  <meta name="color-scheme" content="dark light">
-
-  <!-- Branding / Favicons (unified across site) -->
-  <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-
-  <!-- Preconnect for CTA targets -->
-  <link rel="preconnect" href="https://buy.stripe.com" crossorigin>
-  <link rel="preconnect" href="https://forms.gle" crossorigin>
-  <link rel="preconnect" href="https://lead-gateway.manningtopps.workers.dev" crossorigin>
-
-  <!-- Canonical / SEO
-       /seo/ 是长文落地页(投放/长解释)，但不是主页主脸。
-       告诉搜索引擎：权威URL是首页。 -->
-  <link rel="canonical" href="https://www.cg-alert.com/">
-
-  <!-- Primary title / description (match brand voice everywhere) -->
-  <title>CG Alert — Evidence-backed vendor change alerts</title>
-  <meta name="description"
-        content="We watch vendor pricing / ToS/MSA / DPA / subprocessors / status pages. We capture timestamped, URL-backed, hash-verified evidence so Procurement / Legal Ops / Finance have leverage before renewal.">
-
-  <!-- Open Graph / Twitter: consistent preview -->
-  <meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
-  <meta property="og:description"
-        content="High-signal vendor change alerts with timestamp, source URL, and cryptographic hash. Procurement / Legal Ops / Finance use this as proof in renewal talks.">
-  <meta property="og:url" content="https://www.cg-alert.com/">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="https://www.cg-alert.com/og.png">
-
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="CG Alert — Evidence-backed vendor change alerts">
-  <meta name="twitter:description"
-        content="Monitor vendor-facing legal / pricing surfaces and get verifiable evidence instead of surprises at renewal.">
-  <meta name="twitter:image" content="https://www.cg-alert.com/og.png">
-
-  <!-- RSS (machine feed) -->
-  <link rel="alternate"
-        type="application/rss+xml"
-        title="CG Alert Evidence Feed"
-        href="/rss.xml">
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="/styles.css">
-  <link rel="stylesheet" href="/assets/cg-theme.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vendor Change Evidence for Procurement / Legal Ops · CG Alert</title>
+<meta name="description" content="CG Alert gives Procurement / Legal Ops / Finance timestamped, hash-backed evidence of vendor pricing / ToS / DPA / subprocessors / status changes.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0b0d12">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/assets/cg-theme.css">
+<meta property="og:title" content="Vendor Change Evidence for Procurement / Legal Ops · CG Alert">
+<meta property="og:description" content="Evidence-backed vendor change alerts with cryptographic proof, aligned to your renewal calendar.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.cg-alert.com/">
 </head>
 <body>
 
-  <!-- Unified site nav (must match homepage / reports / pricing / etc) -->
-  <header class="app-header">
-    <div class="nav container">
-      <a class="logo" href="/"><img src="/icon.svg" alt="CG Alert" />CG Alert</a>
-      <a href="/reports/">Reports</a>
-      <a href="/who-uses/">Who Uses</a>
-      <a href="/pricing/">Pricing</a>
-      <a href="/terms">Terms</a>
-      <a href="/privacy">Privacy</a>
-      <a href="/rss">RSS</a>
-    </div>
-  </header>
+<header class="app-header">
+  <div class="nav container">
+    <a class="logo" href="/"><img src="/icon.svg" alt="CG Alert" />CG Alert</a>
+    <a href="/reports/">Reports</a>
+    <a href="/who-uses/">Who Uses</a>
+    <a href="/pricing/">Pricing</a>
+    <a href="/terms">Terms</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/rss">RSS</a>
+  </div>
+</header>
 
-  <main class="main container" id="main">
-    <div class="section">
-      <div class="container" style="max-width:880px;margin:0 auto;padding:24px 16px">
+<main class="main container" id="main">
+  <div class="section"><div class="container" style="max-width:720px;margin:0 auto;padding:24px 16px">
 
-        <h1 class="h1" style="margin:0 0 16px;">
-          Vendor Change Monitoring — Evidence &amp; Reports
-        </h1>
+    <h1 class="h1" style="margin:0 0 12px;">Vendor Change Evidence for Procurement / Legal Ops</h1>
 
-        <p class="muted" style="margin:0 0 20px;font-size:14px;line-height:1.6;">
-          We monitor vendors’ public surfaces (Pricing, ToS/MSA, DPA / data protection terms,
-          subprocessors, status/incidents). When wording changes, we snapshot it — timestamp,
-          source URL, and a cryptographic hash. Procurement / Legal Ops / Finance use that
-          as leverage <em>before</em> renewal instead of discovering it after signature.
-        </p>
+    <p>...</p>
 
-        <!-- KPI summary / proof-of-activity -->
-        <div class="kpis"
-             style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:0 0 20px;">
-          <div class="card">
-            <div class="muted" style="font-size:12px;">Latest month</div>
-            <div id="latest-month" style="font-size:14px;font-weight:500;"><span class="pill">—</span></div>
-          </div>
-          <div class="card">
-            <div class="muted" style="font-size:12px;">Evidence (month)</div>
-            <div id="evidence-month" style="font-size:14px;font-weight:500;">—</div>
-          </div>
-          <div class="card">
-            <div class="muted" style="font-size:12px;">Changed vendors (72h)</div>
-            <div id="vendors-72h" style="font-size:14px;font-weight:500;">—</div>
-          </div>
-          <div class="card">
-            <div class="muted" style="font-size:12px;">Hash coverage</div>
-            <div id="hash-cov" style="font-size:14px;font-weight:500;">—</div>
-          </div>
-        </div>
-
-        <!-- How to explore / verify we are real -->
-        <section style="margin:0 0 20px;">
-          <h2 style="font-size:15px;font-weight:600;margin:0 0 8px;color:var(--ink);">Explore</h2>
-          <ul class="list" style="font-size:14px;line-height:1.5;color:var(--ink);padding-left:20px;">
-            <li>
-              Latest rollup:&nbsp;
-              <a id="latest-month-link" href="/reports/" style="text-decoration:underline;color:inherit;">/reports/</a>
-              <span class="muted" style="font-size:12px;">(auto-updated)</span>
-            </li>
-            <li>
-              All reports &amp; evidence index:&nbsp;
-              <a href="/reports/" style="text-decoration:underline;color:inherit;">/reports/</a>
-            </li>
-            <li>
-              RSS (machine feed):&nbsp;
-              <a class="rss" href="/rss.xml" rel="alternate" style="text-decoration:underline;color:inherit;">/rss.xml</a>
-              &nbsp;·&nbsp;
-              <a href="/rss" style="text-decoration:underline;color:inherit;">About RSS</a>
-            </li>
-          </ul>
-        </section>
-
-        <!-- Sample vendors list (you can hydrate this with JS if you want real data) -->
-        <section style="margin:0 0 20px;">
-          <h2 style="font-size:15px;font-weight:600;margin:0 0 8px;color:var(--ink);">Recent vendors (sample)</h2>
-          <ul id="vendors-list"
-              class="list"
-              style="font-size:14px;line-height:1.5;color:var(--ink);padding-left:20px;"></ul>
-          <p id="vendors-empty"
-             class="muted"
-             style="font-size:13px;line-height:1.5;color:var(--muted);"
-             hidden>
-             No vendor list yet. Pages will grow as data arrives.
-          </p>
-        </section>
-
-        <!-- How we prove authenticity -->
-        <section style="margin:0 0 8px;">
-          <h2 style="font-size:15px;font-weight:600;margin:0 0 8px;color:var(--ink);">How we verify</h2>
-          <p class="muted" style="font-size:14px;line-height:1.6;color:var(--muted);">
-            Each change is stored with URL, timestamp, and a content hash.
-            Evidence pages live under
-            <code style="font-size:12px;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:2px 4px;">
-              /evidence/&lt;domain&gt;/&lt;YYYY-MM-DD-Type-ID&gt;.html
-            </code>.
-            Weekly we publish a signed hash of rollups.
-            Output is for operational leverage — not legal advice.
-          </p>
-        </section>
-
-        <!-- Unified CTA block (must work with _redirects) -->
-        <section class="cta-block"
-                 style="margin-top:24px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow)">
-          <h2 style="margin:0 0 8px;font-size:16px;font-weight:600;color:var(--ink);">
-            Get alerts with evidence
-          </h2>
-          <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted);">
-            Stop getting surprised at renewal. We deliver timestamped, URL-backed,
-            hash-verified change packs mapped to <em>your</em> vendor list and
-            aligned to your renewal calendar.
-          </p>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;">
-            <!-- /intake MUST 302 to your public intake form / worker (set in _redirects) -->
-            <a class="btn primary"
-               href="/intake"
-               style="display:inline-block;padding:8px 12px;border-radius:8px;background:#111;color:#fff;border:1px solid #111;text-decoration:none">
-              Enable alerts
-            </a>
-
-            <!-- /buy/portfolio MUST 302 to Stripe Payment Link (set in _redirects) -->
-            <a class="btn ghost"
-               href="/buy/portfolio"
-               style="display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #111;text-decoration:none;color:#111;background:transparent">
-              Buy Portfolio · $2,988/yr
-            </a>
-          </div>
-        </section>
-
-        <noscript>
-          <p class="muted" style="margin-top:16px;font-size:13px;line-height:1.5;color:var(--muted);">
-            JavaScript is off. See <a href="/reports/" style="text-decoration:underline;color:inherit;">/reports/</a>
-            for raw HTML/JSON reports.
-          </p>
-        </noscript>
-
+    
+    <section class="cta-block" style="margin-top:32px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow)">
+      <h2 style="margin:0 0 8px;font-size:16px;font-weight:600;color:var(--ink)">Want this mapped to <em>your</em> vendor list?</h2>
+      <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted)">
+        We watch pricing / ToS/MSA / DPA / subprocessors / status pages and send timestamped, hash-backed change packs aligned to your renewal windows. Procurement / Legal Ops get leverage before the call, not after.
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <a class="btn primary" href="/intake" style="display:inline-block;padding:8px 12px;border-radius:8px;background:#111;color:#fff;border:1px solid #111;text-decoration:none">Enable alerts</a>
+        <a class="btn ghost" href="/buy/portfolio" style="display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #111;text-decoration:none;color:#111;background:transparent">Buy Portfolio · $2,988/yr</a>
       </div>
-    </div>
-  </main>
+    </section>
+    
 
-  <!-- Unified footer -->
-  <footer class="container"
-          style="margin-top:32px;padding:24px 16px;font-size:13px;color:var(--muted);text-align:center">
-    © CG Alert — Evidence-backed vendor change alerts.
-  </footer>
+  </div></div>
+</main>
 
-  <!-- Optional hydration script for KPIs / vendor list
-       (you can write a small /assets/app.js that fetches latest stats from your worker)
-       <script src="/assets/app.js" defer></script>
-  -->
+<footer class="container" style="margin-top:32px;padding:24px 16px;font-size:13px;color:var(--muted);text-align:center">
+  © CG Alert — Evidence-backed vendor change alerts.
+</footer>
+
 </body>
 </html>
