@@ -1,54 +1,29 @@
-##################################################
-# 1. Homepage / core pages
-##################################################
-
-# 主站首页直接展示真正的首页，不要再丢到 /seo
 /               /index.html 200
 
-# 允许 /seo 继续存在当成长文/投放页，但它不是首页脸
 /seo            /seo/index.html 200
 /seo/           /seo/index.html 200
 /seo/*          /seo/:splat 200
 
+/intake         https://docs.google.com/forms/d/e/1FAIpQLSdG...link 302
 
-##################################################
-# 2. Lead capture / Pricing checkout
-##################################################
+/buy/portfolio  https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics8...1 302
+/buy/portfolio/ https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics8...1 302
 
-# 线索采集表单（入站）——继续走你的Google Form / Worker
-/intake         https://docs.google.com/forms/d/e/1FAIpQLSdG...link&utm_source=cg-alert&utm_medium=site&utm_campaign=intake 302
+/buy/business   https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs8...00 302
+/buy/business/  https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs8...00 302
 
-# 自助下单：Portfolio 计划
-/buy/portfolio  https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics8...1?utm_source=cg-alert&utm_medium=site&utm_campaign=portfolio 302
+/enterprise     https://forms.gle/TCaom33BRJGbcJ3r5 302
+/enterprise/    https://forms.gle/TCaom33BRJGbcJ3r5 302
 
-# 自助下单：Business 计划
-/buy/business   https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs8...00?utm_source=cg-alert&utm_medium=site&utm_campaign=business 302
+/channel        https://forms.gle/TCaom33BRJGbcJ3r5 302
+/channel/       https://forms.gle/TCaom33BRJGbcJ3r5 302
 
-# Enterprise / Channel partner 入站（高客单 / 渠道合作）
-/enterprise     https://forms.gle/TCaom33BRJGbcJ3r5?utm_source=cg-alert&utm_medium=site&utm_campaign=enterprise 302
-/channel        https://forms.gle/TCaom33BRJGbcJ3r5?utm_source=cg-alert&utm_medium=site&utm_campaign=channel 302
-
-
-##################################################
-# 3. Evidence feed / RSS
-##################################################
-
-# 人类看的解释页（我们会有 public/rss/index.html 这个页面）
 /rss            /rss/index.html 200
 /rss/           /rss/index.html 200
 
-# 机器用的订阅源（public/rss.xml 由 build_rss.js 生成）
 /rss.xml        /rss.xml 200
-
-# 旧地址 /feed 迁到新的 rss.xml
 /feed           /rss.xml 301
 
-
-##################################################
-# 4. Sitemap
-##################################################
-
-# 主站 sitemap，别再把它指到 /seo/sitemap.xml
-# 这里假设你的 workflow 现在输出的是 public/sitemap.xml
-# Cloudflare/Pages 会自动用 /sitemap.xml 这个路径去找这个文件
 /sitemap.xml    /sitemap.xml 200
+
+/*              /404.html 404
