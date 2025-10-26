@@ -17,14 +17,14 @@ jobs:
 
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-        git add reports/
+        git add -A public vendors reports updates _redirects _headers || true
 
         git commit -m "sanitize: replace GH run links with site snapshots" || echo
         "Nothing to commit"
 
         git push
 
-        git add public reports || true
+        git add -A public vendors reports updates _redirects _headers || true
 
         '
 'on':
