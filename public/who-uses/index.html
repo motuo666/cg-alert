@@ -1,81 +1,61 @@
 <!doctype html>
 <html lang="en">
 <head>
-
-  <!-- CSP：允许表单直连 Worker；允许内联脚本；保留 Stripe/Google Forms -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https:; connect-src *; frame-src https://buy.stripe.com https://forms.gle; form-action 'self' https://buy.stripe.com https://forms.gle https://lead-gateway.manningtopps.workers.dev;">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  
-  
-
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="/manifest.webmanifest">
-
-  <!-- Canonical and favicon links -->
-  
-  <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  
-  <!-- Preconnect for external links -->
-  <link rel="preconnect" href="https://buy.stripe.com" crossorigin>
-  
-  <!-- Theme Color -->
-  <meta name="theme-color" content="#0b0d12">
-  
-  <!-- Open Graph meta tags for social media -->
-  
-  
-  
-  
-  <link rel="image_src" href="/og.png">
-  
-  
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="/styles.css">
-<!-- CG-SEO-INJECT START -->
-  <title>Who Uses CG Alert</title>
-  <meta name="description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
-  <link rel="canonical" href="https://www.cg-alert.com/">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"CG Alert — Evidence-backed vendor change alerts","url":"https://www.cg-alert.com/","description":"Monitor public vendor pages and get high-signal alerts with verifiable evidence."}</script>
-  <meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
-  <meta property="og:description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
-  <meta property="og:url" content="https://www.cg-alert.com/">
-  <meta property="og:site_name" content="CG Alert">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="https://www.cg-alert.com/og/default.png?slug=index">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="CG Alert — Evidence-backed vendor change alerts">
-  <meta name="twitter:description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
-  <meta name="twitter:image" content="https://www.cg-alert.com/og/default.png?slug=index">
-<!-- CG-SEO-INJECT END -->
-
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Who Uses CG Alert? · CG Alert</title>
+<meta name="description" content="CG Alert gives Procurement / Legal Ops / Finance timestamped, hash-backed evidence of vendor pricing / ToS / DPA / subprocessors / status changes.">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0b0d12">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/assets/cg-theme.css">
-  <meta name="color-scheme" content="light">
+<meta property="og:title" content="Who Uses CG Alert? · CG Alert">
+<meta property="og:description" content="Evidence-backed vendor change alerts with cryptographic proof, aligned to your renewal calendar.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.cg-alert.com/">
 </head>
 <body>
-<!--APP_HEADER-->
 
-
-
-
-
-
-
-
-
-<main>
-
-  <div class="card">
-    <h1 class="h1">Who Uses CG Alert</h1>
-    <div class="grid">
-      <div class="tile"><strong>Procurement</strong><br>Track pricing/packaging changes and surface evidence for negotiations.</div>
-      <div class="tile"><strong>Legal</strong><br>Monitor ToS/DPA updates with timestamped, hash-backed proof pages.</div>
-      <div class="tile"><strong>RevOps</strong><br>Detect SKU and policy shifts impacting quoting & billing processes.</div>
-      <div class="tile"><strong>Security</strong><br>Watch subprocessor lists & status pages with auditable history.</div>
-    </div>
+<header class="app-header">
+  <div class="nav container">
+    <a class="logo" href="/"><img src="/icon.svg" alt="CG Alert" />CG Alert</a>
+    <a href="/reports/">Reports</a>
+    <a href="/who-uses/">Who Uses</a>
+    <a href="/pricing/">Pricing</a>
+    <a href="/terms">Terms</a>
+    <a href="/privacy">Privacy</a>
+    <a href="/rss">RSS</a>
   </div>
+</header>
 
+<main class="main container" id="main">
+  <div class="section"><div class="container" style="max-width:720px;margin:0 auto;padding:24px 16px">
+
+    <h1 class="h1" style="margin:0 0 12px;">Who Uses CG Alert?</h1>
+
+    <p>...</p>
+
+    
+    <section class="cta-block" style="margin-top:32px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow)">
+      <h2 style="margin:0 0 8px;font-size:16px;font-weight:600;color:var(--ink)">Want this mapped to <em>your</em> vendor list?</h2>
+      <p style="margin:0 0 12px;font-size:14px;line-height:1.5;color:var(--muted)">
+        We watch pricing / ToS/MSA / DPA / subprocessors / status pages and send timestamped, hash-backed change packs aligned to your renewal windows. Procurement / Legal Ops get leverage before the call, not after.
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <a class="btn primary" href="/intake" style="display:inline-block;padding:8px 12px;border-radius:8px;background:#111;color:#fff;border:1px solid #111;text-decoration:none">Enable alerts</a>
+        <a class="btn ghost" href="/buy/portfolio" style="display:inline-block;padding:8px 12px;border-radius:8px;border:1px solid #111;text-decoration:none;color:#111;background:transparent">Buy Portfolio · $2,988/yr</a>
+      </div>
+    </section>
+    
+
+  </div></div>
 </main>
+
+<footer class="container" style="margin-top:32px;padding:24px 16px;font-size:13px;color:var(--muted);text-align:center">
+  © CG Alert — Evidence-backed vendor change alerts.
+</footer>
+
 </body>
 </html>
