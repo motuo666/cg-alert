@@ -16,7 +16,7 @@ jobs:
     - name: Commit & push if changed
       shell: bash
       run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \  \"cg-alert-bot\"\n# 必须包含 evidence 和 public/evidence\ngit add -A evidence\
+        git add -A public vendors reports updates _redirects _headers || true
         \ public/evidence\nif git diff --cached --quiet; then\n  echo \"no changes\"\
         \n  exit 0\nfi\ngit commit -m \"normalize evidence: fill missing hash + snapshots\"\
         \ngit pull --rebase --autostash || true\ngit push\n"
