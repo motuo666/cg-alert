@@ -1,34 +1,41 @@
 #!/usr/bin/env node
 
-// CommonJS 版本，兼容 GitHub Actions 现在的运行环境
+// CG Alert RSS builder (final harden version for production)
+// - CommonJS (works in GitHub Actions Node 20 without "type": "module")
+// - Dedupe per (vendor,type,day)
+// - Adds human-readable <description>
+// - Skips internal/test vendors
+// - Tolerates missing detected_at so feed never looks broken
+
 const fs = require('fs');
 const path = require('path');
 
-// 以仓库根目录为基准
+// repo root
 const ROOT = path.resolve(__dirname, '..');
 const SRC_DIR = path.join(ROOT, 'evidence');
 const OUT_FILE = path.join(ROOT, 'public', 'rss.xml');
 
-// 安全转义成 XML
+// escape XML text safely
 function escapeXml(s = '') {
   return String(s)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/\"/g, '&quot;');
+    // NOTE: single quote (') does not need escaping in element text nodes
 }
 
-// 我们不会发布这些垃圾 / 内部占位商户
+// we don't want to publish junk / internal fixtures
 function shouldPublishVendor(v = '') {
   if (!v) return false;
-  if (v.startsWith('_')) return false;
-  if (v === 'acme') return false;
-  if (v.startsWith('status.')) return false;
-  if (v === 'status.domain') return false;
+  if (v.startsWith('_')) return false;          // internal / scratch
+  if (v === 'acme') return false;               // demo placeholder
+  if (v.startsWith('status.')) return false;    // synthetic status domains
+  if (v === 'status.domain') return false;      // explicit synthetic
   return true;
 }
 
-// 递归收集 evidence/ 下面所有 *.json
+// walk evidence/ recursively and collect *.json
 function collectEvidenceJsonFiles(rootDir) {
   const out = [];
 
@@ -40,10 +47,7 @@ function collectEvidenceJsonFiles(rootDir) {
       const st = fs.statSync(full);
       if (st.isDirectory()) {
         walk(full);
-      } else if (
-        st.isFile() &&
-        name.toLowerCase().endsWith('.json')
-      ) {
+      } else if (st.isFile() && name.toLowerCase().endsWith('.json')) {
         out.push(full);
       }
     }
@@ -53,7 +57,7 @@ function collectEvidenceJsonFiles(rootDir) {
   return out;
 }
 
-// 把所有 evidence/*.json 读进来，按 detected_at 倒序
+// load all evidence objects, newest first
 function loadAll() {
   const files = collectEvidenceJsonFiles(SRC_DIR);
   const list = [];
@@ -61,73 +65,88 @@ function loadAll() {
   for (const fp of files) {
     try {
       const raw = fs.readFileSync(fp, 'utf8');
-      const d = JSON.parse(raw);
+      const obj = JSON.parse(raw);
 
-      // 后面生成 <item> 用到的辅助字段
-      d.__slug = path.basename(fp).replace(/\.json$/i, '.html');
-      d.__vendor = d.vendor;
+      // store convenience fields we need later
+      obj.__slug   = path.basename(fp).replace(/\.json$/i, '.html');
+      obj.__vendor = obj.vendor;
 
-      list.push(d);
+      list.push(obj);
     } catch (err) {
-      // 坏/半写文件直接跳过，不让整条 job 挂
+      // broken/half-written JSON shouldn't kill the job
     }
   }
 
-  // 新的在前
+  // sort newest -> oldest by detected_at
   list.sort((a, b) => {
-    const ta = new Date(b.detected_at || 0).getTime();
-    const tb = new Date(a.detected_at || 0).getTime();
-    return ta - tb;
+    const at = new Date(a.detected_at || 0).getTime();
+    const bt = new Date(b.detected_at || 0).getTime();
+    // bt - at gives descending (newest first)
+    return bt - at;
   });
 
   return list;
 }
 
-// 组装 RSS 文本（带去重 + 描述）
+// build RSS XML with dedupe and human descriptions
 function buildRss(items) {
-  const now = new Date().toUTCString();
-
-  const seen = new Set(); // 去重 (vendor + type + dateStr)
+  const nowRfc2822 = new Date().toUTCString();
+  const seen = new Set();
   const rssItemsArr = [];
 
   for (const it of items) {
     const vendor = it.__vendor || '';
     if (!vendor) continue;
 
-    const slug = it.__slug || 'unknown.html';
-    const permalink = `https://www.cg-alert.com/evidence/${vendor}/${slug}`;
+    // pick a safe timestamp for this item
+    // if detected_at missing, fall back to "now"
+    const detectedRaw =
+      it.detected_at ||
+      it.timestamp ||
+      it.last_seen ||
+      new Date().toISOString();
 
-    const dateStr = (it.detected_at || '').split('T')[0] || '';
-    const pub = new Date(it.detected_at || Date.now()).toUTCString();
+    const dateStr = (detectedRaw || '').split('T')[0] || '';
+    const pubDateRfc2822 = new Date(detectedRaw || Date.now()).toUTCString();
 
-    const typ = it.type || 'Change';
+    const typ    = it.type || 'Change';
     const impact = it.impact || it.severity || 'n/a';
 
-    // 同一个 vendor / type / day 只保留一条，避免 spam
+    // only keep one item per vendor / type / day so we don't spam
     const dedupeKey = `${vendor}::${typ}::${dateStr}`;
     if (seen.has(dedupeKey)) {
       continue;
     }
     seen.add(dedupeKey);
 
-    const title = `${vendor} ${typ} (${dateStr})`;
+    const slug = it.__slug || 'unknown.html';
+    const permalink = `https://www.cg-alert.com/evidence/${vendor}/${slug}`;
 
-    // 给读RSS的人看的简短说明：发生了什么+为什么重要
-    const humanDesc = `${vendor} ${typ} change observed ${dateStr}. Impact: ${impact}. Evidence captured (timestamp, source URL, cryptographic hash) for Procurement / Legal / Finance leverage.`;
+    const title = dateStr
+      ? `${vendor} ${typ} (${dateStr})`
+      : `${vendor} ${typ}`;
+
+    // short human summary that makes us look like a leverage product,
+    // not just a scraper.
+    const humanDesc =
+      `${vendor} ${typ} change observed ${dateStr || 'recently'}. ` +
+      `Impact: ${impact}. ` +
+      `Evidence captured (timestamp, source URL, cryptographic hash) ` +
+      `for Procurement / Legal Ops / Finance leverage.`;
 
     const oneItemXml = [
       '<item>',
       `<title>${escapeXml(title)}</title>`,
       `<link>${escapeXml(permalink)}</link>`,
       `<guid isPermaLink="false">${escapeXml(vendor + '/' + slug)}</guid>`,
-      `<pubDate>${escapeXml(pub)}</pubDate>`,
+      `<pubDate>${escapeXml(pubDateRfc2822)}</pubDate>`,
       `<description>${escapeXml(humanDesc)}</description>`,
       '</item>'
     ].join('\n');
 
     rssItemsArr.push(oneItemXml);
 
-    // 限制长度，避免RSS太胖
+    // cap feed so it doesn't turn into a 5MB monster
     if (rssItemsArr.length >= 60) break;
   }
 
@@ -145,7 +164,7 @@ function buildRss(items) {
     escapeXml(channelDesc),
     '</description>',
     '<language>en-us</language>',
-    `<lastBuildDate>${escapeXml(now)}</lastBuildDate>`,
+    `<lastBuildDate>${escapeXml(nowRfc2822)}</lastBuildDate>`,
     rssItemsArr.join('\n'),
     '</channel>',
     '</rss>',
@@ -153,26 +172,26 @@ function buildRss(items) {
   ].join('\n');
 }
 
-// 主流程
+// main
 (function main() {
-  // 1. 读全部证据
+  // 1. load raw evidence
   const all = loadAll();
 
-  // 2. 去掉我们不想暴露的 vendor
+  // 2. filter out internal/test vendors
   const filtered = all.filter(it => shouldPublishVendor(it.vendor));
 
-  // 3. 构建 RSS
+  // 3. build rss xml
   const xml = buildRss(filtered);
 
-  // 4. 写到 public/rss.xml
+  // 4. write rss.xml to public/
   fs.mkdirSync(path.dirname(OUT_FILE), { recursive: true });
   fs.writeFileSync(OUT_FILE, xml, 'utf8');
 
+  // log for GitHub Actions so we can debug on run output
+  const uniqueCount = (xml.match(/<item>/g) || []).length;
   console.log(
-    '✅ rss.xml generated with',
-    filtered.length,
-    'raw items before dedupe;',
-    'final unique items =',
-    (xml.match(/<item>/g) || []).length
+    '✅ rss.xml generated:',
+    filtered.length, 'source objects,',
+    uniqueCount, 'unique feed items'
   );
 })();
