@@ -15,7 +15,7 @@ jobs:
     - name: Commit fixed HTML (if any)
       shell: bash
       run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \  \"cg-alert-bot\"\ngit add public || true\nif git diff --cached --quiet;\
+        git add -A public vendors reports updates _redirects _headers || true
         \ then\n  echo \"No changes\"\nelse\n  git commit -m \"fix: make asset/script\
         \ links root-absolute\"\n  git push\nfi\n"
 'on':
