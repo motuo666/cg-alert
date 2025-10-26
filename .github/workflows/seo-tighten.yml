@@ -30,7 +30,7 @@ jobs:
       working-directory: ./
     - name: Safe push (include vendors/updates/reports & indices)
       run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \  \"cg-alert-bot\"\ngit add -A vendors reports updates data/evidence.ndx\
+        git add -A public vendors reports updates _redirects _headers || true
         \ data/materiality.csv data/vendor_catalog.csv evidence public/who-uses public/sitemap.xml\
         \ public/rss.xml || true\nif git diff --cached --quiet; then\n  echo \"no\
         \ changes to commit\"\nelse\n  git commit -m \"SEO Tighten: inject SEO + CTA\
