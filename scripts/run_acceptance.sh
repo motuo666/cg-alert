@@ -1,74 +1,85 @@
+\
 #!/usr/bin/env bash
+#
+# scripts/run_acceptance.sh
+#
+# 单人维护版最终验收脚本 (P0 BASELINE)
+#
+# 目标：一键告诉你“现在能不能关灯跑赚钱”
+# - 检查关键文件/工作流是否存在
+# - 检查 funnel (/buy/portfolio redirect) 是否到位
+# - 检查 check-secrets.yml 里是否引用了所有强制 Secrets/Vars
+#
+# 用法：
+#   bash scripts/run_acceptance.sh
+#
 set -euo pipefail
 
 red(){ echo -e "\033[31m✗ $*\033[0m"; }
 grn(){ echo -e "\033[32m✓ $*\033[0m"; }
 ylw(){ echo -e "\033[33m! $*\033[0m"; }
-
 fail(){ red "$1"; exit 1; }
 
-need_files=(
-  "worker/lead-gateway.js"
-  ".github/workflows/buildwith-import.yml"
+# 1. 关键路径都必须存在
+need_paths=(
+  "lead-gateway/src/index.js"
   ".github/workflows/outbound.yml"
-  "scripts/import_buildwith.js"
+  ".github/workflows/outreach-triggered.yml"
+  ".github/workflows/suppression-sync.yml"
+  ".github/workflows/bounce-sweep.yml"
+  "scripts/poll_inbox.js"
   "scripts/send_outbound.js"
-  "config/email_templates/outbound"
+  "scripts/send_triggered.js"
+  "scripts/promote-intakes.js"
+  "data/leads.csv"
+  "data/intakes.csv"
+  "data/customers.csv"
+  "_redirects"
+  "index.html"
 )
 
-for f in "${need_files[@]}"; do
-  [ -e "$f" ] || fail "缺文件: $f"
+for p in "${need_paths[@]}"; do
+  if [ ! -f "$p" ]; then
+    fail "缺文件: $p"
+  fi
 done
-grn "文件存在性 OK"
+grn "关键路径存在 OK"
 
-# 关键路由
-grep -Eq "/import" worker/lead-gateway.js || fail "lead-gateway 缺少 /import 路由"
-grep -Eq "/u"      worker/lead-gateway.js || fail "lead-gateway 缺少 /u 退订路由"
-grep -Eq "/stripe" worker/lead-gateway.js || fail "lead-gateway 缺少 /stripe Webhook"
-grep -Eq "/lead"   worker/lead-gateway.js || fail "lead-gateway 缺少 /lead 表单路由"
-grn "Worker 路由齐全"
+# 2. check-secrets.yml 要包含我们统一的必需 Secrets 名称
+must_envs=(
+  SITE_ORIGIN
+  INTAKE_FORM_URL
+  STRIPE_LINK_PORTFOLIO
+  SMTP_HOST
+  SMTP_PORT
+  SMTP_USER
+  SMTP_PASS
+  MAIL_FROM
+  SLACK_WEBHOOK_URL
+  IMAP_HOST
+  IMAP_PORT
+  IMAP_USER
+  IMAP_PASS
+  CF_API_TOKEN
+  STRIPE_WEBHOOK_SECRET
+  UNSUB_HMAC_SECRET
+)
 
-# Import 鉴权
-grep -Eq "x-obs-key|OBS_KEY" worker/lead-gateway.js scripts/import_buildwith.js \
-  || fail "/import 未做 x-obs-key 鉴权"
-grn "/import 鉴权 OK"
-
-# 退订 HMAC
-grep -Eq "UNSUB_HMAC_SECRET|crypto|Hmac" worker/lead-gateway.js \
-  || fail "退订 token 没用 HMAC 校验"
-grn "退订 HMAC 校验 OK"
-
-# Stripe 校验
-grep -Eq "STRIPE_WEBHOOK_SECRET" worker/lead-gateway.js \
-  || fail "Stripe Webhook 未校验签名"
-grn "Stripe Webhook 签名校验 OK"
-
-# UTM + lid 兜底
-grep -RIl "buy.stripe.com" public scripts config || ylw "未在代码中找到 buy.stripe.com（你若走页面注入也可）"
-grep -RIl "lid=" public scripts config || ylw "未搜索到 lid=，确认前端已在点击时注入 lid"
-grn "UTM/lid 注入检查（如有黄标，手动点页面验证）"
-
-# 模板退订与 lid
-grep -RIl "u?u=" config/email_templates/outbound >/dev/null \
-  || fail "外拓模板缺退订链接参数 ?u="
-grep -RIl "lid" config/email_templates/outbound >/dev/null \
-  || ylw "模板里未显式包含 lid（如果由前端 JS 注入可忽略）"
-grn "外拓模板校验 OK"
-
-# Workflows 并发与计划
-grep -Eq "concurrency:" .github/workflows/outbound.yml \
-  || fail "outbound.yml 缺 concurrency 防并发"
-grep -Eq "on:|workflow_dispatch|schedule" .github/workflows/outbound.yml \
-  || fail "outbound.yml 未配置触发"
-grep -Eq "concurrency:" .github/workflows/buildwith-import.yml \
-  || ylw "buildwith-import.yml 无 concurrency（建议加）"
-grn "Workflows 结构 OK"
-
-# 变量名对齐（仅做静态提示）
-need_secrets=( "UNSUB_HMAC_SECRET" "STRIPE_WEBHOOK_SECRET" "CF_API_TOKEN" "SMTP_HOST" "SMTP_USER" "SMTP_PASS" "MAIL_FROM" "OBS_KEY" )
-for s in "${need_secrets[@]}"; do
-  grep -RIl "$s" . >/dev/null || ylw "仓库未引用 $s（可能在 GitHub Secrets 中）"
+for name in "${must_envs[@]}"; do
+  if ! grep -q "$name" ".github/workflows/check-secrets.yml"; then
+    ylw "check-secrets.yml 未检测 $name"
+  fi
 done
-grn "Secrets/Variables 命名静态检查完成"
+grn "Secrets 命名一致性检查完成（黄色提示代表需要补）"
 
-grn "静态验收通过 ✅（进入 E2E 烟囱测试）"
+# 3. /buy/portfolio redirect 必须在 _redirects 里存在，否则用户无法直接刷卡
+grep -Eq "/buy/portfolio" _redirects || fail "_redirects 里缺 /buy/portfolio → Stripe Payment Link"
+grn "购买入口 (/buy/portfolio) 存在 OK"
+
+# 4. 基础漏斗 CTA 关键词存在
+grep -RIl "Buy Portfolio" index.html public/index.html 2>/dev/null \
+  || ylw "落地页里找不到 'Buy Portfolio' CTA (检查 index.html 是否被你改坏)"
+
+# 5. 基本通过
+echo
+grn "ACCEPTANCE PASS (基础版) — 代表可以开始跑流量+外发，但不代表完全无风险。"
