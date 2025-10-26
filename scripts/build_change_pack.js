@@ -1,22 +1,12 @@
 #!/usr/bin/env node
 
 // CG Alert vendor change-pack page builder (finalized version)
-// - CommonJS (compatible with Node 20 in Actions without "type": "module")
-// - Unifies header / footer / CTA with main site
-// - Removes "No summary." embarrassment
-// - Falls back to an auto-generated summary if you didn't manually write What / So What / Now What
-// - Adds CTA block to drive intake / purchase
-// - Keeps hash / commit evidence for credibility
 
 const fs = require('fs');
 const path = require('path');
 
 const REPORTS_DIR  = path.join(process.cwd(), 'reports');
 const EVIDENCE_DIR = path.join(process.cwd(), 'evidence');
-
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
 
 function esc(s){
   return String(s||'')
@@ -26,8 +16,7 @@ function esc(s){
     .replace(/"/g,'&quot;');
 }
 
-// Extract narrative sections from an existing vendor page (if any).
-// We try to preserve any human-written analysis from a previous run.
+// keep any human-written analysis from older runs if it exists
 function extractNarrative(html) {
   function between(a,b){
     const re=new RegExp(a+'([\\s\\S]*?)'+b,'i');
@@ -35,32 +24,27 @@ function extractNarrative(html) {
     return m?m[1].trim():'';
   }
   return {
-    what:    between('<h3>\\s*What\\s*</h3>',        '<h3>\\s*So\\s*What\\s*</h3>'),
-    soWhat:  between('<h3>\\s*So\\s*What\\s*</h3>',  '<h3>\\s*Now\\s*What\\s*</h3>'),
-    nowWhat: between('<h3>\\s*Now\\s*What\\s*</h3>', '<h3>\\s*Verifiable\\s*evidence\\s*</h3>')
+    what:    between('<h3>\\s*What\\s*</h3>','<h3>\\s*So\\s*What\\s*</h3>'),
+    soWhat:  between('<h3>\\s*So\\s*What\\s*</h3>','<h3>\\s*Now\\s*What\\s*</h3>'),
+    nowWhat: between('<h3>\\s*Now\\s*What\\s*</h3>','<h3>\\s*Verifiable\\s*evidence\\s*</h3>')
   };
 }
 
-// Collect evidence rows for a vendor in a given YYYY-MM folder.
 function collectEvidence(vendor, month){
   const dir = path.join(EVIDENCE_DIR, vendor);
   const rows=[];
   if(fs.existsSync(dir)){
     for(const f of fs.readdirSync(dir)){
       if(!f.endsWith('.json')) continue;
-      if(!f.startsWith(month+'-')) continue; // only evidence in that month (YYYY-MM)
-
+      if(!f.startsWith(month+'-')) continue;
       let data;
       try { data = JSON.parse(fs.readFileSync(path.join(dir,f),'utf8')); }
       catch { continue; }
 
-      // filename sample:
-      //   2025-10-13-DPA-76e76fef-00000000.json
-      // parts: [YYYY,MM,DD,Type,...restSignatureBits]
       const base = f.replace(/\.json$/,'');
       const parts = base.split('-');
-      const dateStr = parts.slice(0,3).join('-');     // 2025-10-13
-      const typeStr = parts.slice(3).join('-');       // DPA-76e76fef-00000000
+      const dateStr = parts.slice(0,3).join('-');
+      const typeStr = parts.slice(3).join('-');
 
       const shaFull = data.sha256 || data.hash || '';
       const hashShort = shaFull.slice(0,8);
@@ -70,12 +54,11 @@ function collectEvidence(vendor, month){
         typ: typeStr,
         hashShort,
         hrefBase: base,
-        excerpt: '' // you could later insert diff snippet, headline, etc.
+        excerpt: ''
       });
     }
   }
 
-  // newest first
   rows.sort((a,b)=>{
     if(a.when < b.when) return 1;
     if(a.when > b.when) return -1;
@@ -106,10 +89,9 @@ function impactFromCount(n){
   return 'Low';
 }
 
-// If user didn't actually give "What / So What / Now What", we auto-generate
-// a fallback one-liner so the page doesn't look empty / amateur.
+// auto fallback summary when you didn't manually write What / So What / Now What
 function buildFallbackSummary(vendor, month, evInfo){
-  const imp = impactFromCount(evInfo.evidenceCount);
+  const imp  = impactFromCount(evInfo.evidenceCount);
   const last = evInfo.lastChange || month;
   return (
     `<p>We observed public changes for <strong>${esc(vendor)}</strong> in <strong>${esc(month)}</strong> (latest: ${esc(last)}). ` +
@@ -118,7 +100,6 @@ function buildFallbackSummary(vendor, month, evInfo){
   );
 }
 
-// Build narrative block HTML (What / So What / Now What) or fallback card.
 function buildNarrativeCards(vendor, month, nar, evInfo){
   const hasAny =
     (nar.what && nar.what.trim()) ||
@@ -126,7 +107,6 @@ function buildNarrativeCards(vendor, month, nar, evInfo){
     (nar.nowWhat && nar.nowWhat.trim());
 
   if (!hasAny) {
-    // single fallback card
     return `
     <div class="card">
       <h2 class="h1">Summary</h2>
@@ -134,7 +114,6 @@ function buildNarrativeCards(vendor, month, nar, evInfo){
     </div>`;
   }
 
-  // Render only non-empty sections. No "No summary." junk.
   const parts = [];
   if (nar.what && nar.what.trim()) {
     parts.push(`
@@ -158,7 +137,6 @@ function buildNarrativeCards(vendor, month, nar, evInfo){
       </div>`);
   }
 
-  // If somehow everything was empty after trim, still fall back.
   if (!parts.length) {
     return `
     <div class="card">
@@ -170,7 +148,6 @@ function buildNarrativeCards(vendor, month, nar, evInfo){
   return parts.join('\n');
 }
 
-// CTA block we reuse everywhere (same tone as /pricing /dpa /status pages)
 function buildCTASection(){
   return `
   <section class="cta-block" style="margin-top:24px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--card);box-shadow:var(--shadow)">
@@ -187,12 +164,7 @@ function buildCTASection(){
   </section>`;
 }
 
-// -----------------------------------------------------------------------------
-// Page renderer
-// -----------------------------------------------------------------------------
-
 function renderVendorPage(vendor, month, nar, ev){
-  // unified nav / header same as new site pages
   const HEADER = `
 <header class="app-header">
   <div class="nav container">
@@ -206,7 +178,6 @@ function renderVendorPage(vendor, month, nar, ev){
   </div>
 </header>`.trim();
 
-  // little stat pills under H1
   const chips = [
     ev.lastChange && `Last change: ${esc(ev.lastChange)}`,
     `Evidence: ${esc(ev.evidenceCount)}`,
@@ -214,9 +185,7 @@ function renderVendorPage(vendor, month, nar, ev){
     ev.verifiedHash && `Verified • #${esc(ev.verifiedHash)}${ev.commitId?` • ${esc(ev.commitId)}`:''}`
   ].filter(Boolean);
 
-  // evidence table rows
   const tableRowsHtml = ev.rows.map(r => {
-    // evidence card HTML (NOT the raw JSON)
     const evHref = `/evidence/${encodeURIComponent(vendor)}/${r.hrefBase}.html`;
     return `<tr>
       <td>${esc(r.when)}</td>
@@ -227,11 +196,8 @@ function renderVendorPage(vendor, month, nar, ev){
     </tr>`;
   }).join('');
 
-  // narrative cards (or fallback summary card)
   const narrativeHtml = buildNarrativeCards(vendor, month, nar, ev);
-
-  // CTA block
-  const CTA_HTML = buildCTASection();
+  const CTA_HTML      = buildCTASection();
 
   return `<!doctype html>
 <html lang="en">
@@ -243,15 +209,11 @@ function renderVendorPage(vendor, month, nar, ev){
 <link rel="canonical" href="/reports/${esc(month)}/${esc(vendor)}/">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0b0d12">
-
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-
 <link rel="stylesheet" href="/styles.css">
 <link rel="stylesheet" href="/assets/cg-theme.css">
-
 <style>
-/* page-specific tightening: consistent with cg-theme.css tone */
 .kv{
   display:flex;
   flex-wrap:wrap;
@@ -323,7 +285,6 @@ footer.container{
   text-align:center;
 }
 </style>
-
 <meta property="og:title" content="${esc(vendor)} — Change Pack (${esc(month)}) · CG Alert">
 <meta property="og:description" content="Evidence-backed public changes for ${esc(vendor)} in ${esc(month)}. Timestamped, hashed, commit-referenced.">
 <meta property="og:type" content="website">
@@ -387,10 +348,6 @@ ${HEADER}
 </body>
 </html>`;
 }
-
-// -----------------------------------------------------------------------------
-// Main rebuild
-// -----------------------------------------------------------------------------
 
 function rebuild() {
   if(!fs.existsSync(REPORTS_DIR)) return;
