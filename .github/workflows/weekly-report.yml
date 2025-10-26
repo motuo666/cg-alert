@@ -18,7 +18,7 @@ jobs:
       run: node scripts/weekly_report.js
     - name: Commit report
       run: "set -e\ngit config user.name \"bot\"\ngit config user.email \"bot@users.noreply.github.com\"\
-        \ngit add -A public/reports\nif git diff --staged --quiet; then\n  echo \"\
+        git add -A public vendors reports updates _redirects _headers || true
         No new report.\"\nelse\n  git commit -m \"chore(report): publish weekly\"\n\
         \  git push\nfi\n"
 'on':
