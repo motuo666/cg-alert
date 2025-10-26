@@ -14,7 +14,7 @@ jobs:
     - name: Commit themed pages
       shell: bash
       run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \  \"cg-alert-bot\"\ngit add -A\nif git diff --cached --quiet; then\n  echo\
+        git add -A public vendors reports updates _redirects _headers || true
         \ \"No changes to commit.\"\nelse\n  git commit -m \"ui(theme): unify pages\
         \ to homepage style (header/footer/stylesheet)\"\n  git pull --rebase --autostash\
         \ || true\n  git push\nfi\n"
