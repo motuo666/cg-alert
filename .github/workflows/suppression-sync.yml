@@ -1,27 +1,43 @@
 name: Suppression Sync
+
+on:
+  schedule:
+    - cron: "30 * * * *" # hourly offset
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: suppression-sync
+  cancel-in-progress: true
+
 jobs:
-  sync:
+  suppression:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Install deps
-      run: npm ci || npm i
-    - name: Normalize & Guard
-      run: 'node scripts/normalize_suppression_logs.js
+      - uses: actions/checkout@v4
 
-        node scripts/leads_guard.js
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-        '
-    - name: Step Summary
-      run: 'echo "### Suppression Sync" >> "$GITHUB_STEP_SUMMARY"
+      - name: Install deps
+        run: npm install
 
-        echo "- unsub/bounce/complaint normalized & applied" >> "$GITHUB_STEP_SUMMARY"
+      - name: Apply suppression to leads.csv
+        run: node scripts/suppression_apply.js
 
-        '
-'on':
-  workflow_dispatch: null
-  schedule:
-  - cron: 5 */6 * * *
+      - name: Commit & push leads.csv after suppression
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add data/leads.csv || true
+          if git diff --cached --quiet; then
+            echo "no suppression changes"
+          else
+            git commit -m "suppression-sync: applied suppression to leads"
+            git pull --rebase --autostash || true
+            git push
+          fi
