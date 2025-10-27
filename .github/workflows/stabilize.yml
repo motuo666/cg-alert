@@ -1,48 +1,43 @@
-name: "stabilize-p0"
+name: Stabilize Site
 
 on:
-  workflow_dispatch: {}
   schedule:
-    - cron: "0 * * * *"  # hourly
+    - cron: "0 * * * *" # hourly
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: stabilize-p0
+  group: stabilize
   cancel-in-progress: true
 
 jobs:
-  repair:
+  stabilize:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      - name: Repair static pages (sanitize head and remove ellipsis)
+      - name: Install deps
+        run: npm install
+
+      - name: Repair pages / redirects / CTA
         run: node scripts/repair_pages.js
 
-      - name: Align acceptance script worker path
-        run: |
-          if grep -q "worker/lead-gateway.js" scripts/run_acceptance.sh; then
-            sed -i 's#worker/lead-gateway.js#lead-gateway/src/index.js#g' scripts/run_acceptance.sh
-          fi
-
-      - name: Commit & push if changed
+      - name: Commit & push repaired pages
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          if git diff --quiet; then
-            echo "no changes"
+          git add index.html enterprise/index.html dashboard _redirects || true
+          if git diff --cached --quiet; then
+            echo "no stabilize changes"
           else
-            git add -A
-            git commit -m "stabilize: repair static pages + align acceptance script"
+            git commit -m "stabilize: repaired CTA/redirects/pages"
             git pull --rebase --autostash || true
             git push
           fi
