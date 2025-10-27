@@ -1,63 +1,45 @@
-name: Weekly Health Check
+name: Weekly Health (Daily)
 
 on:
   schedule:
-    # 每周日 00:20 UTC 跑
-    - cron: '20 0 * * 0'
+    - cron: "0 4 * * *" # daily 04:00 UTC
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-health-check
+  cancel-in-progress: true
 
 jobs:
   health:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20"
 
       - name: Install deps
+        run: npm install
+
+      - name: Run health check and repair pages
         run: |
-          npm ci || npm install
+          node scripts/weekly_health_check.js
+          node scripts/repair_pages.js
 
-      - name: Rebuild static site pages (reports/vendor/evidence/rss)
+      - name: Commit & push health report / repaired pages
         run: |
-          node scripts/build_change_pack.js
-          node scripts/build_evidence_pages.js
-          node scripts/generate_reports_index.js
-          node scripts/generate_sitemap_rss.js
-          node scripts/build_rss.js
-
-      - name: Health check / Slack summary
-        # 这一步会把SMTP/IMAP连通性、发送能力等跑一遍，然后用 SLACK_WEBHOOK_URL 发健康报告
-        # 我们把 IMAP_REQUIRED=0，避免你还没配 IMAP_* 时整个 job 直接 fail
-        env:
-          IMAP_REQUIRED: "0"
-          SMTP_REQUIRED: "1"
-
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-          SMTP_HOST: ${{ secrets.SMTP_HOST }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          MAIL_FROM: ${{ secrets.MAIL_FROM }}
-
-          # 如果 weekly_health_check.js 里还有别的阈值/KPI用到的 env（比如 KPI_TARGET_PER_WEEK 之类）
-          # 也在这里继续加就行。
-        run: |
-          node scripts/weekly_health_check.js || true
-
-      - name: Commit updated pages
-        run: |
-          git add -A public vendors reports updates _redirects _headers || true
-          if [ -n "$(git status --porcelain)" ]; then
-            git -c user.name="cg-bot" -c user.email="bot@cg-alert.com" commit -m "weekly: rebuild site pages (reports/evidence/rss)"
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add artifacts/health_report.txt index.html enterprise/index.html dashboard _redirects || true
+          if git diff --cached --quiet; then
+            echo "no health changes"
+          else
+            git commit -m "weekly-health-check: health report & repaired pages"
             git pull --rebase --autostash || true
             git push
-          else
-            echo "no changes to commit"
           fi
