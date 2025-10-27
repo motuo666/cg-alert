@@ -1,0 +1,46 @@
+name: Evidence Harvest
+
+on:
+  schedule:
+    - cron: "0 * * * *" # hourly
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: evidence-harvest
+  cancel-in-progress: true
+
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm install
+
+      - name: Harvest endpoints and rebuild dashboard
+        run: |
+          node scripts/poll_public_endpoints.js
+          node scripts/build_dashboard.js
+          node scripts/weekly_health_check.js
+
+      - name: Commit & push evidence/dashboard/health
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add public/evidence dashboard artifacts/daily_ops.json artifacts/health_report.txt || true
+          if git diff --cached --quiet; then
+            echo "no evidence changes"
+          else
+            git commit -m "evidence-harvest: new snapshots & dashboard rebuild"
+            git pull --rebase --autostash || true
+            git push
+          fi
