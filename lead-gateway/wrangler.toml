@@ -1,11 +1,12 @@
 name = "lead-gateway"
 main = "src/index.js"
-compatibility_date = "2024-10-10"
-account_id = "76aef9eabaaeeb291d751140630ee1a1"
+compatibility_date = "2024-06-01"
+workers_dev = true
+account_id = "${CF_ACCOUNT_ID}"
 
-kv_namespaces = [
-  { binding = "LEADS", id = "b214daf070d54636a05bc281ccdb0b11" }
-]
+[vars]
+UNSUB_HMAC_SECRET = "${UNSUB_HMAC_SECRET}"
 
-[observability]
-enabled = true
+[[kv_namespaces]]
+binding = "CGALERT_KV"
+id = "${KV_NAMESPACE_ID}"
