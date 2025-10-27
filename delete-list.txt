@@ -23,8 +23,5 @@
    - target-discovery.yml
    其他 workflow 全部移除，避免冲突。
 
-4. 老的 leads.csv / intakes.csv / customers.csv / unsubscribes.csv / bounces.csv / complaints.csv / sent_log.csv / outreach_log.csv
-   如果列名和现在版本不一致，请备份到别处并删掉老文件，避免合并错误。
-
-5. 任意硬编码 Stripe 链接、Google Form 链接、价格文案（$2,988/yr）直接写死在 HTML 的旧页面。
+4. 任意硬编码 Stripe 链接、Google Form 链接、价格文案（$2,988/yr）直接写死在 HTML 的旧页面。
    新版里定价/CTA全部由 pricing_sync.js + pricing-sync.yml 每天自动覆盖。
