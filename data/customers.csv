@@ -1,3 +1,3 @@
-Mon Oct 06 2025 17:29:12 GMT+0800 (China Standard Time),312@gmail.com,Test Co,,Email only,"",id,company,email,plan,vendors,support
-,,,,,,,,,,,standard
-10/6/2025 17:52:20,678@gmail.com,123,,Email only,""
+company,email,domain,plan,timestamp
+Test Co,312@gmail.com,,Email only,Mon Oct 06 2025 17:29:12 GMT+0800 (China Standard Time)
+123,678@gmail.com,,Email only,10/6/2025 17:52:20
