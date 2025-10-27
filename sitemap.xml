@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://cg-alert.com/</loc></url>
-  <url><loc>https://cg-alert.com/privacy.html</loc></url>
-  <url><loc>https://cg-alert.com/terms.html</loc></url>
-  <url><loc>https://cg-alert.com/reports/</loc></url>
+<url><loc>https://example.com/</loc></url>
+<url><loc>https://example.com/enterprise/</loc></url>
+<url><loc>https://example.com/dashboard/</loc></url>
+<url><loc>https://example.com/legal/privacy.html</loc></url>
+<url><loc>https://example.com/legal/terms.html</loc></url>
 </urlset>
