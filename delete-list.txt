@@ -1,7 +1,30 @@
-\
-# 需要手工删除的旧/冲突文件或配置
-#
-# 删这些是为了确保只有一份真源，不让巡检脚本/工作流自相矛盾。
-#
-wrangler.toml   # 仓库根目录的这个文件。它指向 main="src/worker.js"，这是旧版 Worker。
-                # 真正在线的 Worker 是 lead-gateway/ 下的 wrangler.toml + src/index.js。
+需要你手动删除/清理掉的旧内容，避免和最终版打架：
+
+1. 根目录下任何老的 terms.html / privacy.html / dpa.html / orderform.html
+   （最终版会在 /legal/*.html 自动生成并每天刷新。）
+
+2. 任意手写 footer 片段里，没有 Postal address / Privacy / Terms / DPA / 退订说明 的老页面。
+   （新版由 legal_stamp.js 注入统一 footer，你的手写版本会被覆盖。）
+
+3. 任何早期/临时的 GitHub Actions workflow（只保留这批）:
+   - stabilize.yml
+   - intake-sync.yml
+   - outreach-triggered.yml
+   - bounce-sweep.yml
+   - suppression-sync.yml
+   - evidence-harvest.yml
+   - lead-enrich.yml
+   - weekly-health-check.yml
+   - workflows-doctor.yml
+   - check-secrets.yml
+   - pricing-sync.yml
+   - legal-health.yml
+   - vendor-expand.yml
+   - target-discovery.yml
+   其他 workflow 全部移除，避免冲突。
+
+4. 老的 leads.csv / intakes.csv / customers.csv / unsubscribes.csv / bounces.csv / complaints.csv / sent_log.csv / outreach_log.csv
+   如果列名和现在版本不一致，请备份到别处并删掉老文件，避免合并错误。
+
+5. 任意硬编码 Stripe 链接、Google Form 链接、价格文案（$2,988/yr）直接写死在 HTML 的旧页面。
+   新版里定价/CTA全部由 pricing_sync.js + pricing-sync.yml 每天自动覆盖。
