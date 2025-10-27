@@ -1,27 +1,26 @@
 {
   "name": "cg-alert",
+  "version": "1.1.0",
   "private": true,
-  "version": "1.0.0",
   "description": "CG Alert automation scripts",
   "license": "UNLICENSED",
-  "engines": {
-    "node": ">=18"
+  "type": "commonjs",
+  "scripts": {
+    "repair": "node scripts/repair_pages.js",
+    "health": "node scripts/weekly_health_check.js",
+    "harvest": "node scripts/poll_public_endpoints.js && node scripts/build_dashboard.js",
+    "outreach": "node scripts/send_triggered.js",
+    "intakeSync": "node scripts/intake_sync_kv.js && node scripts/sync_unsub_kv.js",
+    "bounce": "node scripts/poll_inbox.js",
+    "suppress": "node scripts/suppression_apply.js",
+    "enrich": "node scripts/lead_enrich_sync.js",
+    "discoverTargets": "node scripts/discover_targets.js",
+    "expandEndpoints": "node scripts/expand_endpoints.js",
+    "pricingSync": "node scripts/pricing_sync.js",
+    "legalStamp": "node scripts/legal_stamp.js"
   },
   "dependencies": {
-    "archiver": "6.0.2",
-    "csv-parse": "^5.6.0",
-    "csv-stringify": "^6.5.1",
-    "imapflow": "^1.0.199",
-    "mailparser": "3.7.5",
-    "minimist": "^1.2.8",
-    "nodemailer": "^6.10.1",
-    "glob": "^10.3.1"
-  },
-  "type": "module",
-  "scripts": {
-    "build": "node scripts/build_pretty_evidence.js && node scripts/site_doctor.js && node scripts/theme_injector.js && node scripts/build_rss.js",
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "posttheme": "node scripts/theme_hotfix_inject.js"
+    "imapflow": "^1.0.136",
+    "nodemailer": "^6.9.0"
   }
 }
