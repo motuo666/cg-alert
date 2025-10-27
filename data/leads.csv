@@ -1,3 +1,4 @@
+email,company,domain,stack1,stack2,stack3,dept,status,active
 manningtopps@gmail.com,Your Co,gmail.com,Slack,Zoom,stripe.com,procurement,sent,1
 procurement@asana.com,Asana,asana.com,Okta,Slack,Zoom,procurement,bounced,1
 security@globex.com,globex,globex.com,,,,security,new,1
