@@ -1,29 +1,43 @@
 name: Workflows Doctor
+
+on:
+  schedule:
+    - cron: "30 4 * * *" # daily 04:30 UTC
+  workflow_dispatch:
+
 permissions:
   contents: write
+
+concurrency:
+  group: workflows-doctor
+  cancel-in-progress: true
+
 jobs:
-  fix:
+  doctor:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - name: Install YAML parser
-      run: npm i yaml@2
-    - name: Run doctor
-      run: node scripts/workflows_doctor.js
-    - name: Create PR with fixes
-      uses: peter-evans/create-pull-request@v6
-      with:
-        commit-message: 'chore: fix workflows yaml (doctor v2)'
-        branch: bot/workflows-doctor
-        title: Fix workflows yaml (doctor v2)
-        body: Automated fixes for YAML (remove stray true/false at top, tabs→spaces,
-          ensure on.workflow_dispatch & name, drop top-level git lines).
-        labels: automation
-        delete-branch: true
-'on':
-  workflow_dispatch: null
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm install
+
+      - name: Check workflows
+        run: node scripts/workflows_doctor.js
+
+      - name: Commit & push workflows_report.txt
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add artifacts/workflows_report.txt || true
+          if git diff --cached --quiet; then
+            echo "no workflows doctor changes"
+          else
+            git commit -m "workflows-doctor: workflows_report.txt"
+            git pull --rebase --autostash || true
+            git push
+          fi
