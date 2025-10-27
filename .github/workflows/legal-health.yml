@@ -1,0 +1,46 @@
+name: Legal Health
+
+on:
+  schedule:
+    - cron: "15 3 * * *"  # daily at 03:15 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: legal-health
+  cancel-in-progress: true
+
+jobs:
+  legal:
+    runs-on: ubuntu-latest
+    env:
+      COMPANY_LEGAL_NAME: ${{ vars.COMPANY_LEGAL_NAME }}
+      MAIL_POSTAL_ADDRESS: ${{ vars.MAIL_POSTAL_ADDRESS }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm install
+
+      - name: Stamp /legal/*.html and inject legal footer
+        run: node scripts/legal_stamp.js
+
+      - name: Commit & push legal/footer changes
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add legal index.html enterprise/index.html dashboard || true
+          if git diff --cached --quiet; then
+            echo "no legal/footer changes"
+          else
+            git commit -m "legal-health: refresh legal pages + footer injection"
+            git pull --rebase --autostash || true
+            git push
+          fi
