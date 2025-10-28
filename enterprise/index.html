@@ -2,69 +2,236 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>CG Alert – Enterprise Access</title>
+<title>CG Alert – Enterprise / Deal Desk Access</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Timestamped vendor-change evidence for renewals, compliance, procurement leverage.">
+<meta name="description" content="Full vendor-change timeline, evidence packets, and custom escalation support for procurement, legal, and compliance teams.">
 <style>
-body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;line-height:1.5;color:#111;padding:1rem;max-width:48rem;margin:0 auto;}
-h1{font-size:1.1rem;font-weight:600;margin:0 0 .75rem 0;}
-h2{font-size:1rem;font-weight:600;margin:2rem 0 .5rem 0;}
-.card{border:1px solid #ddd;border-radius:6px;background:#f9f9f9;padding:1rem;margin-top:1rem;}
-.btnrow{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem;}
-.btn{display:inline-block;background:#111;color:#fff;padding:.5rem .75rem;border-radius:4px;font-size:.8rem;text-decoration:none;}
-.btn.alt{background:#0a7cff;}
-.small{font-size:.8rem;color:#555;}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    color:#0a0a0a;
+    background:#fff;
+    line-height:1.5;
+  }
+  header{
+    background:#0f172a;
+    color:#fff;
+    padding:3rem 1.5rem 3rem;
+    text-align:center;
+  }
+  header h1{
+    font-size:2rem;
+    font-weight:600;
+    line-height:1.2;
+    margin:0 0 1rem;
+    color:#fff;
+    max-width:900px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  header p.sub{
+    color:#cbd5e1;
+    max-width:900px;
+    margin:0 auto 2rem;
+    font-size:1.05rem;
+  }
+  .cta-row{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:1rem;
+  }
+  .btn{
+    display:inline-block;
+    padding:0.9rem 1.2rem;
+    border-radius:0.5rem;
+    font-weight:600;
+    text-decoration:none;
+    font-size:1rem;
+    line-height:1.2;
+    border:2px solid transparent;
+    white-space:nowrap;
+  }
+  .btn-secondary{
+    background:#1e1e2e;
+    border-color:#4b5563;
+    color:#fff;
+  }
+  section{
+    padding:2.5rem 1.5rem;
+    max-width:1100px;
+    margin:0 auto;
+  }
+  section h2{
+    font-size:1.4rem;
+    font-weight:600;
+    margin:0 0 1rem;
+    color:#0a0a0a;
+  }
+  section p{
+    max-width:900px;
+    color:#334155;
+    font-size:1rem;
+    margin:0 0 1rem;
+  }
+  .list-block{
+    border:1px solid #e2e8f0;
+    border-radius:0.75rem;
+    background:#fff;
+    padding:1rem 1.25rem;
+    max-width:900px;
+  }
+  .list-block h3{
+    margin:0 0 .5rem;
+    font-size:1.1rem;
+    font-weight:600;
+    color:#0f172a;
+  }
+  .list-block ul{
+    margin:0;
+    padding-left:1.25rem;
+    color:#475569;
+    font-size:0.95rem;
+  }
+  .list-block li{
+    margin:0 0 .5rem;
+  }
+  footer{
+    border-top:1px solid #e2e8f0;
+    background:#f8fafc;
+    color:#475569;
+    font-size:0.8rem;
+    line-height:1.4;
+    padding:2rem 1.5rem 4rem;
+  }
+  footer .footer-inner{
+    max-width:1100px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:1.5rem;
+  }
+  footer a{
+    color:#0f172a;
+    text-decoration:none;
+  }
+  footer a:hover{text-decoration:underline;}
+  @media(min-width:700px){
+    footer .footer-inner{
+      grid-template-columns:2fr 1fr 1fr;
+    }
+  }
+  .footer-col h4{
+    margin:0 0 .5rem;
+    font-size:0.9rem;
+    font-weight:600;
+    color:#0f172a;
+  }
+  .footer-col p,
+  .footer-col li{
+    margin:0 0 .5rem;
+    list-style:none;
+  }
+  .unsubscribe-note{
+    font-size:0.7rem;
+    color:#94a3b8;
+    margin-top:1rem;
+  }
 </style>
 </head>
 <body>
 
-<h1>Enterprise Access</h1>
-<p style="font-size:.9rem;margin:0 0 1rem 0;">
-You get timestamped proof of vendor changes (pricing, DPA, sub-processors, SLA shifts).
-This is renewal leverage and compliance evidence your procurement / legal / RevOps can drop directly into the negotiation.
-</p>
-
-<div class="card">
-  <div style="font-size:.9rem;font-weight:600;margin-bottom:.5rem;">Ready to lock leverage before renewal?</div>
-  <div class="btnrow">
-    <a class="btn" href="/buy/portfolio">Buy Portfolio · $2,988/yr</a>
-    <a class="btn alt" href="/intake">Request Enterprise</a>
+<header>
+  <h1>Enterprise / Deal Desk Access</h1>
+  <p class="sub">
+    Full vendor-change timeline, evidence packets, and custom escalation support.
+    We arm procurement, legal, compliance and security with documented diffs of pricing,
+    liability caps, subprocessors and SLA promises — so you can demand better terms.
+  </p>
+  <div class="cta-row">
+    <a class="btn btn-secondary" href="/intake">Request Enterprise Access →</a>
   </div>
-  <div class="small" style="margin-top:.5rem;">
-    Portfolio = prebuilt evidence library + ongoing monitoring.<br/>
-    Enterprise = tailored vendor set, alerts, and contract support.
+</header>
+
+<section>
+  <h2>What Enterprise gets</h2>
+  <div class="list-block">
+    <h3>1. Complete Change Timeline per Vendor</h3>
+    <ul>
+      <li>Every material change in price, SLA, uptime credit, termination window, DPAs, subprocessors.</li>
+      <li>Timestamped captures you can attach directly to your renewal email or escalation thread.</li>
+    </ul>
+
+    <h3>2. Evidence Packets for Legal / Security</h3>
+    <ul>
+      <li>Side-by-side redlines of liability cap shifts and new subprocessors.</li>
+      <li>PDF bundle you can send to GC or SecOps without extra editing.</li>
+    </ul>
+
+    <h3>3. Renewal / Escalation Playbook</h3>
+    <ul>
+      <li>Context: “This vendor raised everyone’s minimum commit 18% last quarter.”</li>
+      <li>You forward it and ask for carve-outs or credits — with receipts.</li>
+    </ul>
+
+    <h3>4. Priority Support & Custom Targets</h3>
+    <ul>
+      <li>We will start watching any vendor you nominate, even if it’s niche/internal-critical.</li>
+      <li>We’ll alert you first if they quietly weaken terms somewhere else before hitting you.</li>
+    </ul>
   </div>
-</div>
+</section>
 
-<h2>What we give you</h2>
-<ul style="font-size:.9rem;margin-top:0;padding-left:1.2rem;">
-  <li>Timestamped diffs with SHA256 hash for legal credibility</li>
-  <li>Historical trail for “you changed terms/price, here’s proof”</li>
-  <li>Sub-processor and DPA drift monitoring for audit/compliance</li>
-  <li>Dashboard you can forward to procurement / legal / RevOps</li>
-</ul>
+<section>
+  <h2>Who usually signs this?</h2>
+  <p>
+    • Procurement / Strategic Sourcing<br>
+    • Legal / Commercial Counsel / GC<br>
+    • Security / Compliance / Vendor Risk<br>
+    • CFO / Finance owning SaaS spend
+  </p>
+  <p>
+    We’re not a “marketing lead list”. We are leverage for renewal and proof for audit.
+  </p>
 
-<h2>Why this matters</h2>
-<ul style="font-size:.9rem;margin-top:0;padding-left:1.2rem;">
-  <li>"You raised price / changed liability cap / quietly added a new sub-processor — justify."</li>
-  <li>"Competitor offers softer indemnity. Match or we move."</li>
-  <li>"We have documented notice gaps. Fix the commercial terms."</li>
-</ul>
+  <div class="cta-row" style="margin-top:2rem;">
+    <a class="btn btn-secondary" href="/intake">Request Enterprise Access →</a>
+  </div>
+</section>
 
-<footer style="border-top:1px solid #ddd;padding-top:1rem;margin-top:2rem;font-size:.8rem;color:#555;">
-  <div>CG Alert — automated vendor change intelligence.</div>
+<footer>
+  <div class="footer-inner">
+    <div class="footer-col">
+      <h4>CG Alert</h4>
+      <p>Vendor Change Intelligence for renewals, compliance, and procurement leverage.</p>
+      <p><strong>[COMPANY_LEGAL_NAME]</strong><br>[MAIL_POSTAL_ADDRESS]</p>
+      <p>Contact: <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a></p>
+    </div>
+
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/buy/portfolio">Buy Portfolio</a></li>
+        <li><a href="/intake">Enterprise / Deal Desk</a></li>
+        <li><a href="/dashboard/">Evidence Dashboard</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Legal & Compliance</h4>
+      <ul>
+        <li><a href="/legal/terms.html">Terms</a></li>
+        <li><a href="/legal/privacy.html">Privacy</a></li>
+        <li><a href="/legal/dpa.html">DPA</a></li>
+        <li><a href="/legal/order-form.html">Order Form</a></li>
+      </ul>
+      <p class="unsubscribe-note">
+        Unsubscribe / complaints: reply STOP or email remove@cg-alert.com.
+        We honor all suppression requests immediately and log them in suppression.
+      </p>
+    </div>
+  </div>
 </footer>
 
-
-<footer style="border-top:1px solid #ddd;padding-top:1rem;margin-top:2rem;font-size:.8rem;color:#555;">
-  <div>CG Alert (sole proprietor: Zhening Sun) — automated vendor change intelligence for renewals / compliance / procurement leverage.</div>
-  <div style="margin-top:.5rem;">Postal address: Bailutun, High-tech Zone, Zhengzhou City, Henan Province</div>
-  <div style="margin-top:.5rem;font-size:.75rem;color:#777;">
-    Privacy: <a href="/legal/privacy.html" style="color:#0645ad;text-decoration:underline;">Privacy Policy</a> ·
-    Terms: <a href="/legal/terms.html" style="color:#0645ad;text-decoration:underline;">Terms</a> ·
-    DPA: <a href="/legal/dpa.html" style="color:#0645ad;text-decoration:underline;">DPA Template</a><br/>
-    You can unsubscribe from outreach instantly via the link in any email.
-  </div>
-</footer>
 </body>
 </html>
