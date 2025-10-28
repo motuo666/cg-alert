@@ -1,0 +1,40 @@
+name: newlead-autoreply
+on:
+  schedule:
+    - cron: "*/10 * * * *"  # 每10分钟跑一次
+  workflow_dispatch:
+
+jobs:
+  autorespond:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install deps
+        run: |
+          npm install nodemailer
+
+      - name: Run intake sync (pull latest leads from CF Worker / intake KV)
+        run: |
+          node scripts/intake_sync_kv.js
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          KV_NAMESPACE_ID: ${{ secrets.KV_NAMESPACE_ID }}
+
+      - name: Send autoresponse to new leads
+        run: |
+          node scripts/send_autoreply_newlead.js
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          SITE_ORIGIN: ${{ secrets.SITE_ORIGIN }}
