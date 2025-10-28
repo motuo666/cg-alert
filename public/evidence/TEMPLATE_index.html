@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>{{VENDOR_DISPLAY_NAME}} – Captured {{CAPTURED_AT}}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Timestamped vendor change evidence for renewal leverage, compliance, and audit defense.">
 <style>
 :root {
   --brand-start:#5598f9;
@@ -28,7 +29,31 @@ body{
   background:var(--bg-page);
   line-height:1.5;
 }
-/* simple nav */
+
+/* BRAND LOGO */
+.brand-wrap{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  font-weight:600;
+  color:var(--brand-dark);
+  font-size:.95rem;
+}
+.brand-logo{
+  width:28px;
+  height:28px;
+  border-radius:.5rem;
+  background:linear-gradient(135deg,var(--brand-start) 0%,var(--brand-end) 100%);
+  color:var(--brand-dark);
+  font-size:.8rem;
+  font-weight:600;
+  line-height:28px;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(5,32,59,0.18);
+  flex-shrink:0;
+}
+
+/* NAV */
 .navbar-wrap{
   background:#fff;
   box-shadow:0 12px 24px rgba(5,32,59,0.08);
@@ -43,19 +68,6 @@ body{
   justify-content:space-between;
   flex-wrap:wrap;
   font-size:.8rem;
-}
-.nav-left{
-  display:flex;
-  align-items:center;
-  gap:.5rem;
-  font-weight:600;
-  color:var(--brand-dark);
-  font-size:.95rem;
-}
-.nav-left img{
-  width:28px;
-  height:28px;
-  border-radius:.5rem;
 }
 .nav-right{
   display:flex;
@@ -81,7 +93,7 @@ body{
   line-height:1.2;
 }
 
-/* HERO CARD */
+/* HERO */
 .hero{
   position:relative;
   padding:2rem 1rem 2.5rem;
@@ -118,8 +130,18 @@ body{
   margin-bottom:1rem;
 }
 .meta-row div{margin-bottom:.3rem;}
+.summary-row{
+  font-size:.9rem;
+  color:var(--text-muted);
+  line-height:1.4;
+  margin-bottom:1rem;
+}
+.summary-row strong{
+  color:var(--brand-dark);
+  font-weight:600;
+}
 
-/* RAW CAPTURE */
+/* MAIN CONTENT */
 .main{
   max-width:1200px;
   margin:2rem auto 4rem;
@@ -135,15 +157,23 @@ body{
   line-height:1.4;
   color:var(--text-dark);
   overflow-x:auto;
-  white-space:pre-wrap;
   word-break:break-word;
+}
+.capture-card summary{
+  font-weight:600;
+  font-size:.8rem;
+  color:var(--brand-dark);
+  cursor:pointer;
+  outline:none;
+  margin-bottom:.5rem;
 }
 .capture-card pre{
   margin:0;
-  font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   font-size:.7rem;
   line-height:1.4;
   color:#000;
+  white-space:pre-wrap;
 }
 
 /* CTA BOX */
@@ -235,17 +265,14 @@ footer{
 <!-- NAV -->
 <div class="navbar-wrap">
   <div class="navbar">
-    <div class="nav-left">
-      <img src="/cg-logo-512.png" alt="CG" />
+    <div class="brand-wrap">
+      <div class="brand-logo">CG</div>
       <div>CG Alert</div>
     </div>
     <div class="nav-right">
       <a href="/">Home</a>
       <a href="/dashboard/">Dashboard</a>
       <a href="/intake">Enterprise / Deal Desk</a>
-      <a href="/buy/portfolio">Buy Portfolio</a>
-      <a href="/buy/renewal-desk">Buy Renewal Desk</a>
-      <a href="/buy/compliance">Buy Compliance & Vendor Risk</a>
       <a class="nav-cta" href="/intake">Request Enterprise →</a>
     </div>
   </div>
@@ -256,26 +283,38 @@ footer{
   <div class="hero-inner">
     <div class="hero-card">
       <h1>{{VENDOR_DISPLAY_NAME}} – Captured {{CAPTURED_AT}}</h1>
+
       <div class="meta-row">
         <div><strong>Source URL:</strong> {{SOURCE_URL}}</div>
-        <div><strong>SHA256:</strong> {{SHA256}}</div>
         <div><strong>Captured:</strong> {{CAPTURED_AT}}</div>
+        <div><strong>SHA256:</strong> {{SHA256}}</div>
       </div>
-      <div class="note" style="font-size:.8rem;">
-        This snapshot is part of a vendor change event. Full packet includes redlines, escalation language, and PDF bundle.
+
+      <div class="summary-row">
+        <strong>What changed:</strong> {{SUMMARY_CHANGE}}<br>
+        <strong>Why this matters:</strong> {{WHY_IT_MATTERS}}<br>
+        <strong>How you use it in renewal:</strong> {{HOW_TO_USE}}
+      </div>
+
+      <div class="summary-row" style="font-size:.8rem;">
+        This snapshot is part of a vendor change event. Paid access includes
+        full redlines, escalation language, and PDF bundles for Procurement / Legal / Compliance / Finance.
       </div>
     </div>
   </div>
 </div>
 
-<!-- MAIN BODY -->
+<!-- MAIN -->
 <div class="main">
   <div class="capture-card">
-    <pre>{{RAW_BODY}}</pre>
+    <details>
+      <summary>Raw captured page / clause language (timestamped)</summary>
+      <pre>{{RAW_BODY}}</pre>
+    </details>
   </div>
 
   <div class="cta-box">
-    <strong>Use this in renewal.</strong><br>
+    <strong>Use this wording in your renewal call.</strong><br>
     “On {{CAPTURED_AT}} you changed liability caps / SLAs / pricing. We need carve-outs, credits, or custom language.”
     <div class="cta-row">
       <a class="btn primary" href="/buy/portfolio">Buy Portfolio · $2,988/yr</a>
