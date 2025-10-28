@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <title>CG Alert – Vendor Change Intelligence / Renewal Leverage / Compliance Evidence</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="We track and timestamp your vendors' pricing, SLA, liability caps, subprocessors and DPAs. You walk into renewal with receipts.">
+<meta name="description" content="We track and timestamp vendor pricing, SLAs, DPAs, subprocessors, liability caps. You walk into renewal with receipts.">
 <style>
 :root {
   --brand-start:#5598f9;
@@ -164,7 +164,7 @@ body{
   max-width:700px;
 }
 
-/* VALUE STRIP - like BuiltWith's 3 pillars */
+/* VALUE STRIP */
 .value-strip{
   margin-top:2rem;
   display:grid;
@@ -178,7 +178,7 @@ body{
   background:#fff;
   border:1px solid var(--border);
   border-radius:var(--radius-lg);
-  padding:1rem 1rem 1rem;
+  padding:1rem;
   box-shadow:var(--shadow-card-sm);
 }
 .value-card h3{
@@ -194,14 +194,14 @@ body{
   line-height:1.4;
 }
 
-/* STATS / SOCIAL PROOF */
+/* STATS */
 .stats-row{
   margin-top:2rem;
   background:#fff;
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-card-sm);
   border:1px solid var(--border);
-  padding:1rem 1rem;
+  padding:1rem;
   display:flex;
   flex-wrap:wrap;
   gap:1rem 2rem;
@@ -216,7 +216,7 @@ body{
   line-height:1.2;
 }
 
-/* SECTION */
+/* GENERIC SECTION */
 .section{
   padding:3rem 1rem;
 }
@@ -240,7 +240,7 @@ body{
   margin:0 0 2rem;
 }
 
-/* DASHBOARD PREVIEW */
+/* DASHBOARD / OUTREACH PREVIEW */
 .dashboard-preview{
   display:grid;
   grid-template-columns:1fr;
@@ -344,6 +344,83 @@ body{
   color:#fff;
 }
 
+/* HOW IT WORKS / WHO USES / FAQ */
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1.5rem;
+}
+@media(min-width:1000px){
+  .grid-2{grid-template-columns:1fr 1fr;}
+}
+.block-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card-sm);
+  padding:1.25rem 1rem 1rem;
+  font-size:.9rem;
+  color:var(--text-muted);
+  line-height:1.4;
+}
+.block-card h3{
+  margin:0 0 .5rem;
+  font-size:1rem;
+  color:var(--brand-dark);
+  font-weight:600;
+}
+
+/* CTA BAND */
+.cta-band{
+  background:linear-gradient(135deg,var(--brand-start) 0%,var(--brand-end) 100%);
+  color:#fff;
+  margin:0;
+  padding:2rem 1rem;
+}
+.cta-band-inner{
+  max-width:1200px;
+  margin:0 auto;
+  background:#fff;
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-card);
+  padding:1.5rem 1.5rem 1.5rem;
+  color:var(--text-dark);
+}
+.cta-band-inner h2{
+  margin:0 0 .75rem;
+  font-size:1.25rem;
+  font-weight:600;
+  color:var(--brand-dark);
+}
+.cta-band-inner p{
+  margin:0 0 1rem;
+  font-size:.9rem;
+  color:var(--text-muted);
+  line-height:1.4;
+}
+.cta-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.75rem;
+}
+.cta-actions a{
+  display:inline-block;
+  text-decoration:none;
+  font-weight:600;
+  font-size:.9rem;
+  line-height:1.2;
+  border-radius:.5rem;
+  padding:.6rem .8rem;
+  border:2px solid var(--brand-dark);
+  color:var(--brand-dark);
+  background:#fff;
+  box-shadow:var(--shadow-card-sm);
+}
+.cta-actions a.dark{
+  background:var(--brand-dark);
+  color:#fff;
+}
+
 /* FOOTER */
 footer{
   border-top:1px solid var(--border);
@@ -397,17 +474,16 @@ footer{
 <div class="navbar-wrap">
   <div class="navbar">
     <div class="nav-left">
-      <!-- 你的logo：建议用 /cg-logo-512.png 缩小显示 -->
       <img src="/cg-logo-512.png" alt="CG" />
       <div>CG Alert</div>
     </div>
     <div class="nav-right">
-      <a href="#why">Renewal Leverage</a>
-      <a href="#compliance">Compliance & Risk</a>
-      <a href="/dashboard/">Evidence Dashboard</a>
+      <a href="#why">Renewal</a>
+      <a href="#compliance">Compliance</a>
+      <a href="/dashboard/">Dashboard</a>
       <a href="#pricing">Pricing</a>
-      <a href="/buy/portfolio">Buy Portfolio</a>
-      <a class="nav-cta" href="/intake">Request Enterprise Access →</a>
+      <a href="/buy/portfolio">Buy</a>
+      <a class="nav-cta" href="/intake">Request Enterprise →</a>
     </div>
   </div>
 </div>
@@ -417,23 +493,23 @@ footer{
   <div class="hero-inner">
     <div class="hero-card">
       <h1 class="hero-headline">
-        See what your vendors changed, when they changed it, and use it to beat them at renewal.
+        Your vendors changed the rules. We timestamp it. You use it to beat them at renewal.
       </h1>
       <p class="hero-sub">
         We track and timestamp pricing, SLAs, liability caps, subprocessors and DPAs from your critical SaaS vendors.
-        You walk into renewal with receipts — not guesses.
-        Your CFO / Procurement / Legal / Compliance get leverage and audit-ready evidence instantly.
+        Procurement, Legal, Compliance and Finance walk into renewal with receipts — not guesses.
       </p>
 
-      <!-- BuiltWith-style lead form -> 我们导到 /intake -->
-      <form class="hero-form" action="/intake" method="get">
-        <input type="email" name="work_email" placeholder="Work email to receive a sample Vendor Change Packet…" />
+      <!-- Lead capture form feeding /intake -->
+      <form class="hero-form" action="/intake" method="GET">
+        <input type="email" name="work_email" placeholder="Work email to receive a sample Vendor Change Packet…" required />
+        <input type="hidden" name="source" value="homepage_vendor_packet">
         <button type="submit">Get Vendor Change Packet →</button>
       </form>
 
       <div class="hero-note">
-        We’ll send a redacted evidence packet showing real pricing / SLA / liability-cap changes.
-        Full unredacted timelines and escalation-ready PDFs are part of Enterprise / Deal Desk.
+        We auto-email you a redacted evidence bundle. Full unredacted timelines, escalation language, and PDF bundles sit behind Enterprise / Deal Desk.
+        You can also self-purchase below.
       </div>
 
       <div class="value-strip" id="why">
@@ -464,32 +540,29 @@ footer{
         <div class="stat-badge">187 critical SaaS vendors monitored</div>
         <div class="stat-badge">4,312 policy / SLA / pricing diffs logged</div>
         <div class="stat-badge">1,204 live timestamps archived</div>
-        <div class="stat-badge">Active deal support for Procurement / Legal / CFO</div>
+        <div class="stat-badge">Renewal / Legal / Compliance / CFO Ready</div>
       </div>
     </div>
   </div>
 </header>
 
-<!-- DASHBOARD / OUTREACH SECTION -->
+<!-- DASHBOARD + OUTREACH -->
 <section class="section">
   <div class="section-inner">
-    <h2 class="section-title">Evidence Dashboard & Automated Outreach</h2>
+    <h2 class="section-title">Live Evidence Dashboard & Outreach Engine</h2>
     <p class="section-desc">
-      This is not a spreadsheet. It’s a live ledger of vendor behavior + an outbound engine that drops those receipts on the right owner inside your target account, without burning your sender reputation.
+      This is not a list of emails. It's a continuously updating ledger of vendor behavior plus an outbound workflow that drops those receipts on the correct owner at the account, without burning your sender reputation.
     </p>
 
     <div class="dashboard-preview">
       <div class="preview-card">
         <h4>Evidence Dashboard</h4>
         <p>
-          Timeline of every material change we captured:
-          pricing, SLA, termination windows, liability caps, subprocessors.
+          Timeline of every material change we captured: pricing, SLA, termination windows, liability caps, subprocessors.
           Each entry is timestamped and archived.
         </p>
-        <p class="plan-desc" style="margin:0 0 1rem;">
-          Procurement can demand credits.
-          Legal can demand carve-outs.
-          Compliance can prove diligence.
+        <p>
+          Procurement can demand credits. Legal can demand carve-outs. Compliance can prove diligence.
         </p>
         <p><a href="/dashboard/">View live dashboard →</a></p>
       </div>
@@ -497,25 +570,23 @@ footer{
       <div class="preview-card">
         <h4>Auto Outreach & Suppression</h4>
         <p>
-          We route the evidence to the correct owner (CFO / Procurement / Legal) at each target account,
-          then watch bounces/complaints/unsubscribes and permanently suppress them.
+          We route evidence to CFO / Procurement / Legal at the target account,
+          then we track bounces / complaints / unsubscribes and permanently suppress them.
+          Scale leverage without torching your domain.
         </p>
-        <p class="plan-desc" style="margin:0 0 1rem;">
-          You scale without burning your domain.
-        </p>
-        <p><a href="/intake">Request Enterprise Access →</a></p>
+        <p><a href="/intake">Request Enterprise →</a></p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- PRICING SECTION -->
+<!-- PRICING -->
 <section class="section" id="pricing">
   <div class="section-inner">
-    <h2 class="section-title">Plans</h2>
+    <h2 class="section-title">Plans (self-serve or enterprise)</h2>
     <p class="section-desc">
       All tiers include continuous monitoring, timestamped evidence, and suppression handling (unsubscribe / complaint / bounce).
-      Enterprise / Deal Desk is the “we sit with you at the negotiation table” tier. That’s where 5-figure contracts live.
+      Higher tiers add escalation language and direct renewal support.
     </p>
 
     <div class="pricing-grid">
@@ -549,7 +620,7 @@ footer{
           <li>Routing evidence to CFO / Procurement / Legal</li>
         </ul>
         <div class="plan-cta">
-          <a href="/intake">Request Enterprise</a>
+          <a class="primary" href="/buy/renewal-desk">Buy Renewal Desk · $6,000/yr</a>
         </div>
       </div>
 
@@ -566,7 +637,7 @@ footer{
           <li>Priority monitoring for regulated vendors you nominate</li>
         </ul>
         <div class="plan-cta">
-          <a href="/intake">Request Enterprise</a>
+          <a class="primary" href="/buy/compliance">Buy Compliance & Vendor Risk · $12,000/yr</a>
         </div>
       </div>
 
@@ -583,9 +654,76 @@ footer{
           <li>Signed Order Form + DPA</li>
         </ul>
         <div class="plan-cta">
-          <a href="/intake">Request Enterprise</a>
+          <a href="/intake">Request Enterprise →</a>
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS / WHO USES / FAQ -->
+<section class="section">
+  <div class="section-inner grid-2">
+    <div class="block-card">
+      <h3>How it Works</h3>
+      <p><strong>1. We watch vendors you care about.</strong><br>
+      Pricing pages, SLA terms, DPAs, subprocessors, liability caps, termination windows. 24/7.</p>
+      <p><strong>2. We timestamp diffs and store receipts.</strong><br>
+      You get "Before vs After" proof with SHA256 and capture time.</p>
+      <p><strong>3. We hand you negotiation ammo.</strong><br>
+      Procurement/Legal walk into renewal with the vendor's own language. You ask for credits, carve-outs, better caps.</p>
+      <p><strong>4. We outreach with suppression.</strong><br>
+      We route to CFO / Procurement / Legal. Complaints/unsubscribes are auto-suppressed so you don't burn your domain.</p>
+    </div>
+
+    <div class="block-card">
+      <h3>Who Uses This</h3>
+      <p><strong>Procurement / Strategic Sourcing</strong><br>
+      Wants cost-down and carve-outs at renewal with proof.</p>
+      <p><strong>Legal / Commercial Counsel</strong><br>
+      Needs to push back on liability caps / termination windows using actual prior terms.</p>
+      <p><strong>Compliance / Security / Vendor Risk</strong><br>
+      Needs immediate alert if a vendor quietly adds a risky subprocessor without notice.</p>
+      <p><strong>CFO / Finance</strong><br>
+      Wants leverage, not fluff, when a supplier tries to jack price 18% “for everyone”.</p>
+    </div>
+
+    <div class="block-card">
+      <h3>FAQ / Compliance</h3>
+      <p><strong>Will you spam my prospects?</strong><br>
+      No. We track bounces, unsubscribes and complaints, and permanently suppress them across all future sends.</p>
+      <p><strong>Can I get unredacted vendor names?</strong><br>
+      Yes. That's part of Renewal Desk / Compliance / Deal Desk tiers.</p>
+      <p><strong>Do I get PDF bundles?</strong><br>
+      Yes. We package all screenshots, timestamps and diffs into audit-ready PDFs for board / SOC2 / legal review.</p>
+      <p><strong>Can I self-serve?</strong><br>
+      Yes. Buy Portfolio, Renewal Desk, or Compliance right now with Stripe. Or request Enterprise / Deal Desk if you want us sitting in the renewal call.</p>
+    </div>
+
+    <div class="block-card">
+      <h3>What You Stop Doing</h3>
+      <p>• You stop diffing 40-page DPAs at 2am to see if liability caps moved.<br>
+      • You stop guessing how hard to push in renewal calls.<br>
+      • You stop letting vendors rewrite SLAs silently and pretend it's “always been that way”.<br>
+      • You stop losing sender reputation because one CFO got annoyed.</p>
+      <p>We industrialize that entire job and hand you leverage.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BAND -->
+<section class="cta-band">
+  <div class="cta-band-inner">
+    <h2>Ready to walk into renewal with receipts instead of hope?</h2>
+    <p>
+      Get a redacted Vendor Change Packet now, or just swipe a credit card and start using the live dashboard.
+      If you're a large org and you want us in the escalation thread, request Enterprise / Deal Desk.
+    </p>
+    <div class="cta-actions">
+      <a class="dark" href="/intake">Request Enterprise Access →</a>
+      <a href="/buy/portfolio">Buy Portfolio · $2,988/yr</a>
+      <a href="/buy/renewal-desk">Buy Renewal Desk · $6,000/yr</a>
+      <a href="/buy/compliance">Buy Compliance & Vendor Risk · $12,000/yr</a>
     </div>
   </div>
 </section>
@@ -596,7 +734,6 @@ footer{
     <div class="footer-col">
       <h4>CG Alert</h4>
       <p>Vendor Change Intelligence for renewals, compliance, and procurement leverage.</p>
-      <p><strong>[COMPANY_LEGAL_NAME]</strong><br>[MAIL_POSTAL_ADDRESS]</p>
       <p>Contact: <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a></p>
     </div>
 
@@ -605,6 +742,8 @@ footer{
       <ul>
         <li><a href="/dashboard/">Evidence Dashboard</a></li>
         <li><a href="/buy/portfolio">Buy Portfolio</a></li>
+        <li><a href="/buy/renewal-desk">Buy Renewal Desk</a></li>
+        <li><a href="/buy/compliance">Buy Compliance & Vendor Risk</a></li>
         <li><a href="/intake">Enterprise / Deal Desk</a></li>
       </ul>
     </div>
@@ -618,8 +757,8 @@ footer{
         <li><a href="/legal/order-form.html">Order Form</a></li>
       </ul>
       <p class="unsubscribe-note">
-        Unsubscribe / complaints: reply STOP or email remove@cg-alert.com.
-        We honor all suppression immediately and log it in suppression.
+        Unsubscribe / complaints: reply STOP or email remove@cg-alert.com.<br>
+        We honor suppression immediately and never send again.
       </p>
     </div>
   </div>
