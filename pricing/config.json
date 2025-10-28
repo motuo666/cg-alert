@@ -3,5 +3,67 @@
   "portfolio_sku_label": "Buy Portfolio · $2,988/yr",
   "enterprise_cta_label": "Request Enterprise",
   "stripe_product": "portfolio_yearly",
-  "notes": "Portfolio includes vendor-change monitoring, timestamped evidence, dashboard access for renewals/compliance leverage."
+  "notes": "Portfolio includes vendor-change monitoring, timestamped evidence, dashboard access for renewals/compliance leverage.",
+
+  "plans": [
+    {
+      "id": "portfolio",
+      "name": "Portfolio",
+      "price_usd_year": 2988,
+      "price_label": "$2,988 / yr",
+      "tagline": "Prebuilt vendor-change portfolio. Instant leverage.",
+      "includes": [
+        "Monitored list of high-impact SaaS vendors",
+        "Historical pricing / SLA / liability / subprocessor diffs",
+        "Evidence dashboard access",
+        "1 named internal user"
+      ],
+      "checkout_redirect": "/buy/portfolio"
+    },
+    {
+      "id": "renewal_desk",
+      "name": "Renewal Desk",
+      "price_usd_year": 6000,
+      "price_label": "$6,000 / yr",
+      "tagline": "Finance & procurement leverage at renewal.",
+      "includes": [
+        "Everything in Portfolio",
+        "Unlimited internal viewers",
+        "Escalation-ready screenshots / language",
+        "Alert routing to the correct owner (CFO / Legal / Procurement)"
+      ],
+      "contact_redirect": "/intake"
+    },
+    {
+      "id": "compliance_risk",
+      "name": "Compliance & Vendor Risk",
+      "price_usd_year": 12000,
+      "price_label": "$12,000 / yr",
+      "tagline": "DPA / subprocessor / liability watch for Security & Legal.",
+      "includes": [
+        "Automated tracking of DPAs & subprocessors",
+        "Liability cap change alerts",
+        "PDF bundles for audit / board / SOC2",
+        "Priority monitoring for regulated vendors you nominate"
+      ],
+      "contact_redirect": "/intake"
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise / Deal Desk",
+      "price_usd_year": "custom",
+      "price_label": "Custom",
+      "tagline": "Dedicated deal support and custom vendor coverage.",
+      "includes": [
+        "We add any vendor you name",
+        "Executive escalation support on live renewals",
+        "Board / audit reporting packs",
+        "Signed Order Form + DPA"
+      ],
+      "contact_redirect": "/intake"
+    }
+  ],
+
+  "currency": "USD",
+  "compliance_note": "All plans include suppression handling (unsubscribe/complaint/bounce) to protect sender reputation and respect opt-outs."
 }
