@@ -3,7 +3,7 @@
   "portfolio_sku_label": "Buy Portfolio · $2,988/yr",
   "enterprise_cta_label": "Request Enterprise",
   "stripe_product": "portfolio_yearly",
-  "notes": "Portfolio includes vendor-change monitoring, timestamped evidence, dashboard access for renewals/compliance leverage.",
+  "notes": "Portfolio gives prebuilt monitored vendors, historical diffs, dashboard access. Higher tiers add renewal escalation support, compliance evidence bundles, and custom vendor watching.",
 
   "plans": [
     {
@@ -29,8 +29,8 @@
       "includes": [
         "Everything in Portfolio",
         "Unlimited internal viewers",
-        "Escalation-ready screenshots / language",
-        "Alert routing to the correct owner (CFO / Legal / Procurement)"
+        "Escalation-ready screenshots / vendor language",
+        "Routing evidence to CFO / Procurement / Legal"
       ],
       "contact_redirect": "/intake"
     },
@@ -51,11 +51,11 @@
     {
       "id": "enterprise",
       "name": "Enterprise / Deal Desk",
-      "price_usd_year": "custom",
-      "price_label": "Custom",
-      "tagline": "Dedicated deal support and custom vendor coverage.",
+      "price_usd_year": 30000,
+      "price_label": "Starts $30k / yr",
+      "tagline": "We act as your external deal desk on renewals.",
       "includes": [
-        "We add any vendor you name",
+        "We watch any vendor you name",
         "Executive escalation support on live renewals",
         "Board / audit reporting packs",
         "Signed Order Form + DPA"
@@ -65,5 +65,5 @@
   ],
 
   "currency": "USD",
-  "compliance_note": "All plans include suppression handling (unsubscribe/complaint/bounce) to protect sender reputation and respect opt-outs."
+  "compliance_note": "All plans include suppression handling (unsubscribe / complaint / bounce) to protect sender reputation and respect opt-outs."
 }
