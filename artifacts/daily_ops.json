@@ -1231,6 +1231,83 @@
           "ts": "2025-10-28T12-35-31-459Z"
         }
       ]
+    },
+    {
+      "type": "snapshot",
+      "vendor": "gmail.com",
+      "captured_at": "2025-10-28T13-28-29-993Z",
+      "notes": [
+        {
+          "url": "https://gmail.com/pricing",
+          "hash": "e94d1fd448b386cde6e8b5f887664bc03a27b7163e489c3d255d506b1294b012",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/legal/terms",
+          "hash": "79c5a72b6ca9e9a54cd4e0f55d936758dc023ff75ccda2d1671cbf2d7ea882e0",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/terms",
+          "hash": "9efc20ce63dfe9b432062e85e3bb25454328646c46c53282fbc4b7cca40fb062",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/legal/privacy",
+          "hash": "63c41f5e23a13e3431256c160bc96587dc8d7d10910aec4e2d871d0bc24ebbf2",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/privacy",
+          "hash": "86b1872c9364b4f93ad2e14635dfbb872046059274f1d450980e3751671c00ab",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/legal/dpa",
+          "hash": "a933c646e9687f2e6ddcd98604043801dc768e4c1a714023b1d86f7ed80c104c",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/legal/data-processing-addendum",
+          "hash": "baf9daecb3844c31fb1b92ab108146b7346ebde559f6d2b67a735b0c86e34bcd",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/legal/data-processing-agreement",
+          "hash": "f33aff46f315ace554be7c24c03325adf3905386ea41a346eb10fb53f2c00536",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/security/subprocessors",
+          "hash": "9b710f689c44f8dc7546ee81094a3f3988fff9fde23f975cd46ddb34010bf53b",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/legal/subprocessors",
+          "hash": "9dd908d1634bb53a0f1368e03b7da89b83bffb01550d5177e4a5fbbba5f4847c",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/subprocessors",
+          "hash": "64cc64dfdc602ce0b8ed2df633f6f82cb7755ed34bb62403dd2dd7d29bc23851",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/legal/sub-processors",
+          "hash": "54b55d6c3f16db996c7e9a7d3c3b674c811351d7450c036a70ab9b6b7ae67a6d",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/status",
+          "hash": "e42f81616d2e64b435645eef72c00d08f56334679993ef288c55d3c843d5945f",
+          "ts": "2025-10-28T13-28-29-993Z"
+        },
+        {
+          "url": "https://gmail.com/statuspage",
+          "hash": "280471a52acf2248f204c76dc6904bb25295ea8a77f3ce700470b6c36b27779a",
+          "ts": "2025-10-28T13-28-29-993Z"
+        }
+      ]
     }
   ]
 }
