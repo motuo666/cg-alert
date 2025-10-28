@@ -1,5 +1,1 @@
-/buy/portfolio      https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801?utm_source=site&utm_medium=cta&utm_campaign=buy&lid={{cg_lead_id}}       302
-/buy/renewal-desk   https://checkout.stripe.com/c/YOUR_RENEWAL_DESK_CHECKOUT_LINK    302
-/buy/compliance     https://checkout.stripe.com/c/YOUR_COMPLIANCE_CHECKOUT_LINK      302
-
-/intake             https://docs.google.com/forms/d/e/1FAIpQLSdGidrPsKJ1jJ1c7cUCw0gmQBqn81htHWsEeCM1EaNoeyfQAQ/viewform                       302
+/public/evidence/*  /public/evidence/:splat  200
