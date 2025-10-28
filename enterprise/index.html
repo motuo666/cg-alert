@@ -4,198 +4,261 @@
 <meta charset="utf-8">
 <title>CG Alert – Enterprise / Deal Desk Access</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Full vendor-change timeline, evidence packets, and custom escalation support for procurement, legal, and compliance teams.">
+<meta name="description" content="Full vendor-change timeline, evidence packets, and escalation support for Procurement, Legal, Compliance and Finance.">
 <style>
-  body{
-    margin:0;
-    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
-    color:#0a0a0a;
-    background:#fff;
-    line-height:1.5;
+:root {
+  --brand-start:#5598f9;
+  --brand-end:#7ad9de;
+  --brand-dark:#05203b;
+  --text-dark:#0a1a2b;
+  --text-muted:#475569;
+  --border:#e2e8f0;
+  --bg-page:#ffffff;
+  --bg-card:#ffffff;
+  --bg-footer:#f8fafc;
+  --radius-xl:1.5rem;
+  --radius-lg:1rem;
+  --shadow-card:0 24px 48px rgba(5,32,59,0.12);
+  --shadow-card-sm:0 8px 20px rgba(5,32,59,0.08);
+}
+*{box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  color:var(--text-dark);
+  background:var(--bg-page);
+  line-height:1.5;
+}
+
+/* HERO */
+.hero{
+  position:relative;
+  padding:3rem 1rem 4rem;
+  background:linear-gradient(135deg,var(--brand-start) 0%,var(--brand-end) 100%);
+}
+@media(min-width:768px){
+  .hero{padding:4rem 1rem 5rem;}
+}
+.hero-inner{
+  max-width:1200px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.hero-card{
+  background:var(--bg-card);
+  box-shadow:var(--shadow-card);
+  border-radius:var(--radius-xl);
+  padding:2rem 1.5rem 2rem;
+  max-width:900px;
+  width:100%;
+  text-align:left;
+  color:var(--text-dark);
+}
+@media(min-width:768px){
+  .hero-card{padding:2.5rem 2rem 2rem;}
+}
+.hero-headline{
+  font-size:1.5rem;
+  font-weight:600;
+  line-height:1.2;
+  color:var(--brand-dark);
+  margin:0 0 1rem;
+}
+@media(min-width:768px){
+  .hero-headline{font-size:2rem;}
+}
+.hero-sub{
+  color:var(--text-muted);
+  font-size:1rem;
+  line-height:1.5;
+  margin:0 0 1.5rem;
+  max-width:700px;
+}
+.cta-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.75rem;
+  margin:0 0 1rem;
+}
+.btn{
+  display:inline-block;
+  text-decoration:none;
+  font-weight:600;
+  font-size:0.95rem;
+  line-height:1.2;
+  border-radius:var(--radius-lg);
+  padding:.8rem 1rem;
+  border:2px solid transparent;
+  box-shadow:var(--shadow-card-sm);
+  white-space:nowrap;
+}
+.btn-primary{
+  background:var(--brand-dark);
+  color:#fff;
+  border-color:var(--brand-dark);
+}
+
+.section{
+  padding:2.5rem 1rem;
+}
+.section-inner{
+  max-width:1100px;
+  margin:0 auto;
+}
+.section-title{
+  font-size:1.25rem;
+  font-weight:600;
+  color:var(--text-dark);
+  margin:0 0 1rem;
+}
+@media(min-width:768px){
+  .section-title{font-size:1.5rem;}
+}
+.section-desc{
+  color:var(--text-muted);
+  font-size:1rem;
+  max-width:800px;
+  margin:0 0 2rem;
+}
+
+.block{
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  background:#fff;
+  box-shadow:var(--shadow-card-sm);
+  padding:1.25rem 1rem 1rem;
+  max-width:900px;
+  margin-bottom:1.5rem;
+}
+.block h3{
+  margin:0 0 .5rem;
+  font-size:1.05rem;
+  font-weight:600;
+  color:var(--brand-dark);
+}
+.block ul{
+  margin:0;
+  padding-left:1.25rem;
+  color:var(--text-muted);
+  font-size:.95rem;
+  line-height:1.4;
+}
+.block li{
+  margin:0 0 .5rem;
+}
+
+/* FOOTER */
+footer{
+  border-top:1px solid var(--border);
+  background:var(--bg-footer);
+  color:var(--text-muted);
+  font-size:.8rem;
+  line-height:1.4;
+  padding:2rem 1rem 4rem;
+}
+.footer-inner{
+  max-width:1100px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1.5rem;
+}
+@media(min-width:700px){
+  .footer-inner{
+    grid-template-columns:2fr 1fr 1fr;
   }
-  header{
-    background:#0f172a;
-    color:#fff;
-    padding:3rem 1.5rem 3rem;
-    text-align:center;
-  }
-  header h1{
-    font-size:2rem;
-    font-weight:600;
-    line-height:1.2;
-    margin:0 0 1rem;
-    color:#fff;
-    max-width:900px;
-    margin-left:auto;
-    margin-right:auto;
-  }
-  header p.sub{
-    color:#cbd5e1;
-    max-width:900px;
-    margin:0 auto 2rem;
-    font-size:1.05rem;
-  }
-  .cta-row{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:1rem;
-  }
-  .btn{
-    display:inline-block;
-    padding:0.9rem 1.2rem;
-    border-radius:0.5rem;
-    font-weight:600;
-    text-decoration:none;
-    font-size:1rem;
-    line-height:1.2;
-    border:2px solid transparent;
-    white-space:nowrap;
-  }
-  .btn-secondary{
-    background:#1e1e2e;
-    border-color:#4b5563;
-    color:#fff;
-  }
-  section{
-    padding:2.5rem 1.5rem;
-    max-width:1100px;
-    margin:0 auto;
-  }
-  section h2{
-    font-size:1.4rem;
-    font-weight:600;
-    margin:0 0 1rem;
-    color:#0a0a0a;
-  }
-  section p{
-    max-width:900px;
-    color:#334155;
-    font-size:1rem;
-    margin:0 0 1rem;
-  }
-  .list-block{
-    border:1px solid #e2e8f0;
-    border-radius:0.75rem;
-    background:#fff;
-    padding:1rem 1.25rem;
-    max-width:900px;
-  }
-  .list-block h3{
-    margin:0 0 .5rem;
-    font-size:1.1rem;
-    font-weight:600;
-    color:#0f172a;
-  }
-  .list-block ul{
-    margin:0;
-    padding-left:1.25rem;
-    color:#475569;
-    font-size:0.95rem;
-  }
-  .list-block li{
-    margin:0 0 .5rem;
-  }
-  footer{
-    border-top:1px solid #e2e8f0;
-    background:#f8fafc;
-    color:#475569;
-    font-size:0.8rem;
-    line-height:1.4;
-    padding:2rem 1.5rem 4rem;
-  }
-  footer .footer-inner{
-    max-width:1100px;
-    margin:0 auto;
-    display:grid;
-    grid-template-columns:1fr;
-    gap:1.5rem;
-  }
-  footer a{
-    color:#0f172a;
-    text-decoration:none;
-  }
-  footer a:hover{text-decoration:underline;}
-  @media(min-width:700px){
-    footer .footer-inner{
-      grid-template-columns:2fr 1fr 1fr;
-    }
-  }
-  .footer-col h4{
-    margin:0 0 .5rem;
-    font-size:0.9rem;
-    font-weight:600;
-    color:#0f172a;
-  }
-  .footer-col p,
-  .footer-col li{
-    margin:0 0 .5rem;
-    list-style:none;
-  }
-  .unsubscribe-note{
-    font-size:0.7rem;
-    color:#94a3b8;
-    margin-top:1rem;
-  }
+}
+.footer-col h4{
+  margin:0 0 .5rem;
+  font-size:.8rem;
+  font-weight:600;
+  color:var(--brand-dark);
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.footer-col p,
+.footer-col li{
+  margin:0 0 .5rem;
+  list-style:none;
+  color:var(--text-muted);
+}
+.footer-col a{
+  color:var(--brand-dark);
+  text-decoration:none;
+}
+.footer-col a:hover{text-decoration:underline;}
+.unsubscribe-note{
+  font-size:.7rem;
+  color:#94a3b8;
+  margin-top:1rem;
+}
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Enterprise / Deal Desk Access</h1>
-  <p class="sub">
-    Full vendor-change timeline, evidence packets, and custom escalation support.
-    We arm procurement, legal, compliance and security with documented diffs of pricing,
-    liability caps, subprocessors and SLA promises — so you can demand better terms.
-  </p>
-  <div class="cta-row">
-    <a class="btn btn-secondary" href="/intake">Request Enterprise Access →</a>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-card">
+      <h1 class="hero-headline">Enterprise / Deal Desk Access</h1>
+      <p class="hero-sub">
+        Full vendor-change timeline, evidence packets, and escalation support.
+        We arm Procurement, Legal, Compliance and Finance with documented diffs of pricing,
+        liability caps, subprocessors and SLA promises — so you can demand better terms.
+      </p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" href="/intake">Request Enterprise Access →</a>
+      </div>
+    </div>
   </div>
 </header>
 
-<section>
-  <h2>What Enterprise gets</h2>
-  <div class="list-block">
-    <h3>1. Complete Change Timeline per Vendor</h3>
-    <ul>
-      <li>Every material change in price, SLA, uptime credit, termination window, DPAs, subprocessors.</li>
-      <li>Timestamped captures you can attach directly to your renewal email or escalation thread.</li>
-    </ul>
+<section class="section">
+  <div class="section-inner">
+    <h2 class="section-title">What Enterprise gets</h2>
+    <div class="block">
+      <h3>1. Complete Change Timeline per Vendor</h3>
+      <ul>
+        <li>Every material change in price, SLA, uptime credit, termination window, DPAs, subprocessors.</li>
+        <li>Timestamped captures you can attach directly to renewal / escalation threads.</li>
+      </ul>
 
-    <h3>2. Evidence Packets for Legal / Security</h3>
-    <ul>
-      <li>Side-by-side redlines of liability cap shifts and new subprocessors.</li>
-      <li>PDF bundle you can send to GC or SecOps without extra editing.</li>
-    </ul>
+      <h3>2. Evidence Packets for Legal / Security</h3>
+      <ul>
+        <li>Side-by-side redlines of liability cap shifts and new subprocessors.</li>
+        <li>PDF bundle for GC / SecOps / Audit — no extra formatting needed.</li>
+      </ul>
 
-    <h3>3. Renewal / Escalation Playbook</h3>
-    <ul>
-      <li>Context: “This vendor raised everyone’s minimum commit 18% last quarter.”</li>
-      <li>You forward it and ask for carve-outs or credits — with receipts.</li>
-    </ul>
+      <h3>3. Renewal / Escalation Playbook</h3>
+      <ul>
+        <li>Context like “This vendor raised everyone’s minimum commit 18% last quarter.”</li>
+        <li>You forward it and ask for carve-outs or credits — with receipts.</li>
+      </ul>
 
-    <h3>4. Priority Support & Custom Targets</h3>
-    <ul>
-      <li>We will start watching any vendor you nominate, even if it’s niche/internal-critical.</li>
-      <li>We’ll alert you first if they quietly weaken terms somewhere else before hitting you.</li>
-    </ul>
-  </div>
-</section>
+      <h3>4. Priority Support & Custom Targets</h3>
+      <ul>
+        <li>We start watching any vendor you nominate, even niche and business-critical.</li>
+        <li>We alert you first if they quietly weaken terms elsewhere before they try it on you.</li>
+      </ul>
+    </div>
 
-<section>
-  <h2>Who usually signs this?</h2>
-  <p>
-    • Procurement / Strategic Sourcing<br>
-    • Legal / Commercial Counsel / GC<br>
-    • Security / Compliance / Vendor Risk<br>
-    • CFO / Finance owning SaaS spend
-  </p>
-  <p>
-    We’re not a “marketing lead list”. We are leverage for renewal and proof for audit.
-  </p>
+    <h2 class="section-title">Who usually signs this?</h2>
+    <p class="section-desc">
+      • Procurement / Strategic Sourcing<br>
+      • Legal / Commercial Counsel / GC<br>
+      • Security / Compliance / Vendor Risk<br>
+      • CFO / Finance owning SaaS spend
+    </p>
+    <p class="section-desc">
+      This is not a “marketing lead list.”  
+      This is leverage for renewal and audit-ready evidence.
+    </p>
 
-  <div class="cta-row" style="margin-top:2rem;">
-    <a class="btn btn-secondary" href="/intake">Request Enterprise Access →</a>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/intake">Request Enterprise Access →</a>
+    </div>
   </div>
 </section>
 
@@ -211,9 +274,9 @@
     <div class="footer-col">
       <h4>Product</h4>
       <ul>
-        <li><a href="/buy/portfolio">Buy Portfolio</a></li>
-        <li><a href="/intake">Enterprise / Deal Desk</a></li>
         <li><a href="/dashboard/">Evidence Dashboard</a></li>
+        <li><a href="/buy/portfolio">Buy Portfolio · $2,988/yr</a></li>
+        <li><a href="/intake">Enterprise / Deal Desk</a></li>
       </ul>
     </div>
 
@@ -227,7 +290,7 @@
       </ul>
       <p class="unsubscribe-note">
         Unsubscribe / complaints: reply STOP or email remove@cg-alert.com.
-        We honor all suppression requests immediately and log them in suppression.
+        We honor all suppression requests immediately and log them to suppression.
       </p>
     </div>
   </div>
