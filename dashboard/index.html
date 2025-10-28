@@ -2,391 +2,49 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>CG Alert – Evidence Dashboard (Demo View)</title>
+<title>CG Alert – Evidence Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-:root {
-  --brand-start:#5598f9;
-  --brand-end:#7ad9de;
-  --brand-dark:#05203b;
-  --text-dark:#0a1a2b;
-  --text-muted:#475569;
-  --border:#e2e8f0;
-  --bg-page:#ffffff;
-  --bg-card:#ffffff;
-  --bg-footer:#f8fafc;
-  --radius-xl:1.5rem;
-  --radius-lg:1rem;
-  --shadow-card:0 24px 48px rgba(5,32,59,0.12);
-  --shadow-card-sm:0 8px 20px rgba(5,32,59,0.08);
-}
-*{box-sizing:border-box;-webkit-font-smoothing:antialiased;}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
-  color:var(--text-dark);
-  background:var(--bg-page);
-  line-height:1.5;
-}
-
-/* NAV (reuse from homepage minimal subset) */
-.navbar-wrap{
-  background:#fff;
-  box-shadow:0 12px 24px rgba(5,32,59,0.08);
-  border-bottom:1px solid var(--border);
-}
-.navbar{
-  max-width:1200px;
-  margin:0 auto;
-  padding:.75rem 1rem;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  flex-wrap:wrap;
-}
-.nav-left{
-  display:flex;
-  align-items:center;
-  gap:.5rem;
-  font-weight:600;
-  color:var(--brand-dark);
-  font-size:.95rem;
-}
-.nav-left img{
-  width:28px;
-  height:28px;
-  border-radius:.5rem;
-}
-.nav-right{
-  display:flex;
-  flex-wrap:wrap;
-  gap:1rem;
-  align-items:center;
-  font-size:.8rem;
-}
-.nav-right a{
-  color:var(--brand-dark);
-  text-decoration:none;
-  font-weight:500;
-}
-.nav-right a:hover{text-decoration:underline;}
-.nav-cta{
-  background:var(--brand-dark);
-  color:#fff !important;
-  border-radius:.5rem;
-  font-weight:600 !important;
-  padding:.5rem .75rem;
-  box-shadow:var(--shadow-card-sm);
-  border:2px solid var(--brand-dark);
-  text-decoration:none !important;
-  line-height:1.2;
-}
-
-/* HERO CARD */
-.hero{
-  position:relative;
-  padding:2rem 1rem 2.5rem;
-  background:linear-gradient(135deg,var(--brand-start) 0%,var(--brand-end) 100%);
-}
-@media(min-width:768px){
-  .hero{padding:3rem 1rem 3rem;}
-}
-.hero-inner{
-  max-width:1200px;
-  margin:0 auto;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-.hero-card{
-  background:var(--bg-card);
-  box-shadow:var(--shadow-card);
-  border-radius:var(--radius-xl);
-  padding:1.5rem 1.5rem 1.5rem;
-  max-width:900px;
-  width:100%;
-  color:var(--text-dark);
-}
-.hero-card h1{
-  font-size:1.25rem;
-  font-weight:600;
-  color:var(--brand-dark);
-  margin:0 0 .75rem;
-  line-height:1.2;
-}
-@media(min-width:768px){
-  .hero-card h1{font-size:1.5rem;}
-}
-.hero-card p{
-  color:var(--text-muted);
-  margin:0 0 1rem;
-  font-size:.95rem;
-  line-height:1.4;
-}
-.hero-card .note{
-  font-size:.75rem;
-  color:var(--text-muted);
-  line-height:1.4;
-}
-
-/* TABLE / LIST AREA */
-.main{
-  max-width:1200px;
-  margin:2rem auto 4rem;
-  padding:0 1rem;
-}
-.table-card{
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:var(--radius-lg);
-  box-shadow:var(--shadow-card-sm);
-  overflow:hidden;
-}
-.table-head{
-  background:#f8fafc;
-  border-bottom:1px solid var(--border);
-  padding:.75rem 1rem;
-  font-size:.8rem;
-  font-weight:600;
-  color:var(--brand-dark);
-  display:grid;
-  grid-template-columns:1.2fr 1fr 2fr 1fr;
-  gap:1rem;
-}
-.table-row{
-  border-bottom:1px solid var(--border);
-  padding:.75rem 1rem;
-  font-size:.8rem;
-  line-height:1.4;
-  color:var(--text-dark);
-  display:grid;
-  grid-template-columns:1.2fr 1fr 2fr 1fr;
-  gap:1rem;
-}
-.table-row:last-child{
-  border-bottom:none;
-}
-.table-vendor{font-weight:600;color:var(--brand-dark);font-size:.8rem;}
-.table-when{color:var(--text-muted);}
-.table-change{color:var(--text-muted);}
-.table-link a{
-  color:var(--brand-dark);
-  text-decoration:none;
-  font-weight:600;
-}
-.table-link a:hover{text-decoration:underline;}
-
-/* CTA BOX */
-.cta-box{
-  margin-top:2rem;
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:var(--radius-lg);
-  box-shadow:var(--shadow-card-sm);
-  padding:1rem 1rem 1rem;
-  font-size:.8rem;
-  line-height:1.4;
-  color:var(--text-muted);
-}
-.cta-box strong{color:var(--brand-dark);}
-.cta-row{
-  margin-top:1rem;
-  display:flex;
-  flex-wrap:wrap;
-  gap:.75rem;
-}
-.btn{
-  display:inline-block;
-  text-decoration:none;
-  font-weight:600;
-  font-size:.9rem;
-  line-height:1.2;
-  border-radius:.5rem;
-  padding:.6rem .8rem;
-  border:2px solid var(--brand-dark);
-  color:var(--brand-dark);
-  background:#fff;
-  box-shadow:var(--shadow-card-sm);
-}
-.btn.primary{
-  background:var(--brand-dark);
-  color:#fff;
-}
-
-/* FOOTER */
-footer{
-  border-top:1px solid var(--border);
-  background:var(--bg-footer);
-  color:var(--text-muted);
-  font-size:.8rem;
-  line-height:1.4;
-  padding:2rem 1rem 4rem;
-}
-.footer-inner{
-  max-width:1200px;
-  margin:0 auto;
-  display:grid;
-  grid-template-columns:1fr;
-  gap:1.5rem;
-}
-@media(min-width:700px){
-  .footer-inner{
-    grid-template-columns:2fr 1fr 1fr;
-  }
-}
-.footer-col h4{
-  margin:0 0 .5rem;
-  font-size:.8rem;
-  font-weight:600;
-  color:var(--brand-dark);
-  text-transform:uppercase;
-  letter-spacing:.03em;
-}
-.footer-col p,
-.footer-col li{
-  margin:0 0 .5rem;
-  list-style:none;
-  color:var(--text-muted);
-}
-.footer-col a{
-  color:var(--brand-dark);
-  text-decoration:none;
-}
-.footer-col a:hover{text-decoration:underline;}
-.unsubscribe-note{
-  font-size:.7rem;
-  color:#94a3b8;
-  margin-top:1rem;
-}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;line-height:1.5;color:#111;padding:1rem;max-width:48rem;margin:0 auto;}
+h1{font-size:1.1rem;font-weight:600;margin:0 0 1rem 0;}
+.card{border:1px solid #ddd;border-radius:6px;background:#f9f9f9;padding:1rem;margin-top:1rem;}
+.btnrow{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.75rem;}
+.btn{display:inline-block;background:#111;color:#fff;padding:.5rem .75rem;border-radius:4px;font-size:.8rem;text-decoration:none;}
+.btn.alt{background:#0a7cff;}
+.small{font-size:.8rem;color:#555;}
 </style>
 </head>
 <body>
 
-<!-- NAV -->
-<div class="navbar-wrap">
-  <div class="navbar">
-    <div class="nav-left">
-      <img src="/cg-logo-512.png" alt="CG" />
-      <div>CG Alert</div>
-    </div>
-    <div class="nav-right">
-      <a href="/">Home</a>
-      <a href="/intake">Enterprise / Deal Desk</a>
-      <a href="/buy/portfolio">Buy Portfolio · $2,988/yr</a>
-      <a class="nav-cta" href="/intake">Request Enterprise Access →</a>
-    </div>
+<h1>Vendor Change Evidence Dashboard</h1>
+<p style="font-size:.9rem;margin:0 0 1rem 0;">
+Live, timestamped captures of pricing / terms / DPA / sub-processors / SLA changes.
+Use this as leverage in renewal and compliance review.
+</p>
+
+<div class="card">
+  <div style="font-size:.9rem;font-weight:600;margin-bottom:.5rem;">Ready to lock leverage before renewal?</div>
+  <div class="btnrow">
+    <a class="btn" href="/buy/portfolio">Buy Portfolio · $2,988/yr</a>
+    <a class="btn alt" href="/intake">Request Enterprise</a>
+  </div>
+  <div class="small" style="margin-top:.5rem;">
+    Portfolio = prebuilt evidence library + ongoing monitoring.<br/>
+    Enterprise = tailored vendor set, alerts, and contract support.
   </div>
 </div>
 
-<!-- HERO -->
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-card">
-      <h1>Evidence Dashboard (demo view)</h1>
-      <p>
-        This is a live change log of high-impact SaaS vendors.
-        We timestamp price/SLA/DPA/liability/subprocessor changes and keep an archive.
-        Procurement, Legal, Compliance and Finance walk into renewal with proof, not guesses.
-      </p>
-      <p class="note">
-        Vendor names and some details are redacted in this demo.
-        Full vendor IDs, full PDF bundles and escalation language ship with Enterprise / Deal Desk.
-      </p>
-    </div>
-  </div>
-</div>
-
-<!-- MAIN TABLE -->
-<div class="main">
-  <div class="table-card">
-    <div class="table-head">
-      <div>Vendor</div>
-      <div>Detected</div>
-      <div>What changed</div>
-      <div>Evidence</div>
-    </div>
-
-    <!-- Example row mapping to your existing /public/evidence/... links.
-         Replace href targets with the actual paths you already expose,
-         e.g. /public/evidence/gmail.com/... etc.
-         DO NOT expose vendor name directly in the left column. -->
-    <div class="table-row">
-      <div class="table-vendor">Global Email Provider</div>
-      <div class="table-when">2025-10-28</div>
-      <div class="table-change">
-        Liability cap dropped from “12 months fees” to “3 months fees”.
-        SLA credit window narrowed.
-      </div>
-      <div class="table-link">
-        <a href="/public/evidence/gmail.com/2025-10-28T05-17-28-670Z/index.html" target="_blank" rel="noopener noreferrer">
-          Evidence Packet →
-        </a>
-      </div>
-    </div>
-
-    <div class="table-row">
-      <div class="table-vendor">Collaboration / PM Suite</div>
-      <div class="table-when">2025-10-27</div>
-      <div class="table-change">
-        Minimum annual commit increased ~18%.
-        Termination-for-breach notice period extended from 30→60 days.
-      </div>
-      <div class="table-link">
-        <a href="/public/evidence/unknown/asana.com/index0.html" target="_blank" rel="noopener noreferrer">
-          Evidence Packet →
-        </a>
-      </div>
-    </div>
-
-    <!-- add more rows as you have evidence sets -->
-  </div>
-
-  <div class="cta-box">
-    <strong>Need unredacted vendor names, full PDF bundle and escalation language?</strong><br>
-    That’s part of Renewal Desk / Compliance & Vendor Risk / Deal Desk.
-    We’ll monitor vendors you nominate, and prep renewal ammo for Procurement / Legal / CFO.
-    <div class="cta-row">
-      <a class="btn primary" href="/intake">Request Enterprise Access →</a>
-      <a class="btn" href="/buy/portfolio">Buy Portfolio · $2,988/yr</a>
-    </div>
-  </div>
-</div>
-
-<!-- FOOTER -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-col">
-      <h4>CG Alert</h4>
-      <p>Vendor Change Intelligence for renewals, compliance, and procurement leverage.</p>
-      <p><strong>[COMPANY_LEGAL_NAME]</strong><br>[MAIL_POSTAL_ADDRESS]</p>
-      <p>Contact: <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a></p>
-    </div>
-
-    <div class="footer-col">
-      <h4>Product</h4>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="/dashboard/">Evidence Dashboard</a></li>
-        <li><a href="/buy/portfolio">Buy Portfolio</a></li>
-        <li><a href="/intake">Enterprise / Deal Desk</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-col">
-      <h4>Legal & Compliance</h4>
-      <ul>
-        <li><a href="/legal/terms.html">Terms</a></li>
-        <li><a href="/legal/privacy.html">Privacy</a></li>
-        <li><a href="/legal/dpa.html">DPA</a></li>
-        <li><a href="/legal/order-form.html">Order Form</a></li>
-      </ul>
-      <p class="unsubscribe-note">
-        Unsubscribe / complaints: reply STOP or email remove@cg-alert.com.
-        We honor all suppression immediately and log it in suppression.
-      </p>
-    </div>
-  </div>
-</footer>
+<h2 style="font-size:1rem;font-weight:600;margin:2rem 0 .5rem 0;">Captured Vendors</h2>
+<ul style="font-size:.9rem;list-style:disc;padding-left:1.2rem;">
+<li style="margin-bottom:.5rem;">
+<strong>gmail.com</strong> &mdash; latest: <code>2025-10-28T07-16-54-197Z</code>
+<a href="/public/evidence/gmail.com/2025-10-28T07-16-54-197Z/index0.html" style="color:#0645ad;text-decoration:underline;margin-left:.5rem;">view</a>
+</li>
+<li style="margin-bottom:.5rem;">
+<strong>unknown</strong> &mdash; latest: <code>asana.com</code>
+<a href="/public/evidence/unknown/asana.com/index0.html" style="color:#0645ad;text-decoration:underline;margin-left:.5rem;">view</a>
+</li>
+</ul>
 
 </body>
 </html>
