@@ -30,6 +30,29 @@ body{
   line-height:1.5;
 }
 
+/* BRAND LOGO (pure CSS fallback, no external img) */
+.brand-wrap{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  font-weight:600;
+  color:var(--brand-dark);
+  font-size:.95rem;
+}
+.brand-logo{
+  width:28px;
+  height:28px;
+  border-radius:.5rem;
+  background:linear-gradient(135deg,var(--brand-start) 0%,var(--brand-end) 100%);
+  color:var(--brand-dark);
+  font-size:.8rem;
+  font-weight:600;
+  line-height:28px;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(5,32,59,0.18);
+  flex-shrink:0;
+}
+
 /* NAV */
 .navbar-wrap{
   background:#fff;
@@ -46,19 +69,6 @@ body{
   align-items:center;
   justify-content:space-between;
   flex-wrap:wrap;
-}
-.nav-left{
-  display:flex;
-  align-items:center;
-  gap:.5rem;
-  font-weight:600;
-  color:var(--brand-dark);
-  font-size:.95rem;
-}
-.nav-left img{
-  width:28px;
-  height:28px;
-  border-radius:.5rem;
 }
 .nav-right{
   display:flex;
@@ -216,7 +226,7 @@ body{
   line-height:1.2;
 }
 
-/* GENERIC SECTION */
+/* SECTION */
 .section{
   padding:3rem 1rem;
 }
@@ -240,7 +250,7 @@ body{
   margin:0 0 2rem;
 }
 
-/* DASHBOARD / OUTREACH PREVIEW */
+/* DASHBOARD PREVIEW */
 .dashboard-preview{
   display:grid;
   grid-template-columns:1fr;
@@ -344,7 +354,7 @@ body{
   color:#fff;
 }
 
-/* HOW IT WORKS / WHO USES / FAQ */
+/* GRID-2 EXPLANATION */
 .grid-2{
   display:grid;
   grid-template-columns:1fr;
@@ -383,7 +393,7 @@ body{
   background:#fff;
   border-radius:var(--radius-xl);
   box-shadow:var(--shadow-card);
-  padding:1.5rem 1.5rem 1.5rem;
+  padding:1.5rem;
   color:var(--text-dark);
 }
 .cta-band-inner h2{
@@ -473,8 +483,8 @@ footer{
 <!-- NAV -->
 <div class="navbar-wrap">
   <div class="navbar">
-    <div class="nav-left">
-      <img src="/cg-logo-512.png" alt="CG" />
+    <div class="brand-wrap">
+      <div class="brand-logo">CG</div>
       <div>CG Alert</div>
     </div>
     <div class="nav-right">
@@ -482,7 +492,6 @@ footer{
       <a href="#compliance">Compliance</a>
       <a href="/dashboard/">Dashboard</a>
       <a href="#pricing">Pricing</a>
-      <a href="/buy/portfolio">Buy</a>
       <a class="nav-cta" href="/intake">Request Enterprise →</a>
     </div>
   </div>
@@ -500,7 +509,7 @@ footer{
         Procurement, Legal, Compliance and Finance walk into renewal with receipts — not guesses.
       </p>
 
-      <!-- Lead capture form feeding /intake -->
+      <!-- lead capture -> /intake -->
       <form class="hero-form" action="/intake" method="GET">
         <input type="email" name="work_email" placeholder="Work email to receive a sample Vendor Change Packet…" required />
         <input type="hidden" name="source" value="homepage_vendor_packet">
@@ -508,8 +517,7 @@ footer{
       </form>
 
       <div class="hero-note">
-        We auto-email you a redacted evidence bundle. Full unredacted timelines, escalation language, and PDF bundles sit behind Enterprise / Deal Desk.
-        You can also self-purchase below.
+        We auto-email you a redacted evidence bundle. Full unredacted timelines, escalation language, and PDF bundles sit behind paid plans / Enterprise.
       </div>
 
       <div class="value-strip" id="why">
@@ -540,7 +548,7 @@ footer{
         <div class="stat-badge">187 critical SaaS vendors monitored</div>
         <div class="stat-badge">4,312 policy / SLA / pricing diffs logged</div>
         <div class="stat-badge">1,204 live timestamps archived</div>
-        <div class="stat-badge">Renewal / Legal / Compliance / CFO Ready</div>
+        <div class="stat-badge">Ready for Procurement / Legal / Compliance / CFO</div>
       </div>
     </div>
   </div>
@@ -551,7 +559,7 @@ footer{
   <div class="section-inner">
     <h2 class="section-title">Live Evidence Dashboard & Outreach Engine</h2>
     <p class="section-desc">
-      This is not a list of emails. It's a continuously updating ledger of vendor behavior plus an outbound workflow that drops those receipts on the correct owner at the account, without burning your sender reputation.
+      We keep a live ledger of vendor behavior, then we drop those receipts in front of the right person at the account (CFO / Procurement / Legal), with automatic suppression so you don't torch your domain.
     </p>
 
     <div class="dashboard-preview">
@@ -571,8 +579,7 @@ footer{
         <h4>Auto Outreach & Suppression</h4>
         <p>
           We route evidence to CFO / Procurement / Legal at the target account,
-          then we track bounces / complaints / unsubscribes and permanently suppress them.
-          Scale leverage without torching your domain.
+          then track bounces / complaints / unsubscribes and permanently suppress them.
         </p>
         <p><a href="/intake">Request Enterprise →</a></p>
       </div>
@@ -695,14 +702,14 @@ footer{
       <p><strong>Can I get unredacted vendor names?</strong><br>
       Yes. That's part of Renewal Desk / Compliance / Deal Desk tiers.</p>
       <p><strong>Do I get PDF bundles?</strong><br>
-      Yes. We package all screenshots, timestamps and diffs into audit-ready PDFs for board / SOC2 / legal review.</p>
+      Yes. We package screenshots, timestamps and diffs into audit-ready PDFs for board / SOC2 / legal review.</p>
       <p><strong>Can I self-serve?</strong><br>
-      Yes. Buy Portfolio, Renewal Desk, or Compliance right now with Stripe. Or request Enterprise / Deal Desk if you want us sitting in the renewal call.</p>
+      Yes. Buy Portfolio, Renewal Desk, or Compliance now with Stripe. Or request Enterprise / Deal Desk if you want us on the renewal call.</p>
     </div>
 
     <div class="block-card">
       <h3>What You Stop Doing</h3>
-      <p>• You stop diffing 40-page DPAs at 2am to see if liability caps moved.<br>
+      <p>• You stop diffing 40-page DPAs at 2am.<br>
       • You stop guessing how hard to push in renewal calls.<br>
       • You stop letting vendors rewrite SLAs silently and pretend it's “always been that way”.<br>
       • You stop losing sender reputation because one CFO got annoyed.</p>
@@ -714,9 +721,9 @@ footer{
 <!-- CTA BAND -->
 <section class="cta-band">
   <div class="cta-band-inner">
-    <h2>Ready to walk into renewal with receipts instead of hope?</h2>
+    <h2>Walk into renewal with receipts instead of hope.</h2>
     <p>
-      Get a redacted Vendor Change Packet now, or just swipe a credit card and start using the live dashboard.
+      Get a redacted Vendor Change Packet now, or swipe a credit card and start using the live dashboard.
       If you're a large org and you want us in the escalation thread, request Enterprise / Deal Desk.
     </p>
     <div class="cta-actions">
