@@ -1,31 +1,34 @@
-import fs from 'fs';
-import path from 'path';
-import dayjs from 'dayjs';
-import { loadJSON, ensureDir, writeText } from './util.js';
+#!/usr/bin/env node
+// 读 artifacts/daily_ops.json → 生成 updates/weekly.html（轻量版）
+const fs = require('fs');
+const path = require('path');
+const dayjs = require('dayjs');
 
 const ROOT = process.cwd();
-const daily = loadJSON(path.join(ROOT,'artifacts','daily_ops.json'), null);
+const src = path.join(ROOT, 'artifacts', 'daily_ops.json');
+const outDir = path.join(ROOT, 'updates');
+const out = path.join(outDir, 'weekly.html');
+
+let k = {};
+try {
+  const j = JSON.parse(fs.readFileSync(src, 'utf-8'));
+  k = j.kpi || {};
+} catch (_) {}
+
+fs.mkdirSync(outDir, { recursive: true });
 const now = dayjs();
-
-const k = daily?.kpi || {};
-const md = `# Weekly Vendor Change Report
-
-- Date: **${now.format('YYYY-MM-DD')}**
-- Evidence today: **${k.evidence_today ?? 'n/a'}**
-- Sent today: **${k.sent_today ?? 'n/a'}**
-- Hash coverage: **${k.hash_ratio ? (k.hash_ratio*100).toFixed(1)+'%' : 'n/a'}**
-- TTD: P50 **${k.ttd_p50_hours ?? 'n/a'}h**, P95 **${k.ttd_p95_hours ?? 'n/a'}h**, samples **${k.ttd_samples ?? '0'}**
-- Changed vendors (72h): **${k.changed_vendors_72h ?? 'n/a'}**
-
-_For more details, contact sales._
-`;
-
-const html = `<!doctype html><html><head><meta charset="utf-8">
-<title>Weekly Vendor Change Report ${now.format('YYYY-[W]WW')}</title>
-</head><body><pre>${md.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</pre></body></html>`;
-
-const outDir = path.join(ROOT,'public','reports'); ensureDir(outDir);
-const slug = now.format('YYYY-[W]WW');
-writeText(path.join(outDir, `${slug}.md`), md);
-writeText(path.join(outDir, `${slug}.html`), html);
-console.log(`Weekly report → public/reports/${slug}.(md|html)`);
+const html = `<!doctype html><html><head>
+<meta charset="utf-8"><title>Weekly Vendor Change Report</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="canonical" href="/updates/weekly.html">
+</head><body>
+<h1>Weekly Vendor Change Report</h1>
+<p>Date: <b>${now.format('YYYY-MM-DD')}</b></p>
+<ul>
+  <li>Evidence today: <b>${k.evidence_today ?? '-'}</b></li>
+  <li>Emails sent: <b>${k.emails_sent ?? '-'}</b></li>
+  <li>False positives: <b>${k.false_positives ?? '-'}</b></li>
+</ul>
+</body></html>`;
+fs.writeFileSync(out, html, 'utf-8');
+console.log('weekly_report: wrote', out);
