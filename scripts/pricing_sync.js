@@ -1,106 +1,100 @@
-#!/usr/bin/env node
-/**
- * pricing_sync.js
- *
- * Syncs pricing/CTA text and redirect targets across the site.
- *
- * Inputs:
- *   pricing/config.json
- *   env.STRIPE_LINK_PORTFOLIO
- *   env.INTAKE_FORM_URL
- *
- * Updates:
- *   index.html
- *   dashboard/*.html
- *   enterprise/index.html
- *   _redirects
- */
+// Update CTA blocks across pages to align with 3-SKU pricing.
+// Usage: node scripts/pricing_sync.js
+// Looks for old "Buy Portfolio · $2,988/yr" style blocks and replaces with new 3-card CTA.
+// Requires env vars: STRIPE_LINK_RENEWAL_DESK, STRIPE_LINK_PORTFOLIO, STRIPE_LINK_COMPLIANCE.
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
-const STRIPE = process.env.STRIPE_LINK_PORTFOLIO || "https://buy.stripe.com/REPLACE_WITH_STRIPE_PORTFOLIO";
-const INTAKE = process.env.INTAKE_FORM_URL || "https://forms.gle/REPLACE_WITH_GOOGLE_FORM";
+const ROOTS = [
+  '.', 'seo', 'who-uses', 'enterprise', 'dashboard'
+];
 
-function loadPricing() {
-  const raw = fs.readFileSync(path.join("pricing","config.json"), "utf8");
-  return JSON.parse(raw);
+const REN = process.env.STRIPE_LINK_RENEWAL_DESK || '';
+const POR = process.env.STRIPE_LINK_PORTFOLIO || '';
+const COM = process.env.STRIPE_LINK_COMPLIANCE || '';
+const INTAKE = process.env.INTAKE_FORM_URL || '#';
+
+if (!REN || !POR || !COM) {
+  console.error('Missing STRIPE_LINK_* vars. Aborting.');
+  process.exit(1);
 }
 
-function replaceCta(html, label) {
-  // Replace any 'Buy Portfolio · $.../yr' text with new label
-  return html
-    .replace(/Buy Portfolio · \$[0-9,]+\/yr/g, label)
-    .replace(/Buy Portfolio\s*·\s*\$[0-9,]+\/yr/g, label);
-}
-
-function ensureCtas(html, label) {
-  // If somehow missing CTA block, inject minimal CTA
-  if (!html.includes("/buy/portfolio") || !html.includes("/intake")) {
-    const block = `
-<div style="margin-top:2rem;padding:1rem;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;">
-  <div style="font-size:.9rem;line-height:1.4;color:#111;font-weight:600;margin-bottom:.5rem;">Ready to lock pricing/compliance leverage?</div>
-  <div style="display:flex;flex-wrap:wrap;gap:.5rem;">
-    <a href="/buy/portfolio" style="display:inline-block;background:#111;color:#fff;padding:.5rem .75rem;border-radius:4px;font-size:.8rem;text-decoration:none;">${label}</a>
-    <a href="/intake" style="display:inline-block;background:#0a7cff;color:#fff;padding:.5rem .75rem;border-radius:4px;font-size:.8rem;text-decoration:none;">Request Enterprise</a>
+const NEW_BLOCK = `
+<section id="cta" class="cta three-sku">
+  <div class="cta-grid">
+    <div class="card">
+      <h3>Renewal Desk</h3>
+      <p>Prebuilt evidence & escalation language. Timestamped changes across pricing / SLA / liability / DPA / subprocessors.</p>
+      <a class="btn" href="${REN}" rel="noopener">Buy Renewal Desk</a>
+    </div>
+    <div class="card">
+      <h3>Portfolio</h3>
+      <p>We continuously monitor up to 3 named vendors you specify and give you copy-pastable leverage language.</p>
+      <a class="btn" href="${POR}" rel="noopener">Buy Portfolio</a>
+    </div>
+    <div class="card">
+      <h3>Compliance & Vendor Risk</h3>
+      <p>Track DPA / subprocessors / liability changes and surface exposures for risk & compliance teams.</p>
+      <a class="btn" href="${COM}" rel="noopener">Buy Compliance & Vendor Risk</a>
+    </div>
   </div>
-</div>`;
-    if (html.includes("</body>")) {
-      return html.replace("</body>", block + "\n</body>");
-    } else {
-      return html + block;
-    }
-  }
-  return html;
-}
+  <p class="cta-note">Fully async. No calls. Evidence-backed alerts.</p>
+</section>
+`;
 
-function syncFile(fp, label) {
-  if (!fs.existsSync(fp)) return;
-  let html = fs.readFileSync(fp, "utf8");
-  const orig = html;
-  html = replaceCta(html, label);
-  html = ensureCtas(html, label);
-  if (html !== orig) {
-    fs.writeFileSync(fp, html, "utf8");
-    console.log("[pricing_sync] updated", fp);
-  }
-}
+function replaceInFile(file) {
+  const html = fs.readFileSync(file, 'utf8');
 
-function syncRedirects(fp, stripeUrl, intakeUrl) {
-  let body = "";
-  if (fs.existsSync(fp)) {
-    body = fs.readFileSync(fp,"utf8");
-  }
-  const lines = body.split(/\r?\n/).filter(Boolean);
-  const newLines = lines.filter(l=>!l.startsWith("/buy/portfolio") && !l.startsWith("/intake"));
-  newLines.push(`/buy/portfolio  ${stripeUrl} 302`);
-  newLines.push(`/intake  ${intakeUrl} 302`);
-  const out = newLines.join("\n")+"\n";
-  if (out !== body && out.trim() !== "") {
-    fs.writeFileSync(fp,out,"utf8");
-    console.log("[pricing_sync] updated _redirects");
-  }
-}
+  // Replace old single-CTA block heuristically
+  const patterns = [
+    /<section[^>]*id=["']?cta["']?[^>]*>[\s\S]*?<\/section>/i,
+    /<div class=["']?cta["']?[^>]*>[\s\S]*?<\/div>/i,
+    /Buy\s+Portfolio[^<]{0,200}<\/a>/i
+  ];
 
-(function main(){
-  const pricing = loadPricing();
-  const label = pricing.portfolio_sku_label || `Buy Portfolio · $${pricing.portfolio_price_usd_year}/yr`;
-
-  // sync main pages
-  syncFile("index.html", label);
-  syncFile(path.join("enterprise","index.html"), label);
-
-  // sync dashboard pages
-  if (fs.existsSync("dashboard")) {
-    for (const f of fs.readdirSync("dashboard")) {
-      if (f.endsWith(".html")) {
-        syncFile(path.join("dashboard", f), label);
-      }
+  let out = html;
+  let replaced = false;
+  for (const pat of patterns) {
+    if (pat.test(out)) {
+      out = out.replace(pat, NEW_BLOCK);
+      replaced = true;
+      break;
     }
   }
 
-  // sync redirects -> Stripe + Intake
-  syncRedirects("_redirects", STRIPE, INTAKE);
+  if (!replaced) {
+    // Try injecting after the first <main> or <header>
+    out = out.replace(/<main[^>]*>/i, m => m + "\n" + NEW_BLOCK + "\n");
+  }
 
-  console.log("[pricing_sync] done");
-})();
+  // Ensure canonical on homepage-level pages
+  if (!/rel=["']canonical["']/.test(out)) {
+    out = out.replace(/<head>/i, '<head>\n<link rel="canonical" href="https://www.cg-alert.com/">');
+  }
+
+  fs.writeFileSync(file, out, 'utf8');
+  console.log('Patched CTA:', file);
+}
+
+function walkAndPatch(rel) {
+  const dir = path.resolve(process.cwd(), rel);
+  if (!fs.existsSync(dir)) return;
+  const entries = fs.readdirSync(dir);
+  for (const e of entries) {
+    const p = path.join(dir, e);
+    const stat = fs.statSync(p);
+    if (stat.isDirectory()) {
+      // Only patch root pages, not reports/evidence massive trees
+      continue;
+    }
+    if (e.endsWith('.html')) {
+      replaceInFile(p);
+    }
+  }
+}
+
+for (const r of ROOTS) {
+  walkAndPatch(r);
+}
+console.log('3-SKU CTA sync complete.');
