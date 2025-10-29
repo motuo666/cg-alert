@@ -1,16 +1,18 @@
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
+#!/usr/bin/env node
+// CJS版：确保 public/seo/sitemap.xml 存在（从 public/sitemap.xml 同步过去）
+const fs = require('fs');
+const path = require('path');
 const root = process.cwd();
-async function ensure() {
-  const src = path.join(root, 'public', 'sitemap.xml');
-  const dst = path.join(root, 'public', 'seo', 'sitemap.xml');
-  try {
-    await fs.mkdir(path.dirname(dst), { recursive: true });
-    const buf = await fs.readFile(src);
-    await fs.writeFile(dst, buf);
+const src = path.join(root, 'public', 'sitemap.xml');
+const dst = path.join(root, 'public', 'seo', 'sitemap.xml');
+try {
+  fs.mkdirSync(path.dirname(dst), { recursive: true });
+  if (fs.existsSync(src)) {
+    fs.writeFileSync(dst, fs.readFileSync(src));
     console.log('sitemap_sync: ensured public/seo/sitemap.xml exists');
-  } catch (e) {
-    console.warn('sitemap_sync: warning: cannot ensure public/seo/sitemap.xml -', e.message);
+  } else {
+    console.warn('sitemap_sync: source missing, skipped');
   }
+} catch (e) {
+  console.warn('sitemap_sync: warning:', e.message);
 }
-await ensure();
