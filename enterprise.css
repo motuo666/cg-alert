@@ -1,0 +1,28 @@
+
+/* enterprise.css — additive polish without breaking homepage */
+:root{
+  --radius: 16px;
+  --line:#e5e7eb;
+  --text:#0b0f14;
+  --muted:#6b7280;
+}
+html{scroll-behavior:smooth}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+.container{max-width:1120px;margin:0 auto;padding:24px 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 2px 10px rgba(0,0,0,.03);padding:20px}
+.card h2,.card h3{margin:.2rem 0 .6rem}
+.grid{display:grid;gap:16px}
+.grid.cards{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid var(--line);padding:10px;text-align:left}
+thead th{background:#fafafa}
+.btn{display:inline-block;border:1px solid #0b0f14;border-radius:12px;padding:10px 14px;text-decoration:none;color:#0b0f14}
+.badge{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--muted);font-size:12px}
+footer .muted, .muted{color:var(--muted)}
+/* header logo vertical align */
+header img, header svg{vertical-align:middle}
+/* spacing */
+section{padding:24px 0}
+@media (min-width:1024px){
+  .hero h1{font-size:40px;line-height:1.2}
+}
