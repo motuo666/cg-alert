@@ -1,2 +1,5 @@
-/public/*          /:splat   301
-/reports/rss.xml   /rss.xml  301
+/public/*          /:splat              301
+/reports/rss.xml   /rss.xml             301
+/buy/renewal-desk  /buy/renewal-desk/  200
+/buy/compliance    /buy/compliance/    200
+/cg-alert-main/*   /:splat   301
