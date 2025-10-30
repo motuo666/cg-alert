@@ -1,0 +1,7 @@
+
+/* Hide bottom blue pricing band only; keep main Plans cards */
+section.pricing-footer, .pricing-footer, .plans-footer, footer.pricing, .pricing-bottom, 
+section#pricing-bottom, section[data-section="pricing-bottom"],
+.bg-blue, .bg--blue, .pricing-band, .pricing-bar, .pricing-section.bottom {
+  display: none !important;
+}
