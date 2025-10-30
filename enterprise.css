@@ -1,4 +1,5 @@
-/* enterprise.css — additive, non-destructive */
+
+/* enterprise.css — additive big-tech polish */
 :root{--radius:16px;--line:#e5e7eb;--text:#0b0f14;--muted:#6b7280}
 html{scroll-behavior:smooth}
 .wrap,.container{max-width:1160px;margin:0 auto;padding:0 16px}
