@@ -3,8 +3,6 @@ const path = require('node:path');
 
 const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 const reportsDir = 'reports';
-const publicDir = 'public';
-fs.mkdirSync(publicDir, { recursive: true });
 
 function* iterReportUrls() {
   if (!fs.existsSync(reportsDir)) return;
@@ -19,15 +17,18 @@ function* iterReportUrls() {
 }
 
 const urls = Array.from(iterReportUrls());
+
+// root sitemap.xml
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url><loc>${ORIGIN}/</loc></url>
 <url><loc>${ORIGIN}/reports/</loc></url>
 ${urls.map(u=>`<url><loc>${u}</loc></url>`).join('\n')}
 </urlset>`;
-fs.writeFileSync(path.join(publicDir, 'sitemap.xml'), sitemap);
 
-// 周榜 RSS（最近 30 条）
+fs.writeFileSync('sitemap.xml', sitemap, 'utf8');
+
+// /reports/rss.xml (recent 30)
 const items = urls.slice(-30);
 const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"><channel>
@@ -36,6 +37,8 @@ const rss = `<?xml version="1.0" encoding="UTF-8"?>
 <description>Top recent vendor change packs</description>
 ${items.map(u=>`<item><title>Vendor Change</title><link>${u}</link></item>`).join('\n')}
 </channel></rss>`;
-fs.writeFileSync(path.join(publicDir, 'reports.rss.xml'), rss);
 
-console.log(`sitemap & rss generated: urls=${urls.length}, rss_items=${items.length}`);
+require('fs').mkdirSync('reports', { recursive: true });
+fs.writeFileSync(path.join('reports', 'rss.xml'), rss, 'utf8');
+
+console.log(`sitemap & reports/rss.xml generated: urls=${urls.length}, rss_items=${items.length}`);
