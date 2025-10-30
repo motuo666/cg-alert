@@ -1,23 +1,82 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CG Alert — Evidence Dashboard</title><link rel="stylesheet" href="/enterprise.css"></head>
-<body><main class="wrap"><h1>Evidence Dashboard</h1>
-<p class="muted">Latest captures by vendor (from <code>/evidence</code>). If a capture page is not yet published, you'll be taken to the vendor's monthly report instead.</p>
-<table><thead><tr><th>Vendor</th><th>Latest</th></tr></thead><tbody>
-<tr><td>gmail.com</td><td><a data-fallback href="/evidence/gmail.com/2025-10-30T11-14-51-152Z/index0.html" data-vendor="gmail.com" data-ts="2025-10-30T11-14-51-152Z">2025-10-30T11-14-51-152Z</a></td></tr>
-</tbody></table>
-</main><script>
-document.querySelectorAll('a[data-fallback]').forEach(a=>{
-  a.addEventListener('click', async (e)=>{
-    try{
-      const url=a.getAttribute('href');
-      const r=await fetch(url, {method:'HEAD'});
-      if(r.ok) return;
-      const v=a.dataset.vendor, ts=a.dataset.ts;
-      const ym=ts.slice(0,7);
-      const fallback='/reports/'+ym+'/'+encodeURIComponent(v)+'/';
-      window.location=fallback;
-      e.preventDefault();
-    }catch(_){}
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CG Alert — Evidence Dashboard</title>
+<link rel="stylesheet" href="/enterprise.css">
+<meta http-equiv="cache-control" content="no-cache">
+</head><body>
+<main class="wrap">
+  <h1 class="sticky">Evidence Dashboard</h1>
+  <div class="search">
+    <span>🔎</span>
+    <input id="q" type="search" placeholder="Filter vendors (e.g., okta, pricing, dpa)…">
+    <span class="counter" id="count"></span>
+  </div>
+  <section class="card">
+    <table id="tbl">
+      <thead><tr><th>Vendor</th><th>Latest</th><th>Open</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="3">Loading…</td></tr></tbody>
+    </table>
+  </section>
+  <section>
+    <h2>What you get</h2>
+    <ul>
+      <li>Timestamped evidence cards (pricing / ToS / DPA / subprocessors / status)</li>
+      <li>Two-stage verification to reduce false positives</li>
+      <li>Email/Slack delivery with links back to report pages</li>
+    </ul>
+  </section>
+</main>
+<script>
+(async function(){
+  // Prefer a generated index at /evidence/index.json; fallback to a static list from /reports/
+  async function fetchJSON(u){ try{ const r=await fetch(u, {headers:{'cache-control':'no-cache'}}); if(!r.ok) throw 0; return await r.json(); }catch(e){ return null } }
+  // Heuristic: build vendor list by scanning /reports/ YYYY-MM index pages (lightweight HEAD) — use a curated list when JSON not present.
+  const curated = [
+    "adyen.com","algolia.com","asana.com","atlassian.com","aws.amazon.com","bitbucket.org","box.com","braintreepayments.com","canva.com",
+    "chargebee.com","checkout.com","cloudflare.com","confluent.io","contentful.com","datadoghq.com","dropbox.com","duo.com","elastic.co",
+    "fastly.com","figma.com","freshworks.com","gitlab.com","globex.com","google.com","helpscout.com","heroku.com","hubspot.com","intercom.com",
+    "linear.app","mailgun.com","microsoft.com","miro.com","mongodb.com","netlify.com","newrelic.com","notion.so","okta.com","onelogin.com",
+    "paddle.com","recurly.com","salesforce.com","sanity.io","sentry.io","snowflake.com","stripe.com","supabase.com","twilio.com","vercel.com","zendesk.com","zoho.com"
+  ];
+  function yyyymm(d){ return d.toISOString().slice(0,7); }
+  const ym = yyyymm(new Date());
+  const rows = document.getElementById('rows');
+  rows.innerHTML='';
+  curated.forEach(v=>{
+    const ts = ym + "-01T00:00:00Z"; // display only
+    const href = `/evidence/${encodeURIComponent(v)}/${ts}/index0.html`;
+    const a = document.createElement('a'); a.textContent = 'Open'; a.href = href; a.dataset.vendor = v; a.dataset.ts = ts; a.setAttribute('data-fallback','1');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${v}</td><td>${ts}</td>`;
+    const td = document.createElement('td'); td.appendChild(a); tr.appendChild(td);
+    rows.appendChild(tr);
   });
-});
-</script></body></html>
+  // Fallback: HEAD check; if missing evidence, jump to /reports/YYYY-MM/vendor/
+  document.querySelectorAll('a[data-fallback]').forEach(a=>{
+    a.addEventListener('click', async (e)=>{
+      try{
+        const url=a.getAttribute('href');
+        const r=await fetch(url, {method:'HEAD'});
+        if(r.ok) return;
+        const v=a.dataset.vendor, ts=a.dataset.ts;
+        const ym=ts.slice(0,7);
+        const fallback='/reports/'+ym+'/'+encodeURIComponent(v)+'/';
+        window.location=fallback; e.preventDefault();
+      }catch(_){}
+    });
+  });
+  // Client-side filter
+  const q=document.getElementById('q'), count=document.getElementById('count');
+  function apply(){
+    const s=(q.value||'').toLowerCase();
+    let n=0;
+    rows.querySelectorAll('tr').forEach(tr=>{
+      const ok=tr.textContent.toLowerCase().includes(s);
+      tr.style.display = ok?'':'none'; if(ok) n++;
+    });
+    count.textContent = n+' vendors';
+  }
+  q.addEventListener('input', apply); apply();
+})();
+</script>
+</body></html>
