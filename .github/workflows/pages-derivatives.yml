@@ -1,0 +1,34 @@
+name: Pages Derivatives
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-derivatives:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build dashboard/rss/sitemap
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: |
+          node scripts/build_dashboard.js || true
+          node scripts/build_rss.js || true
+          node scripts/generate_sitemap.js || true
+      - name: Commit changes
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A dashboard rss.xml sitemap.xml
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "Site derivatives: dashboard/rss/sitemap"
+            git push
+          fi
