@@ -1,79 +1,801 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CG Alert — Evidence-backed vendor change alerts</title>
-<meta name="description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
+<!doctype html>
+<html lang="en">
+<head>
 <link rel="canonical" href="https://www.cg-alert.com/">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/styles.css">
-</head><body>
-<header class="site"><div class="wrap bar">
-  <a class="brand" href="/">CG Alert</a>
-  <nav>
-    <a href="/reports/">Reports</a>
-    <a href="/who-uses/">Who Uses</a>
-    <a href="/dashboard/">Dashboard</a>
-    <a href="/rss.xml" rel="nofollow">RSS</a>
-    <a href="#plans">Plans</a>
-  </nav>
-</div></header>
+<meta charset="utf-8">
+<title>CG Alert – Vendor Change Intelligence / Renewal Leverage / Compliance Evidence</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="We track and timestamp vendor pricing, SLAs, DPAs, subprocessors, liability caps. You walk into renewal with receipts.">
+<style>
+:root {
+  --brand-start:#5598f9;
+  --brand-end:#7ad9de;
+  --brand-dark:#05203b;
+  --text-dark:#0a1a2b;
+  --text-muted:#475569;
+  --border:#e2e8f0;
+  --bg-page:#ffffff;
+  --bg-card:#ffffff;
+  --bg-footer:#f8fafc;
+  --radius-xl:1.5rem;
+  --radius-lg:1rem;
+  --shadow-card:0 24px 48px rgba(5,32,59,0.12);
+  --shadow-card-sm:0 8px 20px rgba(5,32,59,0.08);
+}
+*{box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  color:var(--text-dark);
+  background:var(--bg-page);
+  line-height:1.5;
+}
 
-<main class="wrap">
-  <section class="hero">
-    <h1>Evidence-backed vendor change alerts</h1>
-    <p class="muted">We monitor Pricing / Terms / DPA / Subprocessors / Status pages and deliver verifiable evidence cards. Two-stage confirmation keeps noise low.</p>
-  </section>
+/* BRAND LOGO (pure CSS fallback, no external img) */
+.brand-wrap{
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  font-weight:600;
+  color:var(--brand-dark);
+  font-size:.95rem;
+}
+.brand-logo{
+  width:28px;
+  height:28px;
+  border-radius:.5rem;
+  background:linear-gradient(135deg,var(--brand-start) 0%,var(--brand-end) 100%);
+  color:var(--brand-dark);
+  font-size:.8rem;
+  font-weight:600;
+  line-height:28px;
+  text-align:center;
+  box-shadow:0 4px 12px rgba(5,32,59,0.18);
+  flex-shrink:0;
+}
 
-  <section id="plans" class="cards grid">
-    <div class="card">
-      <span class="badge">Portfolio</span>
-      <div class="price">$2,988/yr</div>
-      <ul class="clean">
-        <li>Up to 25 vendors</li>
-        <li>Email or Slack alerts</li>
-        <li>Evidence cards</li>
-        <li>30-day money-back if no material alert</li>
-      </ul>
-      <p><a id="cta-portfolio" class="cta" href="#">Buy Portfolio</a></p>
+/* NAV */
+.navbar-wrap{
+  background:#fff;
+  box-shadow:0 12px 24px rgba(5,32,59,0.08);
+  border-bottom:1px solid var(--border);
+  position:relative;
+  z-index:20;
+}
+.navbar{
+  max-width:1200px;
+  margin:0 auto;
+  padding:.75rem 1rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+}
+.nav-right{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem;
+  align-items:center;
+  font-size:.8rem;
+}
+.nav-right a{
+  color:var(--brand-dark);
+  text-decoration:none;
+  font-weight:500;
+}
+.nav-right a:hover{text-decoration:underline;}
+.nav-cta{
+  background:var(--brand-dark);
+  color:#fff !important;
+  border-radius:.5rem;
+  font-weight:600 !important;
+  padding:.5rem .75rem;
+  box-shadow:var(--shadow-card-sm);
+  border:2px solid var(--brand-dark);
+  text-decoration:none !important;
+  line-height:1.2;
+}
+
+/* HERO */
+.hero{
+  position:relative;
+  padding:3rem 1rem 4rem;
+  background:linear-gradient(135deg,var(--brand-start) 0%,var(--brand-end) 100%);
+}
+@media(min-width:768px){
+  .hero{padding:4rem 1rem 5rem;}
+}
+.hero-inner{
+  max-width:1200px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.hero-card{
+  background:var(--bg-card);
+  box-shadow:var(--shadow-card);
+  border-radius:var(--radius-xl);
+  padding:2rem 1.5rem 2rem;
+  max-width:900px;
+  width:100%;
+  color:var(--text-dark);
+}
+@media(min-width:768px){
+  .hero-card{padding:2.5rem 2rem 2rem;}
+}
+.hero-headline{
+  font-size:1.5rem;
+  font-weight:600;
+  line-height:1.2;
+  color:var(--brand-dark);
+  margin:0 0 1rem;
+}
+@media(min-width:768px){
+  .hero-headline{font-size:2rem;}
+}
+.hero-sub{
+  color:var(--text-muted);
+  font-size:1rem;
+  line-height:1.5;
+  margin:0 0 1.5rem;
+  max-width:700px;
+}
+.hero-form{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.5rem;
+  margin:0 0 1rem;
+}
+.hero-form input[type="email"]{
+  flex:1;
+  min-width:200px;
+  border-radius:.5rem;
+  border:2px solid var(--border);
+  padding:.7rem .75rem;
+  font-size:.9rem;
+  color:var(--text-dark);
+}
+.hero-form button{
+  background:var(--brand-dark);
+  color:#fff;
+  font-weight:600;
+  border-radius:.5rem;
+  border:2px solid var(--brand-dark);
+  padding:.7rem 1rem;
+  font-size:.9rem;
+  line-height:1.2;
+  box-shadow:var(--shadow-card-sm);
+  cursor:pointer;
+}
+.hero-note{
+  font-size:.75rem;
+  line-height:1.4;
+  color:var(--text-muted);
+  max-width:700px;
+}
+
+/* VALUE STRIP */
+.value-strip{
+  margin-top:2rem;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1rem;
+}
+@media(min-width:900px){
+  .value-strip{grid-template-columns:repeat(3,1fr);}
+}
+.value-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:1rem;
+  box-shadow:var(--shadow-card-sm);
+}
+.value-card h3{
+  margin:0 0 .5rem;
+  font-size:1rem;
+  color:var(--brand-dark);
+  font-weight:600;
+}
+.value-card p{
+  margin:0;
+  font-size:.9rem;
+  color:var(--text-muted);
+  line-height:1.4;
+}
+
+/* STATS */
+.stats-row{
+  margin-top:2rem;
+  background:#fff;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card-sm);
+  border:1px solid var(--border);
+  padding:1rem;
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem 2rem;
+  font-size:.8rem;
+  color:var(--brand-dark);
+  font-weight:500;
+}
+.stat-badge{
+  background:rgba(5,32,59,0.05);
+  border-radius:.5rem;
+  padding:.5rem .75rem;
+  line-height:1.2;
+}
+
+/* SECTION */
+.section{
+  padding:3rem 1rem;
+}
+.section-inner{
+  max-width:1200px;
+  margin:0 auto;
+}
+.section-title{
+  font-size:1.25rem;
+  font-weight:600;
+  color:var(--text-dark);
+  margin:0 0 1rem;
+}
+@media(min-width:768px){
+  .section-title{font-size:1.5rem;}
+}
+.section-desc{
+  color:var(--text-muted);
+  font-size:1rem;
+  max-width:800px;
+  margin:0 0 2rem;
+}
+
+/* DASHBOARD PREVIEW */
+.dashboard-preview{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1.5rem;
+}
+@media(min-width:1000px){
+  .dashboard-preview{grid-template-columns:1fr 1fr;}
+}
+.preview-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card-sm);
+  padding:1.25rem 1rem 1rem;
+}
+.preview-card h4{
+  margin:0 0 .5rem;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--brand-dark);
+}
+.preview-card p{
+  margin:0 0 1rem;
+  font-size:.9rem;
+  color:var(--text-muted);
+  line-height:1.4;
+}
+.preview-card a{
+  color:var(--brand-dark);
+  text-decoration:none;
+  font-weight:600;
+  font-size:.9rem;
+}
+.preview-card a:hover{text-decoration:underline;}
+
+/* PRICING GRID */
+.pricing-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1.5rem;
+}
+@media(min-width:1100px){
+  .pricing-grid{grid-template-columns:repeat(4,1fr);}
+}
+.price-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card-sm);
+  padding:1.25rem 1rem 1rem;
+  display:flex;
+  flex-direction:column;
+  min-height:260px;
+}
+.plan-name{
+  font-size:.9rem;
+  font-weight:600;
+  color:var(--brand-dark);
+  margin:0 0 .25rem;
+  line-height:1.2;
+}
+.plan-price{
+  font-size:1.25rem;
+  font-weight:600;
+  color:var(--text-dark);
+  margin:0 0 .5rem;
+  line-height:1.2;
+}
+.plan-desc{
+  font-size:.9rem;
+  color:var(--text-muted);
+  line-height:1.4;
+  margin:0 0 1rem;
+}
+.plan-list{
+  margin:0 0 1rem;
+  padding-left:1rem;
+  font-size:.85rem;
+  color:var(--text-muted);
+  line-height:1.4;
+}
+.plan-list li{margin:0 0 .5rem;}
+.plan-cta{
+  margin-top:auto;
+}
+.plan-cta a{
+  display:inline-block;
+  text-decoration:none;
+  font-weight:600;
+  font-size:.9rem;
+  line-height:1.2;
+  border-radius:.5rem;
+  padding:.6rem .8rem;
+  border:2px solid var(--brand-dark);
+  color:var(--brand-dark);
+  background:#fff;
+  box-shadow:var(--shadow-card-sm);
+}
+.plan-cta a.primary{
+  background:var(--brand-dark);
+  color:#fff;
+}
+
+/* GRID-2 EXPLANATION */
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1.5rem;
+}
+@media(min-width:1000px){
+  .grid-2{grid-template-columns:1fr 1fr;}
+}
+.block-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-card-sm);
+  padding:1.25rem 1rem 1rem;
+  font-size:.9rem;
+  color:var(--text-muted);
+  line-height:1.4;
+}
+.block-card h3{
+  margin:0 0 .5rem;
+  font-size:1rem;
+  color:var(--brand-dark);
+  font-weight:600;
+}
+
+/* CTA BAND */
+.cta-band{
+  background:linear-gradient(135deg,var(--brand-start) 0%,var(--brand-end) 100%);
+  color:#fff;
+  margin:0;
+  padding:2rem 1rem;
+}
+.cta-band-inner{
+  max-width:1200px;
+  margin:0 auto;
+  background:#fff;
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-card);
+  padding:1.5rem;
+  color:var(--text-dark);
+}
+.cta-band-inner h2{
+  margin:0 0 .75rem;
+  font-size:1.25rem;
+  font-weight:600;
+  color:var(--brand-dark);
+}
+.cta-band-inner p{
+  margin:0 0 1rem;
+  font-size:.9rem;
+  color:var(--text-muted);
+  line-height:1.4;
+}
+.cta-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.75rem;
+}
+.cta-actions a{
+  display:inline-block;
+  text-decoration:none;
+  font-weight:600;
+  font-size:.9rem;
+  line-height:1.2;
+  border-radius:.5rem;
+  padding:.6rem .8rem;
+  border:2px solid var(--brand-dark);
+  color:var(--brand-dark);
+  background:#fff;
+  box-shadow:var(--shadow-card-sm);
+}
+.cta-actions a.dark{
+  background:var(--brand-dark);
+  color:#fff;
+}
+
+/* FOOTER */
+footer{
+  border-top:1px solid var(--border);
+  background:var(--bg-footer);
+  color:var(--text-muted);
+  font-size:.8rem;
+  line-height:1.4;
+  padding:2rem 1rem 4rem;
+}
+.footer-inner{
+  max-width:1200px;
+  margin:0 auto;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1.5rem;
+}
+@media(min-width:700px){
+  .footer-inner{
+    grid-template-columns:2fr 1fr 1fr;
+  }
+}
+.footer-col h4{
+  margin:0 0 .5rem;
+  font-size:.8rem;
+  font-weight:600;
+  color:var(--brand-dark);
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.footer-col p,
+.footer-col li{
+  margin:0 0 .5rem;
+  list-style:none;
+  color:var(--text-muted);
+}
+.footer-col a{
+  color:var(--brand-dark);
+  text-decoration:none;
+}
+.footer-col a:hover{text-decoration:underline;}
+.unsubscribe-note{
+  font-size:.7rem;
+  color:#94a3b8;
+  margin-top:1rem;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="navbar-wrap">
+  <div class="navbar">
+    <div class="brand-wrap">
+      <div class="brand-logo">CG</div>
+      <div>CG Alert</div>
+    </div>
+    <div class="nav-right">
+      <a href="#why">Renewal</a>
+      <a href="#compliance">Compliance</a>
+      <a href="/dashboard/">Dashboard</a>
+      <a href="#pricing">Pricing</a>
+      <a class="nav-cta" href="/intake">Request Enterprise →</a>
+    </div>
+  </div>
+</div>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-card">
+      <h1 class="hero-headline">
+        Your vendors changed the rules. We timestamp it. You use it to beat them at renewal.
+      </h1>
+      <p class="hero-sub">
+        We track and timestamp pricing, SLAs, liability caps, subprocessors and DPAs from your critical SaaS vendors.
+        Procurement, Legal, Compliance and Finance walk into renewal with receipts — not guesses.
+      </p>
+
+      <!-- lead capture -> /intake -->
+      <form class="hero-form" action="/intake" method="GET">
+        <input type="email" name="work_email" placeholder="Work email to receive a sample Vendor Change Packet…" required />
+        <input type="hidden" name="source" value="homepage_vendor_packet">
+        <button type="submit">Get Vendor Change Packet →</button>
+      </form>
+
+      <div class="hero-note">
+        We auto-email you a redacted evidence bundle. Full unredacted timelines, escalation language, and PDF bundles sit behind paid plans / Enterprise.
+      </div>
+
+      <div class="value-strip" id="why">
+        <div class="value-card">
+          <h3>Renewal Leverage</h3>
+          <p>
+            “On Aug 14 they raised minimum commit 18% and removed uptime credits.”
+            You paste that in the call and ask for carve-outs. They fold.
+          </p>
+        </div>
+        <div class="value-card" id="compliance">
+          <h3>Compliance & Vendor Risk</h3>
+          <p>
+            We flag when a vendor quietly adds a new subprocessor or weakens liability.
+            Legal / Security get notified without diffing 40-page PDFs at 2am.
+          </p>
+        </div>
+        <div class="value-card">
+          <h3>Procurement Intel</h3>
+          <p>
+            We show which suppliers are tightening terms across your stack.
+            You know who’s about to play hardball before they try it on you.
+          </p>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-badge">187 critical SaaS vendors monitored</div>
+        <div class="stat-badge">4,312 policy / SLA / pricing diffs logged</div>
+        <div class="stat-badge">1,204 live timestamps archived</div>
+        <div class="stat-badge">Ready for Procurement / Legal / Compliance / CFO</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- DASHBOARD + OUTREACH -->
+<section class="section">
+  <div class="section-inner">
+    <h2 class="section-title">Live Evidence Dashboard & Outreach Engine</h2>
+    <p class="section-desc">
+      We keep a live ledger of vendor behavior, then we drop those receipts in front of the right person at the account (CFO / Procurement / Legal), with automatic suppression so you don't torch your domain.
+    </p>
+
+    <div class="dashboard-preview">
+      <div class="preview-card">
+        <h4>Evidence Dashboard</h4>
+        <p>
+          Timeline of every material change we captured: pricing, SLA, termination windows, liability caps, subprocessors.
+          Each entry is timestamped and archived.
+        </p>
+        <p>
+          Procurement can demand credits. Legal can demand carve-outs. Compliance can prove diligence.
+        </p>
+        <p><a href="/dashboard/">View live dashboard →</a></p>
+      </div>
+
+      <div class="preview-card">
+        <h4>Auto Outreach & Suppression</h4>
+        <p>
+          We route evidence to CFO / Procurement / Legal at the target account,
+          then track bounces / complaints / unsubscribes and permanently suppress them.
+        </p>
+        <p><a href="/intake">Request Enterprise →</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="section-inner">
+    <h2 class="section-title">Plans (self-serve or enterprise)</h2>
+    <p class="section-desc">
+      All tiers include continuous monitoring, timestamped evidence, and suppression handling (unsubscribe / complaint / bounce).
+      Higher tiers add escalation language and direct renewal support.
+    </p>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="plan-name">Portfolio</div>
+        <div class="plan-price">$2,988 / yr</div>
+        <div class="plan-desc">
+          Prebuilt vendor-change portfolio. Instant leverage.
+        </div>
+        <ul class="plan-list">
+          <li>Monitored list of high-impact SaaS vendors</li>
+          <li>Historical pricing / SLA / liability / subprocessor diffs</li>
+          <li>Evidence dashboard access</li>
+          <li>1 named internal user</li>
+        </ul>
+        <div class="plan-cta">
+          <a class="primary" href="/buy/portfolio">Buy Portfolio · $2,988/yr</a>
+        </div>
+      </div>
+
+      <div class="price-card">
+        <div class="plan-name">Renewal Desk</div>
+        <div class="plan-price">$6,000 / yr</div>
+        <div class="plan-desc">
+          Finance & procurement leverage at renewal.
+        </div>
+        <ul class="plan-list">
+          <li>Everything in Portfolio</li>
+          <li>Unlimited internal viewers</li>
+          <li>Escalation-ready screenshots / vendor language</li>
+          <li>Routing evidence to CFO / Procurement / Legal</li>
+        </ul>
+        <div class="plan-cta">
+          <a class="primary" href="/buy/renewal-desk">Buy Renewal Desk · $6,000/yr</a>
+        </div>
+      </div>
+
+      <div class="price-card">
+        <div class="plan-name">Compliance & Vendor Risk</div>
+        <div class="plan-price">$12,000 / yr</div>
+        <div class="plan-desc">
+          DPA / subprocessor / liability watch for Security & Legal.
+        </div>
+        <ul class="plan-list">
+          <li>Automated tracking of DPAs & subprocessors</li>
+          <li>Liability cap change alerts</li>
+          <li>PDF bundles for audit / board / SOC2</li>
+          <li>Priority monitoring for regulated vendors you nominate</li>
+        </ul>
+        <div class="plan-cta">
+          <a class="primary" href="/buy/compliance">Buy Compliance & Vendor Risk · $12,000/yr</a>
+        </div>
+      </div>
+
+      <div class="price-card">
+        <div class="plan-name">Enterprise / Deal Desk</div>
+        <div class="plan-price">Starts $30k / yr</div>
+        <div class="plan-desc">
+          We act as your external deal desk on renewals.
+        </div>
+        <ul class="plan-list">
+          <li>We watch any vendor you name</li>
+          <li>Executive escalation support on live renewals</li>
+          <li>Board / audit reporting packs</li>
+          <li>Signed Order Form + DPA</li>
+        </ul>
+        <div class="plan-cta">
+          <a href="/intake">Request Enterprise →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS / WHO USES / FAQ -->
+<section class="section">
+  <div class="section-inner grid-2">
+    <div class="block-card">
+      <h3>How it Works</h3>
+      <p><strong>1. We watch vendors you care about.</strong><br>
+      Pricing pages, SLA terms, DPAs, subprocessors, liability caps, termination windows. 24/7.</p>
+      <p><strong>2. We timestamp diffs and store receipts.</strong><br>
+      You get "Before vs After" proof with SHA256 and capture time.</p>
+      <p><strong>3. We hand you negotiation ammo.</strong><br>
+      Procurement/Legal walk into renewal with the vendor's own language. You ask for credits, carve-outs, better caps.</p>
+      <p><strong>4. We outreach with suppression.</strong><br>
+      We route to CFO / Procurement / Legal. Complaints/unsubscribes are auto-suppressed so you don't burn your domain.</p>
     </div>
 
-    <div class="card">
-      <span class="badge">Business</span>
-      <div class="price">$6,000/yr</div>
-      <ul class="clean">
-        <li>Up to 50 vendors</li>
-        <li>Email + Slack alerts</li>
-        <li>Evidence cards</li>
-      </ul>
-      <p><a id="cta-business" class="cta" href="#">Buy Business</a></p>
+    <div class="block-card">
+      <h3>Who Uses This</h3>
+      <p><strong>Procurement / Strategic Sourcing</strong><br>
+      Wants cost-down and carve-outs at renewal with proof.</p>
+      <p><strong>Legal / Commercial Counsel</strong><br>
+      Needs to push back on liability caps / termination windows using actual prior terms.</p>
+      <p><strong>Compliance / Security / Vendor Risk</strong><br>
+      Needs immediate alert if a vendor quietly adds a risky subprocessor without notice.</p>
+      <p><strong>CFO / Finance</strong><br>
+      Wants leverage, not fluff, when a supplier tries to jack price 18% “for everyone”.</p>
     </div>
 
-    <div class="card">
-      <span class="badge">Enterprise</span>
-      <div class="price">$18,000+/yr</div>
-      <ul class="clean">
-        <li>200+ vendors</li>
-        <li>Custom cadence & routing</li>
-        <li>Invoice / PO</li>
-      </ul>
-      <p><a id="cta-enterprise" class="cta" href="/contact/">Contact Sales</a></p>
+    <div class="block-card">
+      <h3>FAQ / Compliance</h3>
+      <p><strong>Will you spam my prospects?</strong><br>
+      No. We track bounces, unsubscribes and complaints, and permanently suppress them across all future sends.</p>
+      <p><strong>Can I get unredacted vendor names?</strong><br>
+      Yes. That's part of Renewal Desk / Compliance / Deal Desk tiers.</p>
+      <p><strong>Do I get PDF bundles?</strong><br>
+      Yes. We package screenshots, timestamps and diffs into audit-ready PDFs for board / SOC2 / legal review.</p>
+      <p><strong>Can I self-serve?</strong><br>
+      Yes. Buy Portfolio, Renewal Desk, or Compliance now with Stripe. Or request Enterprise / Deal Desk if you want us on the renewal call.</p>
     </div>
-  </section>
-</main>
 
-<footer class="site"><div class="wrap">
-  <div>© CG Alert · Evidence-backed vendor change alerts</div>
-  <div class="muted"><a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a></div>
-</div></footer>
+    <div class="block-card">
+      <h3>What You Stop Doing</h3>
+      <p>• You stop diffing 40-page DPAs at 2am.<br>
+      • You stop guessing how hard to push in renewal calls.<br>
+      • You stop letting vendors rewrite SLAs silently and pretend it's “always been that way”.<br>
+      • You stop losing sender reputation because one CFO got annoyed.</p>
+      <p>We industrialize that entire job and hand you leverage.</p>
+    </div>
+  </div>
+</section>
 
-<script>
-// CTA hotpatch anchors (filled by your existing injection script)
-(function(){
-  try {
-    const P = (k)=> (window.__INJECT__ && window.__INJECT__[k]) || null;
-    const setHref = (id, v)=>{const a=document.getElementById(id); if(a&&v){a.href=v;}};
-    setHref('cta-portfolio', P('STRIPE_LINK_PORTFOLIO'));
-    setHref('cta-business', P('STRIPE_LINK_COMPLIANCE')||'#');
-  } catch(e){}
-})();
-</script>
-</body></html>
+<!-- CTA BAND -->
+<section class="cta-band">
+  
+
+
+<section id="cta" class="cta three-sku">
+  <div class="cta-grid">
+    <div class="card">
+      <h3>Renewal Desk</h3>
+      <p>Prebuilt evidence & escalation language. Timestamped changes across pricing / SLA / liability / DPA / subprocessors.</p>
+      <a class="btn" href="https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800" rel="noopener">Buy Renewal Desk</a>
+    </div>
+    <div class="card">
+      <h3>Portfolio</h3>
+      <p>We continuously monitor up to 3 named vendors you specify and give you copy-pastable leverage language.</p>
+      <a class="btn" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801" rel="noopener">Buy Portfolio</a>
+    </div>
+    <div class="card">
+      <h3>Compliance & Vendor Risk</h3>
+      <p>Track DPA / subprocessors / liability changes and surface exposures for risk & compliance teams.</p>
+      <a class="btn" href="https://buy.stripe.com/00waEZ5Fse2Y8Iq86mcs802" rel="noopener">Buy Compliance & Vendor Risk</a>
+    </div>
+  </div>
+  <p class="cta-note">Fully async. No calls. Evidence-backed alerts.</p>
+</section>
+
+
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-col">
+      <h4>CG Alert</h4>
+      <p>Vendor Change Intelligence for renewals, compliance, and procurement leverage.</p>
+      <p>Contact: <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a></p>
+    </div>
+
+    <div class="footer-col">
+      <h4>Product</h4>
+      <ul>
+        <li><a href="/dashboard/">Evidence Dashboard</a></li>
+        <li><a href="/buy/portfolio">Buy Portfolio</a></li>
+        <li><a href="/buy/renewal-desk">Buy Renewal Desk</a></li>
+        <li><a href="/buy/compliance">Buy Compliance & Vendor Risk</a></li>
+        <li><a href="/intake">Enterprise / Deal Desk</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>Legal & Compliance</h4>
+      <ul>
+        <li><a href="/legal/terms.html">Terms</a></li>
+        <li><a href="/legal/privacy.html">Privacy</a></li>
+        <li><a href="/legal/dpa.html">DPA</a></li>
+        <li><a href="/legal/order-form.html">Order Form</a></li>
+      </ul>
+      <p class="unsubscribe-note">
+        Unsubscribe / complaints: reply STOP or email remove@cg-alert.com.<br>
+        We honor suppression immediately and never send again.
+      </p>
+    </div>
+  </div>
+</footer>
+
+
+<footer style="border-top:1px solid #ddd;padding-top:1rem;margin-top:2rem;font-size:.8rem;color:#555;">
+  <div>CG Alert (sole proprietor: Zhening Sun) — automated vendor change intelligence for renewals / compliance / procurement leverage.</div>
+  <div style="margin-top:.5rem;">Postal address: Bailutun, High-tech Zone, Zhengzhou City, Henan Province</div>
+  <div style="margin-top:.5rem;font-size:.75rem;color:#777;">
+    Privacy: <a href="/legal/privacy.html" style="color:#0645ad;text-decoration:underline;">Privacy Policy</a> ·
+    Terms: <a href="/legal/terms.html" style="color:#0645ad;text-decoration:underline;">Terms</a> ·
+    DPA: <a href="/legal/dpa.html" style="color:#0645ad;text-decoration:underline;">DPA Template</a><br/>
+    You can unsubscribe from outreach instantly via the link in any email.
+  </div>
+</footer>
+</body>
+</html>
