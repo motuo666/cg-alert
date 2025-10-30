@@ -1,8 +1,12 @@
 #!/usr/bin/env node
+/**
+ * generate_sitemap.js
+ * Generate /sitemap.xml with key pages and all /reports/YYYY-MM/* entries.
+ */
 const fs = require('fs'); const path = require('path');
 const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 function collect(){
-  const urls = new Set([`${ORIGIN}/`, `${ORIGIN}/reports/`, `${ORIGIN}/dashboard/`]);
+  const urls = new Set([`${ORIGIN}/`, `${ORIGIN}/reports/`, `${ORIGIN}/dashboard/`, `${ORIGIN}/who-uses/`, `${ORIGIN}/legal/terms.html`, `${ORIGIN}/legal/privacy.html`]);
   const rep = 'reports';
   if(fs.existsSync(rep)){
     for(const ym of fs.readdirSync(rep)){
