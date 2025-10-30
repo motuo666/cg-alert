@@ -4,3 +4,5 @@
 /rss                 /rss.xml           301
 /seo/*               /:splat            301
 /seo                 /                  301
+/buy/renewal-desk  /buy/renewal-desk/  200
+/buy/compliance    /buy/compliance/    200
