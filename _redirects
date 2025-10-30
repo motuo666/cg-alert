@@ -1,2 +1,9 @@
 /buy/renewal-desk  /buy/renewal-desk/  200
 /buy/compliance    /buy/compliance/    200
+
+# --- Clean legacy /public/* URLs to root ---
+/public/*          /:splat              301
+
+# --- Evidence shortlinks ---
+/evidence          /reports/            301
+/reports/rss.xml   /rss.xml             301
