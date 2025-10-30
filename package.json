@@ -17,13 +17,13 @@
     "discoverTargets": "node scripts/discover_targets.js",
     "expandEndpoints": "node scripts/expand_endpoints.js",
     "pricingSync": "node scripts/pricing_sync.js",
-    "legalStamp": "node scripts/legal_stamp.js"
+    "legalStamp": "node scripts/legal_stamp.js",
+    "pricingSyncReports": "node scripts/pricing_sync_reports.js"
   },
   "dependencies": {
     "imapflow": "^1.0.136",
     "nodemailer": "^6.9.0",
-    "airtable": "^0.12.2",
-    "@sendgrid/mail": "^7.7.0",
-    "stripe": "^16.0.0"
+    "stripe": "^16.0.0",
+    "node-fetch": "^2.7.0"
   }
 }
