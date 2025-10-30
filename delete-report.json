@@ -78,6 +78,6 @@
     "cg-alert-main/vendors/supabase.com/index.html.bak",
     "cg-alert-main/vendors/zendesk.com/index.html.bak"
   ],
-  "failures": [],
-  "dry_run": false
+  "skipped": [],
+  "errors": []
 }
