@@ -1,0 +1,75 @@
+name: Site Derivatives (Dashboard + RSS + Sitemap)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "evidence/**"
+      - "reports/**"
+      - "cg-alert-main/**"
+      - "who-uses/**"
+      - "terms/**"
+      - "privacy/**"
+      - "seo/**"
+      - "dashboard/**"
+      - "scripts/**"
+      - "index.html"
+      - ".github/workflows/site-derivatives.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *"  # Daily refresh to keep sitemap/rss in sync
+
+permissions:
+  contents: write
+
+concurrency:
+  group: site-derivatives
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Prevent infinite loops when this workflow commits derivatives
+    if: ${{ !contains(github.event.head_commit.message, '[skip-derivatives]') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build dashboard/rss/sitemap
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: |
+          set -e
+          node -v
+          [ -f scripts/build_dashboard.js ] && node scripts/build_dashboard.js || echo "skip: scripts/build_dashboard.js not found"
+          [ -f scripts/build_rss.js ] && node scripts/build_rss.js || echo "skip: scripts/build_rss.js not found"
+          [ -f scripts/generate_sitemap.js ] && node scripts/generate_sitemap.js || echo "skip: scripts/generate_sitemap.js not found"
+
+      - name: Commit derivatives
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A dashboard rss.xml sitemap.xml
+          if git diff --cached --quiet; then
+            echo "No derivatives updated"
+            exit 0
+          fi
+          git commit -m "Derivatives: dashboard/rss/sitemap [skip-derivatives]"
+          git push
+
+      - name: Purge Cloudflare cache (optional)
+        if: ${{ secrets.CF_API_TOKEN && vars.CF_ZONE_ID }}
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ZONE_ID: ${{ vars.CF_ZONE_ID }}
+        run: |
+          curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache"             -H "Authorization: Bearer $CF_API_TOKEN"             -H "Content-Type: application/json"             --data '{"purge_everything":true}' || echo "cache purge skipped"
