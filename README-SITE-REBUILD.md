@@ -1,0 +1,1 @@
+Used homepage title='CG Alert – Vendor Change Intelligence / Renewal Leverage / Compliance Evidence' desc='We track and timestamp vendor pricing, SLAs, DPAs, subprocessors, liability caps. You walk into renewal with receipts.' from 够了.zip if present: True
