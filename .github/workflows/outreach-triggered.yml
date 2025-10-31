@@ -13,14 +13,14 @@ jobs:
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      MAIL_FROM: ${{ vars.MAIL_FROM }}
+      MAIL_FROM: ${{ vars.MAIL_FROM || 'CG Alert Ops <ops@cg-alert.com>' }}
       MAIL_POSTAL_ADDRESS: ${{ vars.MAIL_POSTAL_ADDRESS }}
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
-      STRIPE_LINK_RENEWAL_DESK: ${{ vars.STRIPE_LINK_RENEWAL_DESK }}
-      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
-      STRIPE_LINK_COMPLIANCE: ${{ vars.STRIPE_LINK_COMPLIANCE }}
-      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
-      UNSUB_HMAC_SECRET: ${{ vars.UNSUB_HMAC_SECRET }}
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      STRIPE_LINK_PORTFOLIO:  ${{ vars.STRIPE_LINK_PORTFOLIO }}
+      STRIPE_LINK_COMPLIANCE: ${{ vars.STRIPE_LINK_COMPLIANCE || vars.STRIPE_LINK_BUSINESS }}
+      STRIPE_LINK_ENTERPRISE: ${{ vars.STRIPE_LINK_ENTERPRISE }}
+      INTAKE_FORM_URL:        ${{ vars.INTAKE_FORM_URL }}
+      UNSUB_HMAC_SECRET:      ${{ vars.UNSUB_HMAC_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
