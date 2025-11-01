@@ -12,8 +12,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
       - name: Patch links & CSP
-        run: |
-          node scripts/patch_site_workers_url.js
+        run: node scripts/patch_site_workers_url.js
       - name: Commit changes
         run: |
           git config user.email "bot@cg-alert.com"
