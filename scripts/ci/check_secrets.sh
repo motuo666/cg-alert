@@ -1,24 +1,31 @@
 #!/usr/bin/env bash
 set -euo pipefail
-red(){ printf "\e[31m%s\e[0m\n" "$1"; }
-yel(){ printf "\e[33m%s\e[0m\n" "$1"; }
-grn(){ printf "\e[32m%s\e[0m\n" "$1"; }
-missing=0
-must_have(){ local key="$1"; local val="${2:-}"; if [ -z "${val:-}" ]; then red "✗ missing: $key"; missing=$((missing+1)); else grn "✓ $key"; fi; }
-nice_to_have(){ local key="$1"; local val="${2:-}"; if [ -z "${val:-}" ]; then yel "• (optional) $key is empty"; else grn "• (optional) $key present"; fi; }
-must_have SITE_ORIGIN "${SITE_ORIGIN:-}"
-must_have MAIL_FROM "${MAIL_FROM:-}"
-must_have MAIL_POSTAL_ADDRESS "${MAIL_POSTAL_ADDRESS:-}"
-must_have STRIPE_LINK_RENEWAL_DESK "${STRIPE_LINK_RENEWAL_DESK:-}"
-must_have STRIPE_LINK_PORTFOLIO    "${STRIPE_LINK_PORTFOLIO:-}"
-must_have STRIPE_LINK_COMPLIANCE   "${STRIPE_LINK_COMPLIANCE:-}"
-must_have INTAKE_FORM_URL          "${INTAKE_FORM_URL:-}"
-must_have UNSUB_HMAC_SECRET        "${UNSUB_HMAC_SECRET:-}"
-must_have SMTP_HOST "${SMTP_HOST:-}"
-must_have SMTP_PORT "${SMTP_PORT:-}"
-must_have SMTP_USER "${SMTP_USER:-}"
-must_have SMTP_PASS "${SMTP_PASS:-}"
-must_have STRIPE_WEBHOOK_SECRET "${STRIPE_WEBHOOK_SECRET:-}"
-nice_to_have ENRICH_API_TOKEN "${ENRICH_API_TOKEN:-}"
-nice_to_have TARGET_DISCOVERY_API_TOKEN "${TARGET_DISCOVERY_API_TOKEN:-}"
-if [ "${missing}" -gt 0 ]; then red "✗ Missing ${missing} required variables/secrets"; exit 1; else grn "✓ All required variables/secrets are set"; fi
+need(){ local n="$1"; local v="${!n:-}"; [[ -z "$v" ]] && { echo "::error::Missing required env: $n"; MISSING=1; } || true; }
+MISSING=0
+# vars
+need SITE_ORIGIN
+need MAIL_FROM
+need MAIL_POSTAL_ADDRESS
+need STRIPE_LINK_RENEWAL_DESK
+need STRIPE_LINK_PORTFOLIO
+need STRIPE_LINK_COMPLIANCE
+need STRIPE_LINK_ENTERPRISE
+need INTAKE_FORM_URL
+# secrets sending
+need UNSUB_HMAC_SECRET
+need SMTP_HOST
+need SMTP_PORT
+need SMTP_USER
+need SMTP_PASS
+# infra
+need CF_ACCOUNT_ID
+need KV_NAMESPACE_ID
+need CF_API_TOKEN
+# imap
+need IMAP_HOST
+need IMAP_PORT
+need IMAP_USER
+need IMAP_PASS
+# webhook optional
+if [[ -z "${STRIPE_WEBHOOK_SECRET:-}" ]]; then echo "::warning::STRIPE_WEBHOOK_SECRET not set; Stripe auto-booking off"; fi
+[[ $MISSING -eq 1 ]] && exit 1 || echo "all required env/secrets present"
