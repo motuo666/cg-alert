@@ -1,8 +1,12 @@
-name: Site QA (links+policy+assets)
+name: Site QA
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+  push:
+    paths:
+      - 'scripts/qa/**'
+      - '.github/workflows/site-qa.yml'
 permissions:
-  contents: write
+  contents: read
 jobs:
   qa:
     runs-on: ubuntu-latest
@@ -11,16 +15,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Link Check
-        run: node scripts/qa/link_check.js
-      - name: Policy Check (pricing only on home, canonical www)
-        run: node scripts/qa/policy_check.js
-      - name: Assets Check
+      - name: Assets check
         run: node scripts/qa/assets_check.js
-      - name: Commit artifacts
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add artifacts/*.json || true
-          if git diff --cached --quiet; then echo 'no changes'; else git commit -m "qa: link+policy+assets checks"; git pull --rebase --autostash || true; git push; fi
+      - name: Link check
+        run: node scripts/qa/link_check.js
+      - name: Policy check
+        run: node scripts/qa/policy_check.js
+      - name: Upload QA artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-qa
+          path: artifacts/
