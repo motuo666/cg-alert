@@ -54,21 +54,21 @@
 <header class="cg-topbar">
   <div class="cg-wrap cg-nav">
     <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert"><span>CG&nbsp;Alert</span></a>
-    <nav class="cg-links">
+    <nav class="cg-links" id="topnav">
       <a href="#pricing">Pricing</a>
       <a href="#how">How it works</a>
       <a href="#evidence">Evidence</a>
       <a href="#compare">Compare</a>
       <a href="#faq">FAQ</a>
-      <a class="cg-enter" href="mailto:ops@cg-alert.com">Request Enterprise →</a>
+      <a class="cg-btn ghost" href="mailto:ops@cg-alert.com">Request Enterprise →</a>
     </nav>
   </div>
 </header>
 
-<section class="cg-hero">
+<section class="cg-hero" id="hero">
   <div class="cg-wrap">
     <h1>Vendor Change Intelligence · Renewal Leverage · Compliance Evidence</h1>
-    <p class="cg-sub">We track vendor Pricing, Terms, DPAs, Subprocessors and SLAs; de‑noise; and deliver evidence cards with receipts. You walk into renewal with proof.</p>
+    <p class="cg-sub">We monitor vendor <b>Pricing</b>, <b>Terms/SLA</b>, <b>DPA</b>, <b>Subprocessors</b>, and <b>Status/Security</b>. Two‑stage de‑noise, and <b>evidence cards</b>（URL·timestamp·SHA256）加上可直接粘贴的续约话术。</p>
     <div class="cg-cta">
       <a class="cg-btn" href="#pricing">See pricing</a>
       <a class="cg-btn ghost" href="#evidence">View evidence</a>
@@ -77,7 +77,7 @@
   </div>
 </section>
 
-<section class="cg-trust">
+<section class="cg-trust" id="trust">
   <div class="cg-wrap">
     <div class="cg-trust-grid">
       <div>Security</div><div>Legal</div><div>RevOps</div><div>Procurement</div><div>Finance</div><div>Compliance</div>
@@ -85,29 +85,29 @@
   </div>
 </section>
 
-<section class="cg-features">
+<section class="cg-features" id="features">
   <div class="cg-wrap cg-grid3">
-    <div class="cg-card">
-      <h3>What we cover</h3>
+    <div class="cg-card hover">
+      <h3>Coverage</h3>
       <ul>
-        <li>Pricing uplifts & unit changes</li>
-        <li>ToS & SLA redlines</li>
-        <li>DPA retention/transfer</li>
-        <li>Subprocessors updates</li>
-        <li>Status/Security notes</li>
+        <li>Pricing uplifts / tier & unit changes</li>
+        <li>Terms/SLA redlines & credits</li>
+        <li>DPA retention / transfers</li>
+        <li>Subprocessors add/remove</li>
+        <li>Status/Security posture notes</li>
       </ul>
     </div>
-    <div class="cg-card">
-      <h3>SLOs</h3>
+    <div class="cg-card hover">
+      <h3>SLO</h3>
       <div class="cg-kpi"><b>P95 &lt; 24h</b><span>time‑to‑detect</span></div>
       <div class="cg-kpi"><b>&lt;10%</b><span>false positives</span></div>
       <div class="cg-kpi"><b>≤72h</b><span>opt‑out SLA</span></div>
     </div>
-    <div class="cg-card">
+    <div class="cg-card hover">
       <h3>Delivery</h3>
       <ul>
         <li>Email or Slack</li>
-        <li>Evidence cards (URL + timestamp + SHA256)</li>
+        <li>Evidence cards（URL + timestamp + SHA256）</li>
         <li>Renewal language & playbooks</li>
       </ul>
     </div>
@@ -118,10 +118,10 @@
   <div class="cg-wrap">
     <h2>How it works</h2>
     <div class="cg-grid4">
-      <div class="cg-step"><b>1. Crawl</b><p>Public pages only. Respect robots/sitemaps.</p></div>
-      <div class="cg-step"><b>2. Diff</b><p>Structured compare across versions.</p></div>
-      <div class="cg-step"><b>3. De‑noise</b><p>Two‑pass filters keep FP under 10% (target).</p></div>
-      <div class="cg-step"><b>4. Deliver</b><p>Email/Slack with evidence & escalation language.</p></div>
+      <div class="cg-step hover"><b>1. Crawl</b><p>Public pages only · Respect robots/sitemaps</p></div>
+      <div class="cg-step hover"><b>2. Diff</b><p>Structured compare across versions</p></div>
+      <div class="cg-step hover"><b>3. De‑noise</b><p>Two‑pass filters keep FP under 10%（目标）</p></div>
+      <div class="cg-step hover"><b>4. Deliver</b><p>Email/Slack with evidence & escalation language</p></div>
     </div>
   </div>
 </section>
@@ -129,7 +129,7 @@
 <section id="evidence" class="cg-evidence">
   <div class="cg-wrap">
     <div class="cg-bar"></div>
-    <article class="cg-evi-card">
+    <article class="cg-evi-card hover">
       <div class="cg-evi-meta">Source URL: https://vendorx.com/pricing · Captured: 2025‑10‑24 08:34 UTC · SHA256: 9f2e…ab3</div>
       <h3>Vendor X — Pricing change</h3>
       <p><b>What changed:</b> Professional plan increased from $99 → $129 per seat. Credits policy tightened.</p>
@@ -138,6 +138,10 @@
       <details class="cg-raw"><summary>Raw captured clause (timestamped)</summary>
         <pre>$99 per seat → $129 per seat as of Oct 24, 2025. Credits apply only to future invoices.</pre>
       </details>
+      <div class="cg-actions">
+        <button class="cg-btn" id="copy">Copy escalation language</button>
+        <span class="cg-note" id="copied"></span>
+      </div>
     </article>
   </div>
 </section>
@@ -145,13 +149,13 @@
 <section id="compare" class="cg-compare">
   <div class="cg-wrap">
     <h2>Why CG Alert vs DIY</h2>
-    <div class="cg-card">
+    <div class="cg-card hover">
       <table class="cg-table">
         <thead><tr><th></th><th>CG Alert</th><th>DIY scripts</th></tr></thead>
         <tbody>
           <tr><td>Coverage</td><td>Pricing/ToS/DPA/Subproc/SLA</td><td>One‑off pages</td></tr>
-          <tr><td>Noise</td><td>&lt;10% FP (two‑pass)</td><td>High (format churn)</td></tr>
-          <tr><td>Evidence</td><td>URL + timestamp + SHA256</td><td>Missing/fragile</td></tr>
+          <tr><td>Noise</td><td>&lt;10% FP（two‑pass）</td><td>High（format churn）</td></tr>
+          <tr><td>Evidence</td><td>URL + timestamp + SHA256</td><td>Missing / fragile</td></tr>
           <tr><td>Delivery</td><td>Email / Slack</td><td>Manual checks</td></tr>
           <tr><td>Renewal language</td><td>Included</td><td>Custom</td></tr>
         </tbody>
@@ -163,43 +167,43 @@
 <section id="pricing" class="cg-pricing">
   <div class="cg-wrap">
     <h2>Pricing</h2>
-    <div class="cg-grid4">
-      <div class="cg-card">
+    <div class="cg-grid4 cg-grid-equal">
+      <div class="cg-card pcard hover">
         <h3>Portfolio</h3>
         <p class="cg-price">$2,988<span>/yr</span></p>
-        <p class="cg-note">Up to 25 vendors. Email/Slack alerts. 30‑day money‑back if no material alert.</p>
-        <a class="cg-btn" target="_blank" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801">Buy Portfolio</a>
+        <p class="cg-note grow">Up to 25 vendors. Email/Slack alerts. 30‑day money‑back if no material alert.</p>
+        <a class="cg-btn align" target="_blank" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801">Buy Portfolio</a>
       </div>
-      <div class="cg-card">
+      <div class="cg-card pcard hover">
         <h3>Compliance & Vendor Risk</h3>
         <p class="cg-price">$6,000<span>/yr</span></p>
-        <p class="cg-note">DPA/Subprocessors monitoring. Evidence cards for auditors.</p>
-        <a class="cg-btn" target="_blank" href="https://buy.stripe.com/00waEZ5Fse2Y8Iq86mcs802">Buy Compliance</a>
+        <p class="cg-note grow">DPA/Subprocessors monitoring. Evidence cards for auditors.</p>
+        <a class="cg-btn align" target="_blank" href="https://buy.stripe.com/00waEZ5Fse2Y8Iq86mcs802">Buy Compliance</a>
       </div>
-      <div class="cg-card">
+      <div class="cg-card pcard hover">
         <h3>Enterprise</h3>
         <p class="cg-price">$12,000<span>/yr</span></p>
-        <p class="cg-note">Up to 200 vendors, dual routing (Email+Slack), custom cadence.</p>
-        <a class="cg-btn" target="_blank" href="https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800">Buy Enterprise</a>
+        <p class="cg-note grow">Up to 200 vendors · dual routing（Email+Slack）· custom cadence.</p>
+        <a class="cg-btn align" target="_blank" href="https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800">Buy Enterprise</a>
       </div>
-      <div class="cg-card">
+      <div class="cg-card pcard hover">
         <h3>Need more?</h3>
         <p class="cg-price">—</p>
-        <p class="cg-note">Channel/OEM, bespoke reporting, non‑standard routing.</p>
-        <a class="cg-btn ghost" href="mailto:ops@cg-alert.com">Email ops@cg-alert.com</a>
+        <p class="cg-note grow">Channel/OEM · bespoke reporting · non‑standard routing.</p>
+        <a class="cg-btn ghost align" href="mailto:ops@cg-alert.com">Email ops@cg-alert.com</a>
       </div>
     </div>
-    <p class="cg-caption">* All three plans are **self‑serve**. Enterprise add‑ons available via email.</p>
+    <p class="cg-caption">* All three plans are self‑serve. Enterprise add‑ons available via email.</p>
   </div>
 </section>
 
 <section id="faq" class="cg-faq">
   <div class="cg-wrap">
     <h2>FAQ</h2>
-    <div class="cg-grid3">
-      <div class="cg-card"><h3>How noisy are alerts?</h3><p class="cg-note">Two‑stage de‑noise keeps false positives under 10%（目标）。</p></div>
-      <div class="cg-card"><h3>Delivery?</h3><p class="cg-note">Email 或 Slack；Enterprise 可双通道。</p></div>
-      <div class="cg-card"><h3>Refunds?</h3><p class="cg-note">Portfolio：30 天内若无“实质性变更”可退款。</p></div>
+    <div class="cg-accordion">
+      <details><summary>How noisy are alerts?</summary><p>Two‑stage de‑noise keeps false positives under 10%（目标）。</p></details>
+      <details><summary>Delivery?</summary><p>Email 或 Slack；Enterprise 可双通道。</p></details>
+      <details><summary>Refunds?</summary><p>Portfolio：30 天内若无“实质性变更”可退款。</p></details>
     </div>
   </div>
 </section>
@@ -217,7 +221,7 @@
 </footer>
 
 <link rel="stylesheet" href="/assets/home-overrides.css">
-<script src="/assets/home.js"></script>
+<script src="/assets/home-v2.js"></script>
 
 </body>
 </html>
