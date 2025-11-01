@@ -10,20 +10,29 @@ jobs:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
       MAIL_FROM: ${{ vars.MAIL_FROM }}
       MAIL_POSTAL_ADDRESS: ${{ vars.MAIL_POSTAL_ADDRESS }}
+      REPLY_TO: ${{ vars.REPLY_TO }}
       UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      SEND_LIMIT: ${{ vars.SEND_LIMIT || 12 }}
+      # Ramp parameters (override via Actions → Variables if needed)
+      RAMP_BASE: ${{ vars.RAMP_BASE || 12 }}
+      RAMP_WEEKLY_INCREMENT: ${{ vars.RAMP_WEEKLY_INCREMENT || 8 }}
+      RAMP_MAX: ${{ vars.RAMP_MAX || 100 }}
+      RAMP_START_DATE: ${{ vars.RAMP_START_DATE || '2025-11-01' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
+      - name: Compute SEND_LIMIT (gradual ramp)
+        id: ramp
+        run: |
+          node scripts/compute_send_limit.js
       - name: Install deps
         run: npm i nodemailer@6
       - name: Send
-        run: node scripts/send_triggered.js --limit "${{ env.SEND_LIMIT }}" --dry=false || true
+        run: node scripts/send_triggered.js --limit "${{ steps.ramp.outputs.limit }}" --dry=false || true
       - name: Commit logs
         run: |
           git config user.email "bot@cg-alert.com"
