@@ -1,6 +1,6 @@
 name: Stripe Sync (KV → repo)
 on:
-  schedule: [ { cron: '*/30 * * * *' } ]  # every 30 minutes UTC
+  schedule: [ { cron: '*/30 * * * *' } ]
   workflow_dispatch:
 permissions: { contents: write }
 jobs:
@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - run: node scripts/stripe/sync_from_kv.js
+      - run: node scripts/stripe_sync_from_kv.js
       - name: Commit customers/orders
         run: |
           git config user.email "bot@cg-alert.com"

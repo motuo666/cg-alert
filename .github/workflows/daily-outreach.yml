@@ -1,30 +1,30 @@
 name: Daily Outreach
 on:
-  schedule: [ { cron: '0 2 * * *' } ]  # UTC
+  schedule: [ { cron: '0 2 * * *' } ]  # daily UTC
   workflow_dispatch:
 permissions: { contents: write }
 jobs:
-  outreach:
+  send:
     runs-on: ubuntu-latest
     env:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
       MAIL_FROM: ${{ vars.MAIL_FROM }}
       MAIL_POSTAL_ADDRESS: ${{ vars.MAIL_POSTAL_ADDRESS }}
-      SEND_LIMIT: ${{ vars.SEND_LIMIT || 12 }}
       UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      SEND_LIMIT: ${{ vars.SEND_LIMIT || 12 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
       - name: Install deps
         run: npm i nodemailer@6
-      - name: Send outreach
-        run: node scripts/outreach/send_triggered.js --limit "${{ env.SEND_LIMIT }}" --dry=false || true
-      - name: Commit logs/suppressions (if any)
+      - name: Send
+        run: node scripts/send_triggered.js --limit "${{ env.SEND_LIMIT }}" --dry=false || true
+      - name: Commit logs
         run: |
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"

@@ -1,6 +1,6 @@
 name: Weekly Report
 on:
-  schedule: [ { cron: '0 0 * * MON' } ]  # UTC Monday 00:00 (JST 09:00)
+  schedule: [ { cron: '0 0 * * MON' } ]
   workflow_dispatch:
 permissions: { contents: write }
 jobs:
@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - run: node scripts/ops/weekly_report.js
+      - run: node scripts/weekly_report.js
       - name: Commit weekly report
         run: |
           git config user.email "bot@cg-alert.com"

@@ -1,6 +1,6 @@
 name: Daily Bounce Sweep
 on:
-  schedule: [ { cron: '0 5 * * *' } ]  # UTC
+  schedule: [ { cron: '0 5 * * *' } ]
   workflow_dispatch:
 permissions: { contents: write }
 jobs:
@@ -18,7 +18,7 @@ jobs:
       - name: Install deps
         run: npm i imapflow@1
       - name: Sweep
-        run: node scripts/inbox/poll_inbox.js || true
+        run: node scripts/poll_inbox.js || true
       - name: Commit suppressions
         run: |
           git config user.email "bot@cg-alert.com"
