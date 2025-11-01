@@ -1,34 +1,24 @@
-name: Site Polish (Light)
-on: { workflow_dispatch: {} }
-permissions: { contents: write }
-concurrency: { group: site-polish, cancel-in-progress: true }
+name: Site Polish
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: write
 jobs:
   polish:
     runs-on: ubuntu-latest
-    env:
-      STRIPE_LINK_PORTFOLIO:  ${{ vars.STRIPE_LINK_PORTFOLIO }}
-      STRIPE_LINK_COMPLIANCE: ${{ vars.STRIPE_LINK_COMPLIANCE || vars.STRIPE_LINK_BUSINESS }}
-      STRIPE_LINK_ENTERPRISE: ${{ vars.STRIPE_LINK_ENTERPRISE }}
-      INTAKE_FORM_URL:        ${{ vars.INTAKE_FORM_URL }}
-      WORKER_URL:             ${{ vars.WORKER_URL }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: "20" }
-      - name: Apply light theme
-        run: node scripts/derivatives/apply_theme.js
-      - name: Sync pricing & CTAs
-        run: node scripts/derivatives/sync_pricing.js
-      - name: Commit & push
+      - name: Commit site files if changed
         run: |
           set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A
+          git add -N index.html about/index.html who-uses/index.html intake/index.html reports/index.html terms/index.html privacy/index.html dashboard/index.html deal-desk/index.html 404.html 2>/dev/null || true
+          git add -A assets _headers _redirects robots.txt sitemap.xml security.txt site.webmanifest icon.svg reports/rss.xml partials scripts .github || true
           if git diff --cached --quiet; then
-            echo "no site polish changes"
+            echo "no site changes"
           else
-            git commit -m "site: light theme + pricing sync (2,988/6,000/12,000) + intake"
+            git config user.email "bot@cg-alert.com"
+            git config user.name  "cg-alert-bot"
+            git commit -m "site: enterprise ultra (nav additions, FAQ/Deal Desk/Dashboard, QA, headers)"
             git pull --rebase --autostash || true
             git push
           fi
