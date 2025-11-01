@@ -1,14 +1,7 @@
 #!/usr/bin/env node
 /**
- * CG Alert — Outreach Sender (hardened)
- * - Headers: email,name,title,company,domain,region,status
- * - Reply-To, optional Return-Path (MAIL_RETURN_PATH)
- * - List-Unsubscribe (One-Click) + optional mailto fallback (LIST_UNSUB_MAILTO)
- * - Dedup across leads.csv + leads_enriched.csv
- * - Per-domain throttle (DOMAIN_LIMIT, default 2)
- * - Send spacing (SEND_SPACING_MS, default 1200ms)
- * - Retry (transient) + early abort guard
- * - Optional seed sends from data/seeds.csv (excluded from LIMIT)
+ * send_triggered.js — UNSUB_ORIGIN support
+ * Uses UNSUB_ORIGIN for unsubscribe endpoint; falls back to SITE_ORIGIN.
  */
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
@@ -21,9 +14,10 @@ const SMTP_PASS = process.env.SMTP_PASS;
 const FROM = process.env.MAIL_FROM || 'Jason — CG Alert <ops@cg-alert.com>';
 const REPLY_TO = process.env.REPLY_TO || 'Jason <jason@cg-alert.com>';
 const RETURN_PATH = process.env.MAIL_RETURN_PATH || '';
-const LIST_UNSUB_MAILTO = process.env.LIST_UNSUB_MAILTO || ''; // e.g., unsub@cg-alert.com
+const LIST_UNSUB_MAILTO = process.env.LIST_UNSUB_MAILTO || '';
 const POSTAL = process.env.MAIL_POSTAL_ADDRESS || '—';
 const SITE = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+const UNSUB_ORIGIN = process.env.UNSUB_ORIGIN || SITE; // NEW
 const HMAC_SECRET = process.env.UNSUB_HMAC_SECRET || '';
 const LIMIT = parseInt((process.argv.find(a=>a.startsWith('--limit='))||'--limit=12').split('=')[1], 10);
 const DRY = !process.argv.some(a=>a==='--dry=false');
@@ -83,7 +77,7 @@ function body(row){
 
   const hi = name ? `Hi ${name},` : 'Hi there,';
   const reports = `${SITE}/reports/`;
-  const unsub = `${SITE}/unsub?m=${encodeURIComponent(row.email)}&t=${hmac(row.email)}`;
+  const unsub = `${UNSUB_ORIGIN}/unsub?m=${encodeURIComponent(row.email)}&t=${hmac(row.email)}`;
   const preheader = 'Evidence‑backed vendor changes (pricing, ToS, DPA, subprocessors) — ready to use at renewal.';
 
   const html = `
