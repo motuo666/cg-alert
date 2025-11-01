@@ -1,19 +1,49 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CG Alert — Intake</title>
-<meta name="description" content="Monitor Pricing / ToS / DPA / Subprocessors / Status with verifiable evidence.">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/assets/cg.css">
-<link rel="canonical" href="https://www.cg-alert.com/">
-</head><body><header class="header"><div class="container nav"><div class="brand"><a href="/"><img src="/assets/logo-cg.png" alt="CG Alert"></a><a href="/" style="color:#0b1324;text-decoration:none;">CG Alert</a></div><nav><a href="/">Home</a><a href="/reports/">Reports</a><a href="/#pricing">Pricing</a><a href="/intake/">Intake</a><a href="/who-uses/">Who uses</a><a href="/about/">About</a><a href="/reports/rss.xml">RSS</a><a href="mailto:ops@cg-alert.com" class="btn secondary">Contact</a></nav></div></header><div class="container hero"><h1 class="h1">Start with Intake</h1><p class="sub">Tell us your vendors.</p>
-<form id="f"><div><label>Email</label><input name="email" type="email" required></div><div style="margin-top:8px"><label>Vendors</label><textarea name="vendors" rows="3"></textarea></div><div style="margin-top:8px"><button class="btn" type="submit">Submit</button></div><p class="note" id="msg"></p></form>
-</div>
-<script>
-const WORKER_URL="https://lead-gateway.manningtopps.workers.dev"; const f=document.getElementById('f'); const msg=document.getElementById('msg');
-f.addEventListener('submit',async(e)=>{e.preventDefault();msg.textContent='Submitting...';
-  try{const r=await fetch(WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'intake',payload:Object.fromEntries(new FormData(f))})});
-    if(!r.ok) throw new Error(await r.text()); msg.textContent='✓ Received.'; f.reset();
-  }catch(err){msg.textContent='× '+err.message;}
-});
-</script>
-<footer class="footer"><div class="container"><div class="links"><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a><a class="rss" href="/reports/rss.xml">RSS</a><span class="note">© CG Alert — evidence-backed vendor change alerts.</span></div></div></footer></body></html>
+<!doctype html><html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Intake — CG Alert</title>
+  <link rel="canonical" href="https://www.cg-alert.com/intake/"/>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <meta name="description" content="Intake — CG Alert">
+  <link rel="stylesheet" href="/assets/home-v3c.css">
+</head>
+<body>
+<header class="cg-topbar"><div class="cg-wrap cg-nav">
+  <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert"><span>CG&nbsp;Alert</span></a>
+  <nav class="cg-links">
+    <a href="/#pricing">Pricing</a><a href="/#how">How it works</a><a href="/#evidence">Evidence</a><a href="/#compare">Compare</a><a href="/#faq">FAQ</a>
+    <a class="cg-btn ghost" href="mailto:ops@cg-alert.com">Request Enterprise →</a>
+  </nav>
+</div></header>
+<main class="cg-wrap" style="padding-top:28px">
+  <h1 style="font-weight:900;margin:0 0 10px">Intake</h1>
+  
+<meta name="worker-url" content=""> <!-- Fill with your Worker URL, e.g., https://lead-gateway.<zone>.workers.dev -->
+<p>Tell us where to deliver your alerts. Email-only delivery.</p>
+<form id="intake" class="cg-card" style="max-width:760px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <label>Email<input name="email" type="email" required placeholder="you@company.com"></label>
+    <label>Company<input name="company" required placeholder="ACME Inc."></label>
+    <label>Company domain<input name="domain" required placeholder="acme.com"></label>
+    <label>Plan<select name="plan" required>
+      <option value="renewal_desk">$2,988 — Renewal Desk</option>
+      <option value="renewal_leverage">$6,000 — Renewal Leverage (3 vendors)</option>
+      <option value="compliance">$12,000 — Compliance & Vendor Risk (6 vendors)</option>
+    </select></label>
+    <label style="grid-column:1/-1">Named vendors (comma‑separated for 6k/12k)<input name="vendors" placeholder="Vendor A, Vendor B, Vendor C"></label>
+    <label style="grid-column:1/-1">Notes<textarea name="notes" rows="4" placeholder="Anything we should know?"></textarea></label>
+  </div>
+  <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
+    <button class="cg-btn" type="submit">Submit</button>
+    <span id="intake_status" class="cg-sub"></span>
+  </div>
+  <p class="cg-caption" style="margin-top:8px">We monitor public pages only. Email delivery. No calls.</p>
+</form>
+<script src="/assets/app-intake.js"></script>
+
+</main>
+<footer class="cg-footer"><div class="cg-wrap cg-footlinks">
+  <a href="/who-uses/">Who uses</a><a href="/about/">About</a><a href="/reports/">Reports</a><a href="/reports/rss.xml">RSS</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a>
+  <span>© CG Alert — evidence-backed vendor change alerts.</span>
+</div></footer>
+</body></html>
