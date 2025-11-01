@@ -1,157 +1,223 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CG Alert — Vendor Change Intelligence</title>
-<meta name="description" content="Evidence-backed vendor change alerts for Pricing, ToS, DPAs, Subprocessors, SLAs. BuildWith-style coverage with receipts.">
-<link rel="canonical" href="https://www.cg-alert.com/">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/assets/home.css">
-</head>
-<body>
-<header class="header"><div class="container nav">
-  <div class="brand">
-    <img src="/icon.svg" alt="CG Alert"><a href="/" style="color:#0b1324;text-decoration:none;">CG Alert</a>
-  </div>
-  <nav>
-    <a href="#pricing">Pricing</a>
-    <a href="#how">How it works</a>
-    <a href="#evidence">Evidence</a>
-    <a href="#compare">Compare</a>
-    <a href="#faq">FAQ</a>
-    <a href="mailto:ops@cg-alert.com" class="enter">Request Enterprise →</a>
-  </nav>
-</div></header>
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- CSP：允许表单直连 Worker；允许内联脚本；保留 Stripe/Google Forms -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; img-src 'self' https: data: blob:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' https:; connect-src *; frame-src https://buy.stripe.com https://forms.gle; form-action 'self' https://buy.stripe.com https://forms.gle https://lead-gateway.manningtopps.workers.dev;">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  
 
-<section class="hero">
-  <div class="container">
-    <h1 class="h1">Vendor Change Intelligence · Renewal Leverage · Compliance Evidence</h1>
-    <p class="sub">We track vendor Pricing, Terms, DPAs, Subprocessors and SLAs; de‑noise; and deliver evidence cards with receipts. You walk into renewal with proof.</p>
-    <div class="hero-cta">
-      <a class="btn" href="#pricing">See pricing</a>
-      <a class="btn secondary" href="#evidence">View evidence</a>
-      <a class="btn secondary" href="#how">How it works</a>
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.webmanifest">
+
+  <!-- Canonical and favicon links -->
+  
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  
+  <!-- Preconnect for external links -->
+  <link rel="preconnect" href="https://buy.stripe.com" crossorigin>
+  
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#0b0d12">
+  
+  <!-- Open Graph meta tags for social media -->
+  
+  
+  
+  
+  <link rel="image_src" href="/og.png">
+  
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/styles.css">
+<!-- CG-SEO-INJECT START -->
+  <title>CG Alert — Evidence-backed vendor change alerts</title>
+  <meta name="description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
+  <link rel="canonical" href="https://www.cg-alert.com/"/>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"CG Alert — Evidence-backed vendor change alerts","url":"https://www.cg-alert.com/","description":"Monitor public vendor pages and get high-signal alerts with verifiable evidence."}</script>
+  <meta property="og:title" content="CG Alert — Evidence-backed vendor change alerts">
+  <meta property="og:description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
+  <meta property="og:url" content="https://www.cg-alert.com/">
+  <meta property="og:site_name" content="CG Alert">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.cg-alert.com/og/default.png?slug=index">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CG Alert — Evidence-backed vendor change alerts">
+  <meta name="twitter:description" content="Monitor public vendor pages and get high-signal alerts with verifiable evidence.">
+  <meta name="twitter:image" content="https://www.cg-alert.com/og/default.png?slug=index">
+<!-- CG-SEO-INJECT END -->
+</head>
+
+<body>
+
+<header class="cg-topbar">
+  <div class="cg-wrap cg-nav">
+    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert"><span>CG&nbsp;Alert</span></a>
+    <nav class="cg-links">
+      <a href="#pricing">Pricing</a>
+      <a href="#how">How it works</a>
+      <a href="#evidence">Evidence</a>
+      <a href="#compare">Compare</a>
+      <a href="#faq">FAQ</a>
+      <a class="cg-enter" href="mailto:ops@cg-alert.com">Request Enterprise →</a>
+    </nav>
+  </div>
+</header>
+
+<section class="cg-hero">
+  <div class="cg-wrap">
+    <h1>Vendor Change Intelligence · Renewal Leverage · Compliance Evidence</h1>
+    <p class="cg-sub">We track vendor Pricing, Terms, DPAs, Subprocessors and SLAs; de‑noise; and deliver evidence cards with receipts. You walk into renewal with proof.</p>
+    <div class="cg-cta">
+      <a class="cg-btn" href="#pricing">See pricing</a>
+      <a class="cg-btn ghost" href="#evidence">View evidence</a>
+      <a class="cg-btn ghost" href="#how">How it works</a>
     </div>
   </div>
 </section>
 
-<div class="container section">
-  <div class="trust">
-    <div>Security</div><div>Legal</div><div>RevOps</div><div>Procurement</div><div>Finance</div><div>Compliance</div>
+<section class="cg-trust">
+  <div class="cg-wrap">
+    <div class="cg-trust-grid">
+      <div>Security</div><div>Legal</div><div>RevOps</div><div>Procurement</div><div>Finance</div><div>Compliance</div>
+    </div>
   </div>
-</div>
+</section>
 
-<div class="container section">
-  <div class="grid cols-3">
-    <div class="card">
-      <div class="h3">What we cover</div>
-      <div class="list">
-        <div>• Pricing uplifts</div><div>• ToS & SLA redlines</div><div>• DPA changes</div><div>• Subprocessors</div><div>• Status/Security</div>
+<section class="cg-features">
+  <div class="cg-wrap cg-grid3">
+    <div class="cg-card">
+      <h3>What we cover</h3>
+      <ul>
+        <li>Pricing uplifts & unit changes</li>
+        <li>ToS & SLA redlines</li>
+        <li>DPA retention/transfer</li>
+        <li>Subprocessors updates</li>
+        <li>Status/Security notes</li>
+      </ul>
+    </div>
+    <div class="cg-card">
+      <h3>SLOs</h3>
+      <div class="cg-kpi"><b>P95 &lt; 24h</b><span>time‑to‑detect</span></div>
+      <div class="cg-kpi"><b>&lt;10%</b><span>false positives</span></div>
+      <div class="cg-kpi"><b>≤72h</b><span>opt‑out SLA</span></div>
+    </div>
+    <div class="cg-card">
+      <h3>Delivery</h3>
+      <ul>
+        <li>Email or Slack</li>
+        <li>Evidence cards (URL + timestamp + SHA256)</li>
+        <li>Renewal language & playbooks</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="how" class="cg-how">
+  <div class="cg-wrap">
+    <h2>How it works</h2>
+    <div class="cg-grid4">
+      <div class="cg-step"><b>1. Crawl</b><p>Public pages only. Respect robots/sitemaps.</p></div>
+      <div class="cg-step"><b>2. Diff</b><p>Structured compare across versions.</p></div>
+      <div class="cg-step"><b>3. De‑noise</b><p>Two‑pass filters keep FP under 10% (target).</p></div>
+      <div class="cg-step"><b>4. Deliver</b><p>Email/Slack with evidence & escalation language.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="evidence" class="cg-evidence">
+  <div class="cg-wrap">
+    <div class="cg-bar"></div>
+    <article class="cg-evi-card">
+      <div class="cg-evi-meta">Source URL: https://vendorx.com/pricing · Captured: 2025‑10‑24 08:34 UTC · SHA256: 9f2e…ab3</div>
+      <h3>Vendor X — Pricing change</h3>
+      <p><b>What changed:</b> Professional plan increased from $99 → $129 per seat. Credits policy tightened.</p>
+      <p><b>Why this matters:</b> Budget impact on upcoming renewal; reserve right to re‑negotiate.</p>
+      <p><b>How to use in renewal:</b> Ask for legacy pricing or credits; cite the capture date and URL.</p>
+      <details class="cg-raw"><summary>Raw captured clause (timestamped)</summary>
+        <pre>$99 per seat → $129 per seat as of Oct 24, 2025. Credits apply only to future invoices.</pre>
+      </details>
+    </article>
+  </div>
+</section>
+
+<section id="compare" class="cg-compare">
+  <div class="cg-wrap">
+    <h2>Why CG Alert vs DIY</h2>
+    <div class="cg-card">
+      <table class="cg-table">
+        <thead><tr><th></th><th>CG Alert</th><th>DIY scripts</th></tr></thead>
+        <tbody>
+          <tr><td>Coverage</td><td>Pricing/ToS/DPA/Subproc/SLA</td><td>One‑off pages</td></tr>
+          <tr><td>Noise</td><td>&lt;10% FP (two‑pass)</td><td>High (format churn)</td></tr>
+          <tr><td>Evidence</td><td>URL + timestamp + SHA256</td><td>Missing/fragile</td></tr>
+          <tr><td>Delivery</td><td>Email / Slack</td><td>Manual checks</td></tr>
+          <tr><td>Renewal language</td><td>Included</td><td>Custom</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" class="cg-pricing">
+  <div class="cg-wrap">
+    <h2>Pricing</h2>
+    <div class="cg-grid4">
+      <div class="cg-card">
+        <h3>Portfolio</h3>
+        <p class="cg-price">$2,988<span>/yr</span></p>
+        <p class="cg-note">Up to 25 vendors. Email/Slack alerts. 30‑day money‑back if no material alert.</p>
+        <a class="cg-btn" target="_blank" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801">Buy Portfolio</a>
+      </div>
+      <div class="cg-card">
+        <h3>Compliance & Vendor Risk</h3>
+        <p class="cg-price">$6,000<span>/yr</span></p>
+        <p class="cg-note">DPA/Subprocessors monitoring. Evidence cards for auditors.</p>
+        <a class="cg-btn" target="_blank" href="https://buy.stripe.com/00waEZ5Fse2Y8Iq86mcs802">Buy Compliance</a>
+      </div>
+      <div class="cg-card">
+        <h3>Enterprise</h3>
+        <p class="cg-price">$12,000<span>/yr</span></p>
+        <p class="cg-note">Up to 200 vendors, dual routing (Email+Slack), custom cadence.</p>
+        <a class="cg-btn" target="_blank" href="https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800">Buy Enterprise</a>
+      </div>
+      <div class="cg-card">
+        <h3>Need more?</h3>
+        <p class="cg-price">—</p>
+        <p class="cg-note">Channel/OEM, bespoke reporting, non‑standard routing.</p>
+        <a class="cg-btn ghost" href="mailto:ops@cg-alert.com">Email ops@cg-alert.com</a>
       </div>
     </div>
-    <div class="card">
-      <div class="h3">SLOs</div>
-      <div class="kpi"><b>P95 &lt; 24h</b><span class="note">time‑to‑detect</span></div>
-      <div class="kpi"><b>&lt;10%</b><span class="note">false positive rate</span></div>
-      <div class="kpi"><b>72h</b><span class="note">suppression SLA</span></div>
-    </div>
-    <div class="card">
-      <div class="h3">Delivery</div>
-      <div class="list"><div>• Email or Slack</div><div>• Evidence cards (URL + timestamp + SHA256)</div><div>• Renewal language</div></div>
-    </div>
-  </div>
-</div>
-
-<div id="how" class="container section">
-  <h2 class="h2">How it works</h2>
-  <div class="grid cols-4">
-    <div class="card"><div class="h3">1. Crawl</div><div class="note">Public pages only. Respect robots/sitemaps.</div></div>
-    <div class="card"><div class="h3">2. Diff</div><div class="note">Structured compare across versions.</div></div>
-    <div class="card"><div class="h3">3. De-noise</div><div class="note">Two-pass filters reduce noise &lt;10% FP.</div></div>
-    <div class="card"><div class="h3">4. Deliver</div><div class="note">Email/Slack with evidence + renewal language.</div></div>
-  </div>
-</div>
-
-<div id="evidence" class="container section">
-  <div class="section-bar"></div>
-  <div class="evidence-card">
-    <div class="note">Source URL: https://vendorx.com/pricing · Captured: 2025‑10‑24 08:34 UTC · SHA256: 9f2e…ab3</div>
-    <h3>Vendor X — Pricing change</h3>
-    <p><b>What changed:</b> Professional plan increased from $99 → $129 per seat. Credits policy tightened.</p>
-    <p><b>Why this matters:</b> Budget impact on upcoming renewal; reserve right to re‑negotiate.</p>
-    <p><b>How to use in renewal:</b> Ask for legacy pricing or credits; cite the capture date and URL.</p>
-    <details style="margin-top:10px"><summary>Raw captured clause (timestamped)</summary>
-      <pre class="code">$99 per seat → $129 per seat as of Oct 24, 2025. Credits apply only to future invoices.</pre>
-    </details>
-  </div>
-</div>
-
-<div id="compare" class="container section">
-  <h2 class="h2">Why CG Alert vs DIY</h2>
-  <div class="card">
-    <table class="table">
-      <thead><tr><th></th><th>CG Alert</th><th>DIY scripts</th></tr></thead>
-      <tbody>
-        <tr><td>Coverage</td><td>Pricing/ToS/DPA/Subproc/SLA</td><td>Often one or two pages</td></tr>
-        <tr><td>Noise</td><td>&lt;10% FP (two-pass)</td><td>High (format churn)</td></tr>
-        <tr><td>Evidence</td><td>URL + timestamp + SHA256</td><td>Missing/fragile</td></tr>
-        <tr><td>Delivery</td><td>Email / Slack</td><td>Manual checks</td></tr>
-        <tr><td>Renewal language</td><td>Included</td><td>Custom, ad‑hoc</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<section id="pricing" class="container section pricing" aria-label="Pricing">
-  <h2 class="h2">Choose your plan</h2>
-  <div class="grid cols-4">
-    <div class="card">
-      <div class="h3">Portfolio</div>
-      <p class="note">Up to 25 vendors. Email/Slack alerts. 30‑day money‑back if no material alert.</p>
-      <div class="price">$2,988<span class="badge">/yr</span></div>
-      <a class="btn" target="_blank" href="https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801">Buy Portfolio</a>
-    </div>
-    <div class="card">
-      <div class="h3">Compliance & Vendor Risk</div>
-      <p class="note">DPA/Subprocessors monitoring. Evidence cards for auditors.</p>
-      <div class="price">$6,000<span class="badge">/yr</span></div>
-      <a class="btn" target="_blank" href="https://buy.stripe.com/00waEZ5Fse2Y8Iq86mcs802">Buy Compliance</a>
-    </div>
-    <div class="card">
-      <div class="h3">Enterprise</div>
-      <p class="note">Up to 200 vendors, dual routing (Email+Slack), custom cadence.</p>
-      <div class="price">$12,000<span class="badge">/yr</span></div>
-      <a class="btn" target="_blank" href="https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800">Buy Enterprise</a>
-    </div>
-    <div class="card">
-      <div class="h3">Need more?</div>
-      <p class="note">Channel/OEM, bespoke reporting, non‑standard routing.</p>
-      <div class="price">—</div>
-      <a class="btn secondary" href="mailto:ops@cg-alert.com">Email ops@cg-alert.com</a>
-    </div>
-  </div>
-  <p class="note">* Self‑serve for the first three plans. Enterprise add‑ons available via email.</p>
-</section>
-
-<section id="faq" class="container section">
-  <h2 class="h2">FAQ</h2>
-  <div class="grid cols-3">
-    <div class="card"><div class="h3">How noisy are alerts?</div><div class="note">Two‑stage de‑noise keeps false positives under 10%（目标）。</div></div>
-    <div class="card"><div class="h3">Delivery?</div><div class="note">Email 或 Slack；Enterprise 可双通道。</div></div>
-    <div class="card"><div class="h3">Refunds?</div><div class="note">Portfolio：30 天内若无“实质性变更”可退款。</div></div>
+    <p class="cg-caption">* All three plans are **self‑serve**. Enterprise add‑ons available via email.</p>
   </div>
 </section>
 
-<footer class="footer">
-  <div class="container">
-    <div class="links">
-      <a href="/who-uses/">Who uses</a>
-      <a href="/about/">About</a>
-      <a href="/reports/rss.xml">RSS</a>
-      <a href="/terms/">Terms</a>
-      <a href="/privacy/">Privacy</a>
-      <span class="note">© CG Alert — evidence-backed vendor change alerts.</span>
+<section id="faq" class="cg-faq">
+  <div class="cg-wrap">
+    <h2>FAQ</h2>
+    <div class="cg-grid3">
+      <div class="cg-card"><h3>How noisy are alerts?</h3><p class="cg-note">Two‑stage de‑noise keeps false positives under 10%（目标）。</p></div>
+      <div class="cg-card"><h3>Delivery?</h3><p class="cg-note">Email 或 Slack；Enterprise 可双通道。</p></div>
+      <div class="cg-card"><h3>Refunds?</h3><p class="cg-note">Portfolio：30 天内若无“实质性变更”可退款。</p></div>
     </div>
+  </div>
+</section>
+
+<footer class="cg-footer">
+  <div class="cg-wrap cg-footlinks">
+    <a href="/who-uses/">Who uses</a>
+    <a href="/about/">About</a>
+    <a href="/reports/">Reports</a>
+    <a href="/reports/rss.xml">RSS</a>
+    <a href="/terms/">Terms</a>
+    <a href="/privacy/">Privacy</a>
+    <span>© CG Alert — evidence-backed vendor change alerts.</span>
   </div>
 </footer>
 
+<link rel="stylesheet" href="/assets/home-overrides.css">
 <script src="/assets/home.js"></script>
-</body></html>
+
+</body>
+</html>
