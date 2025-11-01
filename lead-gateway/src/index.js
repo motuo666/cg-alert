@@ -1,28 +1,23 @@
-// Cloudflare Worker — add /unsub handler (GET/POST) storing to KV, optional Slack notify
+// Cloudflare Worker — /unsub handler (GET/POST) storing to KV; optional Slack notify
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const url = new URL(request.url);
-    const path = url.pathname;
-    if (path === '/unsub') {
-      if (request.method === 'POST' || request.method === 'GET') {
-        const email = url.searchParams.get('m') || '';
-        const token = url.searchParams.get('t') || '';
-        if (!email || !token) return new Response('Bad request', {status:400});
-        const ok = await verifyHMAC(email, token, env.UNSUB_HMAC_SECRET);
-        if (!ok) return new Response('Bad token', {status:403});
-        const key = `unsub:${email.toLowerCase()}`;
-        const rec = { email, at: new Date().toISOString(), ua: request.headers.get('user-agent')||'', ip: request.headers.get('cf-connecting-ip')||'' };
-        await env.KV.put(key, JSON.stringify(rec));
-        if (env.SLACK_WEBHOOK_URL) {
-          const text = `🔕 Unsubscribed: ${email}`;
-          try{ await fetch(env.SLACK_WEBHOOK_URL, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({text})}); }catch(e){}
-        }
-        const html = `<!doctype html><meta charset="utf-8"><title>Unsubscribed</title><h1>Unsubscribed</h1><p>${email} will no longer receive outreach from CG Alert.</p>`;
-        return new Response(html, { headers: {'content-type':'text/html; charset=utf-8'} });
+    if (url.pathname === '/unsub') {
+      if (request.method !== 'GET' && request.method !== 'POST') return new Response('Method not allowed', {status:405});
+      const email = url.searchParams.get('m') || '';
+      const token = url.searchParams.get('t') || '';
+      if (!email || !token) return new Response('Bad request', {status:400});
+      const ok = await verifyHMAC(email, token, env.UNSUB_HMAC_SECRET);
+      if (!ok) return new Response('Bad token', {status:403});
+      const key = `unsub:${email.toLowerCase()}`;
+      const rec = { email, at: new Date().toISOString(), ua: request.headers.get('user-agent')||'', ip: request.headers.get('cf-connecting-ip')||'' };
+      await env.KV.put(key, JSON.stringify(rec));
+      if (env.SLACK_WEBHOOK_URL) {
+        try{ await fetch(env.SLACK_WEBHOOK_URL, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({text:`🔕 Unsubscribed: ${email}`})}); }catch(e){}
       }
-      return new Response('Method not allowed', {status:405});
+      const html = `<!doctype html><meta charset="utf-8"><title>Unsubscribed</title><h1>Unsubscribed</h1><p>${email} will no longer receive outreach from CG Alert.</p>`;
+      return new Response(html, { headers: {'content-type':'text/html; charset=utf-8'} });
     }
-    // fallthrough to other routes (if any)
     return new Response('OK', {status:200});
   }
 }
