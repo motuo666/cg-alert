@@ -1,0 +1,41 @@
+:root{
+  --bg:#f6f9ff; --ink:#0b1324; --muted:#5a6a85; --line:#e6eef8;
+  --brand:#0b5fff; --accent:#22c1b8; --card:#ffffff; --nav:#ffffff;
+  --btn:#0b1324; --btn-ink:#ffffff; --radius:18px; --shadow:0 10px 32px rgba(11,19,36,.08)
+}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{{font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:var(--bg);color:var(--ink);line-height:1.65}}
+a{{color:var(--brand);text-decoration:none}}a:hover{{text-decoration:underline}}
+.container{{max-width:1200px;margin:0 auto;padding:24px}}
+.header{{position:sticky;top:0;background:var(--nav);box-shadow:0 1px 0 var(--line);z-index:50}}
+.nav{{display:flex;align-items:center;justify-content:space-between;gap:16px}}
+.brand{{display:flex;align-items:center;gap:10px;font-weight:900}}
+.brand img{{width:28px;height:28px;border-radius:8px}}
+.nav a{{padding:10px 12px;border-radius:10px}}
+.nav .enter{{padding:10px 16px;border-radius:14px;background:var(--btn);color:var(--btn-ink);font-weight:800;border:1px solid #0b1528}}
+.hero{{padding:64px 0;background:radial-gradient(1000px 600px at 20% -20%, rgba(101,140,255,.35), transparent 60%), radial-gradient(1000px 600px at 120% 0%, rgba(34,193,184,.25), transparent 60%)}}
+.hero .h1{{font-size:48px;line-height:1.1;margin:0 0 12px;font-weight:900;letter-spacing:-.02em}}
+.sub{{color:var(--muted);margin:0 0 18px}}
+.hero-cta{{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}}
+.btn{{display:inline-block;padding:12px 18px;border-radius:12px;background:var(--brand);color:#fff;font-weight:800;border:1px solid var(--brand)}}
+.btn.secondary{{background:#fff;color:var(--brand);border:1px solid var(--brand)}}
+.grid{{display:grid;gap:20px}}.cols-3{{grid-template-columns:repeat(3,1fr)}}.cols-4{{grid-template-columns:repeat(4,1fr)}}.cols-6{{grid-template-columns:repeat(6,1fr)}}
+.section{{padding:32px 0}}
+.card{{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}}
+.h2{{font-size:32px;line-height:1.2;margin:0 0 16px;font-weight:900}}
+.h3{{font-size:20px;font-weight:800;margin:8px 0}}
+.note{{font-size:13px;color:#5a6a85}}
+.section-bar{{height:10px;background:linear-gradient(90deg,#5f8cff 0%, #60e1cc 100%);border-radius:10px;margin:24px 0}}
+.list{{display:grid;gap:10px}}
+.kpi{{display:flex;gap:14px;align-items:center}}
+.kpi b{{font-size:28px}}
+.table{{width:100%;border-collapse:collapse}}.table th,.table td{{border-bottom:1px solid var(--line);padding:12px;text-align:left}}
+.pricing .price{{font-size:36px;font-weight:900;margin:8px 0;background:linear-gradient(135deg,var(--brand),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}}
+.badge{{font-size:12px;padding:4px 8px;border-radius:999px;background:#eef3ff;color:#0a3dc2;display:inline-block;margin-left:8px}}
+.evidence-card{{background:#fff;border:1px solid #e6eef8;border-radius:24px;padding:20px;box-shadow:0 18px 40px rgba(7,22,48,.12)}}
+.code{{font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace;background:#f7faff;border:1px solid #e6eef8;border-radius:12px;padding:12px;overflow:auto}}
+.trust{{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;opacity:.9}}
+.trust div{{height:42px;border:1px dashed #dbe6f7;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#88a; font-weight:700}}
+.footer{{border-top:1px solid #e6eef8;margin-top:40px;background:#fff}}
+.footer .links{{display:flex;gap:16px;flex-wrap:wrap;color:#52607a;padding:18px 0}}
+@media (max-width:1024px){{.cols-6{{grid-template-columns:repeat(3,1fr)}}.cols-4{{grid-template-columns:repeat(2,1fr)}}.cols-3{{grid-template-columns:1fr}}.hero .h1{{font-size:36px}}}}
