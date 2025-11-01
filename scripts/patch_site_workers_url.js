@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 /**
  * patch_site_workers_url.js
- * - Replaces *.workers.dev with WORKER_URL across HTML/YAML/MD.
- * - Refreshes CSP meta: allow connect-src/form-action to WORKER_URL; keep strict defaults.
+ * Replace *.workers.dev with WORKER_URL (HTML/YAML/MD) and refresh CSP.
  */
 const fs = require('fs'); const path = require('path');
-
 const ROOT = process.cwd();
 const WORKER_URL = process.env.WORKER_URL || '';
 if (!WORKER_URL) { console.error('WORKER_URL not set'); process.exit(1); }
@@ -18,14 +16,10 @@ function walk(dir){
     else if (exts.has(path.extname(e.name))) patchFile(p);
   }
 }
-
 function patchFile(p){
   let s = fs.readFileSync(p, 'utf8');
   const before = s;
-  // Replace workers.dev with WORKER_URL
   s = s.replace(/https?:\/\/[a-z0-9.-]+\.workers\.dev/gi, WORKER_URL);
-
-  // Patch CSP meta (very simple heuristic)
   if (p.endsWith('.html')){
     s = s.replace(/<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]*>/i, (tag)=>{
       const policy = [
@@ -46,5 +40,4 @@ function patchFile(p){
     console.log('patched', p);
   }
 }
-
 walk(ROOT);

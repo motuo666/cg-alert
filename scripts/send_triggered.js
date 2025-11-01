@@ -1,7 +1,15 @@
 #!/usr/bin/env node
 /**
- * send_triggered.js — UNSUB_ORIGIN support
- * Uses UNSUB_ORIGIN for unsubscribe endpoint; falls back to SITE_ORIGIN.
+ * CG Alert — Outreach Sender (ultimate)
+ * - Headers: email,name,title,company,domain,region,status
+ * - Reply-To + optional Return-Path (MAIL_RETURN_PATH)
+ * - List-Unsubscribe (One-Click) + optional mailto fallback (LIST_UNSUB_MAILTO)
+ * - Dedup across leads.csv + leads_enriched.csv
+ * - Region filter via REGION_FILTER (comma-separated, case-insensitive)
+ * - Per-domain throttle (DOMAIN_LIMIT), send spacing (SEND_SPACING_MS)
+ * - Retry (transient) + early abort guard
+ * - Seed sends (data/seeds.csv) excluded from LIMIT
+ * - UNSUB_ORIGIN for unsubscribe endpoint (fallback SITE_ORIGIN)
  */
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
@@ -14,13 +22,14 @@ const SMTP_PASS = process.env.SMTP_PASS;
 const FROM = process.env.MAIL_FROM || 'Jason — CG Alert <ops@cg-alert.com>';
 const REPLY_TO = process.env.REPLY_TO || 'Jason <jason@cg-alert.com>';
 const RETURN_PATH = process.env.MAIL_RETURN_PATH || '';
-const LIST_UNSUB_MAILTO = process.env.LIST_UNSUB_MAILTO || '';
+const LIST_UNSUB_MAILTO = process.env.LIST_UNSUB_MAILTO || ''; // e.g., unsub@cg-alert.com
 const POSTAL = process.env.MAIL_POSTAL_ADDRESS || '—';
 const SITE = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
-const UNSUB_ORIGIN = process.env.UNSUB_ORIGIN || SITE; // NEW
+const UNSUB_ORIGIN = process.env.UNSUB_ORIGIN || SITE;
 const HMAC_SECRET = process.env.UNSUB_HMAC_SECRET || '';
 const LIMIT = parseInt((process.argv.find(a=>a.startsWith('--limit='))||'--limit=12').split('=')[1], 10);
 const DRY = !process.argv.some(a=>a==='--dry=false');
+const REGION_FILTER = (process.env.REGION_FILTER || '').split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
 
 const DOMAIN_LIMIT = parseInt(process.env.DOMAIN_LIMIT || '2', 10);
 const SEND_SPACING_MS = parseInt(process.env.SEND_SPACING_MS || '1200', 10);
@@ -43,10 +52,19 @@ function uniqByEmail(rows){
   }
   return out;
 }
+function inRegion(r){
+  if (!REGION_FILTER.length) return true; // no filter
+  const v = String(r.region||'').toLowerCase();
+  return REGION_FILTER.some(tok => v.includes(tok));
+}
+
 const base = loadCSV(path.join('data','leads.csv'));
 const enriched = loadCSV(path.join('data','leads_enriched.csv'));
 const seeds = loadCSV(path.join('data','seeds.csv')); // optional
 let leads = uniqByEmail([...enriched.rows, ...base.rows]);
+if (REGION_FILTER.length){
+  leads = leads.filter(inRegion);
+}
 
 const supPath = path.join('data','suppressions.csv'); if(!fs.existsSync(supPath)) fs.writeFileSync(supPath,'email,reason,at\n');
 const suppressed = new Set(fs.readFileSync(supPath,'utf8').split(/\r?\n/).slice(1).map(l=>l.split(',')[0].toLowerCase()).filter(Boolean));
