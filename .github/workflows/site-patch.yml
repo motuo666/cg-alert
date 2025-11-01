@@ -1,0 +1,22 @@
+name: Site Patch (workers.dev → WORKER_URL + CSP)
+on:
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    env:
+      WORKER_URL: ${{ vars.WORKER_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Patch links & CSP
+        run: |
+          node scripts/patch_site_workers_url.js
+      - name: Commit changes
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A
+          if git diff --cached --quiet; then echo "no changes"; else git commit -m "site: swap workers.dev → WORKER_URL and refresh CSP"; git pull --rebase --autostash || true; git push; fi
