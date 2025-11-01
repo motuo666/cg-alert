@@ -1,1 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>CG Alert Reports</title><link>https://www.cg-alert.com/reports/</link><description>Timestamped vendor change evidence</description></channel></rss>
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>CG Alert — Reports</title>
+  <link>https://www.cg-alert.com/reports/</link>
+  <description>Evidence-backed vendor change reports</description>
+</channel>
+</rss>
