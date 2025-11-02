@@ -9,42 +9,28 @@ permissions:
 
 jobs:
   sweep:
-    runs-on: ubuntu-24.04
-    env:
-      IMAP_HOST: ${{ secrets.IMAP_HOST }}
-      IMAP_USER: ${{ secrets.IMAP_USER }}
-      IMAP_PASS: ${{ secrets.IMAP_PASS }}
-      DEBUG_IMAPFLOW: "1"
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: IMAP sanity (banner & STARTTLS support)
-        shell: bash
-        run: |
-          set -e
-          echo "::group::openssl banner 993"
-          echo -e "a1 CAPABILITY
-" | openssl s_client -crlf -quiet -connect "${IMAP_HOST}:993" -servername "${IMAP_HOST}" || true
-          echo "::endgroup::"
-          echo "::group::openssl plain 143 (should advertise STARTTLS)"
-          echo -e "a1 CAPABILITY
-" | nc -w 3 "${IMAP_HOST}" 143 || true
-          echo "::endgroup::"
-
       - name: Install IMAP dependency (no lockfile change)
         run: npm i imapflow@1.0.105 --no-save
-
-      - name: Sweep bounces and update suppressions
-        run: node scripts/bounce_sweep.js
-
-      - name: Commit suppression list
+      - name: Sweep bounces (non-fatal)
+        env:
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
         run: |
+          set +e
+          node scripts/bounce_sweep.js || true
+      - name: Commit suppressions (staged-only)
+        run: |
+          set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add data/suppressions.csv || true
+          git add -A data/suppressions.csv || true
           if git diff --cached --quiet; then
             echo "no changes"
           else

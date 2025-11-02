@@ -25,13 +25,13 @@ jobs:
         env:
           SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
         run: node scripts/poller.js
-      - name: Commit evidence & updates
+      - name: Commit evidence (idempotent)
         shell: bash
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add -A vendors updates reports out public || true
+          git add -A
           if git status --porcelain | grep -q .; then
             git commit -m "poller: evidence updates"
             git pull --rebase --autostash || true
