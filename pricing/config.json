@@ -49,8 +49,8 @@
     },
     {
       "id": "enterprise",
-      "name": "Enterprise",
-      "price_usd_year": 18000,
+      "name": "Enterprise / Deal Desk",
+      "price_usd_year": 30000,
       "price_label": "Starts $18,000+ / yr",
       "tagline": "We act as your external deal desk.",
       "includes": [
