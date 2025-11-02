@@ -26,10 +26,12 @@ jobs:
         run: |
           set -e
           echo "::group::openssl banner 993"
-          echo -e "a1 CAPABILITY\r\n" | openssl s_client -crlf -quiet -connect "${IMAP_HOST}:993" -servername "${IMAP_HOST}" || true
+          echo -e "a1 CAPABILITY
+" | openssl s_client -crlf -quiet -connect "${IMAP_HOST}:993" -servername "${IMAP_HOST}" || true
           echo "::endgroup::"
           echo "::group::openssl plain 143 (should advertise STARTTLS)"
-          echo -e "a1 CAPABILITY\r\n" | nc -w 3 "${IMAP_HOST}" 143 || true
+          echo -e "a1 CAPABILITY
+" | nc -w 3 "${IMAP_HOST}" 143 || true
           echo "::endgroup::"
 
       - name: Install IMAP dependency (no lockfile change)
