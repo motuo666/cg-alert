@@ -7,12 +7,12 @@
   <div class="cg-wrap cg-nav">
     <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert"><span>CG&nbsp;Alert</span></a>
     <nav class="cg-links" id="topnav">
-      <a href="#pricing">Pricing</a>
+      <a href="https://www.cg-alert.com/#pricing">Pricing</a>
       <a href="#how">How it works</a>
       <a href="#evidence">Evidence</a>
       <a href="#compare">Compare</a>
       <a href="#faq">FAQ</a>
-      <a class="cg-btn ghost" href="https://www.cg-alert.com/intake/">Request Enterprise →</a>
+      <a class="cg-btn ghost" href="/intake/">Request Enterprise →</a>
     </nav>
   </div>
 </header>
@@ -22,7 +22,7 @@
     <h1>Vendor Change Intelligence · Renewal Leverage · Compliance Evidence</h1>
     <p class="cg-sub">We monitor <b>Pricing</b>, <b>Terms/SLA</b>, <b>DPA</b>, <b>Subprocessors</b>, and <b>Status/Security</b>. Two‑stage de‑noise plus <b>evidence cards</b> (URL · timestamp · SHA256) and <b>ready‑to‑paste escalation language</b>.</p>
     <div class="cg-cta">
-      <a class="cg-btn" href="#pricing">See pricing</a>
+      <a class="cg-btn" href="https://www.cg-alert.com/#pricing">See pricing</a>
       <a class="cg-btn ghost" href="#evidence">View evidence</a>
       <a class="cg-btn ghost" href="#how">How it works</a>
     </div>
@@ -195,4 +195,23 @@
 
 <link rel="stylesheet" href="/assets/home-v3c.css">
 <script src="/assets/home-v3c.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const btn = document.getElementById('copy');
+  const note = document.getElementById('copied');
+  if (btn) {
+    btn.addEventListener('click', async function () {
+      try {
+        const pre = document.querySelector('#evidence pre.cg-raw') || document.querySelector('pre.cg-raw');
+        const text = pre ? pre.innerText.trim() : '';
+        await navigator.clipboard.writeText(text);
+        if (note) { note.textContent = 'Copied'; setTimeout(()=> note.textContent='', 2000); }
+      } catch (e) {
+        if (note) note.textContent = 'Copy failed';
+      }
+    });
+  }
+});
+</script>
 </body></html>
