@@ -1,67 +1,28 @@
 {
-  "portfolio_price_usd_year": 2988,
-  "portfolio_sku_label": "Buy Portfolio · $2,988/yr",
-  "enterprise_cta_label": "Request Enterprise",
-  "stripe_product": "portfolio_yearly",
-  "notes": "All tiers include continuous monitoring, timestamped evidence, and suppression handling.",
   "plans": [
     {
       "id": "portfolio",
       "name": "Portfolio",
       "price_usd_year": 2988,
       "price_label": "$2,988 / yr",
-      "tagline": "Prebuilt vendor-change portfolio. Instant leverage.",
-      "includes": [
-        "Monitored list of high-impact SaaS vendors",
-        "Historical pricing / SLA / liability / subprocessor diffs",
-        "Evidence dashboard access",
-        "1 named internal user"
-      ],
-      "checkout_redirect": "/buy/portfolio"
+      "tagline": "Up to 25 vendors. Weekly. Delivery: Email.",
+      "checkout_redirect": "${STRIPE_LINK_PORTFOLIO}"
     },
     {
-      "id": "renewal_desk",
-      "name": "Renewal Desk",
+      "id": "business",
+      "name": "Business",
       "price_usd_year": 6000,
       "price_label": "$6,000 / yr",
-      "tagline": "Finance & procurement leverage at renewal.",
-      "includes": [
-        "Everything in Portfolio",
-        "Unlimited internal viewers",
-        "Escalation-ready screenshots / vendor language for negotiation",
-        "Routing evidence to CFO / Procurement / Legal"
-      ],
-      "checkout_redirect": "/buy/renewal-desk"
-    },
-    {
-      "id": "compliance_risk",
-      "name": "Compliance & Vendor Risk",
-      "price_usd_year": 12000,
-      "price_label": "$12,000 / yr",
-      "tagline": "Subprocessor / DPA / liability watch for Security & Legal.",
-      "includes": [
-        "Automated tracking of DPAs & subprocessors",
-        "Liability cap change alerts",
-        "PDF bundles for audit / board / SOC2",
-        "Priority monitoring for regulated vendors you nominate"
-      ],
-      "checkout_redirect": "/buy/compliance"
+      "tagline": "Up to 50 vendors. Daily/Weekly. Delivery: Email.",
+      "checkout_redirect": "${STRIPE_LINK_BUSINESS}"
     },
     {
       "id": "enterprise",
-      "name": "Enterprise / Deal Desk",
-      "price_usd_year": 30000,
-      "price_label": "Starts $30k / yr",
-      "tagline": "We act as your external deal desk.",
-      "includes": [
-        "We watch any vendor you name",
-        "Executive escalation support on live renewals",
-        "Board / audit reporting packs",
-        "Signed Order Form + DPA"
-      ],
-      "contact_redirect": "https://www.cg-alert.com/intake/"
+      "name": "Enterprise",
+      "price_usd_year": 18000,
+      "price_label": "Starts $18,000+ / yr",
+      "tagline": "Up to 200 vendors. Custom cadence. Delivery: Email.",
+      "contact_redirect": "/intake/"
     }
-  ],
-  "currency": "USD",
-  "compliance_note": "We permanently suppress unsubscribes / complaints. We respect procurement/legal process."
+  ]
 }
