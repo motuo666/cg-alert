@@ -1,44 +1,43 @@
 name: Outreach Triggered
 on:
   schedule:
-    - cron: "0 */2 * * *"
+    - cron: '0 19 * * *'   # 04:00 JST
   workflow_dispatch:
-permissions: { contents: write }
-concurrency: { group: outreach-triggered, cancel-in-progress: true }
+    inputs:
+      dry:
+        description: "Dry run?"
+        required: true
+        default: "true"
+        type: choice
+        options: ["true","false"]
+      limit:
+        description: "Max emails to send when dry=false"
+        required: true
+        default: "20"
+
+concurrency:
+  group: outreach-triggered
+  cancel-in-progress: false
+
 jobs:
-  outreach:
-    runs-on: ubuntu-latest
+  send:
+    runs-on: ubuntu-24.04
     env:
+      RAMP_SERIES: "12,20,30,50,80"
+      REPLY_TO: "Jason <ops@cg-alert.com>"
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      MAIL_FROM: ${{ vars.MAIL_FROM || 'CG Alert Ops <ops@cg-alert.com>' }}
-      MAIL_POSTAL_ADDRESS: ${{ vars.MAIL_POSTAL_ADDRESS }}
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-      STRIPE_LINK_PORTFOLIO:  ${{ vars.STRIPE_LINK_PORTFOLIO }}
-      STRIPE_LINK_COMPLIANCE: ${{ vars.STRIPE_LINK_COMPLIANCE || vars.STRIPE_LINK_BUSINESS }}
-      STRIPE_LINK_ENTERPRISE: ${{ vars.STRIPE_LINK_ENTERPRISE }}
-      INTAKE_FORM_URL:        ${{ vars.INTAKE_FORM_URL }}
-      UNSUB_HMAC_SECRET:      ${{ vars.UNSUB_HMAC_SECRET }}
+      UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET }}
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+      LIMIT: ${{ inputs.limit }}
+      DRY: ${{ inputs.dry }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: "20" }
+        with:
+          node-version: '20'
       - name: Install deps
-        run: npm install
-      - name: Send outreach emails
-        run: node scripts/send_triggered.js
-      - name: Commit & push outreach logs
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add data/sent_log.csv data/outreach_log.csv || true
-          if git diff --cached --quiet; then
-            echo "no outreach changes"
-          else
-            git commit -m "outreach: logs update"
-            git pull --rebase --autostash || true
-            git push
-          fi
+        run: npm i nodemailer@6.9.13 crypto-js@4.2.0
+      - name: Send emails
+        run: node scripts/outreach_send.js

@@ -1,0 +1,17 @@
+name: Pricing Normalize Guard
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  guard:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check pricing labels
+        run: |
+          set -e
+          grep -R "\$2,988" -n -- index.html pricing || (echo "::error::Missing $2,988 reference" && exit 1)
+          grep -R "\$6,000" -n -- index.html pricing || (echo "::error::Missing $6,000 reference" && exit 1)
+          grep -R "Starts \$18,000" -n -- index.html pricing || (echo "::error::Missing Starts $18,000 reference" && exit 1)

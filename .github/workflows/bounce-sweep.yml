@@ -1,48 +1,28 @@
 name: Bounce Sweep
-
 on:
   schedule:
-    - cron: "15 * * * *" # hourly offset
+    - cron: '30 20 * * *'   # 05:30 JST
   workflow_dispatch:
 
-permissions:
-  contents: write
-
-concurrency:
-  group: bounce-sweep
-  cancel-in-progress: true
-
 jobs:
-  bounce:
-    runs-on: ubuntu-latest
+  sweep:
+    runs-on: ubuntu-24.04
     env:
       IMAP_HOST: ${{ secrets.IMAP_HOST }}
-      IMAP_PORT: ${{ secrets.IMAP_PORT }}
       IMAP_USER: ${{ secrets.IMAP_USER }}
       IMAP_PASS: ${{ secrets.IMAP_PASS }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-
+          node-version: '20'
       - name: Install deps
-        run: npm install
-
-      - name: Sweep inbox for bounces/complaints/unsubs
-        run: node scripts/poll_inbox.js
-
-      - name: Commit & push bounce/unsub logs
+        run: npm i imap-simple@5.1.0 mailparser@3.7.1
+      - name: Sweep bounces
+        run: node scripts/bounce_sweep.js
+      - name: Commit suppression list
         run: |
-          set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add data/bounces.csv data/complaints.csv data/unsubscribes.csv || true
-          if git diff --cached --quiet; then
-            echo "no bounce changes"
-          else
-            git commit -m "bounce-sweep: update suppression sources"
-            git pull --rebase --autostash || true
-            git push
-          fi
+          git add data/suppressions.csv || true
+          if git diff --cached --quiet; then echo "no changes"; else git commit -m "bounce: update suppressions" && git push; fi
