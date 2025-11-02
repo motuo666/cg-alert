@@ -13,6 +13,14 @@
       <cg:sourceUrl>https://example.com/pricing</cg:sourceUrl>
       <cg:sha256>sha-6578616d706c652e</cg:sha256>
     </item>
-    <lastBuildDate>Sun, 02 Nov 2025 13:14:01 GMT</lastBuildDate>
+    <item>
+      <title>Change detected @ example.com/pricing</title>
+      <description>&lt;![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <link>https://www.cg-alert.com/reports/</link>
+      <pubDate>Sun, 02 Nov 2025 16:02:15 GMT</pubDate>
+      <cg:sourceUrl>https://example.com/pricing</cg:sourceUrl>
+      <cg:sha256>sha-6578616d706c652e</cg:sha256>
+    </item>
+    <lastBuildDate>Sun, 02 Nov 2025 16:02:15 GMT</lastBuildDate>
   </channel>
 </rss>
