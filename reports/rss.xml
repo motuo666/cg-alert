@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="/reports/rss.xsl"?><rss version="2.0"><channel>
-<title>CG Alert — Reports</title><link>https://www.cg-alert.com/reports/</link><description>Recent vendor report pages</description>
-
-</channel></rss>
+<?xml-stylesheet type="text/xsl" href="/reports/rss.xsl"?>
+<rss version="2.0" xmlns:cg="https://www.cg-alert.com/ns">
+  <channel>
+    <title>CG Alert — Reports</title>
+    <link>https://www.cg-alert.com/reports/</link>
+    <description>Recent vendor report pages</description>
+  </channel>
+</rss>
