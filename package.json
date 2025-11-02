@@ -21,9 +21,10 @@
     "pricingSyncReports": "node scripts/pricing_sync_reports.js"
   },
   "dependencies": {
+    "fast-xml-parser": "^4.4.0",
     "imapflow": "^1.0.136",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^6.9.0",
-    "stripe": "^16.0.0",
-    "node-fetch": "^2.7.0"
+    "stripe": "^16.0.0"
   }
 }
