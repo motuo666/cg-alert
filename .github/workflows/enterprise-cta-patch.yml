@@ -1,0 +1,29 @@
+name: Enterprise CTA Patch (to intake form)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    env:
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Patch index.html Enterprise CTA
+        run: node scripts/patch_enterprise_cta.js
+      - name: Commit
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "fix: Enterprise CTA -> intake form"
+            git pull --rebase --autostash || true
+            git push
+          fi
