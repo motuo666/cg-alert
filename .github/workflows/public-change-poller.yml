@@ -1,7 +1,7 @@
 name: Public Change Poller
 on:
   schedule:
-    - cron: '30 18 * * *'   # 03:30 JST
+    - cron: '30 18 * * *'   # 03:30 JST (UTC+9)
   workflow_dispatch:
 
 permissions:
@@ -20,17 +20,18 @@ jobs:
         with:
           node-version: '20'
       - name: Install deps
-        run: npm i node-fetch@3.3.2 fast-xml-parser@4.4.0
+        run: npm i fast-xml-parser@4.4.0 --no-save
       - name: Run poller
         env:
           SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
         run: node scripts/poller.js
       - name: Commit evidence & updates
+        shell: bash
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add -A
+          git add vendors updates reports out public || true
           if git status --porcelain | grep -q .; then
             git commit -m "poller: evidence updates"
             git pull --rebase --autostash || true

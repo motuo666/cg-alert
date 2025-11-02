@@ -4,39 +4,34 @@ on:
     - cron: '30 20 * * *'   # 05:30 JST
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   sweep:
     runs-on: ubuntu-24.04
+    env:
+      IMAP_HOST: ${{ secrets.IMAP_HOST }}
+      IMAP_USER: ${{ secrets.IMAP_USER }}
+      IMAP_PASS: ${{ secrets.IMAP_PASS }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install deps
-        run: npm i imap-simple@5.1.0 mailparser@3.7.1
-      - name: Sweep bounces (non-fatal if IMAP misconfigured)
-        env:
-          IMAP_HOST: ${{ secrets.IMAP_HOST }}
-          IMAP_USER: ${{ secrets.IMAP_USER }}
-          IMAP_PASS: ${{ secrets.IMAP_PASS }}
-        run: |
-          set +e
-          node scripts/bounce_sweep.js
-          code=$?
-          if [ "$code" != "0" ]; then
-            echo "::warning::Bounce sweep skipped or failed (code=$code). Make sure IMAP_* secrets are valid."
-            exit 0
-          fi
+      - name: Install IMAP dependency (no lockfile change)
+        run: npm i imapflow@1.0.105 --no-save
+      - name: Sweep bounces and update suppressions
+        run: node scripts/bounce_sweep.js
       - name: Commit suppression list
         run: |
-          set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add -A data/suppressions.csv || true
-          if git status --porcelain | grep -q .; then
+          git add data/suppressions.csv || true
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
             git commit -m "bounce: update suppressions"
             git pull --rebase --autostash || true
             git push
-          else
-            echo "no changes"
           fi
