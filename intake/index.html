@@ -6,6 +6,7 @@
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
   <meta name="description" content="Intake — CG Alert">
   <link rel="stylesheet" href="/assets/home-v3c.css">
+  <link rel="stylesheet" href="/assets/form-enterprise.css">
 </head>
 <body>
 <header class="cg-topbar"><div class="cg-wrap cg-nav">
@@ -20,24 +21,61 @@
   
 <meta name="worker-url" content=""> <!-- Fill with your Worker URL, e.g., https://lead-gateway.<zone>.workers.dev -->
 <p>Tell us where to deliver your alerts. Email-only delivery.</p>
-<form id="intake" class="cg-card" style="max-width:760px">
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-    <label>Email<input name="email" type="email" required placeholder="you@company.com"></label>
-    <label>Company<input name="company" required placeholder="ACME Inc."></label>
-    <label>Company domain<input name="domain" required placeholder="acme.com"></label>
-    <label>Plan<select name="plan" required>
-      <option value="renewal_desk">$2,988 — Renewal Desk</option>
-      <option value="renewal_leverage">$6,000 — Renewal Leverage (3 vendors)</option>
-      <option value="compliance">$12,000 — Compliance & Vendor Risk (6 vendors)</option>
-    </select></label>
-    <label style="grid-column:1/-1">Named vendors (comma‑separated for 6k/12k)<input name="vendors" placeholder="Vendor A, Vendor B, Vendor C"></label>
-    <label style="grid-column:1/-1">Notes<textarea name="notes" rows="4" placeholder="Anything we should know?"></textarea></label>
+<form id="intake" method="post">
+  <div class="intake-hero cg-wrap">
+    <h1>Tell us where to deliver</h1>
+    <p>Email‑only delivery. Fully async. No calls.</p>
   </div>
-  <div style="display:flex;gap:12px;align-items:center;margin-top:12px">
-    <button class="cg-btn" type="submit">Submit</button>
-    <span id="intake_status" class="cg-sub"></span>
+  <div class="cg-wrap form-card">
+    <div class="form-grid">
+      <div class="field">
+        <label for="email">Work email</label>
+        <input id="email" name="email" type="email" required placeholder="you@company.com" autocomplete="email">
+        <small>We’ll send evidence and receipts here.</small>
+      </div>
+      <div class="field">
+        <label for="company">Company</label>
+        <input id="company" name="company" required placeholder="ACME Inc.">
+      </div>
+      <div class="field">
+        <label for="domain">Company domain</label>
+        <input id="domain" name="domain" required placeholder="acme.com">
+      </div>
+      <div class="field">
+        <label for="plan">Plan</label>
+        <select id="plan" name="plan" required>
+          <option value="">Choose a plan…</option>
+          <option value="portfolio">Portfolio — $2,988/yr</option>
+          <option value="business">Business — $6,000/yr</option>
+          <option value="enterprise">Enterprise — $18,000+/yr (we'll contact you)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="vendors">Vendors to monitor (comma‑separated)</label>
+        <input id="vendors" name="vendors" placeholder="e.g., HubSpot, Salesforce, Snowflake">
+      </div>
+      <div class="field">
+        <label for="region">Region</label>
+        <select id="region" name="region">
+          <option value="">Select region…</option>
+          <option>APAC</option><option>EMEA</option><option>AMER</option>
+        </select>
+      </div>
+      <div class="field" style="grid-column:1/-1">
+        <label for="notes">Notes (optional)</label>
+        <textarea id="notes" name="notes" rows="4" placeholder="Anything we should know?"></textarea>
+      </div>
+      <input type="hidden" name="description" value="CG Alert intake">
+    </div>
+    <div class="actions">
+      <button class="btn-primary" type="submit">Submit</button>
+      <span class="badge-ok">Email delivery</span>
+      <span id="intake_status" class="note"></span>
+    </div>
+    <p class="note">By submitting, you agree to our <a href="/terms/">Terms</a> and <a href="/privacy/">Privacy Policy</a>.</p>
+    <div id="intake_success" class="success">Received. We’ll email you shortly.</div>
+    <div id="intake_error" class="error">Something went wrong. Please try again or email <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a>.</div>
   </div>
-  <p class="cg-caption" style="margin-top:8px">We monitor public pages only. Email delivery. No calls.</p>
 </form>
 <script src="/assets/app-intake.js"></script>
 
