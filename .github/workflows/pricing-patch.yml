@@ -1,6 +1,5 @@
-name: Pricing Patch (naming & delivery)
-on:
-  workflow_dispatch:
+name: Pricing Patch (3-tier normalize)
+on: { workflow_dispatch: {} }
 permissions: { contents: write }
 jobs:
   patch:
@@ -9,11 +8,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - name: Patch pricing/config.json
+      - name: Apply patch
         run: node scripts/patch_pricing_config.js
       - name: Commit
         run: |
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
           git add pricing/config.json
-          if git diff --cached --quiet; then echo "no changes"; else git commit -m "pricing: align naming & delivery wording"; git pull --rebase --autostash || true; git push; fi
+          if git diff --cached --quiet; then echo "no changes"; else git commit -m "pricing: normalize to 3-tier (Email-first)"; git pull --rebase --autostash || true; git push; fi
