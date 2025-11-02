@@ -1,0 +1,53 @@
+name: Daily Outreach — AMER window
+on:
+  schedule: [ { cron: '30 14 * * 1-5' } ]  # 09:30 ET weekdays
+permissions: { contents: write }
+jobs:
+  send:
+    if: ${{ false }}  # disabled by overlay on 2025-11-02
+    runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+      MAIL_FROM: ${{ vars.MAIL_FROM }}
+      MAIL_POSTAL_ADDRESS: ${{ vars.MAIL_POSTAL_ADDRESS }}
+      REPLY_TO: ${{ vars.REPLY_TO }}
+      MAIL_RETURN_PATH: ${{ vars.MAIL_RETURN_PATH }}
+      LIST_UNSUB_MAILTO: ${{ vars.LIST_UNSUB_MAILTO }}
+      UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      RAMP_BASE: ${{ vars.RAMP_BASE || 12 }}
+      RAMP_WEEKLY_INCREMENT: ${{ vars.RAMP_WEEKLY_INCREMENT || 8 }}
+      RAMP_MAX: ${{ vars.RAMP_MAX || 100 }}
+      RAMP_START_DATE: ${{ vars.RAMP_START_DATE || '2025-11-01' }}
+      DOMAIN_LIMIT: ${{ vars.DOMAIN_LIMIT || 2 }}
+      SEND_SPACING_MS: ${{ vars.SEND_SPACING_MS || 1200 }}
+      ERROR_ABORT_THRESHOLD: ${{ vars.ERROR_ABORT_THRESHOLD || 3 }}
+      ERROR_ABORT_WINDOW: ${{ vars.ERROR_ABORT_WINDOW || 10 }}
+      SEED_SEND: ${{ vars.SEED_SEND || 'true' }}
+      REGION_FILTER: ${{ vars.REGION_FILTER_AMER || 'amer,us,ca,mx,br' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Compute daily limit
+        id: ramp
+        run: node scripts/compute_send_limit.js
+      - name: Compute AMER window limit (33%)
+        id: win
+        env:
+          DAILY_LIMIT: ${{ steps.ramp.outputs.limit }}
+          WINDOW_FRACTION: 0.33
+        run: node scripts/compute_window_limit.js
+      - name: Install deps
+        run: npm i nodemailer@6
+      - name: Send
+        run: node scripts/send_triggered.js --limit "${{ steps.win.outputs.limit }}" --dry=false || true
+      - name: Commit logs
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A out data/suppressions.csv
+          if git diff --cached --quiet; then echo "no changes"; else git commit -m "outreach: AMER window"; git pull --rebase --autostash || true; git push; fi

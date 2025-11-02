@@ -1,0 +1,46 @@
+name: Weekly Health (Daily)
+
+on:
+  schedule:
+    - cron: "0 4 * * *" # daily 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-health-check
+  cancel-in-progress: true
+
+jobs:
+  health:
+    if: ${{ false }}  # disabled by overlay on 2025-11-02
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm install
+
+      - name: Run health check and repair pages
+        run: |
+          node scripts/weekly_health_check.js
+          node scripts/repair_pages.js
+
+      - name: Commit & push health report / repaired pages
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add artifacts/health_report.txt index.html enterprise/index.html dashboard _redirects || true
+          if git diff --cached --quiet; then
+            echo "no health changes"
+          else
+            git commit -m "weekly-health-check: health report & repaired pages"
+            git pull --rebase --autostash || true
+            git push
+          fi

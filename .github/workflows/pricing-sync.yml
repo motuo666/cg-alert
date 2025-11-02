@@ -1,0 +1,51 @@
+name: Pricing Sync
+
+on:
+  schedule:
+    - cron: "0 3 * * *"  # 每天 03:00 UTC 执行
+  workflow_dispatch:  # 手动触发
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pricing-sync
+  cancel-in-progress: true
+
+jobs:
+  pricing:
+    if: ${{ false }}  # disabled by overlay on 2025-11-02
+    runs-on: ubuntu-latest
+    env:
+      STRIPE_LINK_RENEWAL_DESK: ${{ vars.STRIPE_LINK_RENEWAL_DESK }}
+      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+      STRIPE_LINK_COMPLIANCE: ${{ vars.STRIPE_LINK_COMPLIANCE }}
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Sync pricing / CTA / redirects
+        run: node scripts/pricing_sync.js
+
+      - name: Commit & push pricing-sync changes
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add index.html enterprise/index.html dashboard _redirects || true
+          if git diff --cached --quiet; then
+            echo "no pricing changes"
+          else
+            git commit -m "pricing-sync: refreshed CTA text / redirects / dashboard CTAs"
+            git pull --rebase --autostash || true
+            git push
+          fi
