@@ -1,5 +1,4 @@
-
-// Copy Escalation Language (robust)
+// assets/home-v3c.js (augment copy button)
 (function(){
   try{
     var btn = document.getElementById('copy');
