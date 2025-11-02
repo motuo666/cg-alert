@@ -1,26 +1,49 @@
 #!/usr/bin/env node
-// scripts/patch_pricing_config.js
-// Patch pricing/config.json to align naming, delivery wording, and enterprise price label.
-const fs = require('fs'); const path = require('path');
+// scripts/patch_pricing_config.js — normalize to 3 plans (Portfolio/Business/Enterprise), Email-first
+const fs = require('fs'), path = require('path');
 const p = path.join(process.cwd(), 'pricing', 'config.json');
-if (!fs.existsSync(p)) { console.error('pricing/config.json not found'); process.exit(1); }
+if (!fs.existsSync(p)) { console.error('pricing/config.json missing'); process.exit(1); }
 const j = JSON.parse(fs.readFileSync(p,'utf8'));
 if (!Array.isArray(j.plans)) { console.error('plans missing'); process.exit(1); }
+let plans = j.plans;
 
-for (const plan of j.plans) {
-  const id = String(plan.id||'');
-  if (id === 'portfolio') {
+// Map/keep portfolio
+for (const plan of plans) {
+  if (plan.id === 'portfolio') {
     plan.name = 'Portfolio';
-    plan.tagline = 'Up to 25 vendors. Weekly. Delivery: Email (default) or Slack (single‑channel).';
-  } else if (id === 'renewal_desk') {
+    plan.price_usd_year = 2988;
+    plan.price_label = '$2,988 / yr';
+    plan.tagline = 'Up to 25 vendors. Weekly. Delivery: Email (default). Optional Slack (single-channel).';
+    if (!plan.checkout_redirect) plan.checkout_redirect = '/buy/portfolio';
+  }
+}
+
+// Rename renewal_desk -> business
+for (const plan of plans) {
+  if (plan.id === 'renewal_desk') {
+    plan.id = 'business';
     plan.name = 'Business';
-    plan.tagline = 'Up to 50 vendors. Daily/Weekly. Delivery: Email + Slack.';
-  } else if (id === 'enterprise') {
+    plan.price_usd_year = 6000;
+    plan.price_label = '$6,000 / yr';
+    plan.tagline = 'Up to 50 vendors. Daily/Weekly. Delivery: Email (default) + optional Slack.';
+    if (!plan.checkout_redirect) plan.checkout_redirect = '/buy/business';
+  }
+}
+
+// Drop compliance tier if exists
+plans = plans.filter(p => p.id !== 'compliance_risk' && p.id !== 'compliance' && p.name !== 'Compliance & Vendor Risk');
+
+// Enterprise normalize
+for (const plan of plans) {
+  if (plan.id === 'enterprise') {
     plan.name = 'Enterprise';
     plan.price_usd_year = 18000;
     plan.price_label = 'Starts $18,000+ / yr';
     plan.tagline = 'Up to 200 vendors. Custom cadence. Delivery: Email (default) + optional Slack / SIEM.';
+    if (!plan.contact_redirect) plan.contact_redirect = '/intake';
   }
 }
+
+j.plans = plans;
 fs.writeFileSync(p, JSON.stringify(j, null, 2));
-console.log('pricing/config.json patched');
+console.log('pricing/config.json normalized to 3 plans');
