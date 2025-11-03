@@ -41,3 +41,29 @@ function patchFile(p){
   }
 }
 walk(ROOT);
+
+
+// --- Inject/overwrite <meta name="worker-url" content="..."> to WORKER_URL ---
+(function ensureWorkerMeta(){
+  const fs = require('fs'); const path = require('path');
+  const ROOT = process.cwd();
+  if (!WORKER_URL) return;
+  function walk(dir){
+    for(const e of fs.readdirSync(dir, {withFileTypes:true})){
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (/\.html?$/i.test(e.name)) patchHTML(p);
+    }
+  }
+  function patchHTML(p){
+    let s = fs.readFileSync(p,'utf8');
+    if (/<meta[^>]+name=["']worker-url["']/i.test(s)) {
+      s = s.replace(/<meta([^>]+)name=["']worker-url["']([^>]+)content=["'][^"']*["']([^>]*)>/i,
+        (m,a,b,c)=>`<meta${a}name="worker-url"${b}content="${WORKER_URL}"${c}>`);
+    } else if (/<head>/i.test(s)) {
+      s = s.replace(/<head>/i, `<head>\n<meta name="worker-url" content="${WORKER_URL}">`);
+    }
+    fs.writeFileSync(p, s);
+  }
+  walk(ROOT);
+})();
