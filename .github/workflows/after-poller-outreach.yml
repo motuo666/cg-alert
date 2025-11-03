@@ -37,8 +37,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: KPI Guard (auto-dry on breach)
         id: kpi
-        run: node scripts/outreach/kpi_guard.js
+        run: node outreach/kpi_guard.js
       - name: Gate & dispatch Outreach Triggered
         env:
           OUTREACH_DRY_DEFAULT: ${{ steps.kpi.outputs.outreach_dry }}
-        run: node scripts/outreach/gate_and_dispatch.js
+        run: node outreach/gate_and_dispatch.js
