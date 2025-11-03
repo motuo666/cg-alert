@@ -5,7 +5,7 @@ on:
 permissions: { contents: write }
 jobs:
   sync:
-    if: ${{ false }}  # disabled by overlay on 2025-11-02
+
     runs-on: ubuntu-latest
     env:
       CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}

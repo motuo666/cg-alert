@@ -7,7 +7,7 @@ permissions: { contents: write }
 concurrency: { group: evidence-harvest, cancel-in-progress: true }
 jobs:
   harvest:
-    if: ${{ false }}  # disabled by overlay on 2025-11-02
+
     runs-on: ubuntu-latest
     env:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}

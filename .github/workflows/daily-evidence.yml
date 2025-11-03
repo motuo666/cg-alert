@@ -5,7 +5,7 @@ on:
 permissions: { contents: write }
 jobs:
   run:
-    if: ${{ false }}  # disabled by overlay on 2025-11-02
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
