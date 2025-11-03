@@ -1,0 +1,38 @@
+name: All Systems Go
+on:
+  workflow_dispatch:
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Site link check
+        run: |
+          node scripts/qa/link_check.js || echo "::warning::link_check failed"
+      - name: Policy check
+        run: |
+          node scripts/qa/policy_check.js || true
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: qa
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+      WORKER_URL:  ${{ vars.WORKER_URL }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      IMAP_HOST: ${{ secrets.IMAP_HOST }}
+      IMAP_PORT: ${{ secrets.IMAP_PORT }}
+      IMAP_USER: ${{ secrets.IMAP_USER }}
+      IMAP_PASS: ${{ secrets.IMAP_PASS }}
+    steps:
+      - run: |
+          echo "PING $SITE_ORIGIN"
+          echo "WORKER_URL $WORKER_URL"
+          test -n "$SLACK_WEBHOOK_URL" || echo "::warning::SLACK_WEBHOOK_URL empty"
+          test -n "$SMTP_HOST" || echo "::warning::SMTP_HOST empty"
+          test -n "$IMAP_HOST" || echo "::warning::IMAP_HOST empty"

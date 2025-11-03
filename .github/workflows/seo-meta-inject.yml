@@ -1,0 +1,35 @@
+name: SEO Meta Inject
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  inject:
+    runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inject canonical & description
+        run: |
+          node scripts/seo/inject_meta.js
+      - name: Commit if changed
+        run: |
+          set -e
+          if git diff --quiet; then
+            echo "no changes"; exit 0
+          fi
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A
+          git commit -m "seo: inject canonical & meta description"
+          git push
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: meta_inject
+          path: artifacts/meta_inject.txt
