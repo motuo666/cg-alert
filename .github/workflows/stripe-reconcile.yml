@@ -1,0 +1,16 @@
+name: Stripe Reconcile
+on:
+  schedule:
+    - cron: '55 0 * * *'   # 09:55 JST 每日
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  recon:
+    runs-on: ubuntu-latest
+    env:
+      STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY || secrets.STRIPE_SECRET_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: node scripts/ops/stripe_reconcile.js
