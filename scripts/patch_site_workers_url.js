@@ -46,10 +46,11 @@ walk(ROOT);
 // --- Inject/overwrite <meta name="worker-url" content="..."> to WORKER_URL ---
 (function ensureWorkerMeta(){
   const fs = require('fs'); const path = require('path');
+  const WORKER_URL = process.env.WORKER_URL;
   const ROOT = process.cwd();
   if (!WORKER_URL) return;
   function walk(dir){
-    for(const e of fs.readdirSync(dir, {withFileTypes:true})){
+    for(const e of fs.readdirSync(dir,{withFileTypes:true})){
       const p = path.join(dir, e.name);
       if (e.isDirectory()) walk(p);
       else if (/\.html?$/i.test(e.name)) patchHTML(p);
