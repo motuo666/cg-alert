@@ -1,3 +1,4 @@
-asana.com
-freshdesk.com
-zendesk.com
+# Replace with your target vendor domains, one per line
+# example:
+example.com
+vendorx.com
