@@ -1,0 +1,35 @@
+name: Seeds Refresh Weekly
+on:
+  schedule:
+    - cron: "0 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install xml parser
+        run: npm i fast-xml-parser@4 --no-save
+      - name: Build seed_domains.txt from RSS
+        env:
+          SEEDS_MAX: "500"
+        run: node scripts/seeds_refresh.js
+      - name: Commit changes
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add data/seed_domains.txt
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "seeds: refresh from RSS"
+            git pull --rebase --autostash || true
+            git push
+          fi
