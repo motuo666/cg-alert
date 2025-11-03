@@ -1,0 +1,15 @@
+{
+  "base": 20,
+  "step": 10,
+  "max": 60,
+  "min": 10,
+  "guard": {
+    "unsub7": 3,
+    "complaintRate": 0.1,
+    "bounce7": 8
+  },
+  "soft": {
+    "complaintRate": 0.07,
+    "bounce7": 5
+  }
+}
