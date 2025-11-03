@@ -1,0 +1,3 @@
+Hi {{name}},
+We track vendor Pricing/ToS/DPA/Subprocessors/SLA and ship evidence cards (URL · timestamp · SHA256) you can paste into renewal emails.
+Reply and I'll send a quick sample pack.
