@@ -1,3 +1,0 @@
-We detected a public change on {Vendor}: {Topic} ({Date}).
-Impact: {Impact}. Opt-out anytime.
-See verifiable details → {PackUrl}
