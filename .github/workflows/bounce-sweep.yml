@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   sweep:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,9 +22,15 @@ jobs:
           IMAP_HOST: ${{ secrets.IMAP_HOST }}
           IMAP_USER: ${{ secrets.IMAP_USER }}
           IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          DEBUG_IMAPFLOW: 1
         run: |
           set +e
-          node scripts/bounce_sweep.js || true
+          node scripts/bounce_sweep.js
+          code=$?
+          if [ "$code" != "0" ]; then
+            echo "::warning::Bounce sweep skipped or failed (code=$code)."
+            exit 0
+          fi
       - name: Commit suppressions (staged-only)
         run: |
           set -e

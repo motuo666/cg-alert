@@ -23,7 +23,7 @@ jobs:
         run: npm i fast-xml-parser@4.4.0 --no-save
       - name: Run poller
         env:
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
         run: node scripts/poller.js
       - name: Commit evidence (idempotent)
         shell: bash
