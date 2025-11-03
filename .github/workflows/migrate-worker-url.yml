@@ -53,6 +53,9 @@ env:
 
 on: { workflow_dispatch: {} }
 permissions: { contents: write }
+on:
+  workflow_dispatch:
+
 jobs:
   migrate:
     runs-on: ubuntu-latest
