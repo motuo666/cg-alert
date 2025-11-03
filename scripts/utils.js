@@ -11,26 +11,29 @@ function findFirst(paths){
 
 function readCSVGuess(file){
   const txt = fs.readFileSync(file, 'utf8').replace(/\r\n/g,'\n').trim();
+  if(!txt) return [];
   const lines = txt.split('\n').filter(Boolean);
-  if(lines.length === 0) return [];
   const sep = (txt.indexOf('\t')>=0 && txt.indexOf(',')<0) ? '\t' : ',';
-  const header = lines[0].split(sep).map(s=>s.trim().toLowerCase());
-  const rows = [];
+  const head = parseLine(lines[0], sep);
+  const out = [];
   for(let i=1;i<lines.length;i++){
-    const raw = lines[i];
-    const cols = splitSmart(raw, sep);
-    const obj = {};
-    for(let j=0;j<header.length;j++) obj[header[j]] = (cols[j]||'').trim();
-    rows.push(obj);
+    const row = parseLine(lines[i], sep);
+    const o = {};
+    for(let j=0;j<head.length;j++){
+      const k = (head[j]||'').trim();
+      if(!k) continue;
+      o[k] = row[j]||'';
+    }
+    out.push(o);
   }
-  return rows;
+  return out;
 }
 
-function splitSmart(line, sep){
+function parseLine(line, sep){
   const out = []; let cur = ''; let q = false;
   for(let i=0;i<line.length;i++){
     const c = line[i];
-    if(c === '"'){ q = !q; cur += c; continue; }
+    if(c === '"'){ q = !q; continue; } // drop quotes
     if(!q && c === sep){ out.push(cur); cur=''; continue; }
     cur += c;
   }

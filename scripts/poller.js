@@ -1,21 +1,21 @@
-// scripts/poller.js (CommonJS auto-discovery)
+// scripts/poller.js (CommonJS)
 const fs = require('fs');
 const path = require('path');
 const { XMLParser, XMLBuilder } = require('fast-xml-parser');
 const { findFirst, readCSVGuess, ensureDir, log } = require('./utils.js');
 
 const SITE = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
-
 const vendorsPath = findFirst(['vendors/vendors.csv','data/vendors.csv','vendors.csv']);
-let vendors = ['example.com/pricing'];
+
+let vendors = ['vendorx.com/pricing'];
 if(vendorsPath){
-  try {
+  try{
     const rows = readCSVGuess(vendorsPath);
     const cols = Object.keys(rows[0]||{}).map(s=>s.toLowerCase());
     const key = cols.includes('url') ? 'url' : (cols[0]||'url');
-    vendors = rows.map(r => (r[key]||'').replace(/^https?:\/\//,'')).filter(Boolean);
+    vendors = rows.map(r => String(r[key]||'').replace(/^https?:\/\//,'')).filter(Boolean);
     log('loaded vendors:', vendors.length, 'from', vendorsPath);
-  } catch(e){ log('vendors.csv parse failed, fallback to demo', e.message); }
+  }catch(e){ log('vendors.csv parse failed, fallback:', e.message); }
 }
 
 const OUT_DIR = path.join(process.cwd(), 'reports');
@@ -25,10 +25,10 @@ function ensureRss(){
   ensureDir(OUT_DIR);
   if(!fs.existsSync(RSS)){
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:cg="https://www.cg-alert.com/ns">
+<rss version="2.0" xmlns:cg="https://www.cg-alert.com/ns" xml-stylesheet="type=text/xsl href='/reports/rss.xsl'">
   <channel>
     <title>CG Alert — Reports</title>
-    <link>${SITE}</link>
+    <link>${SITE}/reports/</link>
     <description>Evidence-backed vendor changes</description>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
   </channel>
@@ -39,7 +39,7 @@ function ensureRss(){
 
 function appendItem({title, summary, link, sourceUrl, sha}){
   const parser = new XMLParser({ ignoreAttributes:false, attributeNamePrefix:'@_' });
-  const builder = new XMLBuilder({ ignoreAttributes:false, attributeNamePrefix:'@_', format:true });
+  const builder = new XMLBuilder({ ignoreAttributes:false, attributeNamePrefix:'@_' });
   const doc = parser.parse(fs.readFileSync(RSS,'utf8'));
   const ch = doc.rss.channel;
   const item = {
@@ -52,13 +52,13 @@ function appendItem({title, summary, link, sourceUrl, sha}){
 }
 
 function shaDemo(input){
-  const n = Buffer.from(input).toString('hex').slice(0,16);
-  return `sha-${n}`;
+  return require('crypto').createHash('sha256').update(String(input)).digest('hex');
 }
 
 function main(){
   ensureRss();
-  vendors.forEach(v => {
+  const n = Math.max(1, vendors.length);
+  vendors.slice(0, n).forEach(v => {
     appendItem({
       title: `Change detected @ ${v}`,
       summary: `Potential update at ${v}. Verify & escalate if material.`,
