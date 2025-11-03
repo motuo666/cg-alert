@@ -1,35 +1,38 @@
-// scripts/lead_auto_expand.js (refined filters)
+// scripts/lead_auto_expand.js (configurable width)
 const fs = require('fs'); const path = require('path');
 const { XMLParser } = require('fast-xml-parser');
 const fetch = global.fetch;
 
-const MAX_FETCH = parseInt(process.env.AUTOEXPAND_MAX_FETCH || '50', 10);
-const URL_RE = /(\/pricing(\/|$))|(\/terms(\/|$))|(\/legal(\/|$))|(\/dpa(\/|$))|(\/data\-processing(\/|$))|(\/subprocessors?(\/|$))|(\/security(\/|$))|(\/status(\/|$))/i;
+function loadJSON(p, fb){ try{ return JSON.parse(fs.readFileSync(p,'utf8')); }catch{ return fb; } }
+const rules = loadJSON('config/expand_rules.json', {"mode":"balanced","keywords":{"balanced":["pricing","terms","dpa","subprocessors","security","status"]},"max_fetch":50});
+
+const MODE = (process.env.AUTOEXPAND_MODE || rules.mode || 'balanced').toLowerCase();
+const KEYWORDS = (rules.keywords && rules.keywords[MODE]) ? rules.keywords[MODE] : (rules.keywords?.balanced || ["pricing","terms","dpa","subprocessors"]);
+const MAX_FETCH = parseInt(process.env.AUTOEXPAND_MAX_FETCH || rules.max_fetch || '50', 10);
+
+function buildRegex(words){
+  const esc = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return new RegExp("(" + esc.map(w => `/${w}(\\/|$)`).join("|") + ")", "i");
+}
+const URL_RE = buildRegex(KEYWORDS);
 
 function readSeeds(){
   const f = 'data/seed_domains.txt';
   if(!fs.existsSync(f)) return [];
   return fs.readFileSync(f,'utf8').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
 }
-async function getRobots(domain){
+async function fetchText(u){
   try{
-    const r = await fetch(`https://${domain}/robots.txt`, {redirect:'follow'});
+    const r = await fetch(u, {redirect:'follow'});
     if(!r.ok) return '';
     return await r.text();
   }catch{return ''}
 }
+async function getRobots(domain){ return await fetchText(`https://${domain}/robots.txt`); }
 function parseSitemaps(robots){
   const out = [];
-  robots.split(/\r?\n/).forEach(l=>{
-    const m = /^sitemap:\s*(.+)$/i.exec(l.trim());
-    if(m) out.push(m[1].trim());
-  });
+  robots.split(/\r?\n/).forEach(l=>{ const m=/^sitemap:\s*(.+)$/i.exec(l.trim()); if(m) out.push(m[1].trim()); });
   return out;
-}
-async function fetchText(u){
-  const r = await fetch(u, {redirect:'follow'});
-  if(!r.ok) return '';
-  return await r.text();
 }
 function pickRelevant(xmlOrHtml, isXml){
   if(isXml){
@@ -91,5 +94,5 @@ function appendLeads(domain, emails){
       }
     }
   }
-  console.log(`auto-expand done. new_leads=${newCount} budget_left=${budget}`);
+  console.log(`auto-expand(${MODE}) done. new_leads=${newCount} budget_left=${budget}`);
 })();
