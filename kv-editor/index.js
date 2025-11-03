@@ -2,46 +2,113 @@ export default {
   async fetch(request, env, ctx) {
     const auth = request.headers.get("authorization") || "";
     if (!(await basicAuthOk(auth, env))) {
-      return new Response("Unauthorized", { status: 401, headers: { "WWW-Authenticate": 'Basic realm="CG Alert KV Editor"' } });
+      return new Response("Unauthorized", {
+        status: 401,
+        headers: { "WWW-Authenticate": 'Basic realm="CG Alert KV Editor"' },
+      });
     }
     const url = new URL(request.url);
     const path = url.pathname.replace(/\/+$/,"") || "/";
     if (path === "/") return htmlPage();
     if (path === "/api/load" && request.method === "GET") return apiLoad(env);
     if (path === "/api/save" && request.method === "POST") return apiSave(request, env);
+    if (path === "/api/ping") return json({ ok: true });
     return new Response("Not found", { status: 404 });
   }
 };
-async function basicAuthOk(authHeader, env) { if (!authHeader.startsWith("Basic ")) return false; try { const dec = atob(authHeader.slice(6)); const [u, p] = dec.split(":", 2); return u === (await env.ADMIN_USER) && p === (await env.ADMIN_PASS); } catch { return false; } }
-function json(obj, status=200) { return new Response(JSON.stringify(obj), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }); }
-async function apiLoad(env) { const keys = ["region_filter.json", "persona_rules.json", "blacklist.txt"]; const out = {}; for (const k of keys) out[k] = (await env.FILTERS.get(k)) || defaultValue(k); return json(out); }
-function defaultValue(k) { if (k === "region_filter.json") { return JSON.stringify({"mode":"allow","tld_allow":["com","io","ai","app","co","dev","net","org"],"tld_deny":["ru","cn","ir","pk"],"domain_allow_keywords":["cloud","data","saas","dev","app","ops","security","auth","log","status","legal"],"domain_deny_keywords":["blog","docs","support","help","community","statuspage.io"]}, null, 2); } if (k === "persona_rules.json") { return JSON.stringify({"mode":"any","include_keywords":["compliance","security","privacy","risk","vendor","subprocessor","dpa","terms","pricing","plans","sla"],"exclude_keywords":["careers","jobs","press","brand","cdn","blog"]}, null, 2); } return "# blacklist.txt\n# One domain per line. Supports *.example.com suffix.\n"; }
+
+async function basicAuthOk(authHeader, env) {
+  if (!authHeader.startsWith("Basic ")) return false;
+  try {
+    const dec = atob(authHeader.slice(6));
+    const [u, p] = dec.split(":", 2);
+    return u === (await env.ADMIN_USER) && p === (await env.ADMIN_PASS);
+  } catch { return false; }
+}
+
+function json(obj, status=200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store"
+    }
+  });
+}
+
+async function apiLoad(env) {
+  const keys = ["region_filter.json", "persona_rules.json", "blacklist.txt"];
+  const out = {};
+  for (const k of keys) out[k] = (await env.FILTERS.get(k)) || defaultValue(k);
+  return json(out);
+}
+
+function defaultValue(k) {
+  if (k === "region_filter.json") {
+    return JSON.stringify({
+      "mode": "allow",
+      "tld_allow": ["com","io","ai","app","co","dev","net","org"],
+      "tld_deny": ["ru","cn","ir","pk"],
+      "domain_allow_keywords": ["cloud","data","saas","dev","app","ops","security","auth","log","status","legal"],
+      "domain_deny_keywords": ["blog","docs","support","help","community","statuspage.io"]
+    }, null, 2);
+  }
+  if (k === "persona_rules.json") {
+    return JSON.stringify({
+      "mode": "any",
+      "include_keywords": ["compliance","security","privacy","risk","vendor","subprocessor","dpa","terms","pricing","plans","sla"],
+      "exclude_keywords": ["careers","jobs","press","brand","cdn","blog"]
+    }, null, 2);
+  }
+  return "# blacklist.txt\n# One domain per line. Supports *.example.com suffix.\n";
+}
+
 async function apiSave(request, env) {
-  const ctype = request.headers.get("content-type") || ""; let payload;
-  if (ctype.includes("application/json")) payload = await request.json(); else { const form = await request.formData(); payload = {"region_filter.json": form.get("region_filter.json"),"persona_rules.json": form.get("persona_rules.json"),"blacklist.txt": form.get("blacklist.txt")}; }
+  const ctype = request.headers.get("content-type") || "";
+  let payload;
+  if (ctype.includes("application/json")) payload = await request.json();
+  else {
+    const form = await request.formData();
+    payload = {
+      "region_filter.json": form.get("region_filter.json"),
+      "persona_rules.json": form.get("persona_rules.json"),
+      "blacklist.txt": form.get("blacklist.txt")
+    };
+  }
   try { JSON.parse(payload["region_filter.json"]); } catch { return json({ ok:false, error:"region_filter.json 无法解析为 JSON" }, 400); }
   try { JSON.parse(payload["persona_rules.json"]); } catch { return json({ ok:false, error:"persona_rules.json 无法解析为 JSON" }, 400); }
+
   await env.FILTERS.put("region_filter.json", payload["region_filter.json"]);
   await env.FILTERS.put("persona_rules.json", payload["persona_rules.json"]);
   await env.FILTERS.put("blacklist.txt", payload["blacklist.txt"] || "");
+
   let dispatched = false;
   if ((env.ENABLE_DISPATCH || "false").toString() === "true") {
-    const repo = env.GH_REPO; const token = await env.GH_TOKEN;
+    const repo = env.GH_REPO;         // e.g. "yourname/cg-alert"
+    const token = await env.GH_TOKEN; // Worker secret
     if (repo && token) {
       try {
+        // 1) Kick KV Sync in repo (repository_dispatch: kv_sync_kick)
         const r1 = await fetch(`https://api.github.com/repos/${repo}/dispatches`, {
           method: "POST",
-          headers: { "Authorization": `Bearer ${token}`, "Accept": "application/vnd.github+json", "content-type": "application/json" },
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/vnd.github+json",
+            "content-type": "application/json"
+          },
           body: JSON.stringify({ event_type: "kv_sync_kick" })
         });
+        // 2) Let repo chain kick Autopilot after sync (kv-filters-sync.yml will do)
         dispatched = r1.ok;
       } catch (e) {}
     }
   }
+
   return json({ ok: true, dispatched });
 }
+
 function htmlPage() {
-  const H = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  const html = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CG Alert — KV Filters Editor</title>
 <meta name="robots" content="noindex,nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'">
@@ -71,10 +138,21 @@ function htmlPage() {
 </main>
 <script>
   const msg = (s, ok=false)=>{ const el=document.getElementById('msg'); el.innerHTML = ok? '<span class="ok">✅ '+s+'</span>' : '<span class="err">⚠ '+s+'</span>'; };
-  const load = async ()=>{ try{ const r = await fetch('/api/load'); const j = await r.json(); region.value = j['region_filter.json'] || ''; persona.value = j['persona_rules.json'] || ''; blacklist.value = j['blacklist.txt'] || ''; msg('已加载，编辑后点“保存”', true); }catch(e){ msg('加载失败：'+e); } };
-  const save = async ()=>{ try{ const body = { 'region_filter.json': region.value, 'persona_rules.json': persona.value, 'blacklist.txt': blacklist.value }; const r = await fetch('/api/save', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)}); const j = await r.json(); if(j.ok){ msg('已保存到 KV；如开启自动触发，将立即发送 KV Sync 事件', true); } else { msg('保存失败：'+(j.error||'未知错误')); } }catch(e){ msg('保存失败：'+e); } };
-  document.addEventListener('click', (e)=>{ if(e.target && e.target.id==='save') save(); if(e.target && e.target.id==='reload') load(); });
+  const load = async ()=>{
+    try{
+      const r = await fetch('/api/load'); const j = await r.json();
+      region.value = j['region_filter.json'] || ''; persona.value = j['persona_rules.json'] || ''; blacklist.value = j['blacklist.txt'] || '';
+      msg('已加载，编辑后点“保存”', true);
+    }catch(e){ msg('加载失败：'+e); }
+  };
+  const save = async ()=>{
+    try{
+      const body = { 'region_filter.json': region.value, 'persona_rules.json': persona.value, 'blacklist.txt': blacklist.value };
+      const r = await fetch('/api/save', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
+      const j = await r.json();
+      if(j.ok){ msg('已保存到 KV；如开启自动触发，将立即发送 KV Sync 事件', true); } else { msg('保存失败：'+(j.error||'未知错误')); }
+    }catch(e){ msg('保存失败：'+e); }
+  };
+  saveBtnInit(); function saveBtnInit(){ const s=document.getElementById('save'); s.onclick=save; document.getElementById('reload').onclick=load; }
   load();
-</script>`;
-  return new Response(H, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
-}
+</script>
