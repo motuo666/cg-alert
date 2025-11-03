@@ -26,19 +26,23 @@ jobs:
       TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || '10' }}
       TTD_LOOKBACK_HOURS: ${{ vars.TTD_LOOKBACK_HOURS || '48' }}
       REQUIRE_CHANGED_VENDORS: ${{ vars.REQUIRE_CHANGED_VENDORS || 'true' }}
-      OUTREACH_LIMIT: ${{ vars.TARGET_SENT || '12' }}
       OUTREACH_WINDOW_H: ${{ vars.WINDOW_H || '336' }}
       OUTREACH_DRY_DEFAULT: ${{ vars.OUTREACH_DRY_DEFAULT || 'false' }}
       FORCE_MIN_SEND: ${{ vars.FORCE_MIN_SEND || 'false' }}
       UNSUB_7D_MAX: ${{ vars.UNSUB_7D_MAX || '3' }}
       COMPLAINT_7D_MAX: ${{ vars.COMPLAINT_7D_MAX || '0.1' }}
       BOUNCE_7D_MAX: ${{ vars.BOUNCE_7D_MAX || '8' }}
+      TARGET_SENT: ${{ vars.TARGET_SENT || '20' }}
     steps:
       - uses: actions/checkout@v4
       - name: KPI Guard (auto-dry on breach)
         id: kpi
         run: node outreach/kpi_guard.js
+      - name: Compute safe OUTREACH_LIMIT
+        id: compute
+        run: node outreach/compute_limit.js
       - name: Gate & dispatch Outreach Triggered
         env:
+          OUTREACH_LIMIT: ${{ steps.compute.outputs.limit }}
           OUTREACH_DRY_DEFAULT: ${{ steps.kpi.outputs.outreach_dry }}
         run: node outreach/gate_and_dispatch.js
