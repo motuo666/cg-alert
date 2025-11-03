@@ -1,0 +1,36 @@
+{
+  "mode": "balanced",
+  "keywords": {
+    "narrow": [
+      "dpa",
+      "data-processing",
+      "subprocessors",
+      "terms"
+    ],
+    "balanced": [
+      "pricing",
+      "terms",
+      "legal",
+      "dpa",
+      "data-processing",
+      "subprocessors",
+      "security",
+      "status"
+    ],
+    "wide": [
+      "pricing",
+      "terms",
+      "legal",
+      "dpa",
+      "data-processing",
+      "subprocessors",
+      "security",
+      "status",
+      "trust",
+      "sla",
+      "policy",
+      "agreement"
+    ]
+  },
+  "max_fetch": 50
+}
