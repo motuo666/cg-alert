@@ -29,7 +29,7 @@ jobs:
           git commit -m "seo: inject canonical & meta description"
           git push
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: meta_inject
           path: artifacts/meta_inject.txt
