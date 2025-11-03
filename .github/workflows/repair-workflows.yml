@@ -1,0 +1,29 @@
+name: Repair Workflows
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run repair script
+        run: |
+          python3 scripts/ci/repair_workflows.py
+      - name: Commit repaired workflows
+        run: |
+          set -e
+          if git diff --quiet .github/workflows; then
+            echo "no changes"
+            exit 0
+          fi
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add .github/workflows
+          git commit -m "repair: canonicalize top-level env and remove invalid gates"
+          git push
