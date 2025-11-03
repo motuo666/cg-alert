@@ -1,8 +1,4 @@
-// scripts/customer_digest.js
-/**
- * Send email digest to customers based on cadence (daily/weekly).
- * customers.csv: email,company,tier,cadence,vendors   (vendors: comma separated domains)
- */
+// scripts/customer_digest.js (brand tone + x个证据 summary)
 const fs = require('fs'); const path = require('path');
 const { XMLParser } = require('fast-xml-parser');
 const nodemailer = require('nodemailer');
@@ -13,6 +9,7 @@ const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
 const FROM = process.env.MAIL_FROM || 'CG Alert <ops@cg-alert.com>';
 const REPLY_TO = process.env.REPLY_TO || 'Jason <ops@cg-alert.com>';
+const LIMIT = parseInt(process.env.DIGEST_LIMIT || '10', 10);
 
 function readCSV(file){
   const txt = fs.readFileSync(file,'utf8').replace(/\r\n/g,'\n').trim();
@@ -25,27 +22,36 @@ function rssItems(){
   const xml = fs.readFileSync('reports/rss.xml','utf8');
   const p = new XMLParser({ignoreAttributes:false, attributeNamePrefix:'@_'});
   const doc = p.parse(xml); const items = doc?.rss?.channel?.item || [];
-  return Array.isArray(items) ? items : [items];
+  const arr = Array.isArray(items)?items:[items];
+  return arr.filter(Boolean);
 }
 function filterByVendors(items, vendors){
-  if(!vendors || vendors.length===0) return items.slice(-10);
+  if(!vendors || vendors.length===0) return items.slice(-LIMIT);
   const doms = vendors.map(v=>String(v).toLowerCase().trim()).filter(Boolean);
   return items.filter(it => {
     const src = String(it['cg:sourceUrl']||'').toLowerCase();
     return doms.some(d => src.includes(d));
-  }).slice(-10);
+  }).slice(-LIMIT);
 }
-function weekday(){
-  return new Date().getDay(); // 0 Sun, 1 Mon ...
-}
-function due(cadence){
-  if(cadence==='daily') return true;
-  if(cadence==='weekly') return weekday()===1; // Monday
-  return false;
+function groupByVendor(items){
+  const map = new Map();
+  for(const it of items){
+    const src = String(it['cg:sourceUrl']||'');
+    const host = (()=>{ try { return new URL(src).host; } catch { return 'vendor'; } })();
+    if(!map.has(host)) map.set(host, []);
+    map.get(host).push(it);
+  }
+  return map;
 }
 function htmlFor(company, list){
-  const rows = list.map(it => `<li><b>${it.title||''}</b><br/><small>${it['cg:sourceUrl']||''} · ${it['cg:sha256']||''}</small></li>`).join('');
-  return `<p>${company} — your latest evidence:</p><ul>${rows}</ul><p>Use the copyable language in each card to push back at renewal.</p>`;
+  const total = list.length;
+  const g = groupByVendor(list);
+  let blocks = '';
+  for(const [host, arr] of g.entries()){
+    const lis = arr.map(it => `<li>${it.title||''}<br/><small>${it['cg:sourceUrl']||''} · ${it['cg:sha256']||''}</small></li>`).join('');
+    blocks += `<h4 style="margin:12px 0 6px">${host}</h4><ul>${lis}</ul>`;
+  }
+  return `<p style="margin:0 0 8px"><b>${company}</b>，这是你最近的证据更新：<b>${total} 个证据</b>（可核验：URL / 时间戳 / SHA256）。</p>${blocks}<p style="margin-top:12px">需要“续约对话可直接粘贴”的措辞包？直接回复邮箱即可。</p>`;
 }
 
 (async function main(){
@@ -55,12 +61,14 @@ function htmlFor(company, list){
   const transport = nodemailer.createTransport({ host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT===465, auth: {user: SMTP_USER, pass: SMTP_PASS} });
   let sent=0;
   for(const c of cust){
-    if(!due((c.cadence||'').toLowerCase())) continue;
+    const cadence = (c.cadence||'weekly').toLowerCase();
+    if(cadence==='weekly' && new Date().getDay()!==1) continue; // Monday
+    // daily: always due
     const vendors = (c.vendors||'').split(/[ ,;]+/).filter(Boolean);
     const list = filterByVendors(items, vendors);
     if(list.length===0) continue;
     const html = htmlFor(c.company||'Your account', list);
-    await transport.sendMail({ from: FROM, to: c.email, subject: 'Your CG Alert evidence digest', html, replyTo: REPLY_TO });
+    await transport.sendMail({ from: FROM, to: c.email, subject: `CG Alert — 你有 ${list.length} 个新证据`, html, replyTo: REPLY_TO });
     sent++;
   }
   const mdir='data/metrics'; fs.mkdirSync(mdir,{recursive:true});

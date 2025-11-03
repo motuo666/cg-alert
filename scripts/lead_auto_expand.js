@@ -1,13 +1,10 @@
-// scripts/lead_auto_expand.js
-/**
- * Low-cost auto expansion: fetch robots.txt -> sitemap(s) -> scan limited pages for mailto.
- * Respects robots; caps total fetches.
- */
+// scripts/lead_auto_expand.js (refined filters)
 const fs = require('fs'); const path = require('path');
 const { XMLParser } = require('fast-xml-parser');
 const fetch = global.fetch;
 
-const MAX_FETCH = 50;
+const MAX_FETCH = parseInt(process.env.AUTOEXPAND_MAX_FETCH || '50', 10);
+const URL_RE = /(\/pricing(\/|$))|(\/terms(\/|$))|(\/legal(\/|$))|(\/dpa(\/|$))|(\/data\-processing(\/|$))|(\/subprocessors?(\/|$))|(\/security(\/|$))|(\/status(\/|$))/i;
 
 function readSeeds(){
   const f = 'data/seed_domains.txt';
@@ -29,23 +26,22 @@ function parseSitemaps(robots){
   });
   return out;
 }
-async function fetchXml(u){
+async function fetchText(u){
   const r = await fetch(u, {redirect:'follow'});
   if(!r.ok) return '';
   return await r.text();
 }
-function pickInterestingUrls(xml){
-  const p = new XMLParser({ignoreAttributes:false, attributeNamePrefix:'@_'});
-  try{
-    const doc = p.parse(xml);
-    const urls = (doc?.urlset?.url || []).map(u => u.loc).filter(Boolean);
-    return urls.filter(u => /pricing|terms|policy|privacy|dpa|subprocessor|sub-processor|security|status/i.test(u)).slice(0,15);
-  }catch{return []}
-}
-async function fetchPage(u){
-  const r = await fetch(u, {redirect:'follow'});
-  if(!r.ok) return '';
-  return await r.text();
+function pickRelevant(xmlOrHtml, isXml){
+  if(isXml){
+    try{
+      const p = new XMLParser({ignoreAttributes:false, attributeNamePrefix:'@_'});
+      const doc = p.parse(xmlOrHtml); const urls = (doc?.urlset?.url || []).map(u => u.loc).filter(Boolean);
+      return urls.filter(u => URL_RE.test(u)).slice(0, 20);
+    }catch{return []}
+  } else {
+    const links = Array.from(xmlOrHtml.matchAll(/href="([^"]+)"/gi)).map(m=>m[1]);
+    return links.filter(u => /^https?:\/\//.test(u) && URL_RE.test(u)).slice(0, 20);
+  }
 }
 function extractEmails(html){
   const out = new Set();
@@ -61,7 +57,7 @@ function appendLeads(domain, emails){
   let added = 0;
   emails.forEach(e => {
     if(exist.has(e)) return;
-    const row = [e,'','Legal/Procurement','',''+domain,'','discovered'].join(',') + '\n';
+    const row = [e,'','Legal/Procurement','',domain,'','discovered'].join(',') + '\n';
     fs.appendFileSync(file, row); added++;
   });
   return added;
@@ -74,17 +70,26 @@ function appendLeads(domain, emails){
     if(budget<=0) break;
     const robots = await getRobots(domain);
     const sitemaps = parseSitemaps(robots);
+    if(sitemaps.length===0){
+      const html = await fetchText(`https://${domain}`); budget--;
+      const links = pickRelevant(html, false);
+      for(const u of links){
+        if(budget<=0) break;
+        const page = await fetchText(u); budget--;
+        newCount += appendLeads(domain, extractEmails(page));
+      }
+      continue;
+    }
     for(const sm of sitemaps){
       if(budget<=0) break;
-      const xml = await fetchXml(sm); budget--;
-      const pages = pickInterestingUrls(xml);
+      const xml = await fetchText(sm); budget--;
+      const pages = pickRelevant(xml, true);
       for(const u of pages){
         if(budget<=0) break;
-        const html = await fetchPage(u); budget--;
-        const emails = extractEmails(html);
-        newCount += appendLeads(domain, emails);
+        const html = await fetchText(u); budget--;
+        newCount += appendLeads(domain, extractEmails(html));
       }
     }
   }
-  console.log(`auto-expand done. new_leads=${newCount}`);
+  console.log(`auto-expand done. new_leads=${newCount} budget_left=${budget}`);
 })();
