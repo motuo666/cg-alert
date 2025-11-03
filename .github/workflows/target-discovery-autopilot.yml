@@ -25,18 +25,13 @@ jobs:
     env:
       DRY: ${{ inputs.dry || 'false' }}
       DISCOVERY_MAX: ${{ inputs.max_new || '200' }}
-      DISCOVERY_CONCURRENCY: "12"
-      DISCOVERY_PER_HOST_DELAY_MS: "200"
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Discover targets
-        run: node scripts/discovery/discover_targets.js
-      - name: Expand endpoints
-        run: node scripts/discovery/expand_endpoints.js
-      - name: Commit updates
+        with: { fetch-depth: 0 }
+      - name: Run target discovery
+        run: node scripts/target_discovery.js
+      - name: Commit discovery artifacts
         run: |
           set -e
           if git diff --quiet; then
@@ -54,3 +49,9 @@ jobs:
           DOMAINS=$(cat artifacts/endpoints_count.txt 2>/dev/null || echo "0")
           PAYLOAD=$(jq -n --arg t "Target Discovery" --arg d "$DISCOVERED" --arg e "$DOMAINS" '{text: ($t + ": discovered=" + $d + ", endpoints=" + $e)}')
           curl -s -X POST -H 'Content-type: application/json' --data "$PAYLOAD" "$SLACK_WEBHOOK_URL" || true
+      - name: Kick Poller (repository_dispatch)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          curl -s -X POST             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             https://api.github.com/repos/$REPO/dispatches             -d '{"event_type":"poller_kick"}'
