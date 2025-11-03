@@ -1,0 +1,54 @@
+
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>monday.com – snapshot 2025-11-03T18-45-08-956Z</title>
+<body style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;font-size:.9rem;line-height:1.4;color:#111;padding:1rem;">
+<h1 style="font-size:1rem;font-weight:600;margin:0 0 1rem 0;">monday.com</h1>
+<div style="font-size:.8rem;color:#555;">Source URL: https://monday.com/pricing</div>
+<div style="font-size:.8rem;color:#555;">Captured: 2025-11-03T18-45-08-956Z</div>
+<div style="font-size:.8rem;color:#555;">SHA256: 96e170f2a3d351a6d2b4b314317bcb22a932812b8e9fe0ac3a8d6bd75474f76e</div>
+<pre style="white-space:pre-wrap;font-size:.7rem;color:#000;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;padding:.5rem;margin-top:1rem;">&lt;!DOCTYPE html&gt;&lt;html id="main-html" lang="en"&gt;&lt;head&gt;&lt;meta charSet="utf-8"/&gt;&lt;script&gt;
+        
+		
+		const cookieValueByName = cookieName =&gt; {
+			if (!cookieName) return null;
+			var b = document.cookie.match('(^|;)\\s*' + cookieName + '\\s*=\\s*([^;]+)');
+			return b ? b.pop() : null;
+		}
+
+		const onlyNewFirstUserSlug = (date) =&gt; {
+			try {
+				let slugsFromCookie = cookieValueByName("monday_slug_details");
+				let slugs = [];
+				if (slugsFromCookie) {
+					slugsFromCookie = decodeURIComponent(slugsFromCookie);
+					slugs = JSON.parse(slugsFromCookie);
+				}
+				const newSlugs = slugs.filter((slug) =&gt; slug.ac && new Date(slug.ac) &gt;= date && slug.us === 1);
+				return slugs.length &gt; 0 && newSlugs.length === slugs.length;
+			}
+			catch {
+				return false
+			}
+		}
+
+        const lastActiveSlug = cookieValueByName('dapulseLastLoginAccount');  // cookieValueByName defined inside getSlugDataInlineScript
+        const noRedirectCookieValue = cookieValueByName('hp_no_redirect') === "true";
+        
+        const preventRedirect = noRedirectCookieValue || window.location.search.indexOf('no-redirect') &gt; 0;
+
+        if(lastActiveSlug && !preventRedirect) {
+          var appUrl = "//"+lastActiveSlug + ".monday.com";
+          var path = window.location.pathname.trim();;
+
+          const isPricingPage = path.includes("pricing");
+          if (isPricingPage) {
+             // do nothing - not in redirect variant 
+          }
+          else {
+            window.location.replace(appUrl);
+          }
+        }
+    &lt;/script&gt;&lt;title&gt;monday.com pricing and plans&lt;/title&gt;&lt;meta name="description" content="Starting from $9 per user per month, monday.com’s pricing has a plan for everyone."/&gt;&lt;link rel="canonical" href="https://monday.com/pricing"/&gt;&lt;link rel="preload" href="/static/fonts/poppins/poppins-v20-latin-200.woff2" as="font" type="font/woff2" crossorigin="anonymous"/&gt;&lt;link rel="preload" href="/static/fonts/poppins/poppins-v20-latin-300.woff2" as="font" type="font/woff2" crossorigin="an</pre>
+</body></html>
