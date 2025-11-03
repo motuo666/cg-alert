@@ -51,8 +51,6 @@ env:
   BOUNCE_7D_MAX: "${{ vars.BOUNCE_7D_MAX }}"
   REQUIRE_CHANGED_VENDORS: "${{ vars.REQUIRE_CHANGED_VENDORS }}"
 
-on: { workflow_dispatch: {} }
-permissions: { contents: write }
 on:
   workflow_dispatch:
 
