@@ -1,0 +1,29 @@
+name: Endpoint Backoff Sweeper
+on:
+  schedule:
+    - cron: "30 17 * * *"  # 02:30 JST daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run backoff sweeper
+        run: node scripts/discovery/endpoint_backoff_sweeper.js
+      - name: Commit endpoints & queue if changed
+        run: |
+          if git diff --quiet; then
+            echo "no changes"
+          else
+            git config user.email "bot@cg-alert.com"
+            git config user.name  "cg-alert-bot"
+            git add config/endpoints.json config/retry_queue.json
+            git commit -m "discovery: backoff sweeper update"
+            git push
+          fi

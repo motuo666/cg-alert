@@ -1,0 +1,56 @@
+name: Drift Guard
+on:
+  schedule:
+    - cron: "50 22 * * *"   # 07:50 JST daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+      WORKER_URL:  ${{ vars.WORKER_URL }}
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
+      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO }}
+      STRIPE_LINK_BUSINESS:  ${{ vars.STRIPE_LINK_BUSINESS  || secrets.STRIPE_LINK_BUSINESS  }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      IMAP_HOST: ${{ secrets.IMAP_HOST }}
+      IMAP_USER: ${{ secrets.IMAP_USER }}
+      IMAP_PASS: ${{ secrets.IMAP_PASS }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Check required Vars/Secrets
+        run: |
+          set -e
+          MISSING=0
+          req=(SITE_ORIGIN WORKER_URL INTAKE_FORM_URL STRIPE_LINK_PORTFOLIO SMTP_HOST SMTP_USER SMTP_PASS IMAP_HOST IMAP_USER IMAP_PASS)
+          for k in "${req[@]}"; do
+            v="${!k}"
+            if [ -z "$v" ]; then echo "::error::$k is missing"; MISSING=1; fi
+          done
+          if [ "$MISSING" -eq 1 ]; then
+            echo "Missing critical vars/secrets"; exit 1
+          fi
+          echo "Vars/Secrets OK"
+      - name: Site smoke (core routes)
+        run: |
+          set -e
+          test -n "$SITE_ORIGIN"
+          routes=(/ /pricing /vendors /reports /rss /seo/ /terms /privacy)
+          for r in "${routes[@]}"; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$SITE_ORIGIN$r")
+            if [ "$code" -lt 200 ] || [ "$code" -ge 400 ]; then
+              echo "::error::Smoke failed $r -> $code"; exit 1
+            fi
+          done
+          echo "Smoke OK"
+      - name: Slack notify (optional)
+        if: env.SLACK_WEBHOOK_URL != ''
+        run: |
+          curl -s -X POST -H 'Content-type: application/json' \
+            --data '{"text":"Drift Guard ✅ Vars/Secrets & Smoke OK"}' "$SLACK_WEBHOOK_URL" || true

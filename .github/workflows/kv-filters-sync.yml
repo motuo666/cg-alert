@@ -1,0 +1,47 @@
+name: KV Filters Sync
+on:
+  schedule:
+    - cron: "15 23 * * *"  # 08:15 JST daily (before Autopilot)
+  workflow_dispatch:
+  repository_dispatch:
+    types: [kv_sync_kick]
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    env:
+      CF_ACCOUNT_ID: ${{ vars.CF_ACCOUNT_ID }}
+      KV_NAMESPACE_ID: ${{ vars.KV_NAMESPACE_ID }}
+      KV_FILTERS_ID: ${{ vars.KV_FILTERS_ID }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch KV filters (best-effort)
+        run: node scripts/config/fetch_kv_filters.js
+      - name: Commit if changed
+        run: |
+          if git diff --quiet; then
+            echo "no changes"
+          else
+            git config user.email "bot@cg-alert.com"
+            git config user.name  "cg-alert-bot"
+            git add config/region_filter.json config/persona_rules.json config/blacklist.txt artifacts/kv_sync.txt || true
+            git commit -m "config: sync filters from KV"
+            git push
+          fi
+      - name: Kick Autopilot (repository_dispatch)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          curl -s -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$REPO/dispatches \
+            -d '{"event_type":"autopilot_kick"}'
