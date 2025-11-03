@@ -4,8 +4,8 @@ on:
 
 permissions:
   contents: write
-  workflows: write
   pull-requests: write
+  workflow: write
 
 jobs:
   patch:
