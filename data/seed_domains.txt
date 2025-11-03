@@ -44,8 +44,6 @@ customer.io
 hubspot.com
 marketo.com
 adobe.com
-clearbit.com
-gong.io
 vercel.com
 netlify.com
 heroku.com
