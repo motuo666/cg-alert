@@ -1,0 +1,10 @@
+# config/blacklist.txt
+# One domain per line, exact match or suffix *.example.com supported.
+google.com
+facebook.com
+twitter.com
+linkedin.com
+youtube.com
+docs.github.com
+*.gstatic.com
+*.doubleclick.net

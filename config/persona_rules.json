@@ -1,19 +1,24 @@
 {
-  "allow_personas": ["LI", "SEC", "PROC", "GEN"],
-  "caps": {
-    "domain_cap": 4,
-    "domain_window_d": 7,
-    "email_cooldown_d": 7,
-    "vendor_company_d": 7
-  },
-  "safety": {
-    "unsub_pct_max": 0.5,
-    "bounce_pct_max": 8.0,
-    "complaint_pct_max": 0.1
-  },
-  "utm": {
-    "source": "email",
-    "medium": "triggered",
-    "campaign": "cp_202510"
-  }
+  "mode": "any",
+  "include_keywords": [
+    "compliance",
+    "security",
+    "privacy",
+    "risk",
+    "vendor",
+    "subprocessor",
+    "dpa",
+    "terms",
+    "pricing",
+    "plans",
+    "sla"
+  ],
+  "exclude_keywords": [
+    "careers",
+    "jobs",
+    "press",
+    "brand",
+    "cdn",
+    "blog"
+  ]
 }
