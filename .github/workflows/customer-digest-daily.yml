@@ -1,0 +1,25 @@
+name: Customer Digest (daily for Business/Enterprise)
+on:
+  schedule:
+    - cron: '15 1 * * *'     # 10:15 JST daily
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  digest:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm i nodemailer@6 fast-xml-parser@4.4.0 --no-save
+      - name: Send customer digest
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ vars.MAIL_FROM }}
+          REPLY_TO:  ${{ vars.REPLY_TO }}
+        run: node scripts/customer_digest.js

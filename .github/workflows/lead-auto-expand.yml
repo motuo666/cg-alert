@@ -1,0 +1,30 @@
+name: Lead Auto-Expand (low frequency)
+on:
+  schedule:
+    - cron: '0 5 * * 2,5'    # 14:00 JST Tue,Fri
+  workflow_dispatch:
+
+permissions: { contents: write }
+
+jobs:
+  expand:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm i fast-xml-parser@4.4.0 --no-save
+      - name: Expand from seeds (robots-aware)
+        run: node scripts/lead_auto_expand.js
+      - name: Commit new leads
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add data/leads.csv
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "leads: auto-expand from seeds"
+            git pull --rebase --autostash || true
+            git push
+          fi

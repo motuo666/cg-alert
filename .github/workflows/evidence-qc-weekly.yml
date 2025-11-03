@@ -1,0 +1,30 @@
+name: Evidence QC (weekly)
+on:
+  schedule:
+    - cron: '0 4 * * 1'      # 13:00 JST Monday
+  workflow_dispatch:
+
+permissions: { contents: write }
+
+jobs:
+  qc:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm i fast-xml-parser@4.4.0 --no-save
+      - name: Run QC (pick 3)
+        run: node scripts/evidence_qc.js
+      - name: Commit QC report
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add data/qc/latest.md
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "qc: weekly evidence spot-check (3 items)"
+            git pull --rebase --autostash || true
+            git push
+          fi

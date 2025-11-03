@@ -1,0 +1,32 @@
+name: Ramp Guard (monthly)
+on:
+  schedule:
+    - cron: '0 3 1 * *'      # 12:00 JST first of month
+  workflow_dispatch:
+
+permissions: { contents: write }
+
+jobs:
+  guard:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm i fast-xml-parser@4.4.0 --no-save
+      - name: Aggregate (latest) then decide ramp
+        run: |
+          node scripts/metrics_aggregate.js
+          node scripts/ramp_guard.js
+      - name: Commit ramp config
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add config/ramp.json data/metrics/*
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "ramp: auto-guard update"
+            git pull --rebase --autostash || true
+            git push
+          fi
