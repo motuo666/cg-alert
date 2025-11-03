@@ -34,7 +34,6 @@ confluent.io,Confluent,Global
 snowflake.com,Snowflake,Global
 databricks.com,Databricks,Global
 tableau.com,Tableau,Global
-powerbi.microsoft.com,Power BI,Global
 segment.com,Segment,Global
 amplitude.com,Amplitude,Global
 mixpanel.com,Mixpanel,Global
@@ -45,13 +44,8 @@ customer.io,Customer.io,Global
 hubspot.com,HubSpot,Global
 marketo.com,Marketo,Global
 adobe.com,Adobe,Global
-dropcontact.com,Dropcontact,Global
 clearbit.com,Clearbit,Global
 gong.io,Gong,Global
-chorus.ai,Chorus,Global
-navigator.linkedin.com,LinkedIn Navigator,Global
-hackerone.com,HackerOne,Global
-bugcrowd.com,Bugcrowd,Global
 vercel.com,Vercel,Global
 netlify.com,Netlify,Global
 heroku.com,Heroku,Global
@@ -62,8 +56,6 @@ cloud.google.com,Google Cloud,Global
 aws.amazon.com,AWS,Global
 azure.microsoft.com,Azure,Global
 digitalocean.com,DigitalOcean,Global
-linode.com,Linode,Global
-vultr.com,Vultr,Global
 fastly.com,Fastly,Global
 akamai.com,Akamai,Global
 algolia.com,Algolia,Global
@@ -79,15 +71,11 @@ fullstory.com,FullStory,Global
 smartlook.com,Smartlook,Global
 hightouch.com,Hightouch,Global
 fivetran.com,Fivetran,Global
-stitchdata.com,Stitch,Global
 airbyte.com,Airbyte,Global
 hevodata.com,Hevo,Global
-segmentapis.com,Segment APIs,Global
 census.com,Census,Global
 githubstatus.com,GitHub Status,Global
 circleci.com,CircleCI,Global
-travis-ci.com,Travis CI,Global
-githubactions.com,GitHub Actions,Global
 snyk.io,Snyk,Global
 sonarsource.com,SonarSource,Global
 jetbrains.com,JetBrains,Global
@@ -102,23 +90,17 @@ wasabi.com,Wasabi,Global
 cloudinary.com,Cloudinary,Global
 imgix.com,Imgix,Global
 mux.com,Mux,Global
-wistia.com,Wistia,Global
 vimeo.com,Vimeo,Global
-sendinblue.com,Brevo,Global
 mailgun.com,Mailgun,Global
-authentik.io,Authentik,Global
 duo.com,Duo Security,Global
 1password.com,1Password,Global
 lastpass.com,LastPass,Global
 keepersecurity.com,Keeper,Global
 crowdstrike.com,CrowdStrike,Global
 sentinelone.com,SentinelOne,Global
-darktrace.com,Darktrace,Global
 rapid7.com,Rapid7,Global
 qualys.com,Qualys,Global
 tenable.com,Tenable,Global
 cloudflarestatus.com,Cloudflare Status,Global
-paypal.com,PayPal,Global
-braintreepayments.com,Braintree,Global
 adyen.com,Adyen,Global
 squareup.com,Square,Global
