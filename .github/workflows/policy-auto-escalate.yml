@@ -1,0 +1,60 @@
+name: Policy Auto-Escalate
+on:
+  schedule:
+    - cron: "20 12 * * *"   # 21:20 JST daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    env:
+      MIN_SENT7_FOR_DLVR: "${{ vars.MIN_SENT7_FOR_DLVR || '120' }}"
+      UNSUB_7D_MAX: "${{ vars.UNSUB_7D_MAX || '1.0' }}"
+      BOUNCE_7D_MAX: "${{ vars.BOUNCE_7D_MAX || '5.0' }}"
+      COMPLAINT_7D_MAX: "${{ vars.COMPLAINT_7D_MAX || '0.1' }}"
+      TARGET_EVID_TODAY: "${{ vars.TARGET_EVID_TODAY || '10' }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - name: Compute rolling KPIs (7d/14d)
+        id: kpi
+        run: node ops/compute_rolling_kpis.js
+
+      - name: Read current max
+        id: cur
+        run: echo "current=$(node -e \"process.stdout.write(String(require('./config/volume_policy.json').max))\")" >> $GITHUB_OUTPUT
+
+      - name: Decide & apply (escalate to 100)
+        if: steps.kpi.outputs.ok == 'true' && steps.cur.outputs.current != '100'
+        run: |
+          node ops/set_policy_max.js 100
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add config/volume_policy.json reports/metrics/rolling.json
+          git commit -m "policy: auto-escalate max to 100 (kpi ok: ${{ steps.kpi.outputs.reason }})"
+          git pull --rebase --autostash || true
+          git push
+
+      - name: Decide & apply (de-escalate to 80)
+        if: steps.kpi.outputs.ok != 'true' && steps.cur.outputs.current != '80'
+        run: |
+          node ops/set_policy_max.js 80
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add config/volume_policy.json reports/metrics/rolling.json
+          git commit -m "policy: auto-de-escalate max to 80 (kpi fail: ${{ steps.kpi.outputs.reason }})"
+          git pull --rebase --autostash || true
+          git push
+
+      - name: Persist metrics only (no policy change)
+        if: steps.kpi.outputs.ok == 'true' && steps.cur.outputs.current == '100' || steps.kpi.outputs.ok != 'true' && steps.cur.outputs.current == '80'
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add reports/metrics/rolling.json
+          if git diff --cached --quiet; then echo "no metric changes"; else git commit -m "metrics: rolling kpis"; git push; fi
