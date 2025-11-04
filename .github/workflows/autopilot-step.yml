@@ -18,4 +18,10 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           OUTREACH_WORKFLOW_FILE: ${{ vars.OUTREACH_WORKFLOW_FILE || 'outreach-triggered.yml' }}
           AUTOPILOT_REF: ${{ github.ref_name }}
-        run: node scripts/ops/autopilot_step.js
+        run: |
+  set -e
+  if [ "${{ vars.ENABLE_AUTOPILOT || 'false' }}" != "true" ]; then
+    echo "Autopilot disabled via vars"; exit 0; fi
+  if [ ! -f scripts/ops/autopilot_step.js ]; then
+    echo "scripts/ops/autopilot_step.js missing; skipping"; exit 0; fi
+  node scripts/ops/autopilot_step.js
