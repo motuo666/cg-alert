@@ -1,27 +1,31 @@
 name: Autopilot Step
+
 on:
   schedule:
-    - cron: '35 0 * * *'   # 每天 00:35 UTC
-  repository_dispatch:
-    types: [autopilot_kick]
+    - cron: "12 * * * *"
   workflow_dispatch:
-permissions: { contents: read }
+
+permissions:
+  contents: read
+
 jobs:
-  step:
+  autopilot:
     runs-on: ubuntu-latest
+    env:
+      # 默认不启用；要启用就到 Repo → Settings → Variables 设置为 "true"
+      ENABLE_AUTOPILOT: ${{ vars.ENABLE_AUTOPILOT || 'false' }}
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - name: Compute & dispatch outreach
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          OUTREACH_WORKFLOW_FILE: ${{ vars.OUTREACH_WORKFLOW_FILE || 'outreach-triggered.yml' }}
-          AUTOPILOT_REF: ${{ github.ref_name }}
+
+      - name: Guard & run
+        shell: bash
         run: |
-  set -e
-  if [ "${{ vars.ENABLE_AUTOPILOT || 'false' }}" != "true" ]; then
-    echo "Autopilot disabled via vars"; exit 0; fi
-  if [ ! -f scripts/ops/autopilot_step.js ]; then
-    echo "scripts/ops/autopilot_step.js missing; skipping"; exit 0; fi
-  node scripts/ops/autopilot_step.js
+          set -e
+          echo "ENABLE_AUTOPILOT=${ENABLE_AUTOPILOT}"
+          if [ "${ENABLE_AUTOPILOT}" != "true" ]; then
+            echo "Autopilot disabled. Exit 0."; exit 0; fi
+
+          if [ ! -f scripts/ops/autopilot_step.js ]; then
+            echo "scripts/ops/autopilot_step.js missing; skipping"; exit 0; fi
+
+          node scripts/ops/autopilot_step.js
