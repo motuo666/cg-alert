@@ -1,0 +1,44 @@
+
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>vimeo.com – snapshot 2025-11-04T13-09-15-773Z</title>
+<body style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;font-size:.9rem;line-height:1.4;color:#111;padding:1rem;">
+<h1 style="font-size:1rem;font-weight:600;margin:0 0 1rem 0;">vimeo.com</h1>
+<div style="font-size:.8rem;color:#555;">Source URL: https://vimeo.com/status</div>
+<div style="font-size:.8rem;color:#555;">Captured: 2025-11-04T13-09-15-773Z</div>
+<div style="font-size:.8rem;color:#555;">SHA256: b8ce8eba5b9a2f6b9f423e20deaa12c8cbc19e7414548a2105ef8a6e7b41ef3c</div>
+<pre style="white-space:pre-wrap;font-size:.7rem;color:#000;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;padding:.5rem;margin-top:1rem;">&lt;!DOCTYPE html&gt;&lt;html lang="en"&gt;&lt;head&gt;&lt;meta charSet="utf-8"/&gt;&lt;meta name="viewport" content="width=device-width"/&gt;&lt;meta name="next-head-count" content="2"/&gt;&lt;script id="datadog-rum"&gt; 
+    (function(h,o,u,n,d) {
+      h=h[d]=h[d]||{q:[],onReady:function(c){h.q.push(c)}}
+      d=o.createElement(u);d.async=1;d.src=n
+      n=o.getElementsByTagName(u)[0];n.parentNode.insertBefore(d,n)
+    })(window,document,'script','https://www.datadoghq-browser-agent.com/us1/v6/datadog-rum.js','DD_RUM')
+    window.DD_RUM.onReady(function() {
+      window.DD_RUM.init({
+        clientToken: 'pube7d8f53ac3c9217ab7b53a3e960935c1',
+        applicationId: 'e252f82c-ba52-4d13-aff8-c7bfa34e735a',
+        site: 'datadoghq.com',
+        service: 'vimeo-next',
+        env: window.location.host === 'master.ci.vimeows.com' ? 'staging' : 'production',
+        version: 'e910c508',
+        sessionSampleRate: (() =&gt; {
+          const isLoggedIn = document.cookie.split('; ').some(cookie =&gt; cookie === 'is_logged_in=1');
+          return isLoggedIn ? 100 : 40;
+        })(),
+        sessionReplaySampleRate: 0,
+        startSessionReplayRecordingManually: false,
+        trackUserInteractions: true,
+        trackResources: true,
+        trackLongTasks: true,
+        defaultPrivacyLevel: 'mask-user-input',
+        trackViewsManually: false,
+        usePartitionedCrossSiteSessionCookie: true,
+        beforeSend: e=&gt;{if("error"!==e.type)return!0;for(let t of[/Uncaught "ResizeObserver loop completed with undelivered notifications."/,/Script error./,/null is not an object \(evaluating 'n.content'\)/,/.*Cannot create property '(.+)' on string '(.+)'.*/])if(e.error&&e.error.message&&e.error.message.match(t))return!1;return!0},
+        allowedTracingUrls: [(urlString) =&gt; {
+          const url = new URL(urlString);
+          const hostname = url.hostname;
+          return hostname.endsWith('api.vimeo.dev') || hostname.endsWith('api.ci.vimeows.com') || hostname.endsWith('api.vimeo.com');
+        }],
+        traceSampleRa</pre>
+</body></html>

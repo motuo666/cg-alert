@@ -1,0 +1,84 @@
+
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>cloudflare.com – snapshot 2025-11-04T13-09-15-773Z</title>
+<body style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;font-size:.9rem;line-height:1.4;color:#111;padding:1rem;">
+<h1 style="font-size:1rem;font-weight:600;margin:0 0 1rem 0;">cloudflare.com</h1>
+<div style="font-size:.8rem;color:#555;">Source URL: https://cloudflare.com/legal/dpa</div>
+<div style="font-size:.8rem;color:#555;">Captured: 2025-11-04T13-09-15-773Z</div>
+<div style="font-size:.8rem;color:#555;">SHA256: 14f356e411c7f0d1cd0da8a06e16de9f2e61cbc2957a27e58f8b7df6265a204f</div>
+<pre style="white-space:pre-wrap;font-size:.7rem;color:#000;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;padding:.5rem;margin-top:1rem;">&lt;!DOCTYPE html&gt;&lt;html lang="en-us"&gt;&lt;head&gt;
+		&lt;script&gt;
+			window.redwood={"consentGroups":{"C0001":true,"C0002":true,"C0003":true,"C0004":true},"country":"US","colo":"SJC","user":null,"rv1":"tsk","locale":"en-US"}
+			window.redwood.syncOneTrustToZarazConsents = function() {
+				if(!window.zaraz?.consent) {
+					return;
+				}
+				const zarazConsentMap = {
+					C0002: 'Tuku',
+					C0003: 'nBKC',
+					C0004: 'aMDT',
+				}
+				const groups = window.redwood.consentGroups;
+				const currentZarazGroups = window.zaraz.consent.getAll();
+				const zarazActiveConsents = Object.keys(currentZarazGroups);
+				let shouldUpdate = false;
+				const mappedGroups = Object.entries(zarazConsentMap).filter(([key, value]) =&gt; zarazActiveConsents.includes(value)).reduce((acc, [key, value]) =&gt; {
+					acc[value] = groups[key];
+					if (!shouldUpdate && acc[value] !== currentZarazGroups[value]) {
+						shouldUpdate = true;
+					}
+					return acc;
+				}, {});
+				if(!shouldUpdate) {
+					return;
+				}
+				window.zaraz.consent.set(mappedGroups);
+				window.zaraz.consent.sendQueuedEvents();
+			};
+		&lt;/script&gt;
+    &lt;script type="text/javascript"&gt;
+      var OneTrust={"geolocationResponse":{"stateCode":"CA","countryCode":"US"}}
+    &lt;/script&gt;
+    &lt;script&gt;
+     const acceptedLocales = [
+      'en-au',
+      'en-ca',
+      'en-gb',
+      'en-in',
+      'en-us',
+      'de-de',
+      'es-es',
+      'es-la',
+      'fr-fr',
+      'it-it',
+      'ja-jp',
+      'ko-kr',
+			'pl-pl',
+      'pt-br',
+      'ru-ru',
+      'zh-tw',
+      'zh-cn',
+      'zh-hans-cn',
+    ];
+    const orphanLocales = [
+      'sv-se',
+      'nl-nl',
+      'vi-vn',
+      'th-th',
+      'id-id',
+      'tr-tr',
+    ];
+    const ignoreList = [
+      'apps',
+      'docs',
+      'rate-limit-test',
+      'rss',
+    ]
+    function getPathFromLocale(locale, code, pathString) {
+      if ( locale === code || !acceptedLocales.includes(code) || acceptedLocales.includes(locale) || orphanLocales.includes(locale) ) {
+        return null;
+      } else {
+  </pre>
+</body></html>
