@@ -1,0 +1,11 @@
+Subject: We caught a change on {vendor} — with evidence
+
+Hi {first_name},
+
+We monitor vendors' public pages (Pricing / ToS / DPA / Subprocessors / Status).
+Yesterday we captured a change on {vendor}. Your team can use our evidence card (URL+timestamp+hash) to push back at renewal.
+
+If you'd like, we can watch your top {n_vendors} vendors and email/Slack you only when a material change passes our two-step filter.
+
+— CG Alert
+Evidence-backed vendor change alerts

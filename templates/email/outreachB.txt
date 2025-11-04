@@ -1,0 +1,10 @@
+Subject: Procurement leverage for {vendor} (evidence attached)
+
+Hi {first_name},
+
+Short note: {vendor} updated {page_type} on {date}. We have a timestamped capture and a diff.
+Teams use this to demand credits, legacy terms, or better liability at renewal—no calls required.
+
+If this is useful, reply "trial" and we’ll set your {plan} plan (no charge) for {trial_days} days.
+
+— CG Alert
