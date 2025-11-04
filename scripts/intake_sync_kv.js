@@ -2,8 +2,8 @@
 /**
  * intake_sync_kv.js
  *
- * Pull intake form submissions from Cloudflare KV and append to data/intakes.csv
- * and data/customers.csv.
+ * Pull intake form submissions from Cloudflare KV and append to intakes.csv
+ * and customers.csv.
  *
  * Safe mode: if CF vars missing, exit quietly.
  */
