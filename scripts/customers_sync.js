@@ -17,6 +17,19 @@ function readCSV(p){
     return o;
   });
 }
+
+function readCSV_multi(paths){
+  const seen = new Set();
+  let all = [];
+  for (const p of paths){
+    const rows = readCSV(p) || [];
+    for (const r of rows){
+      const key = (r.email||'')+'|'+(r.company||'')+'|'+(r.vendors||'')+'|'+(r.plan||r.tier||'')+'|'+(r.cadence||'');
+      if (!seen.has(key)){ seen.add(key); all.push(r); }
+    }
+  }
+  return all;
+}
 function writeCSV(p, rows){
   const cols = ['email','company','tier','cadence','vendors'];
   const lines = [cols.join(',')].concat(rows.map(r=>cols.map(c=> (r[c]||'')).join(',')));
