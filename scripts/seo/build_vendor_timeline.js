@@ -15,7 +15,7 @@ for(const vendor of fs.readdirSync(VROOT)){
   const vd = path.join(VROOT, vendor);
   if(!fs.statSync(vd).isDirectory()) continue;
   const ch = path.join(vd,'changes'); if(!fs.existsSync(ch)) continue;
-  const days = fs.readdirSync(ch).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x)).sort();
+  const days = fs.readdirSync(ch).filter(x=>/^\\d{4}-\\d{2}-\\d{2}$/.test(x)).sort();
   const recent = days.slice(-365);
   let body = `<div class=card><b>${vendor}</b><div class=meta>Recent ${recent.length} days</div><ul>` + recent.reverse().map(d=>`<li><a href="/vendors/${vendor}/changes/${d}/">${d}</a></li>`).join('') + `</ul></div>`;
   const out = path.join(vd,'timeline','index.html'); ensure(out); fs.writeFileSync(out, shell(`${vendor} — timeline`, body));
