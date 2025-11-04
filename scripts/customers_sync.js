@@ -52,11 +52,11 @@ function normalizeVendors(s){
 }
 
 (function main(){
-  const inP = 'intakes.csv';
+  const inputs = ['intakes.csv','data/intakes.csv'];
   const dst = 'customers.csv';
-  const src = readCSV(inP);
-  if(!src){ console.log('no intakes.csv, skip'); return; }
-
+  let src = [];
+  for (const p of inputs){ const rows = readCSV(p); if(rows) src = src.concat(rows); }
+  if(!src.length){ console.log('no intakes (root or data/), skip'); return; }
   let dstRows = [];
   if(fs.existsSync(dst)){
     const d = readCSV(dst);
