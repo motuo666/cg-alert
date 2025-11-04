@@ -1,0 +1,2 @@
+/* Thin theme proxy for reports; delegates to main stylesheet */
+@import url('/styles.css');
