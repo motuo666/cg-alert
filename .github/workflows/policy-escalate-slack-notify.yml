@@ -1,0 +1,51 @@
+name: Policy Auto-Escalate Slack Notify
+on:
+  workflow_run:
+    workflows: ["Policy Auto-Escalate"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Slack payload
+        id: build
+        run: |
+          set -e
+          # current policy cap (80/100)
+          cur=$(node -e "process.stdout.write(String(require('./config/volume_policy.json').max))" || echo "unknown")
+
+          # try to read KPI snapshot if exists
+          if [ -f reports/metrics/rolling.json ]; then
+            kpi=$(cat reports/metrics/rolling.json)
+            gate=$(echo "$kpi" | jq -r '.ok // empty')
+            reason=$(echo "$kpi" | jq -r '(.reasons|join("; ")) // empty')
+            sent7=$(echo "$kpi" | jq -r '.sent7 // empty')
+            unsub=$(echo "$kpi" | jq -r '.unsub7_pct // empty')
+            bounce=$(echo "$kpi" | jq -r '.bounce7_pct // empty')
+            complaint=$(echo "$kpi" | jq -r '.complaint7_pct // empty')
+            evidence1=$(echo "$kpi" | jq -r '.evidence1 // empty')
+          fi
+
+          text="Policy Auto-Escalate • policy.max=${cur}"
+          if [ -n "${gate}" ]; then
+            gate_human=$([ "$gate" = "true" ] && echo "OK" || echo "FAIL")
+            text="$text • Gate=${gate_human} • ${reason:-no-reason} • sent7=${sent7:-na} • unsub7%=${unsub:-na} • bounce7%=${bounce:-na} • complaint7%=${complaint:-na} • evidence1=${evidence1:-na}"
+          fi
+
+          echo "text=$text" >> "$GITHUB_OUTPUT"
+
+      - name: Send to Slack
+        run: |
+          set -e
+          [ -n "$SLACK_WEBHOOK_URL" ] || { echo "::error::SLACK_WEBHOOK_URL missing"; exit 1; }
+          jq -n --arg t "${{ steps.build.outputs.text }}" '{text:$t}'           | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
