@@ -1,26 +1,20 @@
 /rss.xml
   Content-Type: application/rss+xml; charset=utf-8
   Cache-Control: public, max-age=300
-
 /reports/rss.xml
   Content-Type: application/rss+xml; charset=utf-8
   Cache-Control: public, max-age=300
-
 /reports/rss.xsl
   Content-Type: application/xslt+xml; charset=utf-8
   Cache-Control: public, max-age=86400
-
 /sitemap.xml
   Content-Type: application/xml; charset=utf-8
   Cache-Control: public, max-age=600
-
 /sitemap-index.xml
   Content-Type: application/xml; charset=utf-8
   Cache-Control: public, max-age=600
-
 /sitemaps/*
   Content-Type: application/xml; charset=utf-8
   Cache-Control: public, max-age=600
-
 /404.html
   Cache-Control: public, max-age=60
