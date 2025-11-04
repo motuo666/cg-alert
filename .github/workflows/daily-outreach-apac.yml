@@ -3,7 +3,7 @@ name: Daily Outreach — APAC window
 env:
   SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}"
   WORKER_URL:  "${{ vars.WORKER_URL }}"
-  UNSUB_ORIGIN: "${{ vars.UNSUB_ORIGIN }}"
+  UNSUB_ORIGIN: "${{ vars.UNSUB_ORIGIN || secrets.UNSUB_ORIGIN }}"
   INTAKE_FORM_URL: "${{ vars.INTAKE_FORM_URL }}"
 
   MAIL_FROM: "${{ vars.MAIL_FROM }}"
@@ -104,5 +104,5 @@ jobs:
         run: |
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add -A out data/suppressions.csv
+          if [ -d out ]; then git add -A out; fi data/suppressions.csv
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "outreach: APAC window"; git pull --rebase --autostash || true; git push; fi

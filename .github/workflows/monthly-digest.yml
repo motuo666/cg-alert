@@ -3,7 +3,7 @@ name: Monthly Digest
 env:
   SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}"
   WORKER_URL:  "${{ vars.WORKER_URL }}"
-  UNSUB_ORIGIN: "${{ vars.UNSUB_ORIGIN }}"
+  UNSUB_ORIGIN: "${{ vars.UNSUB_ORIGIN || secrets.UNSUB_ORIGIN }}"
   INTAKE_FORM_URL: "${{ vars.INTAKE_FORM_URL }}"
 
   MAIL_FROM: "${{ vars.MAIL_FROM }}"
