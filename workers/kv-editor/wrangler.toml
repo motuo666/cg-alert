@@ -1,0 +1,15 @@
+name = "kv-editor"
+main = "worker.js"
+compatibility_date = "2024-10-01"
+account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+workers_dev = true
+
+[vars]
+AUTH_USER = "admin"
+AUTH_PASS = "changeme"
+GITHUB_REPO = "owner/repo"
+GITHUB_TOKEN = "ghp_xxx"
+
+[[kv_namespaces]]
+binding = "CG_KV"
+id = "YOUR_KV_NAMESPACE_ID"
