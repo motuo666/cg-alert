@@ -5,7 +5,7 @@ const SRC = path.join('reports','metrics','daily.json');
 if(!fs.existsSync(SRC)){ console.log('no daily.json, skip'); process.exit(0); }
 let data = JSON.parse(fs.readFileSync(SRC,'utf8'));
 if(!Array.isArray(data)){ data = Object.keys(data).sort().map(k=>Object.assign({date:k}, data[k])); }
-function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function esc(s){ return String(s||'').replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])); }
 function svgSpark(values, w=200,h=40){
   values = values.map(v=>Number(v||0)); if(values.length<2){ return `<svg width="${w}" height="${h}"></svg>`; }
   const max = Math.max(...values), min = Math.min(...values); const step = (w-6)/(values.length-1);
