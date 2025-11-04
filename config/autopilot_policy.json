@@ -1,0 +1,12 @@
+{
+  "lookback_days": 7,
+  "step_up": [
+    45,
+    60,
+    80
+  ],
+  "step_down": [
+    30
+  ],
+  "guard_on_3day_low": true
+}

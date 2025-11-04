@@ -1,24 +1,50 @@
 {
-  "mode": "any",
-  "include_keywords": [
-    "compliance",
-    "security",
-    "privacy",
-    "risk",
-    "vendor",
-    "subprocessor",
-    "dpa",
-    "terms",
-    "pricing",
-    "plans",
-    "sla"
+  "boost": [
+    {
+      "field": "title",
+      "include": [
+        "procurement",
+        "sourcing",
+        "legal",
+        "revops",
+        "finance"
+      ],
+      "score": 3
+    },
+    {
+      "field": "dept",
+      "include": [
+        "procurement",
+        "legal",
+        "finance",
+        "ops"
+      ],
+      "score": 2
+    },
+    {
+      "field": "region",
+      "include": [
+        "US",
+        "UK",
+        "CA",
+        "EU",
+        "SG",
+        "AU",
+        "JP"
+      ],
+      "score": 1
+    }
   ],
-  "exclude_keywords": [
-    "careers",
-    "jobs",
-    "press",
-    "brand",
-    "cdn",
-    "blog"
-  ]
+  "suppress": [
+    {
+      "field": "role",
+      "include": [
+        "student",
+        "intern",
+        "contractor"
+      ],
+      "score": -5
+    }
+  ],
+  "threshold": 2
 }

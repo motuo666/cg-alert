@@ -1,40 +1,17 @@
 {
-  "mode": "allow",
-  "tld_allow": [
-    "com",
-    "io",
-    "ai",
-    "app",
-    "co",
-    "dev",
-    "net",
-    "org"
+  "allow": [
+    "US",
+    "UK",
+    "CA",
+    "EU",
+    "SG",
+    "AU",
+    "JP"
   ],
-  "tld_deny": [
-    "ru",
-    "cn",
-    "ir",
-    "pk"
-  ],
-  "domain_allow_keywords": [
-    "cloud",
-    "data",
-    "saas",
-    "dev",
-    "app",
-    "ops",
-    "security",
-    "auth",
-    "log",
-    "status",
-    "legal"
-  ],
-  "domain_deny_keywords": [
-    "blog",
-    "docs",
-    "support",
-    "help",
-    "community",
-    "statuspage.io"
+  "deny": [
+    "RU",
+    "BY",
+    "IR",
+    "KP"
   ]
 }

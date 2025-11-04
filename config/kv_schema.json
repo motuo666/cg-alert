@@ -1,0 +1,7 @@
+{
+  "namespaces": {
+    "blacklist_domains": "config/blacklist/domains_auto.txt",
+    "persona_scores": "config/persona_scores.json",
+    "vendor_overrides": "config/vendor_overrides.json"
+  }
+}
