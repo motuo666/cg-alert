@@ -11,17 +11,12 @@
       .card{background:#121933;border:1px solid #26314a;border-radius:16px;padding:16px 18px;margin:14px 0}
       a{color:#7fb3ff;text-decoration:none}
       .meta{opacity:.8;font-size:12px;margin-top:6px}
-      .badge{display:inline-block;border:1px solid #26314a;border-radius:999px;padding:2px 6px;font-size:12px;margin-left:6px}
     </style>
     </head><body><header><h1>CG Alert — Reports</h1></header><main>
       <xsl:for-each select="rss/channel/item">
         <div class="card">
           <b><a href="{link}"><xsl:value-of select="title"/></a></b>
-          <div class="meta">
-            <xsl:value-of select="pubDate"/>
-            <span class="badge">Source</span>
-            <span class="badge">SHA</span>
-          </div>
+          <div class="meta"><xsl:value-of select="pubDate"/></div>
           <div><xsl:value-of select="description" disable-output-escaping="yes"/></div>
         </div>
       </xsl:for-each>
