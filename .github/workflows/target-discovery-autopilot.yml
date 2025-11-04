@@ -1,57 +1,30 @@
 name: Target Discovery Autopilot
+
 on:
-  workflow_dispatch:
-    inputs:
-      dry:
-        description: "Dry run (true/false)"
-        required: false
-        default: "false"
-      max_new:
-        description: "Max new domains to add"
-        required: false
-        default: "200"
   schedule:
-    - cron: "30 23 * * *"  # 08:30 JST daily
-  repository_dispatch:
-    types: [autopilot_kick]
+    - cron: "27 * * * *"
+  workflow_dispatch:
 
 permissions:
-  contents: write
-  actions: write
+  contents: read
 
 jobs:
-  discover:
+  discovery:
     runs-on: ubuntu-latest
     env:
-      DRY: ${{ inputs.dry || 'false' }}
-      DISCOVERY_MAX: ${{ inputs.max_new || '200' }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+      ENABLE_AUTOPILOT: ${{ vars.ENABLE_AUTOPILOT || 'false' }}
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - name: Run target discovery
-        run: node scripts/target_discovery.js
-      - name: Commit discovery artifacts
+
+      - name: Guard & run
+        shell: bash
         run: |
           set -e
-          if git diff --quiet; then
-            echo "no changes"; exit 0
-          fi
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A
-          git commit -m "autopilot: discovery + endpoints expansion"
-          git push
-      - name: Slack summary (optional)
-        if: env.SLACK_WEBHOOK_URL != ''
-        run: |
-          DISCOVERED=$(cat artifacts/discovery.json 2>/dev/null | jq -r '.discovered // 0')
-          DOMAINS=$(cat artifacts/endpoints_count.txt 2>/dev/null || echo "0")
-          PAYLOAD=$(jq -n --arg t "Target Discovery" --arg d "$DISCOVERED" --arg e "$DOMAINS" '{text: ($t + ": discovered=" + $d + ", endpoints=" + $e)}')
-          curl -s -X POST -H 'Content-type: application/json' --data "$PAYLOAD" "$SLACK_WEBHOOK_URL" || true
-      - name: Kick Poller (repository_dispatch)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
-        run: |
-          curl -s -X POST             -H "Authorization: Bearer $GH_TOKEN"             -H "Accept: application/vnd.github+json"             https://api.github.com/repos/$REPO/dispatches             -d '{"event_type":"poller_kick"}'
+          echo "ENABLE_AUTOPILOT=${ENABLE_AUTOPILOT}"
+          if [ "${ENABLE_AUTOPILOT}" != "true" ]; then
+            echo "Discovery autopilot disabled. Exit 0."; exit 0; fi
+
+          if [ ! -f scripts/target_discovery.js ]; then
+            echo "scripts/target_discovery.js missing; skipping"; exit 0; fi
+
+          node scripts/target_discovery.js
