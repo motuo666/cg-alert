@@ -9,38 +9,79 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     env:
-      IMAP_HOST: ${{ secrets.IMAP_HOST || vars.IMAP_HOST }}
-      IMAP_USER: ${{ secrets.IMAP_USER || vars.IMAP_USER }}
-      IMAP_PASS: ${{ secrets.IMAP_PASS || vars.IMAP_PASS }}
-      SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
-      SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+      IMAP_HOST: ${{ secrets.IMAP_HOST }}
+      IMAP_USER: ${{ secrets.IMAP_USER }}
+      IMAP_PASS: ${{ secrets.IMAP_PASS }}
+      IMAP_HOST_VAR: ${{ vars.IMAP_HOST }}
+      IMAP_USER_VAR: ${{ vars.IMAP_USER }}
+      IMAP_PASS_VAR: ${{ vars.IMAP_PASS }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      SMTP_HOST_VAR: ${{ vars.SMTP_HOST }}
+      SMTP_USER_VAR: ${{ vars.SMTP_USER }}
+      SMTP_PASS_VAR: ${{ vars.SMTP_PASS }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SLACK_WEBHOOK_URL_VAR: ${{ vars.SLACK_WEBHOOK_URL }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Resolve env fallbacks
+        shell: bash
+        run: |
+          set -e
+          IMAP_HOST="${IMAP_HOST:-$IMAP_HOST_VAR}"
+          IMAP_USER="${IMAP_USER:-$IMAP_USER_VAR}"
+          IMAP_PASS="${IMAP_PASS:-$IMAP_PASS_VAR}"
+          SMTP_HOST="${SMTP_HOST:-$SMTP_HOST_VAR}"
+          SMTP_USER="${SMTP_USER:-$SMTP_USER_VAR}"
+          SMTP_PASS="${SMTP_PASS:-$SMTP_PASS_VAR}"
+          SLACK_WEBHOOK_URL="${SLACK_WEBHOOK_URL:-$SLACK_WEBHOOK_URL_VAR}"
+          {
+            echo "IMAP_HOST=$IMAP_HOST"
+            echo "IMAP_USER=$IMAP_USER"
+            echo "IMAP_PASS=${IMAP_PASS:+***}"
+            echo "SMTP_HOST=$SMTP_HOST"
+            echo "SMTP_USER=$SMTP_USER"
+            echo "SMTP_PASS=${SMTP_PASS:+***}"
+            echo "SLACK_WEBHOOK_SET=$([ -n "$SLACK_WEBHOOK_URL" ] && echo yes || echo no)"
+          } >> $GITHUB_STEP_SUMMARY
+          echo "IMAP_HOST=$IMAP_HOST" >> $GITHUB_ENV
+          echo "IMAP_USER=$IMAP_USER" >> $GITHUB_ENV
+          echo "IMAP_PASS=$IMAP_PASS" >> $GITHUB_ENV
+          echo "SMTP_HOST=$SMTP_HOST" >> $GITHUB_ENV
+          echo "SMTP_USER=$SMTP_USER" >> $GITHUB_ENV
+          echo "SMTP_PASS=$SMTP_PASS" >> $GITHUB_ENV
+          echo "SLACK_WEBHOOK_URL=$SLACK_WEBHOOK_URL" >> $GITHUB_ENV
       - name: IMAP login (993)
+        shell: bash
         run: |
           set -e
           if [ -z "${IMAP_HOST}" ] || [ -z "${IMAP_USER}" ] || [ -z "${IMAP_PASS}" ]; then
             echo "IMAP secrets missing, skipping"; exit 0; fi
-          sudo apt-get update -y >/dev/null && sudo apt-get install -y openssl >/dev/null
-          printf "a1 LOGIN %s %s
-a2 LOGOUT
-" "$IMAP_USER" "$IMAP_PASS" |             openssl s_client -crlf -quiet -connect "${IMAP_HOST}:993" -servername "${IMAP_HOST}" | tee imap.log
+          sudo apt-get update -y >/dev/null
+          sudo apt-get install -y openssl >/dev/null
+          printf "a1 LOGIN %s %s\na2 LOGOUT\n" "$IMAP_USER" "$IMAP_PASS" |             openssl s_client -crlf -quiet -connect "${IMAP_HOST}:993" -servername "${IMAP_HOST}" | tee imap.log
           grep -E "a1 OK|a2 OK" imap.log >/dev/null || (echo "::error::IMAP login failed" && false)
       - name: SMTP auth (587) (best-effort)
+        shell: bash
         run: |
           set -e
           if [ -z "${SMTP_HOST}" ] || [ -z "${SMTP_USER}" ] || [ -z "${SMTP_PASS}" ]; then
             echo "SMTP secrets missing, skipping"; exit 0; fi
-          sudo apt-get update -y >/dev/null && sudo apt-get install -y swaks >/dev/null || true
+          sudo apt-get update -y >/dev/null
+          sudo apt-get install -y swaks >/dev/null || true
           if command -v swaks >/dev/null; then
-            swaks --server "${SMTP_HOST}" --port 587 --auth LOGIN --au "${SMTP_USER}" --ap "${SMTP_PASS}" --quit-after RCPT >/dev/null || (echo "::error::SMTP auth failed" && false)
+            swaks --server "${SMTP_HOST}" --port 587 --auth LOGIN --au "${SMTP_USER}" --ap "${SMTP_PASS}" --quit-after RCPT >/div/null || (echo "::error::SMTP auth failed" && false)
           else
             echo "swaks not installed; skipping SMTP smoke"
           fi
       - name: Slack notify on failure
         if: failure()
+        shell: bash
         run: |
           if [ -n "${SLACK_WEBHOOK_URL}" ]; then
-            curl -s -X POST -H 'Content-type: application/json' --data '{"text":"🚨 IMAP/SMTP Smoke 失败，请检查凭证或服务状态。"}' "${SLACK_WEBHOOK_URL}" || true
+            curl -s -X POST -H 'Content-type: application/json' --data "{\"text\":\"IMAP/SMTP Smoke failed on ${GITHUB_REPOSITORY}@${GITHUB_REF_NAME}.\"}" "${SLACK_WEBHOOK_URL}" || true
           fi
