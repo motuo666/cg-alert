@@ -72,6 +72,7 @@ jobs:
       # ramp
       RAMP_BASE: ${{ vars.RAMP_BASE || 12 }}
       RAMP_WEEKLY_INCREMENT: ${{ vars.RAMP_WEEKLY_INCREMENT || 8 }}
+      RAMP_DAILY_INCREMENT: ${{ vars.RAMP_DAILY_INCREMENT || 0 }}
       RAMP_MAX: ${{ vars.RAMP_MAX || 100 }}
       RAMP_START_DATE: ${{ vars.RAMP_START_DATE || '2025-11-01' }}
       # hardening
