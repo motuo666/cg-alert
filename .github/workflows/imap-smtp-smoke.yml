@@ -1,7 +1,7 @@
 name: Imap/Smtp Smoke
 on:
   schedule:
-    - cron: '50 0 * * *'   # 09:50 JST 每日
+    - cron: '50 0 * * *'
   workflow_dispatch:
 permissions: { contents: read }
 jobs:
@@ -12,8 +12,8 @@ jobs:
       IMAP_USER: ${{ secrets.IMAP_USER || vars.IMAP_USER }}
       IMAP_PASS: ${{ secrets.IMAP_PASS || vars.IMAP_PASS }}
       SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
-      SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+      SMTP_USER: ${{ secrets/SMTP_USER || vars.SMTP_USER }}
+      SMTP_PASS: ${{ secrets/SMTP_PASS || vars.SMTP_PASS }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
     steps:
       - name: IMAP login (993)
@@ -22,8 +22,8 @@ jobs:
           if [ -z "${IMAP_HOST}" ] || [ -z "${IMAP_USER}" ] || [ -z "${IMAP_PASS}" ]; then
             echo "IMAP secrets missing, skipping"; exit 0; fi
           sudo apt-get update -y >/dev/null && sudo apt-get install -y openssl >/dev/null
-          echo -e "a1 LOGIN ${IMAP_USER} ${IMAP_PASS}\na2 LOGOUT" | \
-            openssl s_client -crlf -quiet -connect "${IMAP_HOST}:993" -servername "${IMAP_HOST}" | tee imap.log
+          echo -e "a1 LOGIN ${IMAP_USER} ${IMAP_PASS}
+a2 LOGOUT" |             openssl s_client -crlf -quiet -connect "${IMAP_HOST}:993" -servername "${IMAP_HOST}" | tee imap.log
           grep -E "a1 OK|a2 OK" imap.log >/dev/null || (echo "::error::IMAP login failed" && false)
       - name: SMTP auth (587) (best-effort)
         run: |
