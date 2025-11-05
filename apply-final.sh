@@ -5,12 +5,10 @@ if [ ! -d ".git" ]; then
   echo "Run this from your git repo root (where .git/ exists)."; exit 1
 fi
 
-echo "=== CG Alert Final Integrator ==="
+echo "=== CG Alert Final Integrator (1159) ==="
 
-# --- 0) Ensure dirs ---
 mkdir -p public/.well-known public/evidence/_common scripts/patch_assets
 
-# --- 1) Move root pages/files into public/ (idempotent) ---
 move_if_exists() {
   local p="$1"
   if [ -e "$p" ]; then
@@ -28,25 +26,19 @@ if [ -e ".well-known/security.txt" ]; then
   git mv -k ".well-known/security.txt" "public/.well-known/security.txt" || true
 fi
 
-# Prefer public/robots.txt; remove root robots if duplicate
 if [ -f "robots.txt" ] && [ -f "public/robots.txt" ]; then
   git rm -f robots.txt || true
 fi
 
-# --- 2) Install assets & pages ---
 cp -f scripts/patch_assets/fallback.css public/evidence/_common/fallback.css || true
 mkdir -p public/seo
 cp -f scripts/patch_assets/seo_index.html public/seo/index.html || true
 
 git add public/evidence/_common/fallback.css public/seo/index.html || true
 
-# --- 3) Add/Update scripts ---
 git add scripts/normalize_evidence.mjs scripts/linkcheck.mjs scripts/inject_meta.mjs scripts/lcp_preload.mjs || true
-
-# --- 4) Add/Update workflows ---
 git add .github/workflows/site-polish.yml .github/workflows/site-qa.yml .github/workflows/seo-ping.yml .github/workflows/assets-guard.yml || true
 
-# --- 5) Run polish tasks locally (best-effort) ---
 echo ">>> Normalize evidence (enhanced)"
 node scripts/normalize_evidence.mjs || true
 
@@ -59,12 +51,11 @@ node scripts/lcp_preload.mjs || true
 echo ">>> Linkcheck STRICT=true"
 STRICT=true node scripts/linkcheck.mjs || true
 
-# --- 6) Commit ---
 git config user.email "bot@cg-alert.com"
 git config user.name  "cg-alert-bot"
 if ! git diff --quiet; then
   git add -A
-  git commit -m "Final: unify site to public/, add SEO hub, normalize evidence assets, meta, LCP, strict QA"
+  git commit -m "Final(1159): unify to public/, add SEO hub, normalize evidence assets, meta, LCP, strict QA"
   echo "Committed local changes."
 else
   echo "No changes to commit."
