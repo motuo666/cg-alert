@@ -1,50 +1,29 @@
 {
-  "boost": [
+  "matchers": [
     {
-      "field": "title",
-      "include": [
+      "when_title_contains": [
+        "security",
+        "secops",
+        "ciso"
+      ],
+      "persona": "security"
+    },
+    {
+      "when_title_contains": [
         "procurement",
         "sourcing",
-        "legal",
-        "revops",
-        "finance"
+        "buyer"
       ],
-      "score": 3
+      "persona": "procurement"
     },
     {
-      "field": "dept",
-      "include": [
-        "procurement",
+      "when_title_contains": [
         "legal",
-        "finance",
-        "ops"
+        "counsel",
+        "compliance"
       ],
-      "score": 2
-    },
-    {
-      "field": "region",
-      "include": [
-        "US",
-        "UK",
-        "CA",
-        "EU",
-        "SG",
-        "AU",
-        "JP"
-      ],
-      "score": 1
+      "persona": "legal"
     }
   ],
-  "suppress": [
-    {
-      "field": "role",
-      "include": [
-        "student",
-        "intern",
-        "contractor"
-      ],
-      "score": -5
-    }
-  ],
-  "threshold": 2
+  "fallback": "default"
 }
