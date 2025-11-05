@@ -54,24 +54,35 @@ env:
 on:
   schedule: [ { cron: '30 7 * * 1-5' } ]  # 08:30 CET weekdays
 permissions: { contents: write }
-jobs:
+
 concurrency:
   group: outreach-${{ github.workflow }}
   cancel-in-progress: true
+
+jobs:
   send:
     runs-on: ubuntu-latest
     env:
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
-      MAIL_FROM: ${{ vars.MAIL_FROM }}
-      MAIL_POSTAL_ADDRESS: ${{ vars.MAIL_POSTAL_ADDRESS }}
-      REPLY_TO: ${{ vars.REPLY_TO }}
-      MAIL_RETURN_PATH: ${{ vars.MAIL_RETURN_PATH }}
       LIST_UNSUB_MAILTO: ${{ vars.LIST_UNSUB_MAILTO }}
       UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET }}
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-node@v4
+    with: { node-version: '20' }
+  - name: Compute daily limit
+    id: ramp
+    run: node scripts/compute_send_limit.js
+  - name: Compute EMEA window limit (33%)
+    id: win
+    env:
+      DAILY_LIMIT: ${{ steps.ramp.outputs.limit }}
+      WINDOW_FRACTION: 0.33
+    run: node scripts/compute_window_limit.js
+  - name: Install deps
+    run: npm i nodemailer@6
+  - name: Send
+    env:
+      REGION_FILTER: ${{ vars.REGION_FILTER_EMEA || 'emea,eu,uk,de,fr,nl,se,es,it' }}
       RAMP_BASE: ${{ vars.RAMP_BASE || 12 }}
       RAMP_WEEKLY_INCREMENT: ${{ vars.RAMP_WEEKLY_INCREMENT || 8 }}
       RAMP_DAILY_INCREMENT: ${{ vars.RAMP_DAILY_INCREMENT || 0 }}
@@ -82,36 +93,19 @@ concurrency:
       ERROR_ABORT_THRESHOLD: ${{ vars.ERROR_ABORT_THRESHOLD || 3 }}
       ERROR_ABORT_WINDOW: ${{ vars.ERROR_ABORT_WINDOW || 10 }}
       SEED_SEND: ${{ vars.SEED_SEND || 'true' }}
-      REGION_FILTER: ${{ vars.REGION_FILTER_EMEA || 'emea,eu,uk,de,fr,nl,se,es,it' }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - name: Compute daily limit
-        id: ramp
-        run: node scripts/compute_send_limit.js
-      - name: Compute EMEA window limit (33%)
-        id: win
-        env:
-          DAILY_LIMIT: ${{ steps.ramp.outputs.limit }}
-          WINDOW_FRACTION: 0.33
-        run: node scripts/compute_window_limit.js
-      - name: Install deps
-        run: npm i nodemailer@6
-      - name: Send
-        run: node scripts/send_triggered.js --limit "${{ steps.win.outputs.limit }}" --dry=false || true
-      - name: Commit logs
-        run: |
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          if [ -d out ]; then if [ -d out ]; then if [ -d out ]; then if [ -d out ]; then if [ -d out ]; then if [ -d out ]; then git add -A out; fi; fi; fi; fi; fi; fi data/suppressions.csv
-          if git diff --cached --quiet; then echo "no changes"; else git commit -m "outreach: EMEA window"; git pull --rebase --autostash || true; git push; fi
-
-
-- name: Slack on failure
-  if: failure()
-  env:
-    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
-  run: |
-    set -e
-    jq -n --arg t "❌ ${GITHUB_WORKFLOW} failed • run=${GITHUB_RUN_ID}" '{text:$t}'             | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
+    run: node scripts/send_triggered.js --limit "${{ steps.win.outputs.limit }}" --dry=false || true
+  - name: Commit logs
+    run: |
+      git config user.email "bot@cg-alert.com"
+      git config user.name  "cg-alert-bot"
+      if [ -d out ]; then git add -A out; fi
+      if [ -f data/suppressions.csv ]; then git add data/suppressions.csv; fi
+      if git diff --cached --quiet; then echo "no changes"; else git commit -m "outreach: EMEA window"; git pull --rebase --autostash || true; git push; fi
+  - name: Slack on failure
+    if: failure()
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+    run: |
+      set -e
+      jq -n --arg t "❌ ${{ github.workflow }} failed • run=${{ github.run_id }}" '{'text:$t'}' \
+      | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
