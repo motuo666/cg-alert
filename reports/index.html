@@ -1,34 +1,57 @@
 <!doctype html>
 <html lang="en">
 <head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CG Alert — Reports</title>
-
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>About — CG Alert</title>
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="canonical" href="https://www.cg-alert.com/"/>
-<link rel="stylesheet" href="/assets/home-v3c.css">
-
+<meta name="description" content="Vendor Change Packs. Verified change packs by month and vendor. All times in UTC.">
+<link rel="canonical" href="https://www.cg-alert.com/reports/">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0b0d12">
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="/assets/cg-theme.css">
+<style>
+.table-month{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:18px;
+  margin:16px 0 32px 0;
+}
+.table-month h2{
+  font-size:16px;
+  margin:0 0 12px 0;
+  font-weight:600;
+  color:var(--ink);
+}
+.table-month ul{
+  margin:0;
+  padding-left:20px;
+  line-height:1.7;
+  font-size:14px;
+}
+.meta{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:4px
+}
+</style>
 </head>
 <body>
-<header class="cg-topbar">
-  <div class="cg-wrap cg-nav">
-    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert"><span>CG&nbsp;Alert</span></a>
-    <nav class="cg-links" id="topnav">
-      <a href="/#pricing">Pricing</a>
-      <a href="/#how">How it works</a>
-      <a href="/#evidence">Evidence</a>
-      <a href="/#compare">Compare</a>
-      <a href="/#faq">FAQ</a>
-      <a class="cg-btn ghost" href="/intake/">Request Enterprise →</a>
-    </nav>
+<header class="app-header">
+  <div class="nav container">
+    <a class="logo" href="/">CG Alert</a>
+    <a href="/reports/">Reports</a>
+    <a href="/who-uses/">Who Uses</a>
+    <a href="/rss.xml" rel="nofollow">RSS</a>
   </div>
 </header>
 <main class="main container" id="main">
   <div class="section"><div class="container">
     <h1 class="h1">Vendor Change Packs</h1>
     <p class="sub">Verified change packs by month and vendor. All times in UTC.</p>
-    <div class="meta">Last updated 2025-11-05 03:44:58 UTC</div>
+    <div class="meta">Last updated 2025-11-05 14:37:44 UTC</div>
     
       <div class="table-month">
         <h2>2025-10</h2>
@@ -39,16 +62,6 @@
     
   </div></div>
 </main>
-<footer class="cg-footer">
-  <div class="cg-wrap cg-footlinks">
-    <a href="/who-uses/">Who uses</a>
-    <a href="/about/">About</a>
-    <a href="/reports/">Reports</a>
-    <a href="/reports/rss/">RSS</a>
-    <a href="/terms/">Terms</a>
-    <a href="/privacy/">Privacy</a>
-    <span>© CG Alert — evidence-backed vendor change alerts.</span>
-  </div>
-</footer>
+<footer class="container">© CG Alert — Evidence-backed vendor change alerts.</footer>
 </body>
 </html>

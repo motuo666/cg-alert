@@ -1,0 +1,67 @@
+
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>notion.so – snapshot 2025-11-05T13-13-36-859Z</title>
+<body style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;font-size:.9rem;line-height:1.4;color:#111;padding:1rem;">
+<h1 style="font-size:1rem;font-weight:600;margin:0 0 1rem 0;">notion.so</h1>
+<div style="font-size:.8rem;color:#555;">Source URL: https://notion.so/pricing</div>
+<div style="font-size:.8rem;color:#555;">Captured: 2025-11-05T13-13-36-859Z</div>
+<div style="font-size:.8rem;color:#555;">SHA256: 1a92b8498a68d42991f7640a3f708123545e535ed9d338f2b413ca1efa9d1c75</div>
+<pre style="white-space:pre-wrap;font-size:.7rem;color:#000;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;padding:.5rem;margin-top:1rem;">&lt;!DOCTYPE html&gt;&lt;html lang="en-us"&gt;&lt;head&gt;&lt;meta charSet="utf-8"/&gt;&lt;script id="airgap-stub"&gt;window.airgap = window.airgap || {}; window.airgap.readyQueue = window.airgap.readyQueue || [];&lt;/script&gt;&lt;script id="tcf-stub"&gt;
+(function () {
+	if (typeof window.__tcfapi !== 'function') {
+		const queue = [];
+		window.__tcfapi = function (command, version, callback, parameter) {
+			if (!command) return queue;
+			if (command === 'setGdprApplies' && version === 2 && typeof parameter === 'boolean') {
+				window.__tcfapi.gdprApplies = parameter;
+				if (typeof callback === 'function') callback('set', true);
+			} else if (command === 'ping' && typeof callback === 'function') {
+				callback({
+					gdprApplies: window.__tcfapi.gdprApplies ?? undefined,
+					cmpLoaded: false,
+					cmpStatus: 'stub',
+				});
+			} else {
+				queue.push([command, version, callback, parameter]);
+			}
+		};
+		window.__tcfapi.queue = queue;
+
+		const iframeName = '__tcfapiLocator';
+		if (!window.frames[iframeName]) {
+			const iframe = document.createElement('iframe');
+			iframe.name = iframeName;
+			iframe.style.display = 'none';
+			const append = () =&gt; {
+				document.body ? document.body.appendChild(iframe) : setTimeout(append, 5);
+			};
+			append();
+		}
+
+		window.addEventListener('message', function (event) {
+			let data;
+			try {
+				data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+			} catch {
+				data = {};
+			}
+			const call = data.__tcfapiCall;
+			if (call) {
+				window.__tcfapi(call.command, call.version, function (returnValue, success) {
+					const response = {
+						__tcfapiReturn: {
+							returnValue,
+							success,
+							callId: call.callId,
+						},
+					};
+					event.source?.postMessage(JSON.stringify(response), '*');
+				}, call.parameter);
+			}
+		}, false);
+	}
+})();
+&lt;/script&gt;&lt;title&gt;Notion Pricing Plans: Free, Plus, Business, &amp; Enterprise.&lt;/title&gt;&lt;meta name="description" content="Learn more about our different pricing plans. We support everyone, from free personal</pre>
+</body></html>
