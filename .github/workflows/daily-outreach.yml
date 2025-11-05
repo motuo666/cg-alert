@@ -1,56 +1,5 @@
 name: Daily Outreach (manual)
 
-env:
-  SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}"
-  WORKER_URL:  "${{ vars.WORKER_URL }}"
-  UNSUB_ORIGIN: "${{ vars.UNSUB_ORIGIN || secrets.UNSUB_ORIGIN }}"
-  INTAKE_FORM_URL: "${{ vars.INTAKE_FORM_URL }}"
-
-  MAIL_FROM: "${{ vars.MAIL_FROM }}"
-  REPLY_TO:  "${{ vars.REPLY_TO }}"
-  SENDER_NAME: "${{ vars.SENDER_NAME }}"
-  MAIL_POSTAL_ADDRESS: "${{ vars.MAIL_POSTAL_ADDRESS }}"
-  MAIL_RETURN_PATH: "${{ vars.MAIL_RETURN_PATH }}"
-  BCC_TO: "${{ secrets.BCC_TO }}"
-
-  SLACK_WEBHOOK_URL: "${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}"
-
-  SMTP_HOST: "${{ secrets.SMTP_HOST }}"
-  SMTP_PORT: "${{ secrets.SMTP_PORT }}"
-  SMTP_USER: "${{ secrets.SMTP_USER }}"
-  SMTP_PASS: "${{ secrets.SMTP_PASS }}"
-  IMAP_HOST: "${{ secrets.IMAP_HOST }}"
-  IMAP_PORT: "${{ secrets.IMAP_PORT }}"
-  IMAP_USER: "${{ secrets.IMAP_USER }}"
-  IMAP_PASS: "${{ secrets.IMAP_PASS }}"
-
-  CF_ACCOUNT_ID: "${{ vars.CF_ACCOUNT_ID }}"
-  CF_API_TOKEN:  "${{ secrets.CF_API_TOKEN }}"
-  KV_NAMESPACE_ID: "${{ vars.KV_NAMESPACE_ID || secrets.KV_NAMESPACE_ID }}"
-  KV_LEADS_ID:    "${{ vars.KV_LEADS_ID || secrets.KV_LEADS_ID }}"
-
-  STRIPE_LINK_PORTFOLIO: "${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO }}"
-  STRIPE_LINK_BUSINESS:  "${{ vars.STRIPE_LINK_BUSINESS  || secrets.STRIPE_LINK_BUSINESS  }}"
-  STRIPE_WEBHOOK_SECRET: "${{ secrets.STRIPE_WEBHOOK_SECRET }}"
-
-  INDEXNOW_KEY: "${{ secrets.INDEXNOW_KEY }}"
-  OBS_KEY: "${{ secrets.OBS_KEY }}"
-  ENRICH_API_TOKEN: "${{ secrets.ENRICH_API_TOKEN }}"
-
-  TARGET_DISCOVERY_API_URL:   "${{ vars.TARGET_DISCOVERY_API_URL }}"
-  TARGET_DISCOVERY_API_TOKEN: "${{ secrets.TARGET_DISCOVERY_API_TOKEN }}"
-
-  MIN_HASH_RATIO: "${{ vars.MIN_HASH_RATIO }}"
-  MIN_SENT7_FOR_DLVR: "${{ vars.MIN_SENT7_FOR_DLVR }}"
-  P95_TTD_MAX_HOURS: "${{ vars.P95_TTD_MAX_HOURS }}"
-  TARGET_EVID_TODAY: "${{ vars.TARGET_EVID_TODAY }}"
-  TARGET_SENT: "${{ vars.TARGET_SENT }}"
-  TTD_LOOKBACK_HOURS: "${{ vars.TTD_LOOKBACK_HOURS }}"
-  UNSUB_7D_MAX: "${{ vars.UNSUB_7D_MAX }}"
-  COMPLAINT_7D_MAX: "${{ vars.COMPLAINT_7D_MAX }}"
-  BOUNCE_7D_MAX: "${{ vars.BOUNCE_7D_MAX }}"
-  REQUIRE_CHANGED_VENDORS: "${{ vars.REQUIRE_CHANGED_VENDORS }}"
-
 on:
   workflow_dispatch:
 permissions: { contents: write }
@@ -62,45 +11,42 @@ concurrency:
 jobs:
   send:
     runs-on: ubuntu-latest
-    env:
-      LIST_UNSUB_MAILTO: ${{ vars.LIST_UNSUB_MAILTO }}
-      UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET }}
-
-steps:
-  - uses: actions/checkout@v4
-  - uses: actions/setup-node@v4
-    with: { node-version: '20' }
-  - name: Compute SEND_LIMIT
-    id: ramp
-    run: node scripts/compute_send_limit.js
-  - name: Install deps
-    run: npm i nodemailer@6
-  - name: Send
-    env:
-      REGION_FILTER: ${{ vars.REGION_FILTER || '' }}
-      RAMP_BASE: ${{ vars.RAMP_BASE || 12 }}
-      RAMP_WEEKLY_INCREMENT: ${{ vars.RAMP_WEEKLY_INCREMENT || 8 }}
-      RAMP_DAILY_INCREMENT: ${{ vars.RAMP_DAILY_INCREMENT || 0 }}
-      RAMP_MAX: ${{ vars.RAMP_MAX || 100 }}
-      RAMP_START_DATE: ${{ vars.RAMP_START_DATE || '2025-11-01' }}
-      DOMAIN_LIMIT: ${{ vars.DOMAIN_LIMIT || 2 }}
-      SEND_SPACING_MS: ${{ vars.SEND_SPACING_MS || 1200 }}
-      ERROR_ABORT_THRESHOLD: ${{ vars.ERROR_ABORT_THRESHOLD || 3 }}
-      ERROR_ABORT_WINDOW: ${{ vars.ERROR_ABORT_WINDOW || 10 }}
-      SEED_SEND: ${{ vars.SEED_SEND || 'true' }}
-    run: node scripts/send_triggered.js --limit "${{ steps.ramp.outputs.limit }}" --dry=false || true
-  - name: Commit logs
-    run: |
-      git config user.email "bot@cg-alert.com"
-      git config user.name  "cg-alert-bot"
-      if [ -d out ]; then git add -A out; fi
-      if [ -f data/suppressions.csv ]; then git add data/suppressions.csv; fi
-      if git diff --cached --quiet; then echo "no changes"; else git commit -m "outreach: manual send"; git pull --rebase --autostash || true; git push; fi
-  - name: Slack on failure
-    if: failure()
-    env:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
-    run: |
-      set -e
-      jq -n --arg t "❌ ${{ github.workflow }} failed • run=${{ github.run_id }}" '{text:$t}' \
-      | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Compute SEND_LIMIT
+        id: ramp
+        run: node scripts/compute_send_limit.js
+      - name: Install deps
+        run: npm i nodemailer@6
+      - name: Send
+        env:
+          REGION_FILTER: ${{ vars.REGION_FILTER || '' }}
+          RAMP_BASE: ${{ vars.RAMP_BASE || 12 }}
+          RAMP_WEEKLY_INCREMENT: ${{ vars.RAMP_WEEKLY_INCREMENT || 8 }}
+          RAMP_DAILY_INCREMENT: ${{ vars.RAMP_DAILY_INCREMENT || 0 }}
+          RAMP_MAX: ${{ vars.RAMP_MAX || 100 }}
+          RAMP_START_DATE: ${{ vars.RAMP_START_DATE || '2025-11-01' }}
+          DOMAIN_LIMIT: ${{ vars.DOMAIN_LIMIT || 2 }}
+          SEND_SPACING_MS: ${{ vars.SEND_SPACING_MS || 1200 }}
+          ERROR_ABORT_THRESHOLD: ${{ vars.ERROR_ABORT_THRESHOLD || 3 }}
+          ERROR_ABORT_WINDOW: ${{ vars.ERROR_ABORT_WINDOW || 10 }}
+          SEED_SEND: ${{ vars.SEED_SEND || 'true' }}
+        run: node scripts/send_triggered.js --limit "${{ steps.ramp.outputs.limit }}" --dry=false || true
+      - name: Commit logs
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          if [ -d out ]; then git add -A out; fi
+          if [ -f data/suppressions.csv ]; then git add data/suppressions.csv; fi
+          if git diff --cached --quiet; then echo "no changes"; else git commit -m "outreach: manual send"; git pull --rebase --autostash || true; git push; fi
+      - name: Slack on failure
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+        run: |
+          set -e
+          jq -n --arg t "❌ ${{ github.workflow }} failed • run=${{ github.run_id }}" '{text:$t}' \
+          | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
