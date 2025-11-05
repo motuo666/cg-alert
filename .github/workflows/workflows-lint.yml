@@ -1,0 +1,24 @@
+name: Workflows Lint
+on:
+  push:
+    paths:
+      - ".github/workflows/**"
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: actionlint
+        uses: reviewdog/action-actionlint@v1
+        with:
+          fail_on_error: true
+      - name: Forbid '||' in workflows
+        run: |
+          set -e
+          BAD=$(grep -RIn --exclude='*.md' '\|\|' .github/workflows || true)
+          if [ -n "$BAD" ]; then
+            echo "::error::Found '||' in workflows."; echo "$BAD"; exit 1;
+          fi
