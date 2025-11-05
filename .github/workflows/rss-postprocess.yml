@@ -78,7 +78,7 @@ jobs:
           git config user.name  "cg-alert-bot"
           git add -A reports/
           if git status --porcelain | grep -q .; then
-            git commit -m "chore(rss): inject stylesheet + ensure cg fields"
+            if git diff --cached --quiet; then echo "no changes"; else git commit -m "chore(rss): inject stylesheet + ensure cg fields"
             git pull --rebase --autostash || true
             git push
           else

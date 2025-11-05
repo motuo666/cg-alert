@@ -24,6 +24,6 @@ jobs:
             git config user.email "bot@cg-alert.com"
             git config user.name  "cg-alert-bot"
             git add config/endpoints.json config/retry_queue.json
-            git commit -m "discovery: backoff sweeper update"
+            if git diff --cached --quiet; then echo "no changes"; else git commit -m "discovery: backoff sweeper update"
             git push
           fi

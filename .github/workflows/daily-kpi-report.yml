@@ -27,7 +27,7 @@ jobs:
             git config user.email "bot@cg-alert.com"; \
             git config user.name  "cg-alert-bot"; \
             git add reports/metrics/daily.json; \
-            git commit -m "metrics: daily evidence24"; \
+            if git diff --cached --quiet; then echo "no changes"; else git commit -m "metrics: daily evidence24"; \
             git push; \
           fi
       - name: Slack summary (optional)

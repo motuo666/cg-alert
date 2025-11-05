@@ -20,6 +20,6 @@ jobs:
             git config user.email "bot@cg-alert.com"
             git config user.name  "cg-alert-bot"
             git add templates/email/active.txt
-            git commit -m "ab: materialize active template"
+            if git diff --cached --quiet; then echo "no changes"; else git commit -m "ab: materialize active template"
             git push
           fi

@@ -43,7 +43,7 @@ jobs:
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
           git add config/volume_policy.json reports/metrics/rolling.json public/reports/metrics/rolling.json || true
-          git commit -m "policy: auto-escalate max to 100 (kpi ok: ${{ steps.kpi.outputs.reason }})" || echo "no changes"
+          if git diff --cached --quiet; then echo "no changes"; else git commit -m "policy: auto-escalate max to 100 (kpi ok: ${{ steps.kpi.outputs.reason }})" || echo "no changes"
           git pull --rebase --autostash || true
           git push || true
 
@@ -54,7 +54,7 @@ jobs:
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
           git add config/volume_policy.json reports/metrics/rolling.json public/reports/metrics/rolling.json || true
-          git commit -m "policy: auto-de-escalate max to 80 (kpi fail: ${{ steps.kpi.outputs.reason }})" || echo "no changes"
+          if git diff --cached --quiet; then echo "no changes"; else git commit -m "policy: auto-de-escalate max to 80 (kpi fail: ${{ steps.kpi.outputs.reason }})" || echo "no changes"
           git pull --rebase --autostash || true
           git push || true
 
@@ -64,7 +64,7 @@ jobs:
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
           git add reports/metrics/rolling.json public/reports/metrics/rolling.json || true
-          git commit -m "metrics: rolling kpis" || echo "no metric changes"
+          if git diff --cached --quiet; then echo "no changes"; else git commit -m "metrics: rolling kpis" || echo "no metric changes"
           git push || true
 
       - name: Slack notify (policy & KPI)
