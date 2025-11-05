@@ -1,4 +1,4 @@
-// LCP preload injector
+// LCP preload injector (1159)
 import { promises as fs } from 'fs';
 import path from 'path';
 

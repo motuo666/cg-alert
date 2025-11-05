@@ -1,4 +1,4 @@
-// STRICT link checker
+// STRICT link checker (1159)
 import { promises as fs } from 'fs';
 import path from 'path';
 
