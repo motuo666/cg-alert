@@ -11,6 +11,23 @@ const FROM = process.env.MAIL_FROM || 'CG Alert <ops@cg-alert.com>';
 const REPLY_TO = process.env.REPLY_TO || 'Jason <ops@cg-alert.com>';
 const LIMIT = parseInt(process.env.DIGEST_LIMIT || '10', 10);
 
+// ---- ENTITLEMENT RULES (auto-injected) ----
+const RULE = {
+  portfolio:  { vendors: 25, cadence: ["weekly"],          channels: 1 },
+  business:   { vendors: 50, cadence: ["daily","weekly"],  channels: 2 },
+  enterprise: { vendors: 200, cadence: ["daily","weekly"], channels: 2 },
+};
+function normalizeEntitlement(c){
+  const plan = (c.plan||"portfolio").toLowerCase();
+  const R = RULE[plan] || RULE.portfolio;
+  let cadence = (c.cadence || (plan==="business"?"daily":"weekly")).toLowerCase();
+  if (!R.cadence.includes(cadence)) cadence = R.cadence[0];
+  let vendors = (c.vendors||"").split(/[ ,;]+/).filter(Boolean).slice(0, R.vendors);
+  return { plan, cadence, vendors, R };
+}
+// ---- ENTITLEMENT RULES END ----
+
+
 function readCSV(file){
   const txt = fs.readFileSync(file,'utf8').replace(/\r\n/g,'\n').trim();
   if(!txt) return [];
@@ -61,10 +78,10 @@ function htmlFor(company, list){
   const transport = nodemailer.createTransport({ host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT===465, auth: {user: SMTP_USER, pass: SMTP_PASS} });
   let sent=0;
   for(const c of cust){
-    const cadence = (c.cadence||'weekly').toLowerCase();
+    const E = normalizeEntitlement(c); const cadence = E.cadence;
     if(cadence==='weekly' && new Date().getDay()!==1) continue; // Monday
     // daily: always due
-    const vendors = (c.vendors||'').split(/[ ,;]+/).filter(Boolean);
+    const vendors = E.vendors;
     const list = filterByVendors(items, vendors);
     if(list.length===0) continue;
     const html = htmlFor(c.company||'Your account', list);
