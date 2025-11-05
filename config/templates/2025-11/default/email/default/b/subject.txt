@@ -1,1 +1,1 @@
-
+{{COMPANY}}: Your {{DATE}} vendor-change digest is ready
