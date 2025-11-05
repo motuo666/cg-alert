@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>CG Alert — Evidence Updates</title>
+    <link>https://www.cg-alert.com/</link>
+    <description>Newest vendor change evidence from CG Alert.</description>
+    <language>en</language>
+    <ttl>60</ttl>
+  </channel>
+</rss>
