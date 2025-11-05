@@ -1,1 +1,50 @@
-<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="/reports/rss.xsl"?><rss version="2.0" xmlns:cg="https://www.cg-alert.com/ns"><channel><title>CG Alert — Reports</title><link>https://www.cg-alert.com/reports/</link><description>Recent vendor report pages</description><item><title>Change detected @ example.com/pricing</title><description>&lt;![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]&gt;</description><link>https://www.cg-alert.com/reports/</link><pubDate>Sun, 02 Nov 2025 13:14:01 GMT</pubDate><cg:sourceUrl>https://example.com/pricing</cg:sourceUrl><cg:sha256>sha-6578616d706c652e</cg:sha256></item><item><title>Change detected @ example.com/pricing</title><description>&lt;![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]&gt;</description><link>https://www.cg-alert.com/reports/</link><pubDate>Sun, 02 Nov 2025 16:02:15 GMT</pubDate><cg:sourceUrl>https://example.com/pricing</cg:sourceUrl><cg:sha256>sha-6578616d706c652e</cg:sha256></item><item><title>Change detected @ example.com/pricing</title><description>&lt;![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]&gt;</description><link>https://www.cg-alert.com/reports/</link><pubDate>Sun, 02 Nov 2025 18:40:40 GMT</pubDate><cg:sourceUrl>https://example.com/pricing</cg:sourceUrl><cg:sha256>sha-6578616d706c652e</cg:sha256></item><item><title>Change detected @ vendorx.com/pricing</title><description>&lt;![CDATA[Potential update at vendorx.com/pricing. Verify &amp; escalate if material.]]&gt;</description><link>https://www.cg-alert.com/reports/</link><pubDate>Mon, 03 Nov 2025 18:42:54 GMT</pubDate><cg:sourceUrl>https://vendorx.com/pricing</cg:sourceUrl><cg:sha256>84ef3b9d35eddb255969f2d0e0586d514c2eb454acf937094a8b66ddc3f9bed4</cg:sha256></item><item><title>Change detected @ vendorx.com/pricing</title><description>&lt;![CDATA[Potential update at vendorx.com/pricing. Verify &amp; escalate if material.]]&gt;</description><link>https://www.cg-alert.com/reports/</link><pubDate>Tue, 04 Nov 2025 18:46:53 GMT</pubDate><cg:sourceUrl>https://vendorx.com/pricing</cg:sourceUrl><cg:sha256>36899da0528e4752e9453089ab39d4c61d60615e07ca36a598297efd345e0e95</cg:sha256></item><lastBuildDate>Tue, 04 Nov 2025 18:46:53 GMT</lastBuildDate></channel></rss>
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/reports/rss.xsl"?>
+<rss version="2.0" xmlns:cg="https://www.cg-alert.com/ns">
+  <channel>
+    <title>CG Alert — Reports</title>
+    <link>https://www.cg-alert.com/reports/</link>
+    <description>Recent vendor report pages</description>
+    <item>
+      <title>Change detected @ example.com/pricing</title>
+      <description>&lt;![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <link>https://www.cg-alert.com/reports/</link>
+      <pubDate>Sun, 02 Nov 2025 13:14:01 GMT</pubDate>
+      <cg:sourceUrl>https://example.com/pricing</cg:sourceUrl>
+      <cg:sha256>sha-6578616d706c652e</cg:sha256>
+    </item>
+    <item>
+      <title>Change detected @ example.com/pricing</title>
+      <description>&lt;![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <link>https://www.cg-alert.com/reports/</link>
+      <pubDate>Sun, 02 Nov 2025 16:02:15 GMT</pubDate>
+      <cg:sourceUrl>https://example.com/pricing</cg:sourceUrl>
+      <cg:sha256>sha-6578616d706c652e</cg:sha256>
+    </item>
+    <item>
+      <title>Change detected @ example.com/pricing</title>
+      <description>&lt;![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <link>https://www.cg-alert.com/reports/</link>
+      <pubDate>Sun, 02 Nov 2025 18:40:40 GMT</pubDate>
+      <cg:sourceUrl>https://example.com/pricing</cg:sourceUrl>
+      <cg:sha256>sha-6578616d706c652e</cg:sha256>
+    </item>
+    <item>
+      <title>Change detected @ vendorx.com/pricing</title>
+      <description>&lt;![CDATA[Potential update at vendorx.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <link>https://www.cg-alert.com/reports/</link>
+      <pubDate>Mon, 03 Nov 2025 18:42:54 GMT</pubDate>
+      <cg:sourceUrl>https://vendorx.com/pricing</cg:sourceUrl>
+      <cg:sha256>84ef3b9d35eddb255969f2d0e0586d514c2eb454acf937094a8b66ddc3f9bed4</cg:sha256>
+    </item>
+    <item>
+      <title>Change detected @ vendorx.com/pricing</title>
+      <description>&lt;![CDATA[Potential update at vendorx.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <link>https://www.cg-alert.com/reports/</link>
+      <pubDate>Tue, 04 Nov 2025 18:46:53 GMT</pubDate>
+      <cg:sourceUrl>https://vendorx.com/pricing</cg:sourceUrl>
+      <cg:sha256>36899da0528e4752e9453089ab39d4c61d60615e07ca36a598297efd345e0e95</cg:sha256>
+    </item>
+    <lastBuildDate>Tue, 04 Nov 2025 18:46:53 GMT</lastBuildDate>
+  </channel>
+</rss>
