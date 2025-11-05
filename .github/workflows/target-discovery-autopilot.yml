@@ -27,4 +27,6 @@ jobs:
           if [ ! -f scripts/target_discovery.js ]; then
             echo "scripts/target_discovery.js missing; skipping"; exit 0; fi
 
+          # guard-missing:scripts/target_discovery.js
+          if [ ! -f scripts/target_discovery.js ]; then echo 'missing, skip'; exit 0; fi
           node scripts/target_discovery.js

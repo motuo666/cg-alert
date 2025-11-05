@@ -97,3 +97,12 @@ jobs:
           git config user.name  "cg-alert-bot"
           if [ -d out ]; then git add -A out; fi data/suppressions.csv
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "outreach: manual send"; git pull --rebase --autostash || true; git push; fi
+
+
+- name: Slack on failure
+  if: failure()
+  env:
+    SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+  run: |
+    set -e
+    jq -n --arg t "❌ ${GITHUB_WORKFLOW} failed • run=${GITHUB_RUN_ID}" '{text:$t}'             | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
