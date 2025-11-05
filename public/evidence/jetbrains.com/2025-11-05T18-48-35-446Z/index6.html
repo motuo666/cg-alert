@@ -1,0 +1,81 @@
+
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>jetbrains.com – snapshot 2025-11-05T18-48-35-446Z</title>
+<body style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;font-size:.9rem;line-height:1.4;color:#111;padding:1rem;">
+<h1 style="font-size:1rem;font-weight:600;margin:0 0 1rem 0;">jetbrains.com</h1>
+<div style="font-size:.8rem;color:#555;">Source URL: https://jetbrains.com/legal/data-processing-addendum</div>
+<div style="font-size:.8rem;color:#555;">Captured: 2025-11-05T18-48-35-446Z</div>
+<div style="font-size:.8rem;color:#555;">SHA256: 2f53ccda1f19b0dbe2b024dcb965721b2f12caa1d190e39e558f106edad506fa</div>
+<pre style="white-space:pre-wrap;font-size:.7rem;color:#000;background:#f9f9f9;border:1px solid #ddd;border-radius:4px;padding:.5rem;margin-top:1rem;">
+
+
+
+
+
+
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+        &lt;!-- Optimizely --&gt;
+&lt;script type="text/javascript"&gt;
+    window.optimizely = window.optimizely || [];
+
+    function checkConsent() {
+        var hasAnalyticsConsent = false;
+
+        // Find the cookiehub cookie
+        var cookieMatch = document.cookie.match(/cookiehub=([^;]+)/);
+        var cookiehubValue = cookieMatch ? cookieMatch[1] : null;
+
+        if (cookiehubValue) {
+            try {
+                // Decode base64 and parse JSON
+                var jsonString = atob(cookiehubValue);
+                var consentData = JSON.parse(jsonString);
+
+                /*
+                 * Category to purpose mapping for reference:
+                 * Category 1: necessary
+                 * Category 2: preferences
+                 * Category 3: analytics
+                 * Category 4: marketing
+                 * Category 5: uncategorized
+                 */
+
+                // Check for analytics consent (category 3)
+               if (consentData.allAllowed === true ||
+                    (Array.isArray(consentData.categories) && consentData.categories.indexOf(3) !== -1)) {
+                    hasAnalyticsConsent = true;
+                }
+
+            } catch (error) {
+                console.error('Error processing cookiehub consent:', error);
+            }
+        }
+
+        // Set Optimizely based on consent status
+        if (hasAnalyticsConsent) {
+            window.optimizely.push({type: "sendEvents"});
+            clearInterval(pollInterval);
+        } else {
+            window.optimizely.push({type: "holdEvents"});
+        }
+    }
+
+    // Set up polling (will stop after consent is granted)
+    var pollInterval = setInterval(checkConsent, 500);
+
+    // Check consent initially
+    checkConsent();
+&lt;/script&gt;
+
+&lt;script src="https://resources.jetbrains.com/storage/optly/26613100737.js"&gt;
+    // www.jetbrains.com
+&lt;/script&gt;
+&lt;!-- End Optimizely --&gt;&lt;!-- Error reporting --&gt;
+&lt;script&gt;(function(){
+  window.reportError</pre>
+</body></html>
