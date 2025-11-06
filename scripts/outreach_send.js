@@ -1,75 +1,64 @@
-// scripts/outreach_send.js (CommonJS auto-discovery, Email-only)
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const { findFirst, readCSVGuess, log } = require('./utils.js');
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import nodemailer from 'nodemailer';
 
-const DRY = (process.env.DRY || 'true') === 'true';
-const LIMIT = parseInt(process.env.LIMIT || '20', 10);
-const SITE = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_USER = process.env.SMTP_USER;
+const SMTP_PASS = process.env.SMTP_PASS;
+const SEND_LIMIT = parseInt(process.env.SEND_LIMIT || '12', 10);
 
-function hmac(token){
-  return crypto.createHmac('sha256', process.env.UNSUB_HMAC_SECRET || 'dev').update(token).digest('hex');
+if(!SMTP_HOST || !SMTP_USER || !SMTP_PASS){
+  console.error('Missing SMTP_* env');
+  process.exit(1);
 }
 
-const leadsPath = findFirst(['data/leads.csv','leads.csv']);
-let leads = [{email:'buyer@example.com', name:'Buyer', title:'Procurement Lead', company:'Acme', domain:'acme.com', region:'US', status:'new'}];
-if(leadsPath){
-  try { const rows = readCSVGuess(leadsPath); leads = rows.filter(r => r.email); log('loaded leads:', leads.length, 'from', leadsPath); }
-  catch(e){ log('leads.csv parse failed, fallback to demo', e.message); }
+const leadsCsv = path.join(process.cwd(),'data','leads.csv');
+const unsubJson = path.join(process.cwd(),'suppression','unsub.json');
+
+function parseCSV(text){
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  const hdr = lines.shift().split(',').map(s=>s.trim());
+  return lines.map(l=>{
+    const cols = l.split(',').map(s=>s.trim());
+    const obj = {}; hdr.forEach((h,i)=>obj[h]=cols[i]||''); return obj;
+  });
 }
 
-const suppressPath = findFirst(['data/suppressions.csv']);
-const suppressed = new Set();
-if(suppressPath){
-  try{
-    const txt = fs.readFileSync(suppressPath, 'utf8');
-    txt.split(/\r?\n/).forEach(line=>{
-      const m = line.split(',')[0];
-      if(m && m.includes('@')) suppressed.add(m.trim().toLowerCase());
-    });
-    log('loaded suppressions:', suppressed.size);
-  }catch(e){ log('no suppressions parsed'); }
+async function loadLeads(){
+  try{ return parseCSV(await fs.readFile(leadsCsv,'utf8')); }catch{ return []; }
 }
-
-function buildHtml(lead, unsubUrl){
-  return `Hi ${lead.name || 'there'},<br><br>
-We monitor <b>Pricing</b>, <b>Terms/SLA</b>, <b>DPA</b>, <b>Subprocessors</b>, <b>Status</b> with <b>evidence cards</b> (URL · timestamp · SHA256) and ready‑to‑paste escalation language.<br><br>
-Plans: Portfolio $2,988 (25 vendors), Business $6,000 (50 vendors), Enterprise $18k+ (200 vendors).<br>
-See details: <a href="${SITE}">cg-alert.com</a><br><br>
-Unsubscribe: <a href="${unsubUrl}">opt out</a>`;
+async function loadUnsub(){
+  try{ const j = JSON.parse(await fs.readFile(unsubJson,'utf8')); return new Set(j.unsub||[]); }catch{ return new Set(); }
 }
 
 async function main(){
+  const unsub = await loadUnsub();
+  const leads = (await loadLeads()).filter(x=>x.email && !unsub.has(x.email.toLowerCase()));
+  if(leads.length === 0){ console.log('no leads to send'); return; }
+
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: 587, secure: false,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+    host: SMTP_HOST, port: 587, secure: false,
+    auth: { user: SMTP_USER, pass: SMTP_PASS }
   });
 
   let sent = 0;
   for(const lead of leads){
-    if(sent >= LIMIT) break;
-    if(!lead.email) continue;
-    if(suppressed.has((lead.email||'').toLowerCase())) continue;
-    if((lead.status||'').toLowerCase()==='optout') continue;
-
-    const uid = `${lead.email}:${Date.now()}`;
-    const token = hmac(uid);
-    const unsub = `${SITE}/unsubscribe/?u=${encodeURIComponent(uid)}&s=${token}`;
-    const subject = `Evidence-backed vendor change alerts for ${lead.company || lead.domain || ''}`.trim();
-    const html = buildHtml(lead, unsub);
-    const msg = {
-      from: process.env.SMTP_USER,
-      replyTo: process.env.REPLY_TO || `"Jason" <ops@cg-alert.com>`,
-      to: lead.email,
-      subject, html
-    };
-    if(DRY){ console.log('[DRY] would send to', lead.email, 'unsub=', unsub); }
-    else { await transporter.sendMail(msg); console.log('sent', lead.email); }
-    sent++;
+    if(sent >= SEND_LIMIT) break;
+    const to = lead.email;
+    const subj = `[CG Alert] Evidence-backed vendor change monitoring for ${lead.company || 'your team'}`;
+    const body = `Hi ${lead.name || ''},
+We monitor pricing/ToS/DPA/Subprocessors for your named vendors and deliver evidence cards (timestamp + hash) by email/Slack.
+Reply with your top 3 vendors and we will set them up.
+– CG Alert`;
+    try{
+      await transporter.sendMail({
+        from: SMTP_USER,
+        to, subject: subj, text: body
+      });
+      sent++;
+    }catch(e){ /* ignore per-recipient errors */ }
   }
-  log('done. sent=', sent, 'dry=', DRY);
+  console.log('sent', sent);
 }
+
 main().catch(e=>{ console.error(e); process.exit(1); });

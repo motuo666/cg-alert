@@ -1,30 +1,31 @@
-#!/usr/bin/env node
-// CJS版 sitemap 生成：public/seo/** → public/sitemap.xml
-const fs = require('fs');
-const path = require('path');
-const { ensureDir } = require('./util.js');
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 const ROOT = process.cwd();
 const PUB = path.join(ROOT, 'public');
-const SEO = path.join(PUB, 'seo');
-ensureDir(PUB);
+const OUT = path.join(ROOT, 'public', 'sitemap.xml');
+const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 
-function collect(dir, out = []) {
-  if (!fs.existsSync(dir)) return out;
-  for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
-    const p = path.join(dir, ent.name);
-    if (ent.isDirectory()) collect(p, out);
-    else if (ent.isFile() && ent.name.endsWith('.html')) out.push(p);
+async function collect(dir){
+  const out=[];
+  const items = await fs.readdir(dir, { withFileTypes: true });
+  for(const it of items){
+    if(it.name.startsWith('.')) continue;
+    const full = path.join(dir, it.name);
+    if(it.isDirectory()){
+      out.push(...await collect(full));
+    }else if(it.isFile() && it.name.endsWith('.html')){
+      const rel = full.slice(PUB.length).replace(/\\/g,'/');
+      out.push(rel);
+    }
   }
   return out;
 }
 
-const files = collect(SEO);
-const origin = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
-const urls = files.map(f => `<url><loc>${origin}${f.replace(PUB, '').replace(/\\\\/g, '/')}</loc></url>`);
-const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.join('\n')}
-</urlset>`;
-fs.writeFileSync(path.join(PUB, 'sitemap.xml'), xml, 'utf-8');
-console.log(`Sitemap(${files.length}) → public/sitemap.xml`);
+(async function(){
+  const pages = await collect(PUB);
+  const urls = pages.map(p=>`  <url><loc>${ORIGIN}${p}</loc></url>`).join('\n');
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`;
+  await fs.writeFile(OUT, xml, 'utf8');
+  console.log('sitemap pages', pages.length);
+})().catch(e=>{ console.error(e); process.exit(1); });
