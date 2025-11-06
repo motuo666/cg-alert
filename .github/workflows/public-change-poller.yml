@@ -1,7 +1,7 @@
 name: Public Change Poller
 on:
   schedule:
-    - cron: '10 */6 * * *'   # every 6 hours, before Build Content (15 */6 * * *)
+    - cron: '10 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -20,16 +20,27 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
 
-      - name: Generate evidence (placeholder if none today)
+      - name: Install (none required)
+        run: echo "Node 20 has fetch; no deps needed"
+
+      - name: Poll vendors (two-stage confirmation)
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
         run: node scripts/poller.js
 
       - name: Render evidence pages
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
         run: node scripts/render_evidence_pages.js
 
-      - name: Build RSS
+      - name: Build RSS (confirmed only)
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
         run: node scripts/evidence_to_rss.js
 
       - name: Build sitemap
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
         run: node scripts/build_sitemap.js
 
       - name: Commit content
@@ -37,11 +48,11 @@ jobs:
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add -A public/evidence public/vendors public/rss public/sitemap.xml sitemap*.xml || true
+          git add -A evidence public/evidence public/rss sitemap.xml || true
           if git diff --cached --quiet; then
             echo "no content changes"
           else
-            git commit -m "poller: evidence+pages+rss+sitemap"
+            git commit -m "poller: evidence+pages+rss+sitemap (two-stage confirm)"
             git pull --rebase --autostash || true
             git push
           fi
