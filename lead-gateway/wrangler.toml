@@ -1,12 +1,19 @@
+# lead-gateway/wrangler.toml  (sanitized for VCS)
+# DO NOT PUT SECRETS HERE. Use `wrangler secret put ...` in Cloudflare.
 name = "lead-gateway"
 main = "src/index.js"
-compatibility_date = "2024-06-01"
+compatibility_date = "2025-01-15"
 workers_dev = true
-account_id = "${CF_ACCOUNT_ID}"
+account_id = "REPLACE_WITH_CF_ACCOUNT_ID"
 
-[vars]
-UNSUB_HMAC_SECRET = "${UNSUB_HMAC_SECRET}"
-
+# KV binding (set the real namespace id in CF dashboard)
 [[kv_namespaces]]
 binding = "CGALERT_KV"
-id = "${KV_NAMESPACE_ID}"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Secrets to set in CF (not in this file):
+#   wrangler secret put AUTH_USER
+#   wrangler secret put AUTH_PASS
+#   wrangler secret put GITHUB_REPO
+#   wrangler secret put GITHUB_TOKEN
+#   wrangler secret put KV_NAMESPACE_ID
