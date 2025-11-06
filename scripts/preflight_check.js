@@ -1,39 +1,14 @@
-// scripts/preflight_check.js
-// Quick preflight: ensures 'evidence/' is a directory and lists required env keys
-const fs = require('fs');
-const path = require('path');
-
-function ensureEvidenceDir(){
-  try{
-    const st = fs.statSync('evidence');
-    if(!st.isDirectory()){
-      throw new Error("'evidence' exists but is not a directory");
-    }
-  }catch(e){
-    if (e.code === 'ENOENT'){
-      fs.mkdirSync('evidence', { recursive: true });
-    } else {
-      throw e;
-    }
-  }
-  console.log('ok: evidence dir');
-}
-
-const REQUIRED = ['SITE_ORIGIN','SMTP_HOST','SMTP_USER','SMTP_PASS','UNSUB_HMAC_SECRET'];
-const OPTIONAL = ['INTAKE_FORM_URL','STRIPE_LINK_PORTFOLIO','STRIPE_LINK_BUSINESS','SLACK_WEBHOOK_URL','IMAP_HOST','IMAP_USER','IMAP_PASS'];
-
-function checkEnv(){
-  let miss=0;
-  for(const k of REQUIRED){
-    if(!process.env[k]){ console.error('MISS', k); miss++; } else { console.log('OK', k); }
-  }
-  for(const k of OPTIONAL){
-    if(!process.env[k]){ console.log('OPT?', k); } else { console.log('OK', k); }
-  }
-  if(miss>0) process.exit(1);
-}
-
-(function main(){
-  ensureEvidenceDir();
-  checkEnv();
-})();
+#!/usr/bin/env node
+const fs = require('fs'); const path = require('path');
+function fail(m){ console.error(`::error::${m}`); process.exitCode = 1; }
+function ok(m){ console.log(`OK - ${m}`); }
+const ev = path.join(process.cwd(),'evidence');
+try { if (!fs.existsSync(ev)) { fs.mkdirSync(ev,{recursive:true}); ok('created evidence/'); }
+      else if (!fs.statSync(ev).isDirectory()) { fail('`evidence` exists but is not a directory'); }
+      else ok('evidence/ is a directory'); } catch(e){ fail(e.message); }
+const req = ['SITE_ORIGIN','SMTP_HOST','SMTP_USER','SMTP_PASS','UNSUB_HMAC_SECRET'];
+const miss = req.filter(k=>!process.env[k]);
+if (miss.length) fail('Missing required env: '+miss.join(', '));
+else ok('required env present');
+console.log('Preflight passed.');
+if (process.exitCode) process.exit(process.exitCode);
