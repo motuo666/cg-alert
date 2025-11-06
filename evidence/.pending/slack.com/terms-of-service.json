@@ -1,0 +1,12 @@
+{
+  "vendor": "slack.com",
+  "url": "https://slack.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "",
+  "new_hash": "9b66d5997f08181f08bce8fad5c50ca8f6e256e978ce94deb660f47a564b3086",
+  "first_seen_at": "2025-11-06T18:43:51.977Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "Main Services Agreement | Legal | Slack Skip to main content Features COLLABORATION Channels Organize teams and work Slack Connect Work with external partners Messaging Chat with your team Huddles Meet with audio and video Clips Record and "
+}

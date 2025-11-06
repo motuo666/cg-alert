@@ -1,0 +1,12 @@
+{
+  "vendor": "slack.com",
+  "url": "https://slack.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "",
+  "new_hash": "8ee19a6357e73ac828f615d38a14552e1c4dd3cddefd6830c827bd27da998ce0",
+  "first_seen_at": "2025-11-06T18:43:49.721Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "Slack Product Pricing Support Download Slack Create a new workspace Find your workspace Sign in Menu Product Pricing Support Download the Slack app Sign in Create a new workspace &lt;style type=&quot;text/css&quot;&gt; nav.top { position: r"
+}

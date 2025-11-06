@@ -1,0 +1,12 @@
+{
+  "vendor": "gitlab.com",
+  "url": "https://gitlab.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "",
+  "new_hash": "e70bdd53416540554eaccafe4209ed62146ef8317b1c0b9af622c09b3970b687",
+  "first_seen_at": "2025-11-06T18:44:20.360Z",
+  "confirmed_at": null,
+  "status_code": 403,
+  "snippet": "Just a moment... Enable JavaScript and cookies to continue"
+}

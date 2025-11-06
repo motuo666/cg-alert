@@ -1,0 +1,12 @@
+{
+  "vendor": "miro.com",
+  "url": "https://miro.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "",
+  "new_hash": "119720122886cc74e7aa1af0c172c603e89c12b0075ab80f1b4acb48ec75b903",
+  "first_seen_at": "2025-11-06T18:46:39.307Z",
+  "confirmed_at": null,
+  "status_code": 500,
+  "snippet": "500: Internal Server Error 500 Internal Server Error ."
+}

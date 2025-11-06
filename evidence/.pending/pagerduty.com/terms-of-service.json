@@ -1,0 +1,12 @@
+{
+  "vendor": "pagerduty.com",
+  "url": "https://pagerduty.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "",
+  "new_hash": "2934a34ee25dd138b0ca3fb97011334c3294ebb54660fda349b7618136358ab9",
+  "first_seen_at": "2025-11-06T18:45:22.226Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "Terms of Service | PagerDuty We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog Connect, Learn, Innovate. Join us for PagerDuty on Tour. Register now We built an AI SRE with memory! PagerDuty SRE Agent is now GA. R"
+}

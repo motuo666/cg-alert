@@ -1,0 +1,12 @@
+{
+  "vendor": "cloudflare.com",
+  "url": "https://cloudflare.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "",
+  "new_hash": "661d6797cd273e1fe789c89399511f6e5f1a025bd191c4ce1228be9cc6aee11e",
+  "first_seen_at": "2025-11-06T18:45:06.063Z",
+  "confirmed_at": null,
+  "status_code": 404,
+  "snippet": "Page not found | Cloudflare Sign up Languages English English (United Kingdom) Deutsch Español (Latinoamérica) Español (España) Français Italiano 日本語 한국어 Polski Português (Brasil) Русский 繁體中文 简体中文 Platform Connectivity cloud Cloudflare’s c"
+}

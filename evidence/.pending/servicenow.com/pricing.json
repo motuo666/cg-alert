@@ -1,0 +1,12 @@
+{
+  "vendor": "servicenow.com",
+  "url": "https://servicenow.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "",
+  "new_hash": "1253823d7e55c4b5fa253d571bb29e430d45fc2cf2a205100320200ee6b2a565",
+  "first_seen_at": "2025-11-06T18:45:59.834Z",
+  "confirmed_at": null,
+  "status_code": 403,
+  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;pricing\" on this server. Reference&#32;&#35;18&#46;971c2117&#46;1762454758&#46;5ba7b2dc https&#58;&#47;&#47;errors&#46;edgesu"
+}

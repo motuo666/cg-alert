@@ -1,0 +1,12 @@
+{
+  "vendor": "okta.com",
+  "url": "https://okta.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "",
+  "new_hash": "11d0276368397d562267df833510ae5e1f7953d60ffb2a3ba5bb91ddf5dc987f",
+  "first_seen_at": "2025-11-06T18:45:33.760Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "%PDF-1.7 %���� 1 0 obj >/Metadata 227 0 R/ViewerPreferences 228 0 R>> endobj 2 0 obj > endobj 3 0 obj >/ExtGState >/XObject >/ProcSet[/PDF/Text/ImageB/ImageC/ImageI] >>/Annots[ 18 0 R 19 0 R 20 0 R] /MediaBox[ 0 0 612 792] /Contents 4 0 R/G"
+}

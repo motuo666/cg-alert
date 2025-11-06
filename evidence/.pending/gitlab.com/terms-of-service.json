@@ -1,0 +1,12 @@
+{
+  "vendor": "gitlab.com",
+  "url": "https://gitlab.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "",
+  "new_hash": "fd3a2eb548399e559b97d55c5c34786f38c9046ec2c6d32cc7dda098745160be",
+  "first_seen_at": "2025-11-06T18:44:22.727Z",
+  "confirmed_at": null,
+  "status_code": 403,
+  "snippet": "Just a moment... Enable JavaScript and cookies to continue"
+}

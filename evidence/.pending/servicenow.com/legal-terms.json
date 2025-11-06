@@ -1,0 +1,12 @@
+{
+  "vendor": "servicenow.com",
+  "url": "https://servicenow.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "",
+  "new_hash": "281c9d1ba8c3d9eba7ea2602dee9dfaf1c6eabbbd0a11e21f3a1656e887c2757",
+  "first_seen_at": "2025-11-06T18:46:02.915Z",
+  "confirmed_at": null,
+  "status_code": 403,
+  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;legal&#47;terms\" on this server. Reference&#32;&#35;18&#46;971c2117&#46;1762454761&#46;5ba7cef5 https&#58;&#47;&#47;errors&#4"
+}

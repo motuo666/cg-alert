@@ -1,0 +1,12 @@
+{
+  "vendor": "servicenow.com",
+  "url": "https://servicenow.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "",
+  "new_hash": "6e94551da0baf7a701807653d1cf89ea775082f5691dd5c34ced20030d227d83",
+  "first_seen_at": "2025-11-06T18:46:01.811Z",
+  "confirmed_at": null,
+  "status_code": 403,
+  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;terms&#45;of&#45;service\" on this server. Reference&#32;&#35;18&#46;971c2117&#46;1762454760&#46;5ba7c5b2 https&#58;&#47;&#47;"
+}

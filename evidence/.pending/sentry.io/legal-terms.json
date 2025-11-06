@@ -1,0 +1,12 @@
+{
+  "vendor": "sentry.io",
+  "url": "https://sentry.io/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "",
+  "new_hash": "36194adb286c3752135533549bbfffac6a1d3468a02579955a4169215cb31b49",
+  "first_seen_at": "2025-11-06T18:45:29.686Z",
+  "confirmed_at": null,
+  "status_code": 404,
+  "snippet": "Application Monitoring and Error Tracking Software | Sentry This app works best with JavaScript enabled. Menu Platform Products Products Error Monitoring Logs NEW Session Replay Tracing Seer NEW Uptime Monitoring Profiling Cron Monitoring A"
+}
