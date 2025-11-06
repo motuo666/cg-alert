@@ -1,36 +1,41 @@
 {
   "mode": "balanced",
-  "keywords": {
-    "narrow": [
-      "dpa",
-      "data-processing",
-      "subprocessors",
-      "terms"
-    ],
-    "balanced": [
-      "pricing",
-      "terms",
-      "legal",
-      "dpa",
-      "data-processing",
-      "subprocessors",
-      "security",
-      "status"
-    ],
-    "wide": [
-      "pricing",
-      "terms",
-      "legal",
-      "dpa",
-      "data-processing",
-      "subprocessors",
-      "security",
-      "status",
-      "trust",
-      "sla",
-      "policy",
-      "agreement"
-    ]
-  },
-  "max_fetch": 50
+  "max_seeds_per_run": 30,
+  "max_pages_per_domain": 6,
+  "concurrency": 4,
+  "timeout_ms": 15000,
+  "user_agent": "CG-AlertBot/1.0 (+https://www.cg-alert.com/bot)",
+  "allow_paths_regex": [
+    "/pricing",
+    "/terms",
+    "/legal",
+    "/policy",
+    "/policies",
+    "/privacy",
+    "/security",
+    "/trust",
+    "/trust-center",
+    "/dpa",
+    "/subprocessors",
+    "/sub-processor",
+    "/status"
+  ],
+  "deny_domains": [
+    "facebook.com",
+    "x.com",
+    "twitter.com",
+    "linkedin.com",
+    "instagram.com",
+    "youtube.com",
+    "t.me",
+    "discord.gg",
+    "discord.com"
+  ],
+  "bootstrap_seeds": [
+    "stripe.com",
+    "cloudflare.com",
+    "slack.com",
+    "atlassian.com",
+    "zendesk.com"
+  ]
 }

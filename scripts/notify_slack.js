@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 const fs = require('fs');
-const fetch = require('node-fetch');
 const HOOK = process.env.SLACK_WEBHOOK_URL || '';
 const SITE = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 async function main(){
