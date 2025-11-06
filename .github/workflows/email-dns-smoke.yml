@@ -1,0 +1,88 @@
+name: Email DNS & SMTP/IMAP Smoke
+
+on:
+  schedule:
+    - cron: '12 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dns:
+    runs-on: ubuntu-latest
+    env:
+      MAIL_FROM: ${{ vars.MAIL_FROM || secrets.MAIL_FROM || vars.SMTP_USER || secrets.SMTP_USER }}
+      DKIM_SELECTOR: ${{ vars.DKIM_SELECTOR || 'default' }}
+    outputs:
+      ok: ${{ steps.chk.outputs.ok }}
+      domain: ${{ steps.chk.outputs.domain }}
+      ok_spf: ${{ steps.chk.outputs.ok_spf }}
+      ok_dmarc: ${{ steps.chk.outputs.ok_dmarc }}
+      ok_dkim: ${{ steps.chk.outputs.ok_dkim }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: DNS check (SPF/DKIM/DMARC)
+        id: chk
+        run: |
+          sudo apt-get update && sudo apt-get install -y dnsutils
+          bash scripts/dns_check.sh
+
+  probe:
+    needs: dns
+    runs-on: ubuntu-latest
+    env:
+      SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
+      SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+      SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
+      IMAP_HOST: ${{ secrets.IMAP_HOST || vars.IMAP_HOST }}
+      IMAP_USER: ${{ secrets.IMAP_USER || vars.IMAP_USER }}
+      IMAP_PASS: ${{ secrets.IMAP_PASS || vars.IMAP_PASS }}
+      IMAP_PORT: ${{ vars.IMAP_PORT || '993' }}
+    outputs:
+      ok: ${{ steps.probe.outputs.ok }}
+      reason: ${{ steps.probe.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: SMTP/IMAP probe
+        id: probe
+        run: node scripts/smtp_imap_probe.js
+
+  gate:
+    needs: [dns, probe]
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update sending gate marker
+        run: |
+          set -e
+          mkdir -p ops
+          if [ "${{ needs.dns.outputs.ok }}" != "true" ] || [ "${{ needs.probe.outputs.ok }}" != "true" ]; then
+            echo "SENDING BLOCKED" > ops/SENDING_BLOCKED.md
+            echo "" >> ops/SENDING_BLOCKED.md
+            echo "DNS ok=${{ needs.dns.outputs.ok }} (SPF=${{ needs.dns.outputs.ok_spf }}, DMARC=${{ needs.dns.outputs.ok_dmarc }}, DKIM=${{ needs.dns.outputs.ok_dkim }})" >> ops/SENDING_BLOCKED.md
+            echo "Probe ok=${{ needs.probe.outputs.ok }} (${% raw %}{{% endraw %}}{ needs.probe.outputs.reason })" >> ops/SENDING_BLOCKED.md || true
+          else
+            if [ -f ops/SENDING_BLOCKED.md ]; then rm -f ops/SENDING_BLOCKED.md; fi
+          fi
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add ops/SENDING_BLOCKED.md || true
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "ops: update sending gate marker"
+            git pull --rebase --autostash || true
+            git push
+          fi
+      - name: Slack notify (optional)
+        if: env.SLACK_WEBHOOK_URL != ''
+        run: |
+          STATUS="OK"
+          if [ "${{ needs.dns.outputs.ok }}" != "true" ] || [ "${{ needs.probe.outputs.ok }}" != "true" ]; then STATUS="BLOCKED"; fi
+          jq -n --arg text "Email DNS/SMTP/IMAP: ${STATUS}\nSPF=${{ needs.dns.outputs.ok_spf }}, DMARC=${{ needs.dns.outputs.ok_dmarc }}, DKIM=${{ needs.dns.outputs.ok_dkim }}\nProbe=${{ needs.probe.outputs.ok }}: ${{ needs.probe.outputs.reason }}" '{text:$text}' | curl -sS -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL" || true

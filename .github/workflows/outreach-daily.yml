@@ -1,73 +1,61 @@
-name: Outreach Daily
+name: Outreach Daily (gated)
 
 on:
   schedule:
-    - cron: '0 14 * * *'  # daily; adjust in cron if needed
+    - cron: '5 16 * * *'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  guard:
-    runs-on: ubuntu-latest
-    outputs:
-      status: ${{ steps.chk.outcome }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - id: chk
-        name: KPI guard (evidence_today >= 10)
-        run: node scripts/kpi_guard.js
-
-  window:
-    runs-on: ubuntu-latest
-    outputs:
-      ok: ${{ steps.win.outputs.ok }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - id: win
-        name: Send window guard
-        env:
-          SEND_TZ:          ${{ vars.SEND_TZ }}
-          SEND_DAYS:        ${{ vars.SEND_DAYS }}
-          SEND_START_HOUR:  ${{ vars.SEND_START_HOUR }}
-          SEND_END_HOUR:    ${{ vars.SEND_END_HOUR }}
-        run: node scripts/send_window_guard.js >> $GITHUB_OUTPUT
-
   limit:
     runs-on: ubuntu-latest
     outputs:
-      SEND_LIMIT: ${{ steps.calc.outputs.limit }}
+      SEND_LIMIT: ${{ steps.lim.outputs.SEND_LIMIT }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - id: calc
-        name: Compute daily send limit (+1/day → 100)
+      - name: Compute daily send limit
+        id: lim
         env:
-          CAMPAIGN_START_DATE: ${{ vars.CAMPAIGN_START_DATE }}
-          SEND_BASE: ${{ vars.SEND_BASE || vars.TARGET_SENT || 1 }}
-          SEND_CAP:  ${{ vars.SEND_CAP  || 100 }}
-        run: node scripts/send_limit_daily.js >> $GITHUB_OUTPUT
+          CAMPAIGN_START_DATE: ${{ vars.CAMPAIGN_START_DATE || '2025-10-01' }}
+          SEND_BASE: ${{ vars.SEND_BASE || '1' }}
+          SEND_CAP:  ${{ vars.SEND_CAP  || '100' }}
+          TARGET_SENT: ${{ vars.TARGET_SENT || '0' }}
+        run: node scripts/send_limit_daily.js
+
+  kpi:
+    runs-on: ubuntu-latest
+    outputs:
+      ok: ${{ steps.chk.outputs.ok }}
+      count: ${{ steps.chk.outputs.count }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: KPI guard (evidence >= 10 today)
+        id: chk
+        env:
+          MIN_EVIDENCE_PER_DAY: ${{ vars.MIN_EVIDENCE_PER_DAY || '10' }}
+        run: node scripts/kpi_guard.js
 
   send:
-    needs: [guard, window, limit]
-    if: needs.guard.result == 'success' && needs.window.outputs.ok == 'true'
+    needs: [limit, kpi]
+    if: ${{ !hashFiles('ops/SENDING_BLOCKED.md') && needs.kpi.outputs.ok == 'true' }}
     runs-on: ubuntu-latest
     env:
+      SEND_LIMIT: ${{ needs.limit.outputs.SEND_LIMIT }}
       SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
       SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
-      SEND_LIMIT: ${{ needs.limit.outputs.SEND_LIMIT }}
+      MAIL_FROM: ${{ vars.MAIL_FROM || secrets.MAIL_FROM || vars.SMTP_USER || secrets.SMTP_USER }}
+      UNSUB_ORIGIN: ${{ vars.UNSUB_ORIGIN || 'https://www.cg-alert.com' }}
+      UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET || vars.UNSUB_HMAC_SECRET }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - name: Install deps
-        run: npm i -E nodemailer@6
-      - name: Send outreach (guarded, ramping +1/day)
+      - name: Persona outreach
         run: node scripts/outreach_send.js
