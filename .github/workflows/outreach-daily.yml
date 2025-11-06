@@ -41,9 +41,25 @@ jobs:
           MIN_EVIDENCE_PER_DAY: ${{ vars.MIN_EVIDENCE_PER_DAY || '10' }}
         run: node scripts/kpi_guard.js
 
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      blocked: ${{ steps.mark.outputs.blocked }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check sending gate marker
+        id: mark
+        shell: bash
+        run: |
+          if [ -f ops/SENDING_BLOCKED.md ]; then
+            echo "blocked=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "blocked=false" >> "$GITHUB_OUTPUT"
+          fi
+
   send:
-    needs: [limit, kpi]
-    if: ${{ !hashFiles('ops/SENDING_BLOCKED.md') && needs.kpi.outputs.ok == 'true' }}
+    needs: [limit, kpi, gate]
+    if: ${{ needs.kpi.outputs.ok == 'true' && needs.gate.outputs.blocked != 'true' }}
     runs-on: ubuntu-latest
     env:
       SEND_LIMIT: ${{ needs.limit.outputs.SEND_LIMIT }}
