@@ -1,45 +1,28 @@
-#!/usr/bin/env node
-// scripts/kv_stripe_sync.js — dump Stripe sessions from KV to data/customers.csv
-import { readFileSync, writeFileSync } from 'fs';
-import { execSync } from 'child_process';
+// Sync basic customer flags into Cloudflare KV if env present; otherwise no-op success
+const { fs, path, readJSON } = require('./utils.js');
 
-const file = 'data/customers.csv';
-try{ execSync('test -f '+file+' || echo \"email,plan,amount_cents,currency,session_id,at\" > '+file, {stdio:'inherit'});}catch{}
-const prev = readFileSync(file,'utf8').split(/\r?\n/).filter(Boolean);
-const seen = new Set(prev.slice(1).map(l=>l.split(',')[4])); // session_id
+const CF_API_TOKEN = process.env.CF_API_TOKEN;
+const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+const CF_NS_ID = process.env.CF_KV_NAMESPACE || process.env.CF_KV_NS || process.env.KV_NAMESPACE_ID;
+const DATA = path.join(process.cwd(),'customers.json');
 
-// Expect Cloudflare API envs provided by workflow
-const acct = process.env.CF_ACCOUNT_ID, ns = process.env.KV_NAMESPACE_ID, tok = process.env.CF_API_TOKEN;
-if(!acct||!ns||!tok){ console.error('CF env missing'); process.exit(1); }
-
-function listKeys(cursor){
-  const url = `https://api.cloudflare.com/client/v4/accounts/${acct}/storage/kv/namespaces/${ns}/keys?limit=1000` + (cursor?`&cursor=${cursor}`:'');
-  const res = execSync(`curl -s -H "Authorization: Bearer ${tok}" -H "Content-Type: application/json" "${url}"`).toString();
-  const j = JSON.parse(res);
-  return j;
+async function putBulk(pairs){
+  const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_NS_ID}/bulk`;
+  const res = await fetch(url, {
+    method:'PUT',
+    headers:{'Authorization':`Bearer ${CF_API_TOKEN}`,'Content-Type':'application/json'},
+    body: JSON.stringify(pairs.map(([k,v])=>({key:k,value:v})))
+  });
+  if(!res.ok){ throw new Error('CF bulk put fail '+res.status); }
 }
 
-function readKey(key){
-  const url = `https://api.cloudflare.com/client/v4/accounts/${acct}/storage/kv/namespaces/${ns}/values/${encodeURIComponent(key)}`;
-  const res = execSync(`curl -s -H "Authorization: Bearer ${tok}" -H "Content-Type: application/json" "${url}"`).toString();
-  return res;
-}
-
-let cursor=null, added=0;
-do{
-  const j=listKeys(cursor);
-  cursor=j.result_info && j.result_info.cursor;
-  for(const k of j.result||[]){
-    if(!k.name.startsWith('stripe:session:')) continue;
-    if(seen.has(k.name.split(':').pop())) continue;
-    const val = readKey(k.name);
-    try{
-      const o = JSON.parse(val);
-      const row = [o.email||'', o.plan||'', o.amount_total||'', (o.currency||'').toUpperCase(), o.session_id||'', o.at||''].join(',');
-      prev.push(row); added++;
-    }catch{}
+(async function(){
+  if(!CF_API_TOKEN || !CF_ACCOUNT_ID || !CF_NS_ID){
+    console.log('kv_stripe_sync: missing CF env, no-op');
+    return;
   }
-}while(cursor);
-
-writeFileSync(file, prev.join('\n'));
-console.log('customers added:', added);
+  const rows = await readJSON(DATA, []);
+  const pairs = rows.slice(0,1000).map(c => [`cust:${(c.email||'').toLowerCase()}`, JSON.stringify({plan:c.plan||'', rhythm:c.rhythm||''})]);
+  if(pairs.length) await putBulk(pairs);
+  console.log('kv_stripe_sync done', pairs.length);
+})().catch(e=>{ console.error(e); process.exit(1); });

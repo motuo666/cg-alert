@@ -1,57 +1,12 @@
-// Minimal hardened utils for Node 18+ / 20+
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
-import crypto from 'node:crypto';
+// CommonJS helpers
+const fs = require('node:fs/promises');
+const path = require('node:path');
 
-export async function ensureDir(p) {
-  await fs.mkdir(p, { recursive: true });
-}
+function slugify(v){ return (v||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'unknown'; }
 
-export async function readJSON(p, def = null) {
-  try {
-    const s = await fs.readFile(p, 'utf8');
-    return JSON.parse(s);
-  } catch (e) {
-    if (def !== null) return def;
-    throw e;
-  }
-}
+async function readJSON(p, def=null){ try{ return JSON.parse(await fs.readFile(p,'utf8')); }catch{ return def; } }
+async function writeJSON(p, obj){ await fs.mkdir(path.dirname(p),{recursive:true}); await fs.writeFile(p, JSON.stringify(obj, null, 2), 'utf8'); }
 
-export async function writeJSON(p, obj) {
-  await ensureDir(path.dirname(p));
-  const s = JSON.stringify(obj, null, 2);
-  await fs.writeFile(p, s, 'utf8');
-}
+function nowISO(){ return new Date().toISOString(); }
 
-export function env(name, fallback = undefined) {
-  const v = process.env[name];
-  if (v === undefined || v === '') {
-    if (fallback !== undefined) return fallback;
-    throw new Error(`Missing env ${name}`);
-  }
-  return v;
-}
-
-export async function sha256Hex(input) {
-  const h = crypto.createHash('sha256');
-  h.update(typeof input === 'string' ? input : Buffer.from(input));
-  return h.digest('hex');
-}
-
-export async function hmacSha256Hex(key, msg) {
-  const h = crypto.createHmac('sha256', key);
-  h.update(msg);
-  return h.digest('hex');
-}
-
-export function nowISO() {
-  return new Date().toISOString();
-}
-
-export function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
-
-export function safeJSON(obj) {
-  try { return JSON.stringify(obj); } catch { return '"<unserializable>"'; }
-}
+module.exports = { fs, path, slugify, readJSON, writeJSON, nowISO };

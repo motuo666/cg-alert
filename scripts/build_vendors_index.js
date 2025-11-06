@@ -1,40 +1,28 @@
-/**
- * Build simple /public/vendors/ index from vendors/*/events.json
- * Safe when empty.
- */
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
-import { ensureDir, readJSON } from './utils.js';
+const { fs, path, slugify, readJSON } = require('./utils.js');
+const PUB = path.join(process.cwd(), process.env.PUBLISH_DIR || 'public');
+const EVD = path.join(process.cwd(), 'evidence');
 
-const ROOT = process.cwd();
-const VENDORS_DIR = path.join(ROOT, 'vendors');
-const OUT_DIR = path.join(ROOT, 'public', 'vendors');
-
-function htmlPage(title, body){
-  return `<!doctype html><meta charset="utf-8"><title>${title}</title>
-  <link rel="canonical" href="/vendors/"><style>body{{font:16px/1.6 -apple-system,Segoe UI,Roboto,Arial;margin:24px}}</style>
-  ${body}`;
+function html(title, body){
+  return `<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${title}</title>
+<style>body{font:16px/1.6 -apple-system,Segoe UI,Roboto,Arial;margin:24px;color:#0b0f19}a{color:#0b62f2}</style>
+</head><body><main>${body}</main></body></html>`;
 }
 
-async function main(){
-  await ensureDir(OUT_DIR);
-  let entries = [];
-  try {
-    const items = await fs.readdir(VENDORS_DIR, { withFileTypes: true });
-    for (const d of items) {
-      if (!d.isDirectory()) continue;
-      const slug = d.name;
-      const evPath = path.join(VENDORS_DIR, slug, 'events.json');
-      const ev = await readJSON(evPath, []);
-      entries.push({ slug, count: ev.length });
-      const vendorOut = path.join(OUT_DIR, slug);
-      await ensureDir(vendorOut);
-      await fs.writeFile(path.join(vendorOut, 'index.html'), htmlPage(`Vendor — ${slug}`, `<h1>${slug}</h1><p>${ev.length} events</p>`));
+(async function(){
+  const map = new Map();
+  try{
+    const files = (await fs.readdir(EVD)).filter(f=>f.endsWith('.json'));
+    for(const f of files){
+      const e = await readJSON(path.join(EVD,f), null);
+      if(!e || !e.vendor) continue;
+      const v = slugify(e.vendor);
+      map.set(v, (map.get(v)||0)+1);
     }
-  } catch { /* empty */ }
-  const list = entries.map(e => `<li><a href="/vendors/${e.slug}/">${e.slug}</a> — ${e.count} events</li>`).join('') || '<li>No vendors yet</li>';
-  await fs.writeFile(path.join(OUT_DIR, 'index.html'), htmlPage('Vendors — CG Alert', `<h1>Vendors</h1><ul>${list}</ul>`));
-  console.log('Built vendors index with', entries.length, 'vendors');
-}
-
-main().catch(e => { console.error(e); process.exit(1); });
+  }catch{}
+  const list = Array.from(map.entries()).sort((a,b)=>b[1]-a[1]).map(([v,c])=>`<li><a href="/vendors/${v}/">${v}</a> <small>(${c})</small></li>`).join('');
+  await fs.mkdir(path.join(PUB,'vendors'),{recursive:true});
+  await fs.writeFile(path.join(PUB,'vendors','index.html'), html('Vendors', `<h1>Vendors</h1><ul>${list}</ul>`), 'utf8');
+  console.log('vendors index size', map.size);
+})().catch(e=>{ console.error(e); process.exit(1); });
