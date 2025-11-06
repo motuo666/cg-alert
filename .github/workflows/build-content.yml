@@ -27,16 +27,18 @@ jobs:
         run: node scripts/build_vendors_timeline.js
       - name: Patch pricing CTA (AB)
         run: node scripts/patch_pricing_cta.js
+      - name: Augment JSON-LD (CollectionPage/Breadcrumb)
+        run: node scripts/augment_jsonld.js
       - name: Commit content
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add "$PUBLISH_DIR/evidence" "$PUBLISH_DIR/vendors" "$PUBLISH_DIR/pricing"
+          git add "$PUBLISH_DIR/evidence" "$PUBLISH_DIR/vendors" "$PUBLISH_DIR/pricing" "$PUBLISH_DIR/sitemap.xml"
           if git diff --cached --quiet; then
             echo "no content changes"
           else
-            git commit -m "content: evidence pages + vendor timelines + pricing cta"
+            git commit -m "content: evidence pages + vendor timelines + pricing cta + jsonld augment"
             git pull --rebase --autostash || true
             git push
           fi
