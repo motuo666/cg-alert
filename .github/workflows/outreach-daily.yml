@@ -2,7 +2,7 @@ name: Outreach Daily
 
 on:
   schedule:
-    - cron: '0 14 * * *'  # 23:00 JST -> approx business hours US/EU split
+    - cron: '0 14 * * *'  # daily; adjust in cron if needed
   workflow_dispatch:
 
 permissions:
@@ -12,33 +12,62 @@ jobs:
   guard:
     runs-on: ubuntu-latest
     outputs:
-      continue: ${{ steps.chk.outcome }}
+      status: ${{ steps.chk.outcome }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        with: { node-version: '20' }
       - id: chk
         name: KPI guard (evidence_today >= 10)
-        run: |
-          node scripts/kpi_guard.js
+        run: node scripts/kpi_guard.js
 
-  send:
-    needs: guard
-    if: needs.guard.result == 'success'
+  window:
     runs-on: ubuntu-latest
-    env:
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      SEND_LIMIT: ${{ vars.SEND_LIMIT || 12 }}
+    outputs:
+      ok: ${{ steps.win.outputs.ok }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        with: { node-version: '20' }
+      - id: win
+        name: Send window guard
+        env:
+          SEND_TZ:          ${{ vars.SEND_TZ }}
+          SEND_DAYS:        ${{ vars.SEND_DAYS }}
+          SEND_START_HOUR:  ${{ vars.SEND_START_HOUR }}
+          SEND_END_HOUR:    ${{ vars.SEND_END_HOUR }}
+        run: node scripts/send_window_guard.js >> $GITHUB_OUTPUT
+
+  limit:
+    runs-on: ubuntu-latest
+    outputs:
+      SEND_LIMIT: ${{ steps.calc.outputs.limit }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - id: calc
+        name: Compute daily send limit (+1/day → 100)
+        env:
+          CAMPAIGN_START_DATE: ${{ vars.CAMPAIGN_START_DATE }}
+          SEND_BASE: ${{ vars.SEND_BASE || vars.TARGET_SENT || 1 }}
+          SEND_CAP:  ${{ vars.SEND_CAP  || 100 }}
+        run: node scripts/send_limit_daily.js >> $GITHUB_OUTPUT
+
+  send:
+    needs: [guard, window, limit]
+    if: needs.guard.result == 'success' && needs.window.outputs.ok == 'true'
+    runs-on: ubuntu-latest
+    env:
+      SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
+      SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+      SEND_LIMIT: ${{ needs.limit.outputs.SEND_LIMIT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
       - name: Install deps
-        run: |
-          npm i -E nodemailer@6
-      - name: Send outreach (guarded)
+        run: npm i -E nodemailer@6
+      - name: Send outreach (guarded, ramping +1/day)
         run: node scripts/outreach_send.js

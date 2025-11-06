@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      INDEXNOW_KEY: ${{ vars.INDEXNOW_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        with: { node-version: '20' }
       - name: Build sitemap
         run: node scripts/build_sitemap.js
       - name: Commit sitemap
@@ -36,6 +36,5 @@ jobs:
       - name: Ping IndexNow
         run: |
           set -e
-          KEY="indexnow-cgalert"
           URL="${SITE_ORIGIN}/sitemap.xml"
-          curl -sS "https://api.indexnow.org/IndexNow?url=${URL}&key=${KEY}" || true
+          curl -sS "https://api.indexnow.org/IndexNow?url=${URL}&key=${INDEXNOW_KEY}" || true
