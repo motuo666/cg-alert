@@ -22,3 +22,7 @@
 /rss/index.xml
   Content-Type: application/rss+xml; charset=utf-8
   Cache-Control: public, max-age=300
+
+/reports/*
+  X-Robots-Tag: noindex
+  Cache-Control: public, max-age=300
