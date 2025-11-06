@@ -1,0 +1,22 @@
+{
+  "paths": [
+    "/pricing",
+    "/terms",
+    "/terms-of-service",
+    "/legal/terms",
+    "/dpa",
+    "/data-processing-addendum",
+    "/legal/dpa",
+    "/subprocessors",
+    "/legal/subprocessors",
+    "/security",
+    "/trust",
+    "/status"
+  ],
+  "per_vendor_page_limit": 5,
+  "vendor_limit_per_poll": 30,
+  "user_agent": "CG-Alert/1.0 (+https://www.cg-alert.com)",
+  "timeout_ms": 15000,
+  "inter_request_ms": 900,
+  "confirm_window_hours": 48
+}

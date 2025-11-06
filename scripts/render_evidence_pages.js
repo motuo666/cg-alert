@@ -1,95 +1,75 @@
-// CJS; Node 18+/20+; publishes HTML evidence pages with JSON-LD
-const fs = require('node:fs/promises');
-const path = require('node:path');
 
-const ROOT = process.cwd();
-const PUB_DIR = path.join(ROOT, process.env.PUBLISH_DIR || 'public');
-const EVD_DIR = path.join(ROOT, 'evidence');
-const OUT_DIR = path.join(PUB_DIR, 'evidence');
+/**
+ * Render very simple static HTML pages for evidence.
+ * - For each evidence/vendor/key, create a static index.html
+ * - Create /public/evidence/index.html with links
+ */
+import fs from "fs/promises";
+import path from "path";
 
-function esc(s){ return String(s||'').replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
-function slugify(v){ return (v||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'unknown'; }
-
-function html(title, body){
+function htmlPage(title, body) {
   return `<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(title)}</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title}</title>
 <link rel="canonical" href="/evidence/">
-<meta name="description" content="Timestamped, hash-verifiable vendor change evidence.">
-<style>
-  body{font:16px/1.6 -apple-system,Segoe UI,Roboto,Arial;margin:0;color:#0b0f19}
-  header,main{max-width:960px;margin:0 auto;padding:24px}
-  a{color:#0b62f2} pre{white-space:pre-wrap;word-wrap:break-word;background:#f8fafc;border:1px solid #e5e7eb;padding:12px;border-radius:12px}
-  .crumbs{font-size:14px;color:#475569}
-  .grid{display:grid;grid-template-columns:1fr;gap:12px}
-  .card{border:1px solid #e5e7eb;border-radius:16px;padding:16px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.03)}
-</style>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/site.css">
 </head><body>
-<header class="crumbs"><a href="/">Home</a> › <a href="/vendors/">Vendors</a> › <a href="/evidence/">Evidence</a></header>
+<header><a href="/">CG Alert</a> · <a href="/reports/">Reports</a> · <a href="/pricing/">Pricing</a> · <a href="/evidence/">Evidence</a></header>
 <main>${body}</main>
+<footer><small>© CG Alert</small></footer>
 </body></html>`;
 }
 
-async function readEvidence(){
-  try{
-    const files = (await fs.readdir(EVD_DIR)).filter(f=>f.endsWith('.json'));
-    const rows = [];
-    for(const f of files){
-      try{
-        const j = JSON.parse(await fs.readFile(path.join(EVD_DIR,f),'utf8'));
-        if(j && j.vendor && j.url && j.sha256){
-          j._file = f;
-          rows.push(j);
-        }
-      }catch{}
+async function readJson(p) { return JSON.parse(await fs.readFile(p,"utf-8")); }
+async function ensureDir(d){ await fs.mkdir(d, { recursive:true }); }
+async function fileExists(p){ try{ await fs.stat(p); return true;}catch{ return false; } }
+
+function toLinkLabel(item){
+  const when = (item.confirmed_at || item.first_seen_at || "").slice(0,19).replace("T"," ");
+  return `${item.vendor} · ${item.page} · ${when}`;
+}
+
+async function listEvidenceJson() {
+  const out = [];
+  async function walk(base){
+    const entries = await fs.readdir(base, { withFileTypes:true });
+    for (const e of entries) {
+      const p = path.join(base, e.name);
+      if (e.isDirectory()) { await walk(p); continue; }
+      if (p.endsWith(".json") && !p.includes(path.sep + ".pending" + path.sep) && !p.includes(path.sep + ".confirmed" + path.sep) && !p.endsWith("_last_poll.json")) {
+        out.push(p);
+      }
     }
-    rows.sort((a,b)=> String(b.ts||'').localeCompare(String(a.ts||'')));
-    return rows;
-  }catch{ return []; }
-}
-
-async function writeItem(e){
-  const vendorSlug = slugify(e.vendor);
-  const idSlug = slugify(e.id || e.sha256.slice(0,16));
-  const outDir = path.join(OUT_DIR, vendorSlug);
-  await fs.mkdir(outDir,{recursive:true});
-  const url = `/evidence/${vendorSlug}/${idSlug}.html`;
-  const ld = {
-    "@context":"https://schema.org",
-    "@type":"Article",
-    "headline": `${e.vendor} change evidence`,
-    "about": e.vendor,
-    "datePublished": e.ts || new Date().toISOString(),
-    "url": url,
-    "mainEntityOfPage": e.url,
-    "identifier": e.sha256,
-    "articleBody": (e.snippet || "").slice(0, 5000)
-  };
-  const body = `
-<h1>Evidence — ${esc(e.vendor)}</h1>
-<p><strong>Captured:</strong> ${esc(e.ts||'')} · <strong>Source:</strong> <a href="${esc(e.url)}" rel="nofollow">${esc(e.url)}</a></p>
-<p><strong>SHA-256:</strong> <code>${esc(e.sha256)}</code></p>
-<div class="card"><pre>${esc((e.snippet||'').slice(0,8000))}</pre></div>
-<p><a href="/vendors/${vendorSlug}/">See recent changes for ${esc(e.vendor)} →</a></p>
-<script type="application/ld+json">${JSON.stringify(ld)}</script>`;
-  await fs.writeFile(path.join(outDir, `${idSlug}.html`), html(`Evidence — ${e.vendor}`, body), 'utf8');
-  return { vendorSlug, idSlug, url, ts: e.ts };
-}
-
-async function writeIndex(items){
-  const list = items.slice(0,200).map(e=>`<li><a href="/evidence/${e.vendorSlug}/${e.idSlug}.html">${e.vendorSlug}</a> · ${esc(e.ts||'')}</li>`).join('');
-  const body = `<h1>Evidence</h1><ul class="grid">${list || '<li>No evidence yet</li>'}</ul>`;
-  await fs.mkdir(OUT_DIR,{recursive:true});
-  await fs.writeFile(path.join(OUT_DIR,'index.html'), html('Evidence — CG Alert', body), 'utf8');
-}
-
-(async function(){
-  const evs = await readEvidence();
-  const written = [];
-  for(const e of evs){
-    const meta = await writeItem(e);
-    written.push(meta);
   }
-  await writeIndex(written);
-  console.log('evidence pages', written.length, '->', OUT_DIR);
-})().catch(e=>{ console.error(e); process.exit(1); });
+  try { await walk("evidence"); } catch {}
+  return out.sort();
+}
+
+async function main() {
+  const files = await listEvidenceJson();
+  const pub = path.join("public","evidence");
+  await ensureDir(pub);
+  const links = [];
+
+  for (const f of files) {
+    const item = await readJson(f);
+    const rel = f.split(path.sep).slice(1); // drop 'evidence'
+    const vendor = rel[0], key = rel[1];
+    const ts = path.basename(f).replace(/\.json$/,"");
+    const outDir = path.join(pub, vendor, key);
+    await ensureDir(outDir);
+    const body = `<h1>${vendor} · ${item.page}</h1>
+<p><strong>URL:</strong> <a href="${item.url}" rel="noopener">${item.url}</a></p>
+<p><strong>Confirmed at:</strong> ${item.confirmed_at || ""}</p>
+<pre>${(item.snippet||"").replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</pre>`;
+    await fs.writeFile(path.join(outDir,"index.html"), htmlPage(`${vendor} – ${item.page}`, body), "utf-8");
+
+    const href = `/evidence/${vendor}/${key}/`;
+    links.push(`<li><a href="${href}">${toLinkLabel(item)}</a></li>`);
+  }
+
+  const listHtml = `<h1>Evidence</h1><ul>${links.join("\n")}</ul>`;
+  await fs.writeFile(path.join(pub,"index.html"), htmlPage("Evidence", listHtml), "utf-8");
+}
+await main();
