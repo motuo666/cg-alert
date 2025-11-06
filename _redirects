@@ -10,3 +10,7 @@
 /pricing                    /pricing/ 301
 /reports                    /reports/ 301
 /unsubscribe/*              https://unsub.cg-alert.com/:splat 302
+
+/rss.xml                    /rss/index.xml 301
+/reports/rss                /rss/index.xml 301
+/reports/rss.xml            /rss/index.xml 301
