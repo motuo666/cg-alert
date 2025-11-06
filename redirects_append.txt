@@ -1,0 +1,2 @@
+/updates                    /reports/ 301
+/updates/*                  /reports/:splat 301
