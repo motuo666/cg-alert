@@ -1,0 +1,1 @@
+# Operational markers\n\n- `SENDING_BLOCKED.md`: present => Outreach Daily should skip sending.\n
