@@ -1,4 +1,4 @@
-# workers/kv-editor/wrangler.toml  (sanitized)
+# workers/kv-editor/wrangler.example.toml  (sanitized)
 # DO NOT COMMIT SECRETS HERE. Use `wrangler secret put ...` instead.
 name = "kv-editor"
 main = "worker.js"
