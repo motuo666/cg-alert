@@ -1,0 +1,17 @@
+name: Stripe Dispatch Sink (debug)
+
+on:
+  repository_dispatch:
+    types: [stripe_paid]
+
+permissions:
+  contents: read
+
+jobs:
+  sink:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show payload
+        run: |
+          echo "stripe_paid payload:"
+          echo '${{ toJson(github.event.client_payload) }}'
