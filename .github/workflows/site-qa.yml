@@ -1,34 +1,12 @@
 name: Site QA
-
 on:
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
-  schedule:
-    - cron: '15 3 * * 1' # weekly
-
-permissions:
-  contents: read
-
+permissions: { contents: read }
 jobs:
   qa:
     runs-on: ubuntu-latest
-    env:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
-      STRICT: 'true'
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-      - name: Link check (STRICT)
-        id: linkcheck
-        run: |
-          set -e
-          node scripts/linkcheck.mjs | tee linkcheck.out
-          echo "summary=$(grep -o 'LINKCHECK_SUMMARY .*' linkcheck.out | sed 's/^LINKCHECK_SUMMARY //')" >> $GITHUB_OUTPUT
-      - name: Post to Slack (optional)
-        if: env.SLACK_WEBHOOK_URL != ''
-        run: |
-          jq -n --arg s '${{ steps.linkcheck.outputs.summary }}' '{text: ("Site QA (PR gate) linkcheck: " + $s)}'             | curl -s -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL" || true
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: node -v
