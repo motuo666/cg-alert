@@ -26,22 +26,22 @@ jobs:
       - name: Poll vendors (two-stage confirmation)
         env:
           SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-        run: node scripts/poller.js
+        run: node scripts/poller.mjs
 
       - name: Render evidence pages
         env:
           SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-        run: node scripts/render_evidence_pages.js
+        run: node scripts/render_evidence_pages.mjs
 
       - name: Build RSS (confirmed only)
         env:
           SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-        run: node scripts/evidence_to_rss.js
+        run: node scripts/evidence_to_rss.mjs
 
       - name: Build sitemap
         env:
           SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-        run: node scripts/build_sitemap.js
+        run: node scripts/build_sitemap.mjs
 
       - name: Commit content
         run: |

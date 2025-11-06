@@ -1,32 +1,35 @@
 name: Target Discovery Autopilot
-
 on:
-  schedule:
-    - cron: "27 * * * *"
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
+  schedule: [ { cron: '25 */6 * * *' } ]
+  workflow_dispatch: {}
+permissions: { contents: write }
 jobs:
-  discovery:
+  discover:
     runs-on: ubuntu-latest
-    env:
-      ENABLE_AUTOPILOT: ${{ vars.ENABLE_AUTOPILOT || 'false' }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Guard & run
-        shell: bash
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Install deps (light)
         run: |
           set -e
-          echo "ENABLE_AUTOPILOT=${ENABLE_AUTOPILOT}"
-          if [ "${ENABLE_AUTOPILOT}" != "true" ]; then
-            echo "Discovery autopilot disabled. Exit 0."; exit 0; fi
-
-          if [ ! -f scripts/target_discovery.js ]; then
-            echo "scripts/target_discovery.js missing; skipping"; exit 0; fi
-
-          # guard-missing:scripts/target_discovery.js
-          if [ ! -f scripts/target_discovery.js ]; then echo 'missing, skip'; exit 0; fi
-          node scripts/target_discovery.js
+          if [ -f package.json ]; then
+            npm pkg set engines.node=">=20"
+            npm i --no-audit --no-fund fast-xml-parser
+          fi
+      - name: Run target discovery
+        env: { ALSO_BUILD: "false" }
+        run: node scripts/target_discovery.mjs
+      - name: Commit & push candidates
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A data/seed_domains.txt data/leads.csv config/expand_rules.json || true
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+          else
+            git commit -m "autopilot: discovery update"
+            git pull --rebase --autostash || true
+            git push
+          fi

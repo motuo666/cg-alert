@@ -23,7 +23,7 @@ jobs:
           node-version: '20'
 
       - name: Render Evidence pages
-        run: node scripts/render_evidence_pages.js
+        run: node scripts/render_evidence_pages.mjs
 
       - name: Build vendor timelines
         run: node scripts/build_vendors_timeline.js
@@ -41,10 +41,10 @@ jobs:
         run: node scripts/gen_cases_auto.js
 
       - name: Build RSS feed
-        run: node scripts/evidence_to_rss.js
+        run: node scripts/evidence_to_rss.mjs
 
       - name: Build sitemap
-        run: node scripts/build_sitemap.js
+        run: node scripts/build_sitemap.mjs
 
       - name: Commit content
         run: |

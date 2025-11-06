@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: '20'
       - name: Build sitemap
-        run: node scripts/build_sitemap.js
+        run: node scripts/build_sitemap.mjs
       - name: Commit sitemap
         run: |
           set -e
