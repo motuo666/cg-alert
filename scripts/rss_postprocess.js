@@ -78,24 +78,12 @@ function pick(v){
   return String(v);
 }
 
-
-function repairDesc(d){
-  if(d==null) return d;
-  if(typeof d!=='string') return d;
-  // encoded CDATA -> real CDATA
-  let m = d.match(/&lt;!\[CDATA\[(.*)\]\]&gt;/s);
-  if(m) return { "__cdata": m[1] };
-  // raw CDATA content inside string
-  m = d.match(/^<!\[CDATA\[(.*)\]\]>$/s);
-  if(m) return { "__cdata": m[1] };
-  return d;
-}
 function main(){
   ensureXsl();
   if(!fs.existsSync(RSS)){ console.log('rss.xml not found, skip'); return; }
   const parser = new XMLParser({ ignoreAttributes:false, attributeNamePrefix:'@_' });
   const doc = parser.parse(fs.readFileSync(RSS,'utf8'));
-  const builder = new XMLBuilder({ ignoreAttributes:false, attributeNamePrefix:'@_', format:true, suppressEmptyNode:true, cdataPropName:'__cdata' });
+  const builder = new XMLBuilder({ ignoreAttributes:false, attributeNamePrefix:'@_', format:true, suppressEmptyNode:true });
 
   if(doc.rss){
     doc.rss['@_version'] = doc.rss['@_version'] || '2.0';
@@ -119,7 +107,6 @@ function main(){
       }
     });
     ch.item = items;
-    if(Array.isArray(items)) for(const it of items){ if(it && "description" in it) it.description = repairDesc(it.description); }
   }
 
   let out = builder.build(doc);
@@ -128,3 +115,22 @@ function main(){
   console.log('rss.xml updated');
 }
 main();
+
+
+// EXTRA_RSS: also style root RSS feeds
+const ROOT_RSS = path.join(process.cwd(), 'rss.xml');
+const ROOT_RSS_DIR = path.join(process.cwd(), 'rss', 'index.xml');
+
+function injectPiIfMissing(fp){
+  if(!fs.existsSync(fp)) return false;
+  const raw = fs.readFileSync(fp,'utf8');
+  if(raw.includes(PI)) return false;
+  const out = raw.replace(/^(<\?xml[^>]*>\s*)/, `$1${PI}\n`);
+  fs.writeFileSync(fp, out, 'utf8');
+  return true;
+}
+ensureXsl();
+let touchedRoot = 0;
+touchedRoot += injectPiIfMissing(ROOT_RSS) ? 1 : 0;
+touchedRoot += injectPiIfMissing(ROOT_RSS_DIR) ? 1 : 0;
+console.log('rss_postprocess: extra_rss_touched', touchedRoot);
