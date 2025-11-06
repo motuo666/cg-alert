@@ -1,0 +1,9 @@
+
+# Cloudflare wrangler configs (never commit secrets)
+wrangler.toml
+wrangler.local.toml
+**/wrangler.toml
+**/wrangler.local.toml
+cf/stripe-dispatcher/wrangler.toml
+lead-gateway/wrangler.toml
+workers/kv-editor/wrangler.toml
