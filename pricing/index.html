@@ -1,37 +1,76 @@
 <!doctype html><html lang="en"><head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CG Alert — Pricing</title>
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<title>Pricing — CG Alert</title>
+<link rel="canonical" href="https://www.cg-alert.com/pricing/">
 <link rel="stylesheet" href="/assets/home-v3c.css">
-<link rel="canonical" href="https://www.cg-alert.com/pricing/"/>
-<meta name="description" content="Portfolio $2,988/yr (≤25 vendors), Business $6,000/yr (≤50 vendors), Enterprise $18,000+/yr (200+ vendors). Evidence-backed alerts, email & Slack delivery.">
-<link rel="alternate" type="application/rss+xml" title="CG Alert Reports RSS" href="/rss/index.xml">
+<meta name="description" content="CG Alert pricing for Portfolio, Business, and Enterprise plans.">
 </head><body>
-<header class="site-head"><a href="/" class="brand">CG Alert</a><nav><a href="/pricing/">Pricing</a><a href="/vendors/">Vendors</a><a href="/who-uses/">Who uses</a></nav></header>
-<main class="container prose">
+<header class="cg-header">
+  <div class="cg-wrap">
+    <a class="cg-brand" href="/">CG Alert</a>
+    <nav class="cg-nav">
+      <a href="/#how">How it works</a>
+      <a href="/reports/">Reports</a>
+      <a href="/rss/">RSS</a>
+      <a href="/pricing/" class="cg-btn sm active">Pricing</a>
+      <a href="/enterprise/" class="cg-btn sm">Enterprise</a>
+    </nav>
+  </div>
+</header>
+
+<main class="cg-wrap" style="padding:40px 0 96px">
   <h1>Pricing</h1>
-  <div class="grid grid-3">
-    <div class="card">
+  <div class="cg-cards grid">
+    <div class="cg-card pcard hover">
       <h2>Portfolio</h2>
-      <p class="price">$2,988/yr</p>
-      <ul><li>Up to 25 vendors</li><li>Email & Slack alerts</li><li>Evidence cards</li></ul>
-      <a class="btn btn-primary" href="/">Buy via Stripe</a>
+      <div class="cg-muted">Up to 25 vendors</div>
+      <ul class="cg-list">
+        <li>Email & Slack alerts</li>
+        <li>Evidence cards</li>
+        <li>30-day money-back if no material alert</li>
+      </ul>
+      <a id="btn-portfolio" class="cg-btn align" target="_blank" href="/">Buy via Stripe</a>
     </div>
-    <div class="card">
+
+    <div class="cg-card pcard hover">
       <h2>Business</h2>
-      <p class="price">$6,000/yr</p>
-      <ul><li>Up to 50 vendors</li><li>Email & Slack alerts</li><li>Evidence cards</li></ul>
-      <a class="btn btn-primary" href="/">Buy via Stripe</a>
+      <div class="cg-muted">Up to 50 vendors</div>
+      <ul class="cg-list">
+        <li>Email & Slack alerts</li>
+        <li>Evidence cards</li>
+        <li>30-day money-back if no material alert</li>
+      </ul>
+      <a id="btn-business" class="cg-btn align" target="_blank" href="/">Buy via Stripe</a>
     </div>
-    <div class="card">
+
+    <div class="cg-card pcard hover">
       <h2>Enterprise</h2>
-      <p class="price">$18,000+/yr</p>
-      <ul><li>200+ vendors</li><li>Custom SLAs</li><li>Exports & evidence JSON</li></ul>
-      <a class="btn" href="/enterprise/">Contact sales</a>
+      <div class="cg-muted">200+ vendors</div>
+      <ul class="cg-list">
+        <li>Custom onboarding & SLA</li>
+        <li>Audit-ready evidence & exports</li>
+        <li>SSO, allowlist domains</li>
+      </ul>
+      <a class="cg-btn align" href="/enterprise/">Contact sales</a>
     </div>
   </div>
-  <p>30‑day money‑back if no material alert.</p>
 </main>
-<footer class="site-foot"><a href="/terms/">Terms</a> • <a href="/privacy/">Privacy</a></footer>
+
+<script>
+(async()=>{
+  try{
+    const r = await fetch('/pricing/config.json',{cache:'no-store'});
+    if(!r.ok) return;
+    const c = await r.json();
+    const get = (id)=> (c.plans||[]).find(p=>p.id===id);
+    const p = get('portfolio'), b = get('business');
+    if (p?.checkout_redirect) document.getElementById('btn-portfolio')?.setAttribute('href', p.checkout_redirect);
+    if (b?.checkout_redirect) document.getElementById('btn-business')?.setAttribute('href',  b.checkout_redirect);
+  }catch(_){}
+})();
+</script>
+
+<footer class="site-footer" style="margin-top:48px;padding:24px 0;border-top:1px solid rgba(0,0,0,.06);text-align:center">
+  <div class="cg-wrap"><a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a></div>
+</footer>
 </body></html>
