@@ -8,7 +8,7 @@
   "scripts": {
     "repair": "node scripts/repair_pages.js",
     "health": "node scripts/weekly_health_check.js",
-    "harvest": "node scripts/poll_public_endpoints.js && node scripts/build_dashboard.js",
+    "harvest": "node scripts/poller.js && node scripts/build_dashboard.js",
     "outreach": "node scripts/send_triggered.js",
     "intakeSync": "node scripts/intake_sync_kv.js && node scripts/sync_unsub_kv.js",
     "bounce": "node scripts/poll_inbox.js",

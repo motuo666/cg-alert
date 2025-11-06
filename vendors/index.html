@@ -1,0 +1,47 @@
+<!doctype html><html lang="en"><head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CG Alert — Vendors</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/home-v3c.css">
+<link rel="canonical" href="https://www.cg-alert.com/vendors/"/>
+<meta name="description" content="Browse monitored vendors and their recent changes with evidence-backed timelines.">
+<link rel="alternate" type="application/rss+xml" title="CG Alert Reports RSS" href="/rss/index.xml">
+</head><body>
+<header class="site-head"><a href="/" class="brand">CG Alert</a><nav><a href="/pricing/">Pricing</a><a href="/vendors/">Vendors</a><a href="/who-uses/">Who uses</a></nav></header>
+<main class="container prose">
+  <h1>Vendors</h1>
+  <p>Live index of monitored vendors. Click a vendor to view its evidence timeline.</p>
+  <input id="q" placeholder="Filter vendors…" style="padding:.5rem;width:100%;max-width:420px;margin:.5rem 0 1rem;border:1px solid #ddd;border-radius:8px">
+  <div id="list" class="grid"></div>
+</main>
+<footer class="site-foot"><a href="/terms/">Terms</a> • <a href="/privacy/">Privacy</a></footer>
+<script>
+(async function(){
+  const el = (sel)=>document.querySelector(sel);
+  const list = el('#list'); const q = el('#q');
+  let data = [];
+  try { data = await (await fetch('/api/vendors.json',{cache:'no-store'})).json(); } catch(e){ data = []; }
+  const render = () => {
+    const kw = (q.value||'').toLowerCase();
+    const vendors = (data.vendors||data||[]).filter(v => !kw || (v.name||v.slug||'').toLowerCase().includes(kw));
+    list.innerHTML = vendors.map(v => {
+      const slug = v.slug || (v.name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-');
+      const href = `/vendors/${slug}/`;
+      return `<a class="card" href="${href}" data-slug="${slug}"><strong>${v.name||slug}</strong><span>${v.category||''}</span></a>`
+    }).join('') || '<p>No vendors yet.</p>';
+  };
+  q.addEventListener('input', render);
+  render();
+  // graceful fallback: if a card 404s, redirect to feed.xml
+  list.addEventListener('click', async (e)=>{
+    const a = e.target.closest('a.card'); if(!a) return;
+    e.preventDefault();
+    try {
+      const res = await fetch(a.getAttribute('href'), {method:'HEAD'});
+      if (res.ok) location.href = a.href; else location.href = a.href + 'feed.xml';
+    } catch(_) { location.href = a.href + 'feed.xml'; }
+  });
+})();
+</script>
+</body></html>
