@@ -1,22 +1,57 @@
 name: Workflows Lint
+
 on:
   push:
+    branches: [ main ]
     paths:
-      - ".github/workflows/**"
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
   pull_request:
     paths:
-      - ".github/workflows/**"
+      - ".github/workflows/*.yml"
+      - ".github/workflows/*.yaml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: actionlint
-        uses: reviewdog/action-actionlint@v1
-        with:
-          fail_on_error: true
-      - name: Allow '||' in expressions (documented)
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 使用 actionlint 做语法和常见错误校验（权威）
+      - name: Install actionlint
         run: |
-          echo "Note: '||' is allowed in GitHub expressions for fallback; skipping legacy forbid check."
-          exit 0
-fi
+          set -euo pipefail
+          curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash \
+            | bash -s -- -b ./bin
+
+      - name: Run actionlint
+        run: ./bin/actionlint -color
+
+      # 对工作流里的“||”发出警告但不阻断（避免之前的误杀）
+      - name: Warn on suspicious "||" in workflow YAML (non-blocking)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t FILES < <(git ls-files '.github/workflows/*.yml' '.github/workflows/*.yaml')
+          for f in "${FILES[@]}"; do
+            if grep -nE '\|\|' "$f" > /tmp/matches.txt; then
+              while IFS= read -r line; do
+                ln="${line%%:*}"
+                echo "::warning file=$f,line=$ln::Found '||' (确认它在 bash run: 区块或是刻意的表达式)"
+              done < /tmp/matches.txt
+            fi
+          done || true
+
+      # 强制禁止 YAML 文件里出现 Tab（这就是很多“第22行语法错”的根因）
+      - name: Fail on tabs in YAML (hard rule)
+        run: |
+          set -euo pipefail
+          if grep -nP '\t' .github/workflows/*.y*ml; then
+            echo "::error::Tabs detected in workflow YAML. Replace with spaces."
+            exit 1
+          fi
