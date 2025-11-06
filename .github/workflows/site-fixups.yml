@@ -1,0 +1,63 @@
+name: Site Fixups
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove invalid CSP meta (with placeholder ...)
+        shell: bash
+        run: |
+          set -e
+          files=$(git ls-files '*.html' | tr '\n' ' ')
+          for f in $files; do
+            # remove any meta Content-Security-Policy line that clearly contains placeholder ...
+            sed -i '/http-equiv="Content-Security-Policy"/{/\.\.\./d;}' "$f"
+          done
+
+      - name: Fix duplicate <title> in rss/index.html (keep first only)
+        shell: bash
+        run: |
+          set -e
+          if [ -f "rss/index.html" ]; then
+            node -e "const fs=require('fs');let s=fs.readFileSync('rss/index.html','utf8');let seen=false;s=s.replace(/<title>[\s\S]*?<\/title>/g,(m)=>{if(seen)return '';seen=true;return m});fs.writeFileSync('rss/index.html',s)"
+          fi
+
+      - name: Ensure caching headers for assets and HTML
+        shell: bash
+        run: |
+          set -e
+          if [ ! -f "_headers" ]; then
+            touch _headers
+          fi
+          add_block() {
+            block="$1"
+            if ! grep -Fq "$2" _headers; then
+              printf "\n%s\n" "$block" >> _headers
+            fi
+          }
+          add_block "/assets/*
+  Cache-Control: public, max-age=2592000, immutable" "/assets/*"
+          add_block "/*.html
+  Cache-Control: public, max-age=300" "/*.html"
+
+      - name: Commit & push
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+          else
+            git commit -m "site-fixups: CSP cleanup, RSS title, caching headers"
+            git pull --rebase --autostash || true
+            git push
+          fi
