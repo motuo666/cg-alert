@@ -1,0 +1,16 @@
+# cf/stripe-dispatcher/wrangler.example.toml
+name = "stripe-dispatcher"
+main = "src/index.js"
+account_id = "YOUR_CF_ACCOUNT_ID"
+compatibility_date = "2025-01-15"
+
+routes = [
+  # Replace with your production hostname
+  { pattern = "api.cg-alert.com/stripe*", zone_name = "cg-alert.com" }
+]
+
+# No secrets here. Put secrets via:
+#   wrangler secret put STRIPE_WEBHOOK_SECRET
+#   wrangler secret put GH_OWNER
+#   wrangler secret put GH_REPO
+#   wrangler secret put GH_TOKEN
