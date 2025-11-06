@@ -1,0 +1,44 @@
+name: Outreach Daily
+
+on:
+  schedule:
+    - cron: '0 14 * * *'  # 23:00 JST -> approx business hours US/EU split
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    outputs:
+      continue: ${{ steps.chk.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - id: chk
+        name: KPI guard (evidence_today >= 10)
+        run: |
+          node scripts/kpi_guard.js
+
+  send:
+    needs: guard
+    if: needs.guard.result == 'success'
+    runs-on: ubuntu-latest
+    env:
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      SEND_LIMIT: ${{ vars.SEND_LIMIT || 12 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: |
+          npm i -E nodemailer@6
+      - name: Send outreach (guarded)
+        run: node scripts/outreach_send.js
