@@ -14,3 +14,5 @@
 /rss.xml                    /rss/index.xml 301
 /reports/rss                /rss/index.xml 301
 /reports/rss.xml            /rss/index.xml 301
+/updates                    /reports/ 301
+/updates/*                  /reports/:splat 301
