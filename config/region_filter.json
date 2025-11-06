@@ -1,4 +1,5 @@
 {
-  "allow": ["US", "CA", "UK", "EU", "JP", "SG", "AU"],
-  "block_email_domains": ["noreply.", "no-reply.", "do-not-reply."]
+  "apac": ["jp", "kr", "au", "nz", "sg", "hk", "tw", "in", "id", "my", "ph", "th", "vn", "cn"],
+  "emea": ["uk", "ie", "de", "fr", "es", "pt", "it", "nl", "be", "se", "no", "dk", "fi", "pl", "tr", "ae", "sa", "za", "eg", "il"],
+  "amer": ["us", "ca", "mx", "br", "ar", "cl", "co", "pe"]
 }
