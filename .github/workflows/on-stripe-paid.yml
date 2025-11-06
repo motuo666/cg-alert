@@ -1,0 +1,40 @@
+name: On Stripe Paid → Reconcile
+on:
+  repository_dispatch:
+    types: [stripe_paid]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    env:
+      STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY || secrets.STRIPE_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reconcile recent paid sessions → customers.csv
+        run: |
+          set -e
+          node ops/stripe_reconcile.js || true
+      - name: Commit customers.csv (if changed)
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add customers.csv data/intakes.csv || true
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "stripe: reconcile customers (dispatch: stripe_paid)"
+            git pull --rebase --autostash || true
+            git push
+          fi
+      - name: Slack notify
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+        run: |
+          test -z "$SLACK_WEBHOOK_URL" && exit 0
+          jq -n --arg t "✅ Stripe dispatch: stripe_paid reconciled" '{text:$t}'           | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
