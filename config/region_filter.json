@@ -1,17 +1,4 @@
 {
-  "allow": [
-    "US",
-    "UK",
-    "CA",
-    "EU",
-    "SG",
-    "AU",
-    "JP"
-  ],
-  "deny": [
-    "RU",
-    "BY",
-    "IR",
-    "KP"
-  ]
+  "allow": ["US", "CA", "UK", "EU", "JP", "SG", "AU"],
+  "block_email_domains": ["noreply.", "no-reply.", "do-not-reply."]
 }

@@ -1,29 +1,6 @@
 {
-  "matchers": [
-    {
-      "when_title_contains": [
-        "security",
-        "secops",
-        "ciso"
-      ],
-      "persona": "security"
-    },
-    {
-      "when_title_contains": [
-        "procurement",
-        "sourcing",
-        "buyer"
-      ],
-      "persona": "procurement"
-    },
-    {
-      "when_title_contains": [
-        "legal",
-        "counsel",
-        "compliance"
-      ],
-      "persona": "legal"
-    }
-  ],
-  "fallback": "default"
+  "legal_keywords": ["legal", "counsel", "privacy", "compliance", "grc"],
+  "ops_keywords": ["operations", "it", "sysadmin", "sre", "security", "devops"],
+  "revops_keywords": ["revops", "finance", "procurement", "sourcing", "fp&a"],
+  "rotation_order": ["LEGAL", "OPS", "REVOPS"]
 }
