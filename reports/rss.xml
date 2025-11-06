@@ -7,7 +7,7 @@
     <description>Recent vendor report pages</description>
     <item>
       <title>Change detected @ example.com/pricing</title>
-      <description>&lt;![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <description><![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]></description>
       <link>https://www.cg-alert.com/reports/</link>
       <pubDate>Sun, 02 Nov 2025 13:14:01 GMT</pubDate>
       <cg:sourceUrl>https://example.com/pricing</cg:sourceUrl>
@@ -15,7 +15,7 @@
     </item>
     <item>
       <title>Change detected @ example.com/pricing</title>
-      <description>&lt;![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <description><![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]></description>
       <link>https://www.cg-alert.com/reports/</link>
       <pubDate>Sun, 02 Nov 2025 16:02:15 GMT</pubDate>
       <cg:sourceUrl>https://example.com/pricing</cg:sourceUrl>
@@ -23,7 +23,7 @@
     </item>
     <item>
       <title>Change detected @ example.com/pricing</title>
-      <description>&lt;![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <description><![CDATA[Potential update at example.com/pricing. Verify &amp; escalate if material.]]></description>
       <link>https://www.cg-alert.com/reports/</link>
       <pubDate>Sun, 02 Nov 2025 18:40:40 GMT</pubDate>
       <cg:sourceUrl>https://example.com/pricing</cg:sourceUrl>
@@ -31,7 +31,7 @@
     </item>
     <item>
       <title>Change detected @ vendorx.com/pricing</title>
-      <description>&lt;![CDATA[Potential update at vendorx.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <description><![CDATA[Potential update at vendorx.com/pricing. Verify &amp; escalate if material.]]></description>
       <link>https://www.cg-alert.com/reports/</link>
       <pubDate>Mon, 03 Nov 2025 18:42:54 GMT</pubDate>
       <cg:sourceUrl>https://vendorx.com/pricing</cg:sourceUrl>
@@ -39,7 +39,7 @@
     </item>
     <item>
       <title>Change detected @ vendorx.com/pricing</title>
-      <description>&lt;![CDATA[Potential update at vendorx.com/pricing. Verify &amp; escalate if material.]]&gt;</description>
+      <description><![CDATA[Potential update at vendorx.com/pricing. Verify &amp; escalate if material.]]></description>
       <link>https://www.cg-alert.com/reports/</link>
       <pubDate>Tue, 04 Nov 2025 18:46:53 GMT</pubDate>
       <cg:sourceUrl>https://vendorx.com/pricing</cg:sourceUrl>
