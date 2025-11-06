@@ -12,12 +12,14 @@ jobs:
   seo:
     runs-on: ubuntu-latest
     env:
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      SITE_ORIGIN:  ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
       INDEXNOW_KEY: ${{ vars.INDEXNOW_KEY }}
+      PUBLISH_DIR:  ${{ vars.PUBLISH_DIR || '.' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with:
+          node-version: '20'
       - name: Build sitemap
         run: node scripts/build_sitemap.js
       - name: Commit sitemap
@@ -25,7 +27,7 @@ jobs:
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add public/sitemap.xml
+          git add "$PUBLISH_DIR/sitemap.xml"
           if git diff --cached --quiet; then
             echo "no changes"
           else

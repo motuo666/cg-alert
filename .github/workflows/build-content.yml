@@ -1,0 +1,42 @@
+name: Build Content (Evidence pages, Vendor timelines, Pricing CTA)
+
+on:
+  schedule:
+    - cron: '15 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+      STRIPE_LINK_BUSINESS:  ${{ vars.STRIPE_LINK_BUSINESS }}
+      PRICING_CTA_VARIANT:   ${{ vars.PRICING_CTA_VARIANT || 'A' }}
+      PUBLISH_DIR:           ${{ vars.PUBLISH_DIR || '.' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Render evidence pages (JSON-LD)
+        run: node scripts/render_evidence_pages.js
+      - name: Build vendors timelines
+        run: node scripts/build_vendors_timeline.js
+      - name: Patch pricing CTA (AB)
+        run: node scripts/patch_pricing_cta.js
+      - name: Commit content
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add "$PUBLISH_DIR/evidence" "$PUBLISH_DIR/vendors" "$PUBLISH_DIR/pricing"
+          if git diff --cached --quiet; then
+            echo "no content changes"
+          else
+            git commit -m "content: evidence pages + vendor timelines + pricing cta"
+            git pull --rebase --autostash || true
+            git push
+          fi
