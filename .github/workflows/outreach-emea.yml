@@ -74,7 +74,7 @@ jobs:
           set -e
           DAY_ID=$(date -u +%F)   # UTC day id, e.g. 2025-11-06
           echo "day_id=$DAY_ID" >> "$GITHUB_OUTPUT"
-          if [ -f "ops/OUTREACH_DONE_${{DAY_ID}}.md" ]; then
+          if [ -f "ops/OUTREACH_DONE_${DAY_ID}.md" ]; then
             echo "already=true" >> "$GITHUB_OUTPUT"
           else
             echo "already=false" >> "$GITHUB_OUTPUT"
