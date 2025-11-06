@@ -1,52 +1,113 @@
-name: Daily Outreach (manual)
+name: Daily Outreach (safe, gated)
 
 on:
   workflow_dispatch:
-permissions: { contents: write }
+
+permissions:
+  contents: write
 
 concurrency:
-  group: outreach-${{ github.workflow }}
-  cancel-in-progress: true
+  group: outreach-daily
+  cancel-in-progress: false
 
 jobs:
-  send:
+  limit:
     runs-on: ubuntu-latest
+    outputs:
+      SEND_LIMIT: ${{ steps.lim.outputs.SEND_LIMIT }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Compute SEND_LIMIT
-        id: ramp
-        run: node scripts/compute_send_limit.js
-      - name: Install deps
-        run: npm i nodemailer@6
-      - name: Send
+        with: { node-version: '20' }
+      - name: Compute daily send limit
+        id: lim
         env:
-          REGION_FILTER: ${{ vars.REGION_FILTER || '' }}
-          RAMP_BASE: ${{ vars.RAMP_BASE || 12 }}
-          RAMP_WEEKLY_INCREMENT: ${{ vars.RAMP_WEEKLY_INCREMENT || 8 }}
-          RAMP_DAILY_INCREMENT: ${{ vars.RAMP_DAILY_INCREMENT || 0 }}
-          RAMP_MAX: ${{ vars.RAMP_MAX || 100 }}
-          RAMP_START_DATE: ${{ vars.RAMP_START_DATE || '2025-11-01' }}
-          DOMAIN_LIMIT: ${{ vars.DOMAIN_LIMIT || 2 }}
-          SEND_SPACING_MS: ${{ vars.SEND_SPACING_MS || 1200 }}
-          ERROR_ABORT_THRESHOLD: ${{ vars.ERROR_ABORT_THRESHOLD || 3 }}
-          ERROR_ABORT_WINDOW: ${{ vars.ERROR_ABORT_WINDOW || 10 }}
-          SEED_SEND: ${{ vars.SEED_SEND || 'true' }}
-        run: node scripts/send_triggered.js --limit "${{ steps.ramp.outputs.limit }}" --dry=false || true
-      - name: Commit logs
+          CAMPAIGN_START_DATE: ${{ vars.CAMPAIGN_START_DATE || '2025-10-01' }}
+          SEND_BASE: ${{ vars.SEND_BASE || '1' }}
+          SEND_CAP:  ${{ vars.SEND_CAP  || '100' }}
+          TARGET_SENT: ${{ vars.TARGET_SENT || '0' }}
+        run: node scripts/send_limit_daily.js
+
+  kpi:
+    runs-on: ubuntu-latest
+    outputs:
+      ok: ${{ steps.chk.outputs.ok }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: KPI guard (evidence >= 10 today)
+        id: chk
+        env:
+          MIN_EVIDENCE_PER_DAY: ${{ vars.MIN_EVIDENCE_PER_DAY || '10' }}
+        run: node scripts/kpi_guard.js
+
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      blocked: ${{ steps.mark.outputs.blocked }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check sending gate marker
+        id: mark
+        shell: bash
         run: |
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          if [ -d out ]; then if [ -d out ]; then git add -A out; fi; fi
-          if [ -f data/suppressions.csv ]; then if [ -f data/suppressions.csv ]; then git add data/suppressions.csv; fi; fi
-          if git diff --cached --quiet; then echo "no changes"; else git commit -m "outreach: manual send"; git pull --rebase --autostash || true; git push; fi
-      - name: Slack on failure
-        if: failure()
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+          if [ -f ops/SENDING_BLOCKED.md ]; then
+            echo "blocked=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "blocked=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  day:
+    runs-on: ubuntu-latest
+    outputs:
+      already: ${{ steps.d.outputs.already }}
+      day_id: ${{ steps.d.outputs.day_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: d
+        shell: bash
         run: |
           set -e
-          jq -n --arg t "❌ ${{ github.workflow }} failed • run=${{ github.run_id }}" '{text:$t}' \
-          | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
+          DAY_ID=$(date -u +%F)
+          echo "day_id=$DAY_ID" >> "$GITHUB_OUTPUT"
+          if [ -f "ops/OUTREACH_DONE_${DAY_ID}.md" ]; then
+            echo "already=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  send:
+    needs: [limit, kpi, gate, day]
+    if: needs.kpi.outputs.ok == 'true' && needs.gate.outputs.blocked != 'true' && needs.day.outputs.already != 'true'
+    runs-on: ubuntu-latest
+    env:
+      REGION: manual
+      SEND_TZ: ${{ vars.SEND_TZ || 'Asia/Tokyo' }}
+      SEND_LIMIT: ${{ needs.limit.outputs.SEND_LIMIT }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
+      SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+      MAIL_FROM: ${{ vars.MAIL_FROM || secrets.MAIL_FROM || vars.SMTP_USER || secrets.SMTP_USER }}
+      UNSUB_ORIGIN: ${{ vars.UNSUB_ORIGIN || 'https://www.cg-alert.com' }}
+      UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET || vars.UNSUB_HMAC_SECRET }}
+      PERSONA_RULES: ${{ vars.PERSONA_RULES || 'config/persona_rules.json' }}
+      REGION_FILTER: ${{ vars.REGION_FILTER || 'config/region_filter.json' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Persona outreach (manual gated)
+        run: node scripts/outreach_send.js
+      - name: Mark day as sent
+        shell: bash
+        run: |
+          set -e
+          mkdir -p ops
+          echo "manual sent on ${{ needs.day.outputs.day_id }}" > "ops/OUTREACH_DONE_${{ needs.day.outputs.day_id }}.md"
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add ops/OUTREACH_DONE_${{ needs.day.outputs.day_id }}.md
+          git commit -m "ops: outreach done manual ${{ needs.day.outputs.day_id }}" || true
+          git pull --rebase --autostash || true
+          git push || true
