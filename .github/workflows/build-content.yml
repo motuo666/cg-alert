@@ -28,13 +28,22 @@ jobs:
       - name: Patch pricing CTA (AB)
         run: node scripts/patch_pricing_cta.js
       - name: Augment JSON-LD (CollectionPage/Breadcrumb)
-        run: node scripts/augment_jsonld.js
+        run: node scripts/augment_jsonld.js      - run: node scripts/gen_compare_builtwith.js
+        name: Generate Compare (BuiltWith)
+
+      - run: node scripts/gen_cases_auto.js
+        name: Generate Cases (top2 auto)
+
+      - run: node scripts/evidence_to_rss.js
+        name: Build RSS feed
+
+
       - name: Commit content
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add "$PUBLISH_DIR/evidence" "$PUBLISH_DIR/vendors" "$PUBLISH_DIR/pricing" "$PUBLISH_DIR/sitemap.xml"
+          git add "$PUBLISH_DIR/evidence" "$PUBLISH_DIR/vendors" "$PUBLISH_DIR/pricing" "$PUBLISH_DIR/compare-builtwith.html" "$PUBLISH_DIR/cases" "$PUBLISH_DIR/sitemap.xml" "$PUBLISH_DIR/rss/index.xml"ndors" "$PUBLISH_DIR/pricing" "$PUBLISH_DIR/sitemap.xml"
           if git diff --cached --quiet; then
             echo "no content changes"
           else
