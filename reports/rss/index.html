@@ -1,69 +1,76 @@
-
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RSS · CG Alert</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="manifest" href="/site.webmanifest">
-<link rel="stylesheet" href="/assets/style.css">
-<link rel="stylesheet" href="/assets/overrides.css">
-</head><body><div class="container">
-<header class="cg-topbar">
-  <div class="cg-wrap cg-nav">
-    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
-    <nav class="cg-links" id="topnav">
-      <a href="/#pricing">Pricing</a>
-      <a href="#how">How it works</a>
-      <a href="#evidence">Evidence</a>
-      <a href="#compare">Compare</a>
-      <a href="#faq">FAQ</a>
-      
-    </nav>
-  </div>
-</header>
-<section class="section">
+<link rel="canonical" href="/reports/rss/">
+<style>
+:root { --fg:#0b1220; --muted:#6b7280; --bd:#e5e7eb; --bg:#ffffff; }
+body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; color:var(--fg); background:var(--bg); }
+.container { max-width: 1080px; margin: 0 auto; padding: 24px 16px 56px; }
+h1 { font-size: 1.75rem; margin: 0 0 1rem; }
+.lead { color: var(--muted); margin: 0 0 1.25rem; }
+.cg-cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 12px; }
+.card { display:block; text-decoration:none; border:1px solid var(--bd); border-radius: 14px; padding: 14px; transition:box-shadow .2s, transform .05s; }
+.card:hover { box-shadow: 0 6px 16px rgba(0,0,0,.06); transform: translateY(-1px); }
+.card-title { font-weight: 600; line-height:1.3; margin: 0 0 .25rem; }
+.card-meta { font-size: .875rem; color:var(--muted); margin-bottom: .5rem; }
+.card-body { font-size:.95rem; line-height:1.5; color:#1f2937; }
+.toolbar { display:flex; align-items:center; gap:.5rem; margin:.75rem 0 1rem; }
+.toolbar input[type="search"] { flex:1; padding:.6rem .75rem; border:1px solid var(--bd); border-radius: 10px; font-size:1rem; }
+.toolbar button { padding:.55rem .8rem; border:1px solid var(--bd); border-radius:10px; background:#fff; cursor:pointer; }
+a { color: inherit; } a:hover, a:focus { text-decoration: none; }
+</style>
+</head><body>
+<div class="container">
   <h1>Subscribe via RSS</h1>
-  <p class="lead">Get a human‑readable feed below, or <a href="/rss/index.xml" rel="alternate">view the raw XML</a>.</p>
+  <p class="lead">Human‑readable feed below. For raw XML, <a href="/rss/index.xml" rel="alternate">open /rss/index.xml</a>.</p>
+  <div class="toolbar">
+    <input id="q" type="search" placeholder="Filter by text or vendor…">
+    <button id="clear">Clear</button>
+  </div>
   <div id="rss-list" class="cg-cards"></div>
-</section>
+</div>
 <script>
 (async function() {
-  try {
-    const res = await fetch("/rss/index.xml");
-    const text = await res.text();
-    const xml = new DOMParser().parseFromString(text, "application/xml");
-    const items = Array.from(xml.querySelectorAll("item, entry"));
-    const list = document.getElementById("rss-list");
+  const list = document.getElementById('rss-list');
+  const q = document.getElementById('q');
+  const clear = document.getElementById('clear');
+  function norm(s) { return (s||'').toLowerCase(); }
+  function render(items) {
     list.innerHTML = '';
-    items.slice(0, 120).forEach(it => {
-      const title = it.querySelector("title")?.textContent || "(no title)";
-      const linkEl = it.querySelector("link");
-      let link = "#";
-      if (linkEl) link = linkEl.getAttribute("href") || linkEl.textContent || "#";
-      const date = (it.querySelector("pubDate")||it.querySelector("updated")||it.querySelector("published"))?.textContent || "";
-      const descEl = it.querySelector("description")||it.querySelector("summary")||it.querySelector("content");
-      const desc = descEl ? (descEl.textContent||'').replace(/<[^>]+>/g,'') : "";
-      const a = document.createElement("a");
-      a.className = "card";
-      a.href = link.startsWith("http") ? link : "#";
-      a.innerHTML = `<div class="card-title">${title}</div>
-                     <div class="card-meta">${date}</div>
-                     <div class="card-body">${(desc||'').slice(0,240)}</div>`;
-      if (/not\s*found/i.test(a.textContent) || /\bsample\b/i.test(a.textContent)) return;
-      list.appendChild(a);
+    items.forEach(it => list.appendChild(it));
+  }
+  function makeCard({title, link, date, desc}) {
+    const a = document.createElement('a');
+    a.className = 'card';
+    a.href = link && link.startsWith('http') ? link : '#';
+    a.innerHTML = `<div class="card-title">${title}</div>
+                   <div class="card-meta">${date}</div>
+                   <div class="card-body">${desc}</div>`;
+    return a;
+  }
+  try {
+    const res = await fetch('/rss/index.xml', { cache: 'no-cache' });
+    const text = await res.text();
+    const xml = new DOMParser().parseFromString(text, 'application/xml');
+    const items = Array.from(xml.querySelectorAll('item,entry')).map(x=>({
+      title: (x.querySelector('title')?.textContent||'(no title)').trim(),
+      link: (x.querySelector('link')?.getAttribute('href') || x.querySelector('link')?.textContent || '').trim(),
+      date: (x.querySelector('pubDate,updated,published')?.textContent||'').trim(),
+      desc: ((x.querySelector('description,summary,content')?.textContent)||'').replace(/<[^>]+>/g,'').trim().slice(0,220)
+    })).filter(o => !/not\s*found/i.test(o.title + ' ' + o.desc) && !/\bsample\b/i.test(o.title + ' ' + o.desc));
+    const nodes = items.map(makeCard);
+    render(nodes);
+    q.addEventListener('input', () => {
+      const needle = norm(q.value);
+      const filtered = nodes.filter(n => norm(n.textContent).includes(needle));
+      render(filtered);
     });
-  } catch (e) {
-    document.getElementById("rss-list").innerHTML = '<div class="card">Failed to load feed.</div>';
+    clear.addEventListener('click', () => { q.value=''; q.dispatchEvent(new Event('input')); q.focus(); });
+  } catch(err) {
+    list.innerHTML = '<div class="card"><div class="card-title">Failed to load feed</div><div class="card-body">'+(err?.message||'')+'</div></div>';
   }
 })();
 </script>
-<footer class="cg-footer">
-  <div class="cg-wrap cg-footlinks">
-    <a href="/who-uses/">Who uses</a>
-    <a href="/about/">About</a>
-    <a href="/reports/">Reports</a>
-    <a href="/rss/index.xml">RSS</a>
-    <a href="/terms/">Terms</a>
-    <a href="/privacy/">Privacy</a>
-    <span>© CG Alert — evidence-backed vendor change alerts.</span>
-  </div>
-</footer></div></body></html>
+</body></html>
