@@ -67,9 +67,9 @@ jobs:
   pricing:
     runs-on: ubuntu-latest
     env:
-      STRIPE_LINK_RENEWAL_DESK: ${{ vars.STRIPE_LINK_RENEWAL_DESK }}
+      # STRIPE_LINK_RENEWAL_DESK: (deprecated) ${{ vars.STRIPE_LINK_RENEWAL_DESK }}
       STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
-      STRIPE_LINK_COMPLIANCE: ${{ vars.STRIPE_LINK_COMPLIANCE }}
+      # STRIPE_LINK_COMPLIANCE: (deprecated) ${{ vars.STRIPE_LINK_COMPLIANCE }}
       INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
     steps:
       - name: Checkout code
