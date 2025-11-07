@@ -1,0 +1,26 @@
+
+name: Evidence Seed (demo only)
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Seed sample evidence
+        run: |
+          set -e
+          node scripts/seed_sample_evidence.mjs
+          node scripts/render_evidence_pages.mjs
+          node scripts/generate_reports_index.mjs
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add reports rss evidence
+          git commit -m "seed: sample evidence for demo (remove later)" || echo "no changes"
+          git pull --rebase --autostash || true
+          git push
