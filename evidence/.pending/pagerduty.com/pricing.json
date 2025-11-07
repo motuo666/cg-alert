@@ -1,0 +1,12 @@
+{
+  "vendor": "pagerduty.com",
+  "url": "https://pagerduty.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "8f4649b40407d263968274161a5581dbe13197bdc053c4c399a8083c234e5443",
+  "new_hash": "a3ac1833bc678a664befdd0e9b21f8c49048f186e7e18611fcbde2f4e20712d9",
+  "first_seen_at": "2025-11-07T04:46:21.411Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "Incident Management Pricing | PagerDuty We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog Connect, Learn, Innovate. Join us for PagerDuty on Tour. Register now We built an AI SRE with memory! PagerDuty SRE Agent i"
+}

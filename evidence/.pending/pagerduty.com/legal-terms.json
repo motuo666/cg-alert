@@ -1,0 +1,12 @@
+{
+  "vendor": "pagerduty.com",
+  "url": "https://pagerduty.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "182c33df2d61d2130c00000bfd4f604bddd7c6624c5e36a8c7dc028f429919f8",
+  "new_hash": "1fc6d049f40f94b0ea1ddcae1adab37d78224a57c32612c439a68c474219f8eb",
+  "first_seen_at": "2025-11-07T04:46:25.354Z",
+  "confirmed_at": null,
+  "status_code": 404,
+  "snippet": "404 | PagerDuty We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog Connect, Learn, Innovate. Join us for PagerDuty on Tour. Register now We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog "
+}
