@@ -1,11 +1,11 @@
 {
   "vendor": "twilio.com",
-  "url": "https://twilio.com/dpa",
-  "page": "/dpa",
-  "key": "dpa",
+  "url": "https://twilio.com/terms",
+  "page": "/terms",
+  "key": "terms",
   "old_hash": "d27869db2549e5f417d02e47b434a5e3ebea186413b5fcc4e1a55c76dae43b7e",
-  "new_hash": "244d34ccf9fcae2c0ae40715fba717c487aa76e3d57a7e715d843855aed239a7",
-  "first_seen_at": "2025-11-07T08:34:18.716Z",
+  "new_hash": "2e4299d0e0878670858d097fab1401fb5b7076c6e6a54d495e7fa7bae9e656b9",
+  "first_seen_at": "2025-11-07T09:26:27.076Z",
   "confirmed_at": null,
   "status_code": 404,
   "snippet": "Page not found | Twilio English English An icon of a checkmark French German Japanese Portuguese Spanish Support Help Center Support Plans Partner Solutions Login Log in to: Twilio logo Messaging, Voice, Verify, Video, and more Twilio Or lo"

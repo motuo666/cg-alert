@@ -1,11 +1,11 @@
 {
   "vendor": "salesforce.com",
-  "url": "https://salesforce.com/legal/terms",
-  "page": "/legal/terms",
-  "key": "legal-terms",
-  "old_hash": "823fd112d75d0b72f38caed12056c7c78821b6194cc69ff6b31560d15578f267",
+  "url": "https://salesforce.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "c1d801a2f9bfa1c961a110acceb30a981cc61fd2a1b278822ea3874fd5f7917f",
   "new_hash": "b1a6320953eafe8c32981804517b01c52bcdfe61206ed8f5a3b36f643dc824d0",
-  "first_seen_at": "2025-11-07T09:26:08.740Z",
+  "first_seen_at": "2025-11-07T09:26:03.257Z",
   "confirmed_at": null,
   "status_code": 404,
   "snippet": "404 - Salesforce.com --> Skip to content &nbsp; Oops, the page you're trying to view isn't here. &nbsp; &nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a "
