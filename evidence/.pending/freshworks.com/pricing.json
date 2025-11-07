@@ -1,0 +1,12 @@
+{
+  "vendor": "freshworks.com",
+  "url": "https://freshworks.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "f3553880372aa3f28ea8e6762d87e5ef5f61a741626114cb98987ab2a65ecc01",
+  "new_hash": "a8ac7683e515bbd48ced4958147f45eaae24f31ff326de8b03773566e170b6db",
+  "first_seen_at": "2025-11-07T05:58:56.581Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "Freshworks Pricing: Software for ITSM, Customer Service, CRM and more Skip to main content Products Platform Resources Pricing Demo Try it free Login English Deutsch Nederlands Français Svenska Español (España) Español (América Latina) Port"
+}
