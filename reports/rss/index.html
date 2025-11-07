@@ -1,41 +1,69 @@
-<!doctype html><meta http-equiv="refresh" content="0; url=/rss/index.xml"><title>Redirecting…</title>
 
-<section class="wrap" style="max-width:1200px;margin:1.5rem auto;padding:0 1rem;">
-  <h1 style="font-size:1.5rem;margin:.25rem 0 1rem;">Subscribe via RSS</h1>
-  <p class="lead" style="color:#4b5563;margin:0 0 1rem;">Human‑readable feed below. You can also <a href="/rss/index.xml" rel="alternate">view the raw XML</a>.</p>
-  <div id="rss-list" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;"></div>
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RSS · CG Alert</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/assets/overrides.css">
+</head><body><div class="container">
+<header class="cg-topbar">
+  <div class="cg-wrap cg-nav">
+    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
+    <nav class="cg-links" id="topnav">
+      <a href="/#pricing">Pricing</a>
+      <a href="#how">How it works</a>
+      <a href="#evidence">Evidence</a>
+      <a href="#compare">Compare</a>
+      <a href="#faq">FAQ</a>
+      
+    </nav>
+  </div>
+</header>
+<section class="section">
+  <h1>Subscribe via RSS</h1>
+  <p class="lead">Get a human‑readable feed below, or <a href="/rss/index.xml" rel="alternate">view the raw XML</a>.</p>
+  <div id="rss-list" class="cg-cards"></div>
 </section>
 <script>
 (async function() {
   try {
     const res = await fetch("/rss/index.xml");
     const text = await res.text();
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, "application/xml");
+    const xml = new DOMParser().parseFromString(text, "application/xml");
     const items = Array.from(xml.querySelectorAll("item, entry"));
     const list = document.getElementById("rss-list");
-    items.slice(0, 100).forEach(it => {
+    list.innerHTML = '';
+    items.slice(0, 120).forEach(it => {
       const title = it.querySelector("title")?.textContent || "(no title)";
       const linkEl = it.querySelector("link");
       let link = "#";
-      if (linkEl) {
-        link = linkEl.getAttribute("href") || linkEl.textContent || "#";
-      }
+      if (linkEl) link = linkEl.getAttribute("href") || linkEl.textContent || "#";
       const date = (it.querySelector("pubDate")||it.querySelector("updated")||it.querySelector("published"))?.textContent || "";
       const descEl = it.querySelector("description")||it.querySelector("summary")||it.querySelector("content");
-      const desc = descEl ? descEl.textContent : "";
+      const desc = descEl ? (descEl.textContent||'').replace(/<[^>]+>/g,'') : "";
       const a = document.createElement("a");
       a.className = "card";
-      a.href = link;
-      a.style.cssText = "display:block;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.04);text-decoration:none;";
-      a.innerHTML = `<div style="font-weight:700;margin-bottom:.25rem;">${title}</div>
-                     <div style="color:#6b7280;font-size:.9rem;margin-bottom:.25rem;">${date}</div>
-                     <div style="color:#374151;font-size:.95rem;line-height:1.45;">${(desc||'').slice(0,240)}</div>`;
+      a.href = link.startsWith("http") ? link : "#";
+      a.innerHTML = `<div class="card-title">${title}</div>
+                     <div class="card-meta">${date}</div>
+                     <div class="card-body">${(desc||'').slice(0,240)}</div>`;
+      if (/not\s*found/i.test(a.textContent) || /\bsample\b/i.test(a.textContent)) return;
       list.appendChild(a);
     });
   } catch (e) {
-    const list = document.getElementById("rss-list");
-    list.innerHTML = '<div style="color:#b91c1c;">Failed to load feed.</div>';
+    document.getElementById("rss-list").innerHTML = '<div class="card">Failed to load feed.</div>';
   }
 })();
 </script>
+<footer class="cg-footer">
+  <div class="cg-wrap cg-footlinks">
+    <a href="/who-uses/">Who uses</a>
+    <a href="/about/">About</a>
+    <a href="/reports/">Reports</a>
+    <a href="/rss/index.xml">RSS</a>
+    <a href="/terms/">Terms</a>
+    <a href="/privacy/">Privacy</a>
+    <span>© CG Alert — evidence-backed vendor change alerts.</span>
+  </div>
+</footer></div></body></html>

@@ -5,7 +5,19 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="stylesheet" href="/assets/style.css">
 <link rel="stylesheet" href="/assets/overrides.css">
-</head><body><div class="container">
+</head><body><header class="cg-topbar">
+  <div class="cg-wrap cg-nav">
+    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
+    <nav class="cg-links" id="topnav">
+      <a href="/#pricing">Pricing</a>
+      <a href="#how">How it works</a>
+      <a href="#evidence">Evidence</a>
+      <a href="#compare">Compare</a>
+      <a href="#faq">FAQ</a>
+      
+    </nav>
+  </div>
+</header><div class="container">
 <header class="cg-topbar">
   <div class="cg-wrap cg-nav">
     <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
@@ -22,6 +34,37 @@
 
     <section class="section">
       <h2>Recent vendor changes</h2>
+
+<div id="reports-search" class="cg-search" style="margin:0 0 1rem;display:flex;gap:.5rem;align-items:center;">
+  <input id="q" type="search" placeholder="Search vendor or text…" style="flex:1;padding:.625rem .75rem;border:1px solid #e5e7eb;border-radius:.75rem;font-size:1rem;outline:none;">
+  <button id="clear" class="btn" style="padding:.625rem .9rem;border-radius:.75rem;">Clear</button>
+</div>
+<script>
+(function(){
+  const q = document.getElementById('q');
+  const clear = document.getElementById('clear');
+  const cardsWrap = document.querySelector('.cg-cards') || document.querySelector('#cards') || document.body;
+  function normalize(s){ return (s||'').toLowerCase(); }
+  function applyFilter(){
+    const needle = normalize(q.value);
+    const cards = cardsWrap.querySelectorAll('.card');
+    cards.forEach(card => {
+      const text = normalize(card.textContent);
+      if (/not\s*found/i.test(text) || /\bsample\b/i.test(text)) {
+        card.style.display = 'none';
+        return;
+      }
+      card.style.display = (needle==='' || text.indexOf(needle)>=0) ? '' : 'none';
+    });
+  }
+  if (q) {
+    q.addEventListener('input', applyFilter);
+    clear.addEventListener('click', ()=>{ q.value=''; applyFilter(); q.focus(); });
+    applyFilter();
+  }
+})();
+</script>
+
       <p class="small">Subscribe <a href="/rss/index.xml">via RSS</a>.</p>
       <div class="cg-cards">
     <article class="card">
@@ -1370,4 +1413,14 @@
   })();
 </script>
 
-</body></html>
+<footer class="cg-footer">
+  <div class="cg-wrap cg-footlinks">
+    <a href="/who-uses/">Who uses</a>
+    <a href="/about/">About</a>
+    <a href="/reports/">Reports</a>
+    <a href="/rss/index.xml">RSS</a>
+    <a href="/terms/">Terms</a>
+    <a href="/privacy/">Privacy</a>
+    <span>© CG Alert — evidence-backed vendor change alerts.</span>
+  </div>
+</footer></body></html>
