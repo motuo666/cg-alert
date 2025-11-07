@@ -1,47 +1,36 @@
 <!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>About · CG Alert</title>
-<meta name="description" content="About CG Alert: what we monitor, how we deliver, why evidence matters.">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About — CG Alert</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="manifest" href="/site.webmanifest">
-<link rel="canonical" href="https://www.cg-alert.com/">
-<link rel="preconnect" href="https://buy.stripe.com" crossorigin>
-<link rel="stylesheet" href="/assets/style.css">
-<link rel="stylesheet" href="/assets/overrides.css">
+<link rel="canonical" href="https://www.cg-alert.com/about/"/>
+<link rel="stylesheet" href="/assets/home-v3c.css">
 </head><body>
 <header class="cg-topbar">
   <div class="cg-wrap cg-nav">
     <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
     <nav class="cg-links" id="topnav">
       <a href="/#pricing">Pricing</a>
-      <a href="#how">How it works</a>
-      <a href="#evidence">Evidence</a>
-      <a href="#compare">Compare</a>
-      <a href="#faq">FAQ</a>
-      
+      <a href="/#how">How it works</a>
+      <a href="/#evidence">Evidence</a>
+      <a href="/#compare">Compare</a>
+      <a href="/#faq">FAQ</a>
     </nav>
   </div>
 </header>
 
-<div class="container">
+<section class="cg-wrap">
+  <h1>About</h1>
+  <p>CG Alert monitors public vendor pages across <strong>Pricing</strong>, <strong>Terms/SLA</strong>, <strong>DPA</strong>, <strong>Sub‑processors</strong>, and <strong>Status/Security</strong>. We run a two‑pass filter to remove noise (layout nits, analytics pixels, typos) and keep only material changes. For each alert, we produce a verifiable evidence card with the relevant snippet, canonical URL, timestamp, and SHA256 hash so legal and procurement can quickly audit and trace provenance.</p>
+  <p>Delivery is <strong>email‑only</strong>. No calls. Fully async. You can unsubscribe at any time using the link in any email, or write to <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a>.</p>
 
-<section class="section">
-  <h2>About</h2>
-  <p>CG Alert monitors public vendor pages across Pricing, Terms/SLA, DPA, Sub‑processors, and Status/Security.
-     We run a two‑pass filter to remove noise (layout nits, analytics pixels, typos) and keep only material changes.
-     For each alert, we produce a verifiable evidence card with the relevant snippet, canonical URL, timestamp,
-     and SHA256 hash so legal and procurement can quickly audit and trace provenance.</p>
-  <p>Delivery is <strong>email‑only</strong>. No calls. Fully async. You can unsubscribe at any time using
-     the link in any email, or write to <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a>.</p>
-  <h3>Scope</h3>
-  <ul class="small">
-    <li>Public pages only: Pricing, Terms/SLA, DPA, Sub‑processors, Status/Security</li>
-    <li>Robots first: we respect <code>robots.txt</code> and <code>sitemap.xml</code></li>
-    <li>Evidence‑first: snippet + URL + timestamp + SHA256</li>
+  <h2>Scope</h2>
+  <ul>
+    <li>Public pages only: Pricing, Terms/SLA, DPA, Sub‑processors, Status/Security.</li>
+    <li>Robots first: we respect <code>robots.txt</code> and <code>sitemap.xml</code>.</li>
+    <li>Evidence‑first: snippet + URL + timestamp + SHA256.</li>
   </ul>
 </section>
 
-</div>
 <footer class="cg-footer">
   <div class="cg-wrap cg-footlinks">
     <a href="/who-uses/">Who uses</a>
@@ -50,7 +39,8 @@
     <a href="/rss/index.xml">RSS</a>
     <a href="/terms/">Terms</a>
     <a href="/privacy/">Privacy</a>
-    <span>© CG Alert — evidence-backed vendor change alerts.</span>
+    <span>© CG Alert — evidence‑backed vendor change alerts.</span>
   </div>
 </footer>
+<script src="/assets/home-v3c.js"></script>
 </body></html>
