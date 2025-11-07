@@ -36,14 +36,20 @@ jobs:
         run: node scripts/build_vendors_index.js
 
       # 下面三步负责把 evidence 渲染成 /reports 与 RSS
-      - name: Render evidence pages
-        run: node scripts/render_evidence_pages.js
+      - name: Render evidence pages (ESM safe)
+        run: |
+          cp scripts/render_evidence_pages.js scripts/__render_evidence_pages.mjs
+          node scripts/__render_evidence_pages.mjs
 
-      - name: Generate /reports index
-        run: node scripts/generate_reports_index.js
+      - name: Generate /reports index (ESM safe)
+        run: |
+          cp scripts/generate_reports_index.js scripts/__generate_reports_index.mjs
+          node scripts/__generate_reports_index.mjs
 
-      - name: Build RSS (/rss/index.xml)
-        run: node scripts/build_reports_rss.js
+      - name: Build RSS (/rss/index.xml) (ESM safe)
+        run: |
+          cp scripts/build_reports_rss.js scripts/__build_reports_rss.mjs
+          node scripts/__build_reports_rss.mjs
 
       - name: Commit & push content artifacts
         run: |
