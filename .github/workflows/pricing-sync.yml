@@ -1,13 +1,10 @@
 name: Pricing Sync
-
 on:
   schedule:
-    - cron: '21 3 * * *'   # daily 12:21 UTC+9 ~ 03:21 UTC
+    - cron: '21 3 * * *'   # 03:21 UTC = 12:21 JST
   workflow_dispatch: {}
-
 permissions:
   contents: write
-
 jobs:
   pricing:
     runs-on: ubuntu-latest
@@ -21,9 +18,7 @@ jobs:
           SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
           INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL || format('{0}/intake/', vars.SITE_ORIGIN || 'https://www.cg-alert.com') }}
           STRIPE_LINK_PORTFOLIO: ${{ secrets.STRIPE_LINK_PORTFOLIO || vars.STRIPE_LINK_PORTFOLIO }}
-          STRIPE_LINK_BUSINESS: ${{ secrets.STRIPE_LINK_BUSINESS || vars.STRIPE_LINK_BUSINESS }}
+          STRIPE_LINK_BUSINESS:  ${{ secrets.STRIPE_LINK_BUSINESS  || vars.STRIPE_LINK_BUSINESS  }}
         run: |
           set -e
-          # 使用临时的 ESM 文件
-          cp scripts/pricing_sync.js scripts/__pricing_sync.mjs
-          node scripts/__pricing_sync.mjs
+          node scripts/pricing_sync.mjs

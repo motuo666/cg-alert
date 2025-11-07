@@ -1,71 +1,26 @@
 name: Vendors Build
-
 on:
-  workflow_dispatch:
-    inputs:
-      dry:
-        description: "Dry run? (true=只评估, false=真实提交)"
-        required: true
-        default: "true"
-        type: choice
-        options: ["true","false"]
-
+  schedule:
+    - cron: '13 3 * * *'
+  workflow_dispatch: {}
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      # 你之前说“public不用，直接根目录”，这里默认 .
-      PUBLISH_DIR: ${{ vars.PUBLISH_DIR || '.' }}
+      PUBLISH_DIR: .
       NODE_OPTIONS: --max-old-space-size=2048
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-
       - name: Install deps
         run: npm ci || npm install
-
-      - name: Build vendors index
+      - name: Build vendors index (CJS)
         run: node scripts/build_vendors_index.js
-
-      # 下面三步负责把 evidence 渲染成 /reports 与 RSS
-      - name: Render evidence pages (ESM safe)
-        run: |
-          cp scripts/render_evidence_pages.js scripts/__render_evidence_pages.mjs
-          node scripts/__render_evidence_pages.mjs
-
-      - name: Generate /reports index (ESM safe)
-        run: |
-          cp scripts/generate_reports_index.js scripts/__generate_reports_index.mjs
-          node scripts/__generate_reports_index.mjs
-
-      - name: Build RSS (/rss/index.xml) (ESM safe)
-        run: |
-          cp scripts/build_reports_rss.js scripts/__build_reports_rss.mjs
-          node scripts/__build_reports_rss.mjs
-
-      - name: Commit & push content artifacts
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          # 只提交内容产物，不碰 UI 页面
-          git add "$PUBLISH_DIR/vendors" \
-                  "$PUBLISH_DIR/api" \
-                  "$PUBLISH_DIR/reports" \
-                  "$PUBLISH_DIR/rss/index.xml" \
-                  "$PUBLISH_DIR/sitemap.xml" || true
-          if git diff --cached --quiet; then
-            echo "no changes to commit"
-          else
-            git commit -m "Vendors build: vendors/api/reports/rss artifacts"
-            git pull --rebase --autostash || true
-            git push
-          fi
+      - name: Render evidence pages (ESM)
+        run: node scripts/render_evidence_pages.mjs
+      - name: Generate reports index (ESM)
+        run: node scripts/generate_reports_index.mjs
