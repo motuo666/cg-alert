@@ -1,0 +1,12 @@
+{
+  "vendor": "auth0.com",
+  "url": "https://auth0.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "",
+  "new_hash": "f58b1ea337e91d661bf0ffe251838d284670f014b859549ad8ed297ba5cf5610",
+  "first_seen_at": "2025-11-06T18:45:40.157Z",
+  "confirmed_at": "2025-11-07T02:09:43.169Z",
+  "status_code": 200,
+  "snippet": ""
+}

@@ -4,8 +4,8 @@
   "page": "/legal/terms",
   "key": "legal-terms",
   "old_hash": "",
-  "new_hash": "b8b1ebbdf3cdc60c6b927342ea52cda5dfec4e526e5a90e6267ee8834a84c6dc",
-  "first_seen_at": "2025-11-06T18:45:11.895Z",
+  "new_hash": "7fa3b2802ae93b99b2c91034dacd807c8a645097978df4226b878f6b627b489d",
+  "first_seen_at": "2025-11-07T02:09:13.254Z",
   "confirmed_at": null,
   "status_code": 200,
   "snippet": "Website Terms of Use | Datadog Product { this.openCategory = category; const productMenu = document.querySelector('.product-menu'); window.DD_RUM.onReady(function() { if (productMenu.classList.contains('show')) { window.DD_RUM.addAction(`Pr"
