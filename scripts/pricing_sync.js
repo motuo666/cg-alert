@@ -1,104 +1,91 @@
-// Normalize CTA blocks across pages to align with 3-tier pricing (Portfolio, Business, Enterprise).
-// Usage: node scripts/pricing_sync.js
-// Requires env: STRIPE_LINK_PORTFOLIO, STRIPE_LINK_BUSINESS, INTAKE_FORM_URL
-// Enterprise always routes to intake form (no Stripe link).
+// scripts/pricing_sync.js
+// Node 20+ 运行。Only require Portfolio/Business Stripe links; Enterprise uses form.
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
 
-const fs = require('fs');
-const path = require('path');
+const env = process.env;
 
-function env(k, d=''){ const v=process.env[k]; return (v===undefined||v===null||v==='')?d:String(v); }
+// --- Required & Optional ---
+const required = {
+  STRIPE_LINK_PORTFOLIO: env.STRIPE_LINK_PORTFOLIO || '',
+  STRIPE_LINK_BUSINESS: env.STRIPE_LINK_BUSINESS || ''
+};
+const optional = {
+  // Enterprise 不走 Stripe；为空是合理的
+  STRIPE_LINK_RENEWAL_DESK: env.STRIPE_LINK_RENEWAL_DESK || '',
+  STRIPE_LINK_COMPLIANCE: env.STRIPE_LINK_COMPLIANCE || ''
+};
 
-const ROOTS = ['.', 'seo', 'who-uses', 'enterprise', 'dashboard', 'pricing'];
-const STRIPE_PORT = env('STRIPE_LINK_PORTFOLIO', '');
-const STRIPE_BUSI = env('STRIPE_LINK_BUSINESS', '');
-const INTAKE = env('INTAKE_FORM_URL', '/intake/');
-
-if (!STRIPE_PORT || !STRIPE_BUSI) {
-  console.log('pricing_sync: STRIPE_LINK_PORTFOLIO/STRIPE_LINK_BUSINESS should be set; proceeding without hard fail.');
+const intake = env.INTAKE_FORM_URL || '';
+if (!required.STRIPE_LINK_PORTFOLIO || !required.STRIPE_LINK_BUSINESS) {
+  console.error(`::error::Missing required Stripe links. Need STRIPE_LINK_PORTFOLIO & STRIPE_LINK_BUSINESS.`);
+  process.exit(1);
+}
+if (!intake) {
+  console.error(`::error::Missing INTAKE_FORM_URL for Enterprise form.`);
+  process.exit(1);
 }
 
-const CTA = (href, label) => `<a class="btn" href="${href}" rel="noopener">${label}</a>`;
-
-const snippet = `
-<section id="pricing" class="pricing three">
-  <div class="cards">
-    <div class="card">
-      <h3>Portfolio</h3>
-      <p class="price">$2,988/yr</p>
-      <ul>
-        <li>Up to 25 vendors monitored</li>
-        <li>Evidence cards (snippet + URL + timestamp + hash)</li>
-        <li>Weekly cadence</li>
-        <li>Email delivery · Fully async · No calls</li>
-        <li>30‑day money‑back if no material alert</li>
-      </ul>
-      ${CTA(STRIPE_PORT || '#', 'Buy $ 2,988')}
-    </div>
-    <div class="card">
-      <h3>Business</h3>
-      <p class="price">$6,000/yr</p>
-      <ul>
-        <li>Up to 50 vendors monitored</li>
-        <li>Upgraded evidence (before/after + negotiation language)</li>
-        <li>Daily/Weekly cadence</li>
-        <li>Email delivery · Fully async · No calls</li>
-        <li>Quarterly 1‑pager executive summary</li>
-      </ul>
-      ${CTA(STRIPE_BUSI || '#', 'Buy $ 6,000')}
-    </div>
-    <div class="card">
-      <h3>Enterprise</h3>
-      <p class="price">Starts $18,000+/yr</p>
-      <ul>
-        <li>Up to 200 vendors monitored</li>
-        <li>Custom cadence · Email delivery</li>
-        <li>Downloadable packs (ZIP/CSV/JSON)</li>
-        <li>Renewal Pack (evidence + escalation language)</li>
-      </ul>
-      ${CTA(INTAKE, 'Request Enterprise →')}
-    </div>
-  </div>
-</section>
-`.trim();
-
-function replacePricing(html){
-  // If a #pricing section exists, replace the entire section; else append to end.
-  const has = /<section[^>]*id=["']pricing["'][\s\S]*?<\/section>/i.test(html);
-  if(has){
-    return html.replace(/<section[^>]*id=["']pricing["'][\s\S]*?<\/section>/i, snippet);
-  }
-  return html.replace(/<\/body>\s*<\/html>/i, snippet + '\n</body></html>');
-}
-
-function walk(d){
-  return fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>{
-    const p = path.join(d, e.name);
-    if(e.isDirectory()) return walk(p);
-    if(/\.(html?)$/i.test(e.name)) return [p];
-    return [];
-  });
-}
-
-let touched = 0;
-for(const base of ROOTS){
-  if(!fs.existsSync(base)) continue;
-  for(const f of walk(base)){
-    const s = fs.readFileSync(f, 'utf8');
-    const n = replacePricing(s);
-    if(n !== s){
-      fs.writeFileSync(f, n);
-      touched++;
+// --- Synthesize current pricing link model ---
+const model = {
+  updated_at: new Date().toISOString(),
+  plans: {
+    portfolio: {
+      price: 2988,
+      billing: "year",
+      link: required.STRIPE_LINK_PORTFOLIO,
+      type: "stripe"
+    },
+    business: {
+      price: 6000,
+      billing: "year",
+      link: required.STRIPE_LINK_BUSINESS,
+      type: "stripe"
+    },
+    enterprise: {
+      price: 18000,
+      billing: "year+",
+      link: intake,               // 企业走表单
+      type: "form"
     }
+  },
+  optional: {
+    renewal_desk: optional.STRIPE_LINK_RENEWAL_DESK || null,
+    compliance: optional.STRIPE_LINK_COMPLIANCE || null
   }
+};
+
+// --- Write data/pricing-links.json (for site or other scripts) ---
+const outDir = path.join(process.cwd(), 'data');
+const outFile = path.join(outDir, 'pricing-links.json');
+fs.mkdirSync(outDir, { recursive: true });
+const prev = fs.existsSync(outFile) ? fs.readFileSync(outFile, 'utf8') : '';
+const next = JSON.stringify(model, null, 2);
+if (prev !== next) {
+  fs.writeFileSync(outFile, next);
+  console.log('::notice::pricing-links.json updated');
+  // commit (best-effort)
+  try {
+    execSync('git config user.email "bot@cg-alert.com"');
+    execSync('git config user.name "cg-alert-bot"');
+    execSync(`git add ${JSON.stringify(path.relative(process.cwd(), outFile))}`);
+    execSync('git diff --cached --quiet || git commit -m "chore: Pricing Sync (links regenerated)"');
+    // 允许在只读 token 时静默跳过 push
+    try { execSync('git pull --rebase --autostash || true'); } catch {}
+    try { execSync('git push || true'); } catch {}
+  } catch (e) {
+    console.log('::warning::Git commit/push skipped:', String(e.message || e));
+  }
+} else {
+  console.log('::notice::pricing-links.json up-to-date (no changes)');
 }
 
-if (fs.existsSync('dashboard/index.html')) {
-  // Also normalize dashboard CTAs (buy buttons -> correct links)
-  let s = fs.readFileSync('dashboard/index.html','utf8');
-  s = s.replace(/href="https?:\/\/buy\.stripe\.com\/[^"]+"/g, `href="${STRIPE_PORT || '#'}"`);
-  fs.writeFileSync('dashboard/index.html', s);
+if (!optional.STRIPE_LINK_RENEWAL_DESK) {
+  console.log('::notice::STRIPE_LINK_RENEWAL_DESK empty (ok, optional)');
+}
+if (!optional.STRIPE_LINK_COMPLIANCE) {
+  console.log('::notice::STRIPE_LINK_COMPLIANCE empty (ok, optional)');
 }
 
-fs.mkdirSync('artifacts', { recursive: true });
-fs.writeFileSync('artifacts/pricing_sync.txt', `touched=${touched}\n`);
-console.log(`pricing_sync: touched=${touched}`);
+console.log('::notice::Pricing Sync completed (Enterprise via form).');
