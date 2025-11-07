@@ -44,6 +44,28 @@ for (const plan of plans) {
   }
 }
 
+
+// Resolve Stripe checkout links for Portfolio/Business
+let linkMap = {};
+try {
+  const linksPath = path.join(process.cwd(), 'data', 'pricing-links.json');
+  if (fs.existsSync(linksPath)) linkMap = JSON.parse(fs.readFileSync(linksPath,'utf8'));
+} catch {}
+const envLinks = {
+  portfolio: process.env.STRIPE_LINK_PORTFOLIO || '',
+  business:  process.env.STRIPE_LINK_BUSINESS  || ''
+};
+for (const plan of plans) {
+  if (plan.id === 'portfolio') {
+    const val = envLinks.portfolio || linkMap.portfolio || plan.checkout_redirect || '';
+    if (val) plan.checkout_redirect = val;
+  }
+  if (plan.id === 'business') {
+    const val = envLinks.business || linkMap.business || plan.checkout_redirect || '';
+    if (val) plan.checkout_redirect = val;
+  }
+}
+
 j.plans = plans;
 fs.writeFileSync(p, JSON.stringify(j, null, 2));
 console.log('pricing/config.json normalized to 3 plans');
