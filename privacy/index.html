@@ -1,44 +1,46 @@
 <!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Privacy — CG Alert</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy · CG Alert</title>
+<meta name="description" content="Privacy policy for CG Alert.">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="canonical" href="https://www.cg-alert.com/"/>
-<link rel="stylesheet" href="/assets/home-v3c.css">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="canonical" href="https://www.cg-alert.com/">
+<link rel="preconnect" href="https://buy.stripe.com" crossorigin>
+<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/assets/overrides.css">
 </head><body>
-<header class="cg-topbar">
-  <div class="cg-wrap cg-nav">
-    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert"><span>CG&nbsp;Alert</span></a>
-    <nav class="cg-links" id="topnav">
-      <a href="/#pricing">Pricing</a>
-      <a href="/#how">How it works</a>
-      <a href="/#evidence">Evidence</a>
-      <a href="/#compare">Compare</a>
-      <a href="/#faq">FAQ</a>
-      <a class="cg-btn ghost" href="/intake/">Request Enterprise →</a>
-    </nav>
-  </div>
-</header>
-<section class="cg-wrap">
-<h1>Privacy</h1>
-<p>We store only what’s needed to deliver alerts (contact email, delivery preferences). We don’t sell or share your data. Unsubscribe tokens are HMAC‑signed. We store only what’s needed to deliver alerts: your contact email and delivery preferences. We do not sell or share your data. Unsubscribe tokens are HMAC‑signed. We process two types of data only: A) public webpage change snippets; B) business email for delivery (notifications, subscriptions, billing). Data minimization: we retain only evidence snippets and their URLs. You can unsubscribe from any email; you may also request deletion at ops@cg-alert.com. Evidence is hashed and timestamped for auditability.</p>
-</section>
-
-<p>我们仅处理两类数据：A）公开网页的变更片段；B）为交付所需的业务邮箱（如通知、订阅、账单）。</p>
-<ul>
-  <li>不出售、不共享个人数据。</li>
-  <li>数据最小化：只存证据所需的片段与指向 URL。</li>
-  <li>退订/删除：任何邮件均附带退订链接；也可写至 ops@cg-alert.com 申请删除。</li>
-  <li>安全：证据计算哈希并带时间戳，便于审计追溯。</li>
-</ul><footer class="cg-footer">
-  <div class="cg-wrap cg-footlinks">
-    <a href="/who-uses/">Who uses</a>
-    <a href="/about/">About</a>
+<div class="container">
+<header class="header">
+  <div class="logo"><img src="/icon.svg" alt="CG Alert"><span>CG Alert</span></div>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/pricing/">Pricing</a>
     <a href="/reports/">Reports</a>
-    <a href="/rss/">RSS</a>
+    <a href="/about/">About</a>
     <a href="/terms/">Terms</a>
     <a href="/privacy/">Privacy</a>
-    <span>© CG Alert — evidence-backed vendor change alerts.</span>
-  </div>
+  </nav>
+</header>
+
+<section class="section">
+  <h2>Privacy</h2>
+  <p>We store only what is needed to deliver alerts (contact email and delivery preferences). We do not sell
+     or share your data. Unsubscribe tokens are HMAC‑signed.</p>
+  <h3>Data we process</h3>
+  <ul class="small">
+    <li>A) Public web change fragments used to build evidence cards</li>
+    <li>B) Business email addresses for notifications, subscriptions, and billing</li>
+  </ul>
+  <h3>Principles</h3>
+  <ul class="small">
+    <li>No sale / no sharing of personal data</li>
+    <li>Data minimization: we retain only evidence fragments and canonical URLs</li>
+    <li>Unsubscribe / deletion: every email includes an unsubscribe link; or email us at <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a></li>
+    <li>Security: each evidence card includes a timestamp and SHA256 hash for auditability</li>
+  </ul>
+</section>
+
+<footer class="footer">
+  <div>© CG Alert · <a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a> · Contact: <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a></div>
 </footer>
-<script src="/assets/home-v3c.js"></script>
-</body></html>
+</div></body></html>
