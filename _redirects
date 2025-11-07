@@ -16,3 +16,5 @@
 /reports/rss.xml            /rss/index.xml 301
 /updates                    /reports/ 301
 /updates/*                  /reports/:splat 301
+/buy/renewal-desk  /buy/renewal-desk/  200
+/buy/compliance    /buy/compliance/    200
