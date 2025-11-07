@@ -1,43 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://www.cg-alert.com/</loc></url>
-  <url><loc>https://www.cg-alert.com/404.html</loc></url>
-  <url><loc>https://www.cg-alert.com/about/</loc></url>
-  <url><loc>https://www.cg-alert.com/cases/</loc></url>
-  <url><loc>https://www.cg-alert.com/cases/unknown.html</loc></url>
-  <url><loc>https://www.cg-alert.com/compare-builtwith.html</loc></url>
-  <url><loc>https://www.cg-alert.com/config/outreach_active.html</loc></url>
-  <url><loc>https://www.cg-alert.com/config/templates/outreach_A.html</loc></url>
-  <url><loc>https://www.cg-alert.com/config/templates/outreach_B.html</loc></url>
-  <url><loc>https://www.cg-alert.com/dashboard/</loc></url>
-  <url><loc>https://www.cg-alert.com/deal-desk/</loc></url>
-  <url><loc>https://www.cg-alert.com/enterprise/</loc></url>
-  <url><loc>https://www.cg-alert.com/faq/</loc></url>
-  <url><loc>https://www.cg-alert.com/includes/footer-std.html</loc></url>
-  <url><loc>https://www.cg-alert.com/includes/footer.html</loc></url>
-  <url><loc>https://www.cg-alert.com/includes/head-std.html</loc></url>
-  <url><loc>https://www.cg-alert.com/includes/head.html</loc></url>
-  <url><loc>https://www.cg-alert.com/intake/</loc></url>
   <url><loc>https://www.cg-alert.com/pricing/</loc></url>
-  <url><loc>https://www.cg-alert.com/privacy/</loc></url>
   <url><loc>https://www.cg-alert.com/reports/</loc></url>
-  <url><loc>https://www.cg-alert.com/reports/rss.xml</loc></url>
-  <url><loc>https://www.cg-alert.com/reports/rss/</loc></url>
-  <url><loc>https://www.cg-alert.com/rss.xml</loc></url>
+  <url><loc>https://www.cg-alert.com/evidence/</loc></url>
   <url><loc>https://www.cg-alert.com/rss/</loc></url>
-  <url><loc>https://www.cg-alert.com/rss/index.xml</loc></url>
-  <url><loc>https://www.cg-alert.com/scripts/patch_assets/seo_</loc></url>
-  <url><loc>https://www.cg-alert.com/seo/</loc></url>
-  <url><loc>https://www.cg-alert.com/sitemap-categories.xml</loc></url>
-  <url><loc>https://www.cg-alert.com/sitemap-index.xml</loc></url>
-  <url><loc>https://www.cg-alert.com/sitemap-reports.xml</loc></url>
-  <url><loc>https://www.cg-alert.com/sitemap-vendors.xml</loc></url>
-  <url><loc>https://www.cg-alert.com/sitemap.xml</loc></url>
-  <url><loc>https://www.cg-alert.com/terms/</loc></url>
-  <url><loc>https://www.cg-alert.com/vendors/</loc></url>
-  <url><loc>https://www.cg-alert.com/vendors/_seed/feed.xml</loc></url>
-  <url><loc>https://www.cg-alert.com/vendors/acme/feed.xml</loc></url>
-  <url><loc>https://www.cg-alert.com/vendors/unknown/</loc></url>
-  <url><loc>https://www.cg-alert.com/vendors/unknown/timeline.html</loc></url>
-  <url><loc>https://www.cg-alert.com/who-uses/</loc></url>
 </urlset>
