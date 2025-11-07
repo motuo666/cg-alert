@@ -38,3 +38,6 @@
 .hover:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(11,19,36,.12)}
 :focus-visible{outline:3px solid #9cc1ff;outline-offset:2px}
 @media (max-width:1024px){.cg-grid4{grid-template-columns:repeat(2,1fr)}.cg-grid3{grid-template-columns:1fr}.cg-hero h1{font-size:34px}.cg-trust-grid{grid-template-columns:repeat(3,1fr)}}
+
+/* unify link style */
+a, a:visited, a:hover, a:focus { text-decoration: none !important; }

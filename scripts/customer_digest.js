@@ -36,7 +36,7 @@ function readCSV(file){
   return rows.map(r => { const vals=r.split(','); const o={}; cols.forEach((c,i)=>o[c]=vals[i]||''); return o; });
 }
 function rssItems(){
-  const xml = fs.readFileSync('reports/rss.xml','utf8');
+  const xml = fs.readFileSync('reports/rss/index.xml','utf8');
   const p = new XMLParser({ignoreAttributes:false, attributeNamePrefix:'@_'});
   const doc = p.parse(xml); const items = doc?.rss?.channel?.item || [];
   const arr = Array.isArray(items)?items:[items];

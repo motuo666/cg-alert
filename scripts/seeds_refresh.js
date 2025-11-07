@@ -1,6 +1,6 @@
 // scripts/seeds_refresh.js
 /**
- * From reports/rss.xml extract cg:sourceUrl hosts, merge into data/seed_domains.txt (dedup, cap length).
+ * From reports/rss/index.xml extract cg:sourceUrl hosts, merge into data/seed_domains.txt (dedup, cap length).
  * Config via env: SEEDS_MAX (default 500)
  */
 const fs = require('fs');
@@ -31,9 +31,9 @@ function saveSeeds(p, list){
 }
 
 (function main(){
-  const rssP = 'reports/rss.xml';
+  const rssP = 'reports/rss/index.xml';
   const seedsP = 'data/seed_domains.txt';
-  if(!fs.existsSync(rssP)){ console.log('no reports/rss.xml'); return; }
+  if(!fs.existsSync(rssP)){ console.log('no reports/rss/index.xml'); return; }
   const xml = fs.readFileSync(rssP,'utf8');
   const hosts = hostsFromRSS(xml);
   const base = loadSeeds(seedsP);

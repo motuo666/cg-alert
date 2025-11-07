@@ -8,7 +8,7 @@ const outJson = path.join(mdir, 'summary.json');
 
 function countLeads(){ try { return Math.max(0, (fs.readFileSync('data/leads.csv','utf8').trim().split(/\r?\n/).length-1)); } catch { return 0; } }
 function countSuppress(){ try { return fs.readFileSync('data/suppressions.csv','utf8').trim().split(/\r?\n/).filter(Boolean).length; } catch { return 0; } }
-function countRss(){ try { const xml=fs.readFileSync('reports/rss.xml','utf8'); const p=new XMLParser({ignoreAttributes:false,attributeNamePrefix:'@_'}); const doc=p.parse(xml); const items=doc?.rss?.channel?.item; return Array.isArray(items)?items.length:(items?1:0);} catch { return 0; } }
+function countRss(){ try { const xml=fs.readFileSync('reports/rss/index.xml','utf8'); const p=new XMLParser({ignoreAttributes:false,attributeNamePrefix:'@_'}); const doc=p.parse(xml); const items=doc?.rss?.channel?.item; return Array.isArray(items)?items.length:(items?1:0);} catch { return 0; } }
 function today(){ return new Date().toISOString().slice(0,10); }
 
 function parseEvents(){

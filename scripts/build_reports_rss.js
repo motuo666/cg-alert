@@ -19,4 +19,4 @@ const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>
 ${items}
 </channel></rss>`;
 require('fs').mkdirSync('reports', {recursive:true});
-fs.writeFileSync('reports/rss.xml', xml, 'utf8'); console.log('wrote reports/rss.xml');
+fs.writeFileSync('reports/rss/index.xml', xml, 'utf8'); console.log('wrote reports/rss/index.xml');

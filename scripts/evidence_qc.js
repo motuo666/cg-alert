@@ -7,7 +7,7 @@ function pick3(items){ return items.slice(-3); }
 
 (function main(){
   try {
-    const xml = fs.readFileSync('reports/rss.xml','utf8');
+    const xml = fs.readFileSync('reports/rss/index.xml','utf8');
     const p = new XMLParser({ ignoreAttributes:false, attributeNamePrefix:'@_' });
     const doc = p.parse(xml); const items = doc?.rss?.channel?.item || [];
     const arr = Array.isArray(items) ? items : [items];
