@@ -7,5 +7,6 @@ for(const f of walk(ROOT)){const h=hrefs(fs.readFileSync(f,'utf8'));for(const u 
 fs.mkdirSync('artifacts',{recursive:true});
 fs.writeFileSync('artifacts/link_report.json',JSON.stringify({broken},null,2));
 fs.writeFileSync('artifacts/link_report.txt',broken.map(b=>`${b.file} -> ${b.href}`).join('\n'));
+broken.forEach(b=>console.log(`broken: ${b.file} -> ${b.href}`));
 console.log('link_check: broken internal links =',broken.length);
 if(broken.length>0)process.exit(1);
