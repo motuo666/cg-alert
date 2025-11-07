@@ -4,8 +4,8 @@
   "page": "/pricing",
   "key": "pricing",
   "old_hash": "",
-  "new_hash": "deac4ce44f63219d593b1eb84dbae895a10eea7e28516ca430df1ce8d1c3a64d",
-  "first_seen_at": "2025-11-07T07:42:57.471Z",
+  "new_hash": "a94cf02ced0825dc84583f2157daeb6dbd2fbc649615be979e9c9b20cea1272f",
+  "first_seen_at": "2025-11-07T08:35:35.269Z",
   "confirmed_at": null,
   "status_code": 200,
   "snippet": "Plans and Pricing | Sentry This app works best with JavaScript enabled. Menu Platform Products Products Error Monitoring Logs NEW Session Replay Tracing Seer NEW Uptime Monitoring Profiling Cron Monitoring AI Code Review NEW Integrations In"
