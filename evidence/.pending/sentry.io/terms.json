@@ -4,8 +4,8 @@
   "page": "/terms",
   "key": "terms",
   "old_hash": "",
-  "new_hash": "a8e1ddb71b398cf5ce97fc39bb689407ed9bfb9f6d7f87291347e016c4f976e8",
-  "first_seen_at": "2025-11-07T05:12:39.291Z",
+  "new_hash": "9e14e0ed9fbfc567902ad3da9bb5104f90f75ed2fced8c0a4d4395a1d1046bf0",
+  "first_seen_at": "2025-11-07T05:36:56.400Z",
   "confirmed_at": null,
   "status_code": 200,
   "snippet": "Terms of Service 3.0.0 (February 12, 2024) | Sentry This app works best with JavaScript enabled. Menu Platform Products Products Error Monitoring Logs NEW Session Replay Tracing Seer NEW Uptime Monitoring Profiling Cron Monitoring AI Code R"
