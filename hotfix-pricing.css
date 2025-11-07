@@ -5,3 +5,5 @@ section#pricing-bottom, section[data-section="pricing-bottom"],
 .bg-blue, .bg--blue, .pricing-band, .pricing-bar, .pricing-section.bottom {
   display: none !important;
 }
+
+@media (min-width: 640px){.cg-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}

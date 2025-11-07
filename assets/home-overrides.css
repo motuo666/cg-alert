@@ -41,3 +41,13 @@
 
 /* unify link style */
 a, a:visited, a:hover, a:focus { text-decoration: none !important; }
+
+
+/* === CG Alert override: stable 3-card pricing grid on tablet/desktop === */
+@media (min-width: 640px){
+  .pricing .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25rem;}
+}
+/* Ensure .cg-cards section (pricing page) renders as 3 columns on ≥640px */
+@media (min-width: 640px){
+  .cg-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25rem;align-items:stretch}
+}
