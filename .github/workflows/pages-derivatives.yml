@@ -76,7 +76,7 @@ jobs:
         run: |
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add -A dashboard rss.xml sitemap.xml
+          git add -A dashboard rss/index.xml sitemap.xml
           if git diff --cached --quiet; then
             echo "no changes"
           else

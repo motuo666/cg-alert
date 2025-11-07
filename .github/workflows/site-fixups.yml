@@ -28,7 +28,7 @@ jobs:
         shell: bash
         run: |
           set -e
-          rss="reports/rss.xml"
+          rss="reports/rss/index.xml"
           if [ -f "$rss" ]; then
             if ! grep -q "<title>" "$rss"; then
               # add a basic title element into channel if missing
