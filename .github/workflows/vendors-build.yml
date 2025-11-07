@@ -33,7 +33,7 @@ jobs:
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add "$PUBLISH_DIR/vendors" "$PUBLISH_DIR/api" "$PUBLISH_DIR/sitemap.xml" "$PUBLISH_DIR"/*/index.html || true
+          git add "$PUBLISH_DIR/vendors" "$PUBLISH_DIR/api" "$PUBLISH_DIR/sitemap.xml" || true
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else

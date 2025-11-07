@@ -86,7 +86,7 @@ jobs:
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add artifacts/health_report.txt index.html enterprise/index.html dashboard _redirects || true
+          git add artifacts/health_report.txt || true
           if git diff --cached --quiet; then
             echo "no health changes"
           else
