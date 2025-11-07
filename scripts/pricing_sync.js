@@ -46,7 +46,7 @@ function replaceInFile(file) {
   if (plans.enterprise?.href)withHref('cta-enterprise',plans.enterprise.href);
 
   // 针对历史页面兜底：把已存在的 Stripe/表单 href 统一为当前三挡
-  // Portfolio：任意 stripe 链接若靠近“Portfolio”文案则替换为新链接
+  // Portfolio
   s = s.replace(/(<a[^>]+>(?:[^<]*Portfolio[^<]*)<\/a>)/gi, m =>
     m.replace(/href=["'][^"']+["']/i, `href="${plans.portfolio?.href || INTAKE}"`));
 

@@ -2,7 +2,8 @@
 const fs=require('fs');
 function env(k,d=''){const v=process.env[k];return (v===undefined||v===null||v==='')?d:String(v);}
 function loadJSON(p, def){ try{ return JSON.parse(fs.readFileSync(p,'utf8')); }catch{ return def; } }
-const kpi=loadJSON('artifacts/kpi_guard.json',{sent7:0,complaints:0,bounces:0,unsub:0,complaintRate:0,breach:{}});
+const raw=loadJSON('artifacts/kpi_guard.json',{});
+const kpi=Object.assign({sent7:0,complaints:0,bounces:0,unsub:0,complaintRate:0,breach:{}}, raw||{});
 const policy=loadJSON('config/volume_policy.json',{
   base:20,step:10,max:60,min:10,
   guard:{unsub7:3,complaintRate:0.1,bounce7:8},
