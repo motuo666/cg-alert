@@ -1,7 +1,6 @@
 // scripts/pricing_sync.js
 // 统一 CTA 到三挡：Portfolio($2,988) / Business($6,000) / Enterprise($18,000+, 表单)
-// 读取 pricing/config.json，优先使用环境变量：STRIPE_LINK_PORTFOLIO / STRIPE_LINK_BUSINESS；
-// Enterprise 走 contact_redirect（无则回退 INTAKE_FORM_URL）。不会因缺链接而退出，只降级为表单。
+// Enterprise 固定走 contact_redirect 或 INTAKE_FORM_URL；不再因缺少“旧三挡”链接而退出。
 
 const fs = require('fs');
 const path = require('path');
@@ -21,7 +20,6 @@ function resolveVar(str, ctx) {
   return String(str).replace(/\$\{([A-Z0-9_]+)\}/g, (_, k) => ctx[k] || '');
 }
 
-// 计算三挡目标链接
 const plans = {};
 for (const p of cfg.plans || []) {
   if (p.id === 'portfolio') {
@@ -35,7 +33,6 @@ for (const p of cfg.plans || []) {
   }
 }
 
-// 替换器：优先按 id 定位（cta-portfolio / cta-business / cta-enterprise）；次之按常见文案与路径回写 href
 function replaceInFile(file) {
   let s = fs.readFileSync(file, 'utf8');
   const withHref = (id, url) =>
@@ -45,16 +42,10 @@ function replaceInFile(file) {
   if (plans.business?.href)  withHref('cta-business',  plans.business.href);
   if (plans.enterprise?.href)withHref('cta-enterprise',plans.enterprise.href);
 
-  // 针对历史页面兜底：把已存在的 Stripe/表单 href 统一为当前三挡
-  // Portfolio
   s = s.replace(/(<a[^>]+>(?:[^<]*Portfolio[^<]*)<\/a>)/gi, m =>
     m.replace(/href=["'][^"']+["']/i, `href="${plans.portfolio?.href || INTAKE}"`));
-
-  // Business
   s = s.replace(/(<a[^>]+>(?:[^<]*Business[^<]*)<\/a>)/gi, m =>
     m.replace(/href=["'][^"']+["']/i, `href="${plans.business?.href || INTAKE}"`));
-
-  // Enterprise → 一律表单
   s = s.replace(/(<a[^>]+>(?:[^<]*Enterprise[^<]*)<\/a>)/gi, m =>
     m.replace(/href=["'][^"']+["']/i, `href="${plans.enterprise?.href || INTAKE}"`));
 

@@ -3,25 +3,29 @@ set -euo pipefail
 ROOT="$(pwd)"
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "[1/4] Update scripts/pricing_sync.js"
-install -D -m 0644 "$SRC/scripts/pricing_sync.js" "$ROOT/scripts/pricing_sync.js"
+echo "[1/5] _redirects -> repository root"
+install -D -m 0644 "$SRC/_redirects" "$ROOT/_redirects"
 
-echo "[2/4] Update .github/workflows/drift-guard.yml"
-install -D -m 0644 "$SRC/.github/workflows/drift-guard.yml" "$ROOT/.github/workflows/drift-guard.yml"
+echo "[2/5] rss/index.html -> repository root"
+install -D -m 0644 "$SRC/rss/index.html" "$ROOT/rss/index.html"
 
-echo "[3/4] Update .github/workflows/blacklist-refresh.yml"
-install -D -m 0644 "$SRC/.github/workflows/blacklist-refresh.yml" "$ROOT/.github/workflows/blacklist-refresh.yml"
+echo "[3/5] scripts/vendors_build.mjs"
+install -D -m 0644 "$SRC/scripts/vendors_build.mjs" "$ROOT/scripts/vendors_build.mjs"
 
-echo "[4/4] Update outreach/compute_limit.js"
+echo "[4/5] outreach/compute_limit.js"
 install -D -m 0644 "$SRC/outreach/compute_limit.js" "$ROOT/outreach/compute_limit.js"
 
-echo "Overlay applied."
+echo "[5/5] scripts/pricing_sync.js"
+install -D -m 0644 "$SRC/scripts/pricing_sync.js" "$ROOT/scripts/pricing_sync.js"
+
+echo "Overlay v3 applied."
 git config user.email "bot@cg-alert.com" || true
 git config user.name  "cg-alert-bot" || true
-git add scripts/pricing_sync.js .github/workflows/drift-guard.yml .github/workflows/blacklist-refresh.yml outreach/compute_limit.js || true
+git add _redirects rss/index.html scripts/vendors_build.mjs outreach/compute_limit.js scripts/pricing_sync.js || true
 if git diff --cached --quiet; then
   echo "No changes to commit (already up-to-date)."
 else
-  git commit -m "Apply overlay 1196: pricing CTA tri-tier; probe deps; blacklist fi; KPI hardening" || true
+  git commit -m "Overlay 1196 v3: root redirects+rss; vendors index; outreach limit hardening; pricing CTA tri-tier"
+  git pull --rebase --autostash || true
   git push || true
 fi

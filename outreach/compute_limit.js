@@ -1,23 +1,33 @@
 #!/usr/bin/env node
-const fs=require('fs');
-function env(k,d=''){const v=process.env[k];return (v===undefined||v===null||v==='')?d:String(v);}
-function loadJSON(p, def){ try{ return JSON.parse(fs.readFileSync(p,'utf8')); }catch{ return def; } }
-const raw=loadJSON('artifacts/kpi_guard.json',{});
-const kpi=Object.assign({sent7:0,complaints:0,bounces:0,unsub:0,complaintRate:0,breach:{}}, raw||{});
-const policy=loadJSON('config/volume_policy.json',{
-  base:20,step:10,max:60,min:10,
-  guard:{unsub7:3,complaintRate:0.1,bounce7:8},
-  soft:{complaintRate:0.07,bounce7:5}
-});
-const targetEnv=parseInt(env('TARGET_SENT',policy.base),10);
-let limit=Math.max(policy.min,Math.min(targetEnv,policy.max));
-let reason=`start=${limit}`;
-if(kpi.complaintRate>policy.guard.complaintRate||kpi.bounces>policy.guard.bounce7||kpi.unsub>policy.guard.unsub7){
-  limit=policy.min; reason+=` | hard-guard → ${limit}`;
-}else{
-  if(kpi.complaintRate>policy.soft.complaintRate){ limit=Math.max(policy.min,limit-policy.step); reason+=` | soft-complaint ↓ → ${limit}`; }
-  if(kpi.bounces>policy.soft.bounce7){ limit=Math.max(policy.min,limit-policy.step); reason+=` | soft-bounce ↓ → ${limit}`; }
-  if(kpi.sent7<100 && kpi.complaintRate<0.05 && kpi.bounces<=2){ limit=Math.min(policy.max,limit+policy.step); reason+=` | low-vol healthy ↑ → ${limit}`; }
-}
-const out=process.env.GITHUB_OUTPUT||''; const txt=`limit=${limit}\nreason=${reason}\n`;
-if(out) fs.appendFileSync(out, txt); console.log(txt);
+const fs = require('fs');
+
+function loadJSON(p, def){ try{ return JSON.parse(fs.readFileSync(p,'utf8')); }catch(e){ return def; } }
+
+const raw = loadJSON('artifacts/kpi_guard.json', {});
+const kpi = Object.assign({sent7:0, complaints:0, bounces:0, unsub:0, complaintRate:0, breach:{}}, raw || {});
+
+const sent7 = Number(kpi.sent7)||0;
+const complaints = Number(kpi.complaints)||0;
+const complaintRate = sent7>0 ? complaints/sent7 : 0;
+
+const thr = {
+  UNSUB_7D_MAX: parseFloat(process.env.UNSUB_7D_MAX || '1'),
+  BOUNCE_7D_MAX: parseFloat(process.env.BOUNCE_7D_MAX || '5'),
+  COMPLAINT_7D_MAX: parseFloat(process.env.COMPLAINT_7D_MAX || '0.1')
+};
+
+const breach = {
+  unsub: (Number(kpi.unsub)||0) > thr.UNSUB_7D_MAX,
+  bounce: (Number(kpi.bounces)||0) > thr.BOUNCE_7D_MAX,
+  complaint: complaintRate > thr.COMPLAINT_7D_MAX
+};
+
+let limit = (breach.unsub || breach.bounce || breach.complaint)
+  ? 0
+  : parseInt(String(process.env.TARGET_SENT || '12'), 10);
+
+if (!Number.isFinite(limit)) limit = 0;
+
+const line = `limit=${limit}\n`;
+process.stdout.write(line);
+if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, line);

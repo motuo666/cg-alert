@@ -1,20 +1,6 @@
-/rss                       /rss/index.xml 301
-/evidence/*                 /evidence/:splat 200
-/vendors/*                  /vendors/:splat 200
-/pricing/*                  /pricing/:splat 200
-/cases/*                    /cases/:splat 200
-/compare-builtwith.html     /compare-builtwith.html 200
-/rss/*                      /rss/:splat 200
-/sitemap.xml                /sitemap.xml 200
-/seo                        /seo/ 301
-/vendors                    /vendors/ 301
-/pricing                    /pricing/ 301
-/reports                    /reports/ 301
-/unsubscribe/*              https://unsub.cg-alert.com/:splat 302
-/rss.xml                    /rss/index.xml 301
-/reports/rss                /rss/index.xml 301
-/reports/rss.xml            /rss/index.xml 301
-/updates                    /reports/ 301
-/updates/*                  /reports/:splat 301
-/buy/renewal-desk  /buy/renewal-desk/  200
-/buy/compliance    /buy/compliance/    200
+# Normalize common internal links for QA and user navigation
+/rss      /rss.xml   302
+/rss/     /rss.xml   302
+/intake   /intake/   301
+/reports  /reports/  301
+/pricing  /#pricing  302
