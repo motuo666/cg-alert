@@ -1,0 +1,27 @@
+{
+  "updated_at": "2025-11-07T05:53:52.530Z",
+  "plans": {
+    "portfolio": {
+      "price": 2988,
+      "billing": "year",
+      "link": "https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801",
+      "type": "stripe"
+    },
+    "business": {
+      "price": 6000,
+      "billing": "year",
+      "link": "https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800",
+      "type": "stripe"
+    },
+    "enterprise": {
+      "price": 18000,
+      "billing": "year+",
+      "link": "https://www.cg-alert.com/intake/",
+      "type": "form"
+    }
+  },
+  "optional": {
+    "renewal_desk": null,
+    "compliance": null
+  }
+}
