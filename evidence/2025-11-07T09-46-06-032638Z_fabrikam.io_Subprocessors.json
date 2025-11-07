@@ -1,0 +1,10 @@
+{
+  "id": "sample-3",
+  "vendor": "Fabrikam Analytics",
+  "domain": "fabrikam.io",
+  "url": "https://fabrikam.io/subprocessors",
+  "area": "Subprocessors",
+  "changed": "Added subprocessor: ACME Cloud EU region.",
+  "captured_at": "2025-11-07T09:46:06.032638Z",
+  "sha256": "demo-hash-3"
+}

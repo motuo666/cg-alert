@@ -1,0 +1,10 @@
+{
+  "id": "sample-2",
+  "vendor": "Contoso CRM",
+  "domain": "contoso.com",
+  "url": "https://contoso.com/terms",
+  "area": "Terms",
+  "changed": "Indemnity cap changed from 6× fees → 3× fees.",
+  "captured_at": "2025-11-07T09:46:06.032636Z",
+  "sha256": "demo-hash-2"
+}

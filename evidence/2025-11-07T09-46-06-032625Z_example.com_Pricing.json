@@ -1,0 +1,10 @@
+{
+  "id": "sample-1",
+  "vendor": "Example SaaS",
+  "domain": "example.com",
+  "url": "https://example.com/pricing",
+  "area": "Pricing",
+  "changed": "Price for Pro increased from $49 → $59 / mo.",
+  "captured_at": "2025-11-07T09:46:06.032625Z",
+  "sha256": "demo-hash-1"
+}
