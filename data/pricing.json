@@ -1,0 +1,42 @@
+{
+  "currency": "USD",
+  "tiers": [
+    {
+      "id": "portfolio",
+      "title": "Portfolio",
+      "price_year": 2988,
+      "vendors_max": 25,
+      "buy_link": "https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801",
+      "purchase": "stripe",
+      "includes": [
+        "Email alerts",
+        "Slack alerts",
+        "Evidence cards"
+      ],
+      "refund": "30-day money-back if no material alert"
+    },
+    {
+      "id": "business",
+      "title": "Business",
+      "price_year": 6000,
+      "vendors_max": 50,
+      "buy_link": "https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800",
+      "purchase": "stripe",
+      "includes": [
+        "Email alerts",
+        "Slack alerts",
+        "Evidence cards"
+      ]
+    },
+    {
+      "id": "enterprise",
+      "title": "Enterprise",
+      "price_year": 18000,
+      "vendors_max": 200,
+      "buy_link": null,
+      "purchase": "form",
+      "contact_url": "https://www.cg-alert.com/intake/"
+    }
+  ],
+  "updated_at": "2025-11-07T06:15:32.519Z"
+}
