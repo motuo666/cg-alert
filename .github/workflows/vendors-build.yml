@@ -1,9 +1,14 @@
 name: Vendors Build
 
 on:
-  schedule:
-    - cron: '12 2 * * *'
   workflow_dispatch:
+    inputs:
+      dry:
+        description: "Dry run? (true=只评估, false=真实提交)"
+        required: true
+        default: "true"
+        type: choice
+        options: ["true","false"]
 
 permissions:
   contents: write
@@ -12,41 +17,49 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
+      # 你之前说“public不用，直接根目录”，这里默认 .
       PUBLISH_DIR: ${{ vars.PUBLISH_DIR || '.' }}
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      NODE_OPTIONS: --max-old-space-size=2048
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
-      - name: Build vendor pages
-        run: |
-          set -e
-          node scripts/build_vendors_index.js
-          node scripts/build_vendors_timeline.js
-          node scripts/build_sitemap_filtered.js
-- name: Build evidence pages
-  run: node scripts/render_evidence_pages.js
+      - name: Install deps
+        run: npm ci || npm install
 
-- name: Generate /reports index
-  run: node scripts/generate_reports_index.js
+      - name: Build vendors index
+        run: node scripts/build_vendors_index.js
 
-- name: Build RSS (/rss/index.xml)
-  run: node scripts/build_reports_rss.js
+      # 下面三步负责把 evidence 渲染成 /reports 与 RSS
+      - name: Render evidence pages
+        run: node scripts/render_evidence_pages.js
 
+      - name: Generate /reports index
+        run: node scripts/generate_reports_index.js
 
-      - name: Commit & push
+      - name: Build RSS (/rss/index.xml)
+        run: node scripts/build_reports_rss.js
+
+      - name: Commit & push content artifacts
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add "$PUBLISH_DIR/vendors" "$PUBLISH_DIR/api" "$PUBLISH_DIR/sitemap.xml" "$PUBLISH_DIR/reports" "$PUBLISH_DIR"/*/index.html || true
+          # 只提交内容产物，不碰 UI 页面
+          git add "$PUBLISH_DIR/vendors" \
+                  "$PUBLISH_DIR/api" \
+                  "$PUBLISH_DIR/reports" \
+                  "$PUBLISH_DIR/rss/index.xml" \
+                  "$PUBLISH_DIR/sitemap.xml" || true
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else
-            git commit -m "vendors: rebuild index & timelines + sitemap"
+            git commit -m "Vendors build: vendors/api/reports/rss artifacts"
             git pull --rebase --autostash || true
             git push
           fi
