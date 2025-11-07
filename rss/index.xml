@@ -1,11 +1,710 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="/reports/rss.xsl"?>
 <rss version="2.0">
   <channel>
-    <title>CG Alert — Evidence Feed</title>
-    <link>https://www.cg-alert.com/</link>
-    <description>Vendor change evidence updates</description>
-    <language>en</language>
-    <lastBuildDate>Wed, 05 Nov 2025 14:35:16 +0000</lastBuildDate>
+    <title>CG Alert — Reports</title>
+    <link>https://www.cg-alert.com/reports/</link>
+    <description>Evidence-backed vendor change alerts</description>
+    <lastBuildDate>Fri, 07 Nov 2025 10:32:34 GMT</lastBuildDate>
+    
+    <item>
+      <title>zendesk.com</title>
+      <link>https://zendesk.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Page not found | Zendesk Sign in Product Support Company About us Newsroom Investors Events Careers Diversity &amp; Inclusion Social Impact Zendesk Foundation Legal Contact us English Zendesk. Be the company your customers want you to be. Conta</description>
+      <guid>https://zendesk.com/terms-of-service#2025-11-07T10:32:34.878Z</guid>
+    </item>
+    <item>
+      <title>zendesk.com</title>
+      <link>https://zendesk.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Page not found | Zendesk Sign in Product Support Company About us Newsroom Investors Events Careers Diversity &amp; Inclusion Social Impact Zendesk Foundation Legal Contact us English Zendesk. Be the company your customers want you to be. Conta</description>
+      <guid>https://zendesk.com/dpa#2025-11-07T10:32:34.877Z</guid>
+    </item>
+    <item>
+      <title>zendesk.com</title>
+      <link>https://zendesk.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Page not found | Zendesk Sign in Product Support Company About us Newsroom Investors Events Careers Diversity &amp; Inclusion Social Impact Zendesk Foundation Legal Contact us English Zendesk. Be the company your customers want you to be. Conta</description>
+      <guid>https://zendesk.com/legal/terms#2025-11-07T10:32:34.877Z</guid>
+    </item>
+    <item>
+      <title>zendesk.com</title>
+      <link>https://zendesk.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Zendesk Pricing Plans | Starting from $19/month Skip to main content Contact Sales Try for free Zendesk AI Agents Zendesk AI Agents Resolve customer and employee conversations across any channel AI agents Copilot Zendesk AI AI research Trus</description>
+      <guid>https://zendesk.com/pricing#2025-11-07T10:32:34.877Z</guid>
+    </item>
+    <item>
+      <title>zendesk.com</title>
+      <link>https://zendesk.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Page not found | Zendesk Sign in Product Support Company About us Newsroom Investors Events Careers Diversity &amp; Inclusion Social Impact Zendesk Foundation Legal Contact us English Zendesk. Be the company your customers want you to be. Conta</description>
+      <guid>https://zendesk.com/terms#2025-11-07T10:32:34.877Z</guid>
+    </item>
+    <item>
+      <title>workday.com</title>
+      <link>https://workday.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Not Found Continue U Got it P User 404 ERROR The page you’re looking for can’t be found. Try searching our website from our home page to find what you’re looking for instead. Please accept cookies to continue. This content is blocked due to</description>
+      <guid>https://workday.com/legal/terms#2025-11-07T10:32:34.876Z</guid>
+    </item>
+    <item>
+      <title>workday.com</title>
+      <link>https://workday.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Not Found Continue U Got it P User 404 ERROR The page you’re looking for can’t be found. Try searching our website from our home page to find what you’re looking for instead. Please accept cookies to continue. This content is blocked due to</description>
+      <guid>https://workday.com/pricing#2025-11-07T10:32:34.876Z</guid>
+    </item>
+    <item>
+      <title>workday.com</title>
+      <link>https://workday.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Not Found Continue U Got it P User 404 ERROR The page you’re looking for can’t be found. Try searching our website from our home page to find what you’re looking for instead. Please accept cookies to continue. This content is blocked due to</description>
+      <guid>https://workday.com/terms#2025-11-07T10:32:34.876Z</guid>
+    </item>
+    <item>
+      <title>workday.com</title>
+      <link>https://workday.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Not Found Continue U Got it P User 404 ERROR The page you’re looking for can’t be found. Try searching our website from our home page to find what you’re looking for instead. Please accept cookies to continue. This content is blocked due to</description>
+      <guid>https://workday.com/terms-of-service#2025-11-07T10:32:34.876Z</guid>
+    </item>
+    <item>
+      <title>twilio.com</title>
+      <link>https://twilio.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Twilio Pricing | Twilio English English An icon of a checkmark French German Japanese Portuguese Spanish Support Help Center Support Plans Partner Solutions Login Log in to: Twilio logo Messaging, Voice, Verify, Video, and more Twilio Or lo</description>
+      <guid>https://twilio.com/pricing#2025-11-07T10:32:34.875Z</guid>
+    </item>
+    <item>
+      <title>twilio.com</title>
+      <link>https://twilio.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Page not found | Twilio English English An icon of a checkmark French German Japanese Portuguese Spanish Support Help Center Support Plans Partner Solutions Login Log in to: Twilio logo Messaging, Voice, Verify, Video, and more Twilio Or lo</description>
+      <guid>https://twilio.com/terms#2025-11-07T10:32:34.875Z</guid>
+    </item>
+    <item>
+      <title>twilio.com</title>
+      <link>https://twilio.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Page not found | Twilio English English An icon of a checkmark French German Japanese Portuguese Spanish Support Help Center Support Plans Partner Solutions Login Log in to: Twilio logo Messaging, Voice, Verify, Video, and more Twilio Or lo</description>
+      <guid>https://twilio.com/terms-of-service#2025-11-07T10:32:34.875Z</guid>
+    </item>
+    <item>
+      <title>workday.com</title>
+      <link>https://workday.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Not Found Continue U Got it P User 404 ERROR The page you’re looking for can’t be found. Try searching our website from our home page to find what you’re looking for instead. Please accept cookies to continue. This content is blocked due to</description>
+      <guid>https://workday.com/dpa#2025-11-07T10:32:34.875Z</guid>
+    </item>
+    <item>
+      <title>stripe.com</title>
+      <link>https://stripe.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Chat with Stripe sales Page not found! Stripe logo Products Solutions Developers Resources Pricing Dashboard&amp;nbsp; Sign in&amp;nbsp; Sign in&amp;nbsp; Contact sales&amp;nbsp; Open mobile navigation Stripe logo Back Close mobile navigation Products Solu</description>
+      <guid>https://stripe.com/legal/terms#2025-11-07T10:32:34.874Z</guid>
+    </item>
+    <item>
+      <title>stripe.com</title>
+      <link>https://stripe.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Chat with Stripe sales Page not found! Stripe logo Products Solutions Developers Resources Pricing Dashboard&amp;nbsp; Sign in&amp;nbsp; Sign in&amp;nbsp; Contact sales&amp;nbsp; Open mobile navigation Stripe logo Back Close mobile navigation Products Solu</description>
+      <guid>https://stripe.com/terms-of-service#2025-11-07T10:32:34.874Z</guid>
+    </item>
+    <item>
+      <title>twilio.com</title>
+      <link>https://twilio.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Page not found | Twilio English English An icon of a checkmark French German Japanese Portuguese Spanish Support Help Center Support Plans Partner Solutions Login Log in to: Twilio logo Messaging, Voice, Verify, Video, and more Twilio Or lo</description>
+      <guid>https://twilio.com/dpa#2025-11-07T10:32:34.874Z</guid>
+    </item>
+    <item>
+      <title>twilio.com</title>
+      <link>https://twilio.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Page not found | Twilio English English An icon of a checkmark French German Japanese Portuguese Spanish Support Help Center Support Plans Partner Solutions Login Log in to: Twilio logo Messaging, Voice, Verify, Video, and more Twilio Or lo</description>
+      <guid>https://twilio.com/legal/terms#2025-11-07T10:32:34.874Z</guid>
+    </item>
+    <item>
+      <title>salesforce.com</title>
+      <link>https://salesforce.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 - Salesforce.com --&gt; Skip to content &amp;nbsp; Oops, the page you're trying to view isn't here. &amp;nbsp; &amp;nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a </description>
+      <guid>https://salesforce.com/terms#2025-11-07T10:32:34.873Z</guid>
+    </item>
+    <item>
+      <title>salesforce.com</title>
+      <link>https://salesforce.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 - Salesforce.com --&gt; Skip to content &amp;nbsp; Oops, the page you're trying to view isn't here. &amp;nbsp; &amp;nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a </description>
+      <guid>https://salesforce.com/terms-of-service#2025-11-07T10:32:34.873Z</guid>
+    </item>
+    <item>
+      <title>salesforce.com</title>
+      <link>https://salesforce.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 - Salesforce.com --&gt; Skip to content &amp;nbsp; Oops, the page you're trying to view isn't here. &amp;nbsp; &amp;nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a </description>
+      <guid>https://salesforce.com/terms-of-service#2025-11-07T10:32:34.873Z</guid>
+    </item>
+    <item>
+      <title>stripe.com</title>
+      <link>https://stripe.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Chat with Stripe sales Page not found! Stripe logo Products Solutions Developers Resources Pricing Dashboard&amp;nbsp; Sign in&amp;nbsp; Sign in&amp;nbsp; Contact sales&amp;nbsp; Open mobile navigation Stripe logo Back Close mobile navigation Products Solu</description>
+      <guid>https://stripe.com/dpa#2025-11-07T10:32:34.873Z</guid>
+    </item>
+    <item>
+      <title>salesforce.com</title>
+      <link>https://salesforce.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 - Salesforce.com --&gt; Skip to content &amp;nbsp; Oops, the page you're trying to view isn't here. &amp;nbsp; &amp;nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a </description>
+      <guid>https://salesforce.com/legal/terms#2025-11-07T10:32:34.872Z</guid>
+    </item>
+    <item>
+      <title>salesforce.com</title>
+      <link>https://salesforce.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 - Salesforce.com --&gt; Skip to content &amp;nbsp; Oops, the page you're trying to view isn't here. &amp;nbsp; &amp;nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a </description>
+      <guid>https://salesforce.com/legal/terms#2025-11-07T10:32:34.872Z</guid>
+    </item>
+    <item>
+      <title>salesforce.com</title>
+      <link>https://salesforce.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 - Salesforce.com --&gt; Skip to content &amp;nbsp; Oops, the page you're trying to view isn't here. &amp;nbsp; &amp;nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a </description>
+      <guid>https://salesforce.com/legal/terms#2025-11-07T10:32:34.872Z</guid>
+    </item>
+    <item>
+      <title>salesforce.com</title>
+      <link>https://salesforce.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 - Salesforce.com --&gt; Skip to content &amp;nbsp; Oops, the page you're trying to view isn't here. &amp;nbsp; &amp;nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a </description>
+      <guid>https://salesforce.com/terms#2025-11-07T10:32:34.872Z</guid>
+    </item>
+    <item>
+      <title>pagerduty.com</title>
+      <link>https://pagerduty.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Incident Management Pricing | PagerDuty We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog Connect, Learn, Innovate. Join us for PagerDuty on Tour. Register now We built an AI SRE with memory! PagerDuty SRE Agent i</description>
+      <guid>https://pagerduty.com/pricing#2025-11-07T10:32:34.871Z</guid>
+    </item>
+    <item>
+      <title>pagerduty.com</title>
+      <link>https://pagerduty.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 | PagerDuty We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog Connect, Learn, Innovate. Join us for PagerDuty on Tour. Register now We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog </description>
+      <guid>https://pagerduty.com/terms#2025-11-07T10:32:34.871Z</guid>
+    </item>
+    <item>
+      <title>pagerduty.com</title>
+      <link>https://pagerduty.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Terms of Service | PagerDuty We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog Connect, Learn, Innovate. Join us for PagerDuty on Tour. Register now We built an AI SRE with memory! PagerDuty SRE Agent is now GA. R</description>
+      <guid>https://pagerduty.com/terms-of-service#2025-11-07T10:32:34.871Z</guid>
+    </item>
+    <item>
+      <title>salesforce.com</title>
+      <link>https://salesforce.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 - Salesforce.com --&gt; Skip to content &amp;nbsp; Oops, the page you're trying to view isn't here. &amp;nbsp; &amp;nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a </description>
+      <guid>https://salesforce.com/dpa#2025-11-07T10:32:34.871Z</guid>
+    </item>
+    <item>
+      <title>onelogin.com</title>
+      <link>https://onelogin.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>--&gt; Software License &amp;amp; Product Agreements | One Identity --&gt; For the best web experience, please use IE11+, Chrome, Firefox, or Safari Resources All Resources Learning Hub Blog Communities United States (English) Brazil (Português) Fran</description>
+      <guid>https://onelogin.com/terms#2025-11-07T10:32:34.870Z</guid>
+    </item>
+    <item>
+      <title>onelogin.com</title>
+      <link>https://onelogin.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>--&gt; Page Not Found --&gt; For the best web experience, please use IE11+, Chrome, Firefox, or Safari Contact Sales: +1 (415) 645-6830 Login United States (English) France (Français) Germany (Deutsch) Japan (日本語) Products Main Menu Products Prod</description>
+      <guid>https://onelogin.com/terms-of-service#2025-11-07T10:32:34.870Z</guid>
+    </item>
+    <item>
+      <title>pagerduty.com</title>
+      <link>https://pagerduty.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 | PagerDuty We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog Connect, Learn, Innovate. Join us for PagerDuty on Tour. Register now We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog </description>
+      <guid>https://pagerduty.com/dpa#2025-11-07T10:32:34.870Z</guid>
+    </item>
+    <item>
+      <title>pagerduty.com</title>
+      <link>https://pagerduty.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 | PagerDuty We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog Connect, Learn, Innovate. Join us for PagerDuty on Tour. Register now We built an AI SRE with memory! PagerDuty SRE Agent is now GA. Read the blog </description>
+      <guid>https://pagerduty.com/legal/terms#2025-11-07T10:32:34.870Z</guid>
+    </item>
+    <item>
+      <title>onelogin.com</title>
+      <link>https://onelogin.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>--&gt; Page Not Found --&gt; For the best web experience, please use IE11+, Chrome, Firefox, or Safari Contact Sales: +1 (415) 645-6830 Login United States (English) France (Français) Germany (Deutsch) Japan (日本語) Products Main Menu Products Prod</description>
+      <guid>https://onelogin.com/dpa#2025-11-07T10:32:34.869Z</guid>
+    </item>
+    <item>
+      <title>onelogin.com</title>
+      <link>https://onelogin.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>--&gt; Page Not Found --&gt; For the best web experience, please use IE11+, Chrome, Firefox, or Safari Contact Sales: +1 (415) 645-6830 Login United States (English) France (Français) Germany (Deutsch) Japan (日本語) Products Main Menu Products Prod</description>
+      <guid>https://onelogin.com/legal/terms#2025-11-07T10:32:34.869Z</guid>
+    </item>
+    <item>
+      <title>onelogin.com</title>
+      <link>https://onelogin.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>--&gt; Pricing &amp;amp; Plans | OneLogin --&gt; For the best web experience, please use IE11+, Chrome, Firefox, or Safari Contact Sales: +1 (415) 645-6830 Login United States (English) France (Français) Germany (Deutsch) Japan (日本語) Products Main Me</description>
+      <guid>https://onelogin.com/pricing#2025-11-07T10:32:34.869Z</guid>
+    </item>
+    <item>
+      <title>okta.com</title>
+      <link>https://okta.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Plans and Pricing | Okta Skip to content Solve authorization for agents and phishing. Register now → +1 (800) 425-1267 Search United States Australia Brazil Canada (EN) France Germany Japan Korea Mexico Netherlands Singapore Spain Sweden Un</description>
+      <guid>https://okta.com/pricing#2025-11-07T10:32:34.868Z</guid>
+    </item>
+    <item>
+      <title>okta.com</title>
+      <link>https://okta.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Plans and Pricing | Okta Skip to content Solve authorization for agents and phishing. Register now → +1 (800) 425-1267 Search United States Australia Brazil Canada (EN) France Germany Japan Korea Mexico Netherlands Singapore Spain Sweden Un</description>
+      <guid>https://okta.com/pricing#2025-11-07T10:32:34.868Z</guid>
+    </item>
+    <item>
+      <title>okta.com</title>
+      <link>https://okta.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>%PDF-1.7 %���� 1 0 obj &gt;/Metadata 227 0 R/ViewerPreferences 228 0 R&gt;&gt; endobj 2 0 obj &gt; endobj 3 0 obj &gt;/ExtGState &gt;/XObject &gt;/ProcSet[/PDF/Text/ImageB/ImageC/ImageI] &gt;&gt;/Annots[ 18 0 R 19 0 R 20 0 R] /MediaBox[ 0 0 612 792] /Contents 4 0 R/G</description>
+      <guid>https://okta.com/terms#2025-11-07T10:32:34.868Z</guid>
+    </item>
+    <item>
+      <title>okta.com</title>
+      <link>https://okta.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Terms of Service | Okta Skip to content Solve authorization for agents and phishing. Register now → +1 (800) 425-1267 Search United States Australia Brazil Canada (EN) France Germany Japan Korea Mexico Netherlands Singapore Spain Sweden Uni</description>
+      <guid>https://okta.com/terms-of-service#2025-11-07T10:32:34.868Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/terms-of-service#2025-11-07T10:32:34.867Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/terms-of-service#2025-11-07T10:32:34.867Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/terms-of-service#2025-11-07T10:32:34.867Z</guid>
+    </item>
+    <item>
+      <title>okta.com</title>
+      <link>https://okta.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>%PDF-1.7 %���� 1 0 obj &gt;/Metadata 609 0 R/ViewerPreferences 610 0 R&gt;&gt; endobj 2 0 obj &gt; endobj 3 0 obj &gt;/Font &gt;/XObject &gt;/ProcSet[/PDF/Text/ImageB/ImageC/ImageI] &gt;&gt;/MediaBox[ 0 0 612 792] /Contents 4 0 R/Group &gt;/Tabs/S/StructParents 0&gt;&gt; endo</description>
+      <guid>https://okta.com/dpa#2025-11-07T10:32:34.867Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/legal/terms#2025-11-07T10:32:34.866Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/legal/terms#2025-11-07T10:32:34.866Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/terms#2025-11-07T10:32:34.866Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/terms#2025-11-07T10:32:34.866Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/terms#2025-11-07T10:32:34.866Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/dpa#2025-11-07T10:32:34.865Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/dpa#2025-11-07T10:32:34.865Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/dpa#2025-11-07T10:32:34.865Z</guid>
+    </item>
+    <item>
+      <title>notion.so</title>
+      <link>https://notion.so/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.</description>
+      <guid>https://notion.so/legal/terms#2025-11-07T10:32:34.865Z</guid>
+    </item>
+    <item>
+      <title>newrelic.com</title>
+      <link>https://newrelic.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>New Relic | Page not found Skip to main content Search toggle Main navigation menu, 6 items Search Submit Platform Intelligent Observability Platform View Platform APM APM 360 Business Observability eAPM SAP Monitoring Serverless Transactio</description>
+      <guid>https://newrelic.com/legal/terms#2025-11-07T10:32:34.864Z</guid>
+    </item>
+    <item>
+      <title>newrelic.com</title>
+      <link>https://newrelic.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Transparent Pricing - Start for Free | New Relic Skip to main content Simple, transparent pricing. Only pay for what you use. 50+ capabilities in one platform 100 GB of free data ingest/month Unlimited free basic users Get Started Free Requ</description>
+      <guid>https://newrelic.com/pricing#2025-11-07T10:32:34.864Z</guid>
+    </item>
+    <item>
+      <title>newrelic.com</title>
+      <link>https://newrelic.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Terms of Service Agreement | New Relic Skip to main content New Relic Inc. Terms of Service Paid Accounts Customers that access New Relic’s platform through a paid subscription are governed by the Terms of Service set forth immediately abov</description>
+      <guid>https://newrelic.com/terms#2025-11-07T10:32:34.864Z</guid>
+    </item>
+    <item>
+      <title>newrelic.com</title>
+      <link>https://newrelic.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>New Relic | Page not found Skip to main content Search toggle Main navigation menu, 6 items Search Submit Platform Intelligent Observability Platform View Platform APM APM 360 Business Observability eAPM SAP Monitoring Serverless Transactio</description>
+      <guid>https://newrelic.com/terms-of-service#2025-11-07T10:32:34.864Z</guid>
+    </item>
+    <item>
+      <title>github.com</title>
+      <link>https://github.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>GitHub Terms of Service - GitHub Docs Skip to main content GitHub Docs Version: Free, Pro, &amp;amp; Team Search or ask Copilot Search or ask Copilot Select language: current language is English Search or ask Copilot Search or ask Copilot Open </description>
+      <guid>https://github.com/terms#2025-11-07T10:32:34.863Z</guid>
+    </item>
+    <item>
+      <title>monday.com</title>
+      <link>https://monday.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>monday.com Legal Portal Skip to main content Skip to footer Products Products by monday.com Work Management CRM Dev Service Beta Learn more For managing any project, task, and workflow Project management Plan, manage, and collaborate on any</description>
+      <guid>https://monday.com/terms#2025-11-07T10:32:34.863Z</guid>
+    </item>
+    <item>
+      <title>monday.com</title>
+      <link>https://monday.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>monday.com Legal Portal Skip to main content Skip to footer Products Products by monday.com Work Management CRM Dev Service Beta Learn more For managing any project, task, and workflow Project management Plan, manage, and collaborate on any</description>
+      <guid>https://monday.com/terms#2025-11-07T10:32:34.863Z</guid>
+    </item>
+    <item>
+      <title>newrelic.com</title>
+      <link>https://newrelic.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>New Relic | Page not found Skip to main content Search toggle Main navigation menu, 6 items Search Submit Platform Intelligent Observability Platform View Platform APM APM 360 Business Observability eAPM SAP Monitoring Serverless Transactio</description>
+      <guid>https://newrelic.com/dpa#2025-11-07T10:32:34.863Z</guid>
+    </item>
+    <item>
+      <title>freshworks.dev</title>
+      <link>https://freshworks.dev/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404: This page could not be found 404 This page could not be found .</description>
+      <guid>https://freshworks.dev/pricing#2025-11-07T10:32:34.862Z</guid>
+    </item>
+    <item>
+      <title>freshworks.dev</title>
+      <link>https://freshworks.dev/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404: This page could not be found 404 This page could not be found .</description>
+      <guid>https://freshworks.dev/terms#2025-11-07T10:32:34.862Z</guid>
+    </item>
+    <item>
+      <title>freshworks.dev</title>
+      <link>https://freshworks.dev/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404: This page could not be found 404 This page could not be found .</description>
+      <guid>https://freshworks.dev/terms-of-service#2025-11-07T10:32:34.862Z</guid>
+    </item>
+    <item>
+      <title>github.com</title>
+      <link>https://github.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>GitHub Terms of Service - GitHub Docs Skip to main content GitHub Docs Version: Free, Pro, &amp;amp; Team Search or ask Copilot Search or ask Copilot Select language: current language is English Search or ask Copilot Search or ask Copilot Open </description>
+      <guid>https://github.com/terms#2025-11-07T10:32:34.862Z</guid>
+    </item>
+    <item>
+      <title>freshworks.com</title>
+      <link>https://freshworks.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Refreshing Cloud Business Software - Freshworks Terms Skip to main content Products Platform Resources Pricing Demo Try it free Login English Deutsch Nederlands Français Svenska Español (España) Español (América Latina) Português Italiano 简</description>
+      <guid>https://freshworks.com/terms#2025-11-07T10:32:34.861Z</guid>
+    </item>
+    <item>
+      <title>freshworks.com</title>
+      <link>https://freshworks.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 Page Skip to main content Products Software Freshdesk Delight customers and agents with effortless service and support Freshservice Modern and intuitive IT service management Freshdesk Omni The all-in-one solution, boosted with generati</description>
+      <guid>https://freshworks.com/terms-of-service#2025-11-07T10:32:34.861Z</guid>
+    </item>
+    <item>
+      <title>freshworks.dev</title>
+      <link>https://freshworks.dev/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404: This page could not be found 404 This page could not be found .</description>
+      <guid>https://freshworks.dev/dpa#2025-11-07T10:32:34.861Z</guid>
+    </item>
+    <item>
+      <title>freshworks.dev</title>
+      <link>https://freshworks.dev/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404: This page could not be found 404 This page could not be found .</description>
+      <guid>https://freshworks.dev/legal/terms#2025-11-07T10:32:34.861Z</guid>
+    </item>
+    <item>
+      <title>figma.com</title>
+      <link>https://figma.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Error: Page Not Found</description>
+      <guid>https://figma.com/terms-of-service#2025-11-07T10:32:34.860Z</guid>
+    </item>
+    <item>
+      <title>freshworks.com</title>
+      <link>https://freshworks.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 Page Skip to main content Products Software Freshdesk Delight customers and agents with effortless service and support Freshservice Modern and intuitive IT service management Freshdesk Omni The all-in-one solution, boosted with generati</description>
+      <guid>https://freshworks.com/dpa#2025-11-07T10:32:34.860Z</guid>
+    </item>
+    <item>
+      <title>freshworks.com</title>
+      <link>https://freshworks.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>404 Page Skip to main content Products Software Freshdesk Delight customers and agents with effortless service and support Freshservice Modern and intuitive IT service management Freshdesk Omni The all-in-one solution, boosted with generati</description>
+      <guid>https://freshworks.com/legal/terms#2025-11-07T10:32:34.860Z</guid>
+    </item>
+    <item>
+      <title>freshworks.com</title>
+      <link>https://freshworks.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Freshworks Pricing: Software for ITSM, Customer Service, CRM and more Skip to main content Products Platform Resources Pricing Demo Try it free Login English Deutsch Nederlands Français Svenska Español (España) Español (América Latina) Port</description>
+      <guid>https://freshworks.com/pricing#2025-11-07T10:32:34.860Z</guid>
+    </item>
+    <item>
+      <title>figma.com</title>
+      <link>https://figma.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Error: Page Not Found</description>
+      <guid>https://figma.com/legal/terms#2025-11-07T10:32:34.859Z</guid>
+    </item>
+    <item>
+      <title>figma.com</title>
+      <link>https://figma.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Plans &amp;amp; Pricing | Figma Skip to main content Products Solutions Community Resources Pricing Log in Contact sales Get started Get started for free Figma Design Design and prototype in one place Dev Mode Translate designs into code FigJam</description>
+      <guid>https://figma.com/pricing#2025-11-07T10:32:34.859Z</guid>
+    </item>
+    <item>
+      <title>figma.com</title>
+      <link>https://figma.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Error: Page Not Found</description>
+      <guid>https://figma.com/terms#2025-11-07T10:32:34.859Z</guid>
+    </item>
+    <item>
+      <title>dropbox.com</title>
+      <link>https://dropbox.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Dropbox - 404 Error (404) We can't find the page you're looking for. Here are a few links that may be helpful: Home Help center Sign in Get a free account Dropbox Plus Dropbox Business</description>
+      <guid>https://dropbox.com/dpa#2025-11-07T10:32:34.858Z</guid>
+    </item>
+    <item>
+      <title>dropbox.com</title>
+      <link>https://dropbox.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Dropbox - 404 Error (404) We can't find the page you're looking for. Here are a few links that may be helpful: Home Help center Sign in Get a free account Dropbox Plus Dropbox Business</description>
+      <guid>https://dropbox.com/legal/terms#2025-11-07T10:32:34.858Z</guid>
+    </item>
+    <item>
+      <title>dropbox.com</title>
+      <link>https://dropbox.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Dropbox - 404 Error (404) We can't find the page you're looking for. Here are a few links that may be helpful: Home Help center Sign in Get a free account Dropbox Plus Dropbox Business</description>
+      <guid>https://dropbox.com/terms-of-service#2025-11-07T10:32:34.858Z</guid>
+    </item>
+    <item>
+      <title>figma.com</title>
+      <link>https://figma.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Data Processing Addendum Skip to main content Products Solutions Community Resources Pricing Log in Contact sales Get started Get started for free Figma Design Design and prototype in one place Dev Mode Translate designs into code FigJam Co</description>
+      <guid>https://figma.com/dpa#2025-11-07T10:32:34.858Z</guid>
+    </item>
+    <item>
+      <title>datadoghq.com</title>
+      <link>https://datadoghq.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>&quot; lang=en itemscope itemtype=http://schema.org/Article&gt; Pricing | Datadog Datadog named a Leader in the Gartner® Magic Quadrant™ for Digital Experience Monitoring Leader in the Gartner® Magic Quadrant™ Product { this.openCategory = category</description>
+      <guid>https://datadoghq.com/pricing#2025-11-07T10:32:34.857Z</guid>
+    </item>
+    <item>
+      <title>datadoghq.com</title>
+      <link>https://datadoghq.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>&quot; lang=en itemscope itemtype=http://schema.org/Article&gt; 404 Page Not Found | Datadog Datadog named a Leader in the Gartner® Magic Quadrant™ for Digital Experience Monitoring Leader in the Gartner® Magic Quadrant™ Product { this.openCategory</description>
+      <guid>https://datadoghq.com/terms#2025-11-07T10:32:34.857Z</guid>
+    </item>
+    <item>
+      <title>datadoghq.com</title>
+      <link>https://datadoghq.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>&quot; lang=en itemscope itemtype=http://schema.org/Article&gt; 404 Page Not Found | Datadog Datadog named a Leader in the Gartner® Magic Quadrant™ for Digital Experience Monitoring Leader in the Gartner® Magic Quadrant™ Product { this.openCategory</description>
+      <guid>https://datadoghq.com/terms-of-service#2025-11-07T10:32:34.857Z</guid>
+    </item>
+    <item>
+      <title>clickup.com</title>
+      <link>https://clickup.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>ClickUp™ | Terms of Service Brain AI Product Solutions Resources Pricing Enterprise Contact Sales Login Sign Up Terms of Service Privacy Policy Security Policy Cookie Policy Developer terms DPA Subprocessors ClickUp AI Additional Integratio</description>
+      <guid>https://clickup.com/terms#2025-11-07T10:32:34.856Z</guid>
+    </item>
+    <item>
+      <title>clickup.com</title>
+      <link>https://clickup.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>ClickUp™ | Terms of Service Brain AI Product Solutions Resources Pricing Enterprise Contact Sales Login Sign Up Terms of Service Privacy Policy Security Policy Cookie Policy Developer terms DPA Subprocessors ClickUp AI Additional Integratio</description>
+      <guid>https://clickup.com/terms#2025-11-07T10:32:34.856Z</guid>
+    </item>
+    <item>
+      <title>clickup.com</title>
+      <link>https://clickup.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Let&amp;#x27;s get that fixed Brain AI Product Solutions Resources Pricing Enterprise Contact Sales Login Sign Up Whoops! Something went wrong The page you were looking for is not there. A task has been created to fix this. Contact us In the me</description>
+      <guid>https://clickup.com/terms-of-service#2025-11-07T10:32:34.856Z</guid>
+    </item>
+    <item>
+      <title>datadoghq.com</title>
+      <link>https://datadoghq.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>&quot; lang=en itemscope itemtype=http://schema.org/Article&gt; 404 Page Not Found | Datadog Datadog named a Leader in the Gartner® Magic Quadrant™ for Digital Experience Monitoring Leader in the Gartner® Magic Quadrant™ Product { this.openCategory</description>
+      <guid>https://datadoghq.com/dpa#2025-11-07T10:32:34.856Z</guid>
+    </item>
+    <item>
+      <title>datadoghq.com</title>
+      <link>https://datadoghq.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Website Terms of Use | Datadog Product { this.openCategory = category; const productMenu = document.querySelector('.product-menu'); window.DD_RUM.onReady(function() { if (productMenu.classList.contains('show')) { window.DD_RUM.addAction(`Pr</description>
+      <guid>https://datadoghq.com/legal/terms#2025-11-07T10:32:34.856Z</guid>
+    </item>
+    <item>
+      <title>clickup.com</title>
+      <link>https://clickup.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Data Protection Addendum ClickUp Product Product {/* ClickUp Text */} The only AI solution that's custom-built for you Tasks Break down any size project into customized tasks. Docs Create beautiful docs and connect them to tasks. Goals Trac</description>
+      <guid>https://clickup.com/dpa#2025-11-07T10:32:34.855Z</guid>
+    </item>
+    <item>
+      <title>clickup.com</title>
+      <link>https://clickup.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Let&amp;#x27;s get that fixed Brain AI Product Solutions Resources Pricing Enterprise Contact Sales Login Sign Up Whoops! Something went wrong The page you were looking for is not there. A task has been created to fix this. Contact us In the me</description>
+      <guid>https://clickup.com/legal/terms#2025-11-07T10:32:34.855Z</guid>
+    </item>
+    <item>
+      <title>clickup.com</title>
+      <link>https://clickup.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>The best work solution, for the best price. Brain AI Product Solutions Resources Pricing Enterprise Contact Sales Login Sign Up The best work solution, for the best price. Trusted by the world’s leading businesses 100% Money-Back Guarantee </description>
+      <guid>https://clickup.com/pricing#2025-11-07T10:32:34.855Z</guid>
+    </item>
+    <item>
+      <title>clickup.com</title>
+      <link>https://clickup.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>ClickUp™ | Terms of Service Brain AI Product Solutions Resources Pricing Enterprise Contact Sales Login Sign Up Terms of Service Privacy Policy Security Policy Cookie Policy Developer terms DPA Subprocessors ClickUp AI Additional Integratio</description>
+      <guid>https://clickup.com/terms#2025-11-07T10:32:34.855Z</guid>
+    </item>
+    <item>
+      <title>auth0.com</title>
+      <link>https://auth0.com/legal/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Not found - Auth0 Login Deutsch English Français Español Português 日本語 Developers Developers Developer Center Code Samples Guides Identity Unlocked - Podcasts Zero Index Newsletter Developer Tools OIDC Connect Playground SAML Tool JWT.io We</description>
+      <guid>https://auth0.com/legal/terms#2025-11-07T10:32:34.854Z</guid>
+    </item>
+    <item>
+      <title>auth0.com</title>
+      <link>https://auth0.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description></description>
+      <guid>https://auth0.com/pricing#2025-11-07T10:32:34.854Z</guid>
+    </item>
+    <item>
+      <title>auth0.com</title>
+      <link>https://auth0.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Terms of Service | Okta Skip to content Solve authorization for agents and phishing. Register now → +1 (800) 425-1267 Search United States Australia Brazil Canada (EN) France Germany Japan Korea Mexico Netherlands Singapore Spain Sweden Uni</description>
+      <guid>https://auth0.com/terms#2025-11-07T10:32:34.854Z</guid>
+    </item>
+    <item>
+      <title>auth0.com</title>
+      <link>https://auth0.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Not found - Auth0 Login Deutsch English Français Español Português 日本語 Developers Developers Developer Center Code Samples Guides Identity Unlocked - Podcasts Zero Index Newsletter Developer Tools OIDC Connect Playground SAML Tool JWT.io We</description>
+      <guid>https://auth0.com/terms-of-service#2025-11-07T10:32:34.854Z</guid>
+    </item>
+    <item>
+      <title>atlassian.com</title>
+      <link>https://atlassian.com/pricing</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>| Atlassian Close View this page in your language ? All languages Choose your language 中文 Deutsch English Español Français Italiano 한국어 Nederlands 日本語 Português Pусский Polski Get it free Products Featured Developers Product Managers IT pro</description>
+      <guid>https://atlassian.com/pricing#2025-11-07T10:32:34.853Z</guid>
+    </item>
+    <item>
+      <title>atlassian.com</title>
+      <link>https://atlassian.com/terms</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>| Atlassian Close View this page in your language ? All languages Choose your language 中文 Deutsch English Español Français Italiano 한국어 Nederlands 日本語 Português Pусский Polski Get it free Products Featured Developers Product Managers IT pro</description>
+      <guid>https://atlassian.com/terms#2025-11-07T10:32:34.853Z</guid>
+    </item>
+    <item>
+      <title>atlassian.com</title>
+      <link>https://atlassian.com/terms-of-service</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>| Atlassian Close View this page in your language ? All languages Choose your language 中文 Deutsch English Español Français Italiano 한국어 Nederlands 日本語 Português Pусский Polski Get it free Products Featured Developers Product Managers IT pro</description>
+      <guid>https://atlassian.com/terms-of-service#2025-11-07T10:32:34.853Z</guid>
+    </item>
+    <item>
+      <title>auth0.com</title>
+      <link>https://auth0.com/dpa</link>
+      <pubDate>Fri, 07 Nov 2025 10:32:34 GMT</pubDate>
+      <description>Not found - Auth0 Login Deutsch English Français Español Português 日本語 Developers Developers Developer Center Code Samples Guides Identity Unlocked - Podcasts Zero Index Newsletter Developer Tools OIDC Connect Playground SAML Tool JWT.io We</description>
+      <guid>https://auth0.com/dpa#2025-11-07T10:32:34.853Z</guid>
+    </item>
   </channel>
 </rss>
