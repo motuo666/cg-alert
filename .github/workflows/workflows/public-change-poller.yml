@@ -1,0 +1,58 @@
+name: Public Change Poller
+on:
+  schedule:
+    - cron: '10 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: poller
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+
+      - name: Install (none required)
+        run: echo "Node 20 has fetch; no deps needed"
+
+      - name: Poll vendors (two-stage confirmation)
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: node scripts/poller.mjs
+
+      - name: Render evidence pages
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: node scripts/render_evidence_pages.mjs
+
+      - name: Build RSS (confirmed only)
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: node scripts/evidence_to_rss.mjs
+
+      - name: Build sitemap
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: node scripts/build_sitemap.mjs
+
+      - name: Commit content
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A evidence reports rss/index.xml sitemap.xml || true
+          if git diff --cached --quiet; then
+            echo "no content changes"
+          else
+            git commit -m "poller: evidence+pages+rss+sitemap (two-stage confirm)"
+            git pull --rebase --autostash || true
+            git push
+          fi

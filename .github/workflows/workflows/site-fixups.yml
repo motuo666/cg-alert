@@ -1,0 +1,66 @@
+name: Site Fixups
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cleanup invalid CSP meta placeholders
+        shell: bash
+        run: |
+          set -e
+          shopt -s globstar nullglob
+          for f in **/*.html; do
+            if grep -q "Content-Security-Policy" "$f"; then
+              # remove lines containing placeholder ellipses in CSP meta
+              sed -i "/Content-Security-Policy.*\.\.\./d" "$f" || true
+            fi
+          done
+
+      - name: Ensure RSS title and stylesheet reference
+        shell: bash
+        run: |
+          set -e
+          rss="reports/rss/index.xml"
+          if [ -f "$rss" ]; then
+            if ! grep -q "<title>" "$rss"; then
+              # add a basic title element into channel if missing
+              awk '1; /<channel>/ && !x {print "  <title>CG Alert — Evidence Feed</title>"; x=1}' "$rss" > "$rss.tmp" && mv "$rss.tmp" "$rss"
+            fi
+          fi
+
+      - name: Ensure Pages _headers caching rules
+        shell: bash
+        run: |
+          set -e
+          touch _headers
+          add_block() {
+            block="$1"
+            key="$2"
+            if ! grep -Fq "$key" _headers; then
+              printf "\n%s\n" "$block" >> _headers
+            fi
+          }
+          add_block "/assets/*\n  Cache-Control: public, max-age=2592000, immutable" "/assets/*"
+          add_block "/*.html\n  Cache-Control: public, max-age=300" "/*.html"
+
+      - name: Commit & push
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+          else
+            git commit -m "site-fixups: CSP cleanup, RSS title, caching headers"
+            git pull --rebase --autostash || true
+            git push
+          fi
