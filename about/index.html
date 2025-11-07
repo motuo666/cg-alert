@@ -1,44 +1,44 @@
 <!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>About — CG Alert</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · CG Alert</title>
+<meta name="description" content="About CG Alert: what we monitor, how we deliver, why evidence matters.">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="canonical" href="https://www.cg-alert.com/"/>
-<link rel="stylesheet" href="/assets/home-v3c.css">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="canonical" href="https://www.cg-alert.com/">
+<link rel="preconnect" href="https://buy.stripe.com" crossorigin>
+<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/assets/overrides.css">
 </head><body>
-<header class="cg-topbar">
-  <div class="cg-wrap cg-nav">
-    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert"><span>CG&nbsp;Alert</span></a>
-    <nav class="cg-links" id="topnav">
-      <a href="/#pricing">Pricing</a>
-      <a href="/#how">How it works</a>
-      <a href="/#evidence">Evidence</a>
-      <a href="/#compare">Compare</a>
-      <a href="/#faq">FAQ</a>
-      <a class="cg-btn ghost" href="/intake/">Request Enterprise →</a>
-    </nav>
-  </div>
-</header>
-<section class="cg-wrap">
-<h1>About CG Alert</h1>
-<p>CG Alert monitors public vendor pages (Pricing, Terms/SLA, DPA, Subprocessors, Status/Security). We de‑noise with a two‑pass filter, produce verifiable evidence cards (URL · timestamp · SHA256), and ship email‑ready escalation language you can use at renewal. CG Alert monitors public vendor pages (Pricing, Terms/SLA, DPA, Subprocessors, Status/Security). Noise is reduced with a two‑pass filter. We produce verifiable evidence cards (URL · timestamp · SHA256) and ship email‑ready escalation language you can use at renewal. Delivery is email‑only — fully async, no calls.</p>
-<p>Delivery is <b>Email only</b>. No calls. Fully async.</p>
-</section>
-
-<ul>
-  <li>监控范围：Pricing / Terms / DPA / Sub‑processors / Status / Security 等公开页。</li>
-  <li>证据格式：片段+URL+时间戳+哈希，便于法务与采购复核。</li>
-  <li>隐私做法：仅处理公开网页与客户提供的邮箱，不采集个人敏感数据。</li>
-  <li>支持渠道：ops@cg-alert.com</li>
-</ul><footer class="cg-footer">
-  <div class="cg-wrap cg-footlinks">
-    <a href="/who-uses/">Who uses</a>
-    <a href="/about/">About</a>
+<div class="container">
+<header class="header">
+  <div class="logo"><img src="/icon.svg" alt="CG Alert"><span>CG Alert</span></div>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/pricing/">Pricing</a>
     <a href="/reports/">Reports</a>
-    <a href="/rss/">RSS</a>
+    <a href="/about/">About</a>
     <a href="/terms/">Terms</a>
     <a href="/privacy/">Privacy</a>
-    <span>© CG Alert — evidence-backed vendor change alerts.</span>
-  </div>
+  </nav>
+</header>
+
+<section class="section">
+  <h2>About</h2>
+  <p>CG Alert monitors public vendor pages across Pricing, Terms/SLA, DPA, Sub‑processors, and Status/Security.
+     We run a two‑pass filter to remove noise (layout nits, analytics pixels, typos) and keep only material changes.
+     For each alert, we produce a verifiable evidence card with the relevant snippet, canonical URL, timestamp,
+     and SHA256 hash so legal and procurement can quickly audit and trace provenance.</p>
+  <p>Delivery is <strong>email‑only</strong>. No calls. Fully async. You can unsubscribe at any time using
+     the link in any email, or write to <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a>.</p>
+  <h3>Scope</h3>
+  <ul class="small">
+    <li>Public pages only: Pricing, Terms/SLA, DPA, Sub‑processors, Status/Security</li>
+    <li>Robots first: we respect <code>robots.txt</code> and <code>sitemap.xml</code></li>
+    <li>Evidence‑first: snippet + URL + timestamp + SHA256</li>
+  </ul>
+</section>
+
+<footer class="footer">
+  <div>© CG Alert · <a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a> · Contact: <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a></div>
 </footer>
-<script src="/assets/home-v3c.js"></script>
-</body></html>
+</div></body></html>
