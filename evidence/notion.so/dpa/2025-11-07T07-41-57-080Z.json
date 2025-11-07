@@ -1,12 +1,12 @@
 {
   "vendor": "notion.so",
-  "url": "https://notion.so/terms-of-service",
-  "page": "/terms-of-service",
-  "key": "terms-of-service",
+  "url": "https://notion.so/dpa",
+  "page": "/dpa",
+  "key": "dpa",
   "old_hash": "9aacfa4a5ead036ee1966149b7f281aeef7a10e0592e4285c75c72d833374afb",
   "new_hash": "a058269de4f7dbac359f42a454c47ddbd6ade9218b6420724f1a6807b1b6d782",
-  "first_seen_at": "2025-11-07T06:44:12.373Z",
-  "confirmed_at": null,
+  "first_seen_at": "2025-11-07T06:44:14.389Z",
+  "confirmed_at": "2025-11-07T07:41:57.080Z",
   "status_code": 401,
   "snippet": "Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue."
 }
