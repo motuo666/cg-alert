@@ -1,0 +1,20 @@
+
+/* --- CG Alert overrides (safe, additive) --- */
+a { text-decoration: none !important; }
+a:hover, a:focus { text-decoration: none !important; }
+.pricing .cards, .cg-cards { display: grid; gap: 24px; }
+@media (min-width:640px){ .pricing .cards, .cg-cards { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+.card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:20px; box-shadow:0 2px 6px rgba(0,0,0,.04); }
+.card h3 { margin:0 0 8px; font-size:1.1rem; }
+.card .price { font-size:1.4rem; font-weight:700; margin:8px 0 12px; }
+.btn { display:inline-block; padding:10px 14px; border-radius:10px; background:#0b57d0; color:#fff; font-weight:600; }
+.btn:hover{ opacity:.92; }
+.small { color:#64748b; font-size:.9rem; }
+.container{ max-width:1120px; margin:0 auto; padding:24px; }
+.section{ margin:24px auto; }
+.section h2{ font-size:1.6rem; margin:0 0 12px; }
+.footer{ margin:40px auto 0; padding:24px 0; color:#64748b; font-size:.9rem; border-top:1px solid #e5e7eb; }
+.header a{ margin-right:16px; color:#0b57d0; }
+.header { display:flex; align-items:center; justify-content:space-between; margin:10px 0 20px; }
+.logo { display:flex; align-items:center; gap:10px; font-weight:700; }
+.logo img{ width:28px; height:28px; }
