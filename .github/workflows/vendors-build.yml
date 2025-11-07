@@ -1,8 +1,12 @@
 name: Vendors Build
 on:
-  schedule:
-    - cron: '13 3 * * *'
   workflow_dispatch: {}
+  push:
+    paths:
+      - 'evidence/**'
+      - 'scripts/render_evidence_pages.mjs'
+      - 'scripts/build_vendors_index.mjs'
+      - 'assets/overrides.css'
 permissions:
   contents: write
 jobs:
@@ -16,11 +20,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install deps
+      - name: npm bootstrap (noop)
         run: npm ci || npm install
-      - name: Build vendors index (CJS)
-        run: node scripts/build_vendors_index.js
-      - name: Render evidence pages (ESM)
-        run: node scripts/render_evidence_pages.mjs
-      - name: Generate reports index (ESM)
-        run: node scripts/generate_reports_index.mjs
+      - name: Render reports & RSS (ESM)
+        run: |
+          node scripts/build_vendors_index.mjs
+          node scripts/render_evidence_pages.mjs
+      - name: Commit & push
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A reports rss assets/overrides.css index.html about terms privacy
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "build: render reports/rss + homepage/pricing overrides"
+            git push
+          fi
