@@ -3,7 +3,7 @@
  * legal_stamp.js
  *
  * - Generate/refresh /legal/*.html with COMPANY_LEGAL_NAME + MAIL_POSTAL_ADDRESS.
- * - Inject footer block with Privacy / Terms / Postal address / unsubscribe notice
+ * - Inject footer (disabled) block with Privacy / Terms / Postal address / unsubscribe notice
  *   into index.html, dashboard/*.html, enterprise/index.html (if missing).
  *
  * ENV:
@@ -191,7 +191,7 @@ function injectFooter(fp) {
   writeIfDifferent(path.join("legal","order-form.html"),  buildOrderFormHtml());
 
   // inject footer into key pages
-  injectFooter("index.html");
+// injectFooter disabled by patch
   injectFooter(path.join("enterprise","index.html"));
   if (fs.existsSync("dashboard")) {
     for (const f of fs.readdirSync("dashboard")) {

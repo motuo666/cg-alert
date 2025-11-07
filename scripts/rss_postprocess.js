@@ -36,7 +36,7 @@ function ensureXsl(){
         <a href="/">CG&nbsp;Alert</a>
         <a href="/#pricing">Pricing</a>
         <a href="/reports/">Reports</a>
-        <a href="/reports/rss/">RSS</a>
+        <a href="/rss/">RSS</a>
       </header>
       <div class="wrap">
         <h1><xsl:value-of select="rss/channel/title"/></h1>
@@ -57,7 +57,7 @@ function ensureXsl(){
             </tr>
           </xsl:for-each>
         </tbody></table>
-        <p class="small">Raw feed URL: <code>/reports/rss.xml</code></p>
+        <p class="small">Raw feed URL: <code>/rss/index.xml</code></p>
       </div>
     </body></html>
   </xsl:template>

@@ -26,7 +26,7 @@ s = s.replace(/\bStarts?\s*\$?\s*30\s*,?0?0?0\s*\/\s*yr\b/gi, CTA)
   if(last) s = s.slice(0,last.start) + s.slice(last.end);
 })();
 if(!/application\/rss\+xml/i.test(s)){
-  s = s.replace(/<head[^>]*>/i, m=> m + '\n<link rel="alternate" type="application/rss+xml" href="/rss.xml">');
+  s = s.replace(/<head[^>]*>/i, m=> m + '\n<link rel="alternate" type="application/rss+xml" href="/rss/index.xml">');
 }
 if(s!==o) fs.writeFileSync(HOME, s, 'utf8');
 console.log('homepage micro-fix done');

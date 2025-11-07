@@ -16,8 +16,8 @@ function* htmlFiles(){
 let touched = 0;
 for(const fp of htmlFiles()){
   let html = fs.readFileSync(fp,'utf8'); const before = html;
-  html = html.replace(/href="[^"]*reports\.rss\.xml"/g, 'href="/reports/rss.xml"');
-  html = html.replace(/href="[^"]*\/reports\/rss\.xml"/g, 'href="/reports/rss.xml"');
+  html = html.replace(/href="[^"]*reports\.rss\.xml"/g, 'href="/rss/index.xml"');
+  html = html.replace(/href="[^"]*\/reports\/rss\.xml"/g, 'href="/rss/index.xml"');
   if(html !== before){ fs.writeFileSync(fp, html, 'utf8'); touched++; }
 }
 console.log('repair_reports_rss_link: updated files', touched);

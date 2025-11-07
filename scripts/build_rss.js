@@ -18,4 +18,4 @@ const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel>
 <title>CG Alert — Weekly Vendor Change Radar</title><link>${ORIGIN}/reports/</link><description>Top recent vendor change packs</description>
 ${items}
 </channel></rss>`;
-fs.writeFileSync('rss.xml', xml, 'utf8'); console.log('wrote rss.xml (root)');
+fs.mkdirSync('rss',{recursive:true}); fs.writeFileSync('rss/index.xml', xml, 'utf8'); console.log('wrote rss.xml (root)');

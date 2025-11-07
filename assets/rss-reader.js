@@ -2,7 +2,7 @@
 (async function(){
   const feedEl = document.getElementById('feed');
   try{
-    const res = await fetch('/reports/rss.xml', {cache:'no-store'});
+    const res = await fetch('/rss/index.xml', {cache:'no-store'});
     if(!res.ok) throw new Error('RSS not found');
     const txt = await res.text();
     const xml = new window.DOMParser().parseFromString(txt, 'text/xml');

@@ -44,7 +44,7 @@ function render() {
     <a class="logo" href="/">CG Alert</a>
     <a href="/reports/">Reports</a>
     <a href="/who-uses/">Who Uses</a>
-    <a href="/rss.xml" rel="nofollow">RSS</a>
+    <a href="/rss/index.xml" rel="nofollow">RSS</a>
   </div>
 </header>`.trim();
 
