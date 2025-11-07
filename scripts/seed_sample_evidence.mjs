@@ -1,46 +1,16 @@
 
-import fs from 'fs/promises';
+// Seeds 3 demo evidence items for acceptance. Safe to delete after.
+import { promises as fs } from 'fs';
 import path from 'path';
-
-const evidenceDir = 'evidence';
-await fs.mkdir(evidenceDir, { recursive: true });
-const now = new Date().toISOString();
-
-const samples = [
-  {
-    id: 'sample-1',
-    vendor: 'Example SaaS',
-    domain: 'example.com',
-    url: 'https://example.com/pricing',
-    area: 'Pricing',
-    changed: 'Price for Pro increased from $49 → $59 / mo.',
-    captured_at: '2025-11-07T09:46:06.032625Z',
-    sha256: 'demo-hash-1'
-  },
-  {
-    id: 'sample-2',
-    vendor: 'Contoso CRM',
-    domain: 'contoso.com',
-    url: 'https://contoso.com/terms',
-    area: 'Terms',
-    changed: 'Indemnity cap changed from 6× fees → 3× fees.',
-    captured_at: '2025-11-07T09:46:06.032636Z',
-    sha256: 'demo-hash-2'
-  },
-  {
-    id: 'sample-3',
-    vendor: 'Fabrikam Analytics',
-    domain: 'fabrikam.io',
-    url: 'https://fabrikam.io/subprocessors',
-    area: 'Subprocessors',
-    changed: 'Added subprocessor: ACME Cloud EU region.',
-    captured_at: '2025-11-07T09:46:06.032638Z',
-    sha256: 'demo-hash-3'
-  }
+const dir = 'evidence/demo';
+await fs.mkdir(dir, {recursive:true});
+const now = new Date();
+const items = [
+  {vendor:'Acme CRM', url:'https://acme.example.com/pricing', title:'Pricing change: Enterprise tier updated', snippet:'Enterprise plan now includes SSO; price +$100/mo', ts:new Date(now.getTime()-3600e3).toISOString()},
+  {vendor:'Northwind Analytics', url:'https://northwind.example.com/terms', title:'Terms: Liability cap changed', snippet:'Liability changed from 12x to 6x MRR', ts:new Date(now.getTime()-7200e3).toISOString()},
+  {vendor:'Globex Cloud', url:'https://globex.example.com/subprocessors', title:'Sub‑processors list updated', snippet:'Added AWS Frankfurt region; removed GCP Taiwan', ts:new Date(now.getTime()-10800e3).toISOString()},
 ];
-
-for (const s of samples) {
-  const f = path.join(evidenceDir, `${s.captured_at.replace(/[:.]/g,'-')}_${s.domain}_${s.area}.json`);
-  await fs.writeFile(f, JSON.stringify(s, null, 2));
-  console.log('wrote', f);
+for (const [i, it] of items.entries()){
+  await fs.writeFile(path.join(dir, `demo${i+1}.json`), JSON.stringify(it, null, 2), 'utf-8');
 }
+console.log('Seeded demo evidence (3 files).');
