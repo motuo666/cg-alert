@@ -81,7 +81,7 @@ jobs:
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add public/evidence dashboard artifacts/daily_ops.json artifacts/health_report.txt rss.xml reports/rss.xml || true
+          git add public/evidence dashboard artifacts/daily_ops.json artifacts/health_report.txt rss.xml reports/rss/index.xml || true
           if git diff --cached --quiet; then
             echo "no evidence changes"
           else
