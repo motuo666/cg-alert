@@ -1,1 +1,41 @@
 <!doctype html><meta http-equiv="refresh" content="0; url=/rss/index.xml"><title>Redirecting…</title>
+
+<section class="wrap" style="max-width:1200px;margin:1.5rem auto;padding:0 1rem;">
+  <h1 style="font-size:1.5rem;margin:.25rem 0 1rem;">Subscribe via RSS</h1>
+  <p class="lead" style="color:#4b5563;margin:0 0 1rem;">Human‑readable feed below. You can also <a href="/rss/index.xml" rel="alternate">view the raw XML</a>.</p>
+  <div id="rss-list" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;"></div>
+</section>
+<script>
+(async function() {
+  try {
+    const res = await fetch("/rss/index.xml");
+    const text = await res.text();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(text, "application/xml");
+    const items = Array.from(xml.querySelectorAll("item, entry"));
+    const list = document.getElementById("rss-list");
+    items.slice(0, 100).forEach(it => {
+      const title = it.querySelector("title")?.textContent || "(no title)";
+      const linkEl = it.querySelector("link");
+      let link = "#";
+      if (linkEl) {
+        link = linkEl.getAttribute("href") || linkEl.textContent || "#";
+      }
+      const date = (it.querySelector("pubDate")||it.querySelector("updated")||it.querySelector("published"))?.textContent || "";
+      const descEl = it.querySelector("description")||it.querySelector("summary")||it.querySelector("content");
+      const desc = descEl ? descEl.textContent : "";
+      const a = document.createElement("a");
+      a.className = "card";
+      a.href = link;
+      a.style.cssText = "display:block;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.04);text-decoration:none;";
+      a.innerHTML = `<div style="font-weight:700;margin-bottom:.25rem;">${title}</div>
+                     <div style="color:#6b7280;font-size:.9rem;margin-bottom:.25rem;">${date}</div>
+                     <div style="color:#374151;font-size:.95rem;line-height:1.45;">${(desc||'').slice(0,240)}</div>`;
+      list.appendChild(a);
+    });
+  } catch (e) {
+    const list = document.getElementById("rss-list");
+    list.innerHTML = '<div style="color:#b91c1c;">Failed to load feed.</div>';
+  }
+})();
+</script>
