@@ -1,6 +1,25 @@
-# Normalize common internal links for QA and user navigation
-/rss      /rss.xml   302
-/rss/     /rss.xml   302
-/intake   /intake/   301
-/reports  /reports/  301
-/pricing  /#pricing  302
+# Canonicalize domains
+http://cg-alert.com/*     https://www.cg-alert.com/:splat   301!
+http://www.cg-alert.com/* https://www.cg-alert.com/:splat   301!
+https://cg-alert.com/*    https://www.cg-alert.com/:splat   301!
+
+# Canonical reports
+/reports          /reports/                             301
+/reports/index    /reports/                             301
+
+# Canonical RSS (single endpoint)
+/rss              /rss/index.xml                        302
+/rss/             /rss/index.xml                        302
+/rss.xml          /rss/index.xml                        302
+/reports/rss      /rss/index.xml                        302
+/reports/rss/     /rss/index.xml                        302
+/reports/rss.xml  /rss/index.xml                        302
+
+# Dedicated pricing page (remove anchor redirect)
+# (was: /pricing -> /#pricing)
+/pricing          /pricing/                             301
+
+# Enterprise => intake is handled by on-page link; keep if you had server page
+/enterprise       /intake/                              302
+
+# Default: keep other paths
