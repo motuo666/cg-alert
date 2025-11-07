@@ -1,23 +1,18 @@
-// scripts/pricing_sync.js
-// Node 20+ 运行。Only require Portfolio/Business Stripe links; Enterprise uses form.
-import fs from 'fs';
-import path from 'path';
-import { execSync } from 'child_process';
-
-const env = process.env;
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
 
 // --- Required & Optional ---
 const required = {
-  STRIPE_LINK_PORTFOLIO: env.STRIPE_LINK_PORTFOLIO || '',
-  STRIPE_LINK_BUSINESS: env.STRIPE_LINK_BUSINESS || ''
+  STRIPE_LINK_PORTFOLIO: process.env.STRIPE_LINK_PORTFOLIO || '',
+  STRIPE_LINK_BUSINESS: process.env.STRIPE_LINK_BUSINESS || ''
 };
 const optional = {
-  // Enterprise 不走 Stripe；为空是合理的
-  STRIPE_LINK_RENEWAL_DESK: env.STRIPE_LINK_RENEWAL_DESK || '',
-  STRIPE_LINK_COMPLIANCE: env.STRIPE_LINK_COMPLIANCE || ''
+  STRIPE_LINK_RENEWAL_DESK: process.env.STRIPE_LINK_RENEWAL_DESK || '',
+  STRIPE_LINK_COMPLIANCE: process.env.STRIPE_LINK_COMPLIANCE || ''
 };
 
-const intake = env.INTAKE_FORM_URL || '';
+const intake = process.env.INTAKE_FORM_URL || '';
 if (!required.STRIPE_LINK_PORTFOLIO || !required.STRIPE_LINK_BUSINESS) {
   console.error(`::error::Missing required Stripe links. Need STRIPE_LINK_PORTFOLIO & STRIPE_LINK_BUSINESS.`);
   process.exit(1);
