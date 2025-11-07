@@ -1,120 +1,75 @@
-
-// Render /reports and /rss even if no evidence exists.
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const PUBLISH_DIR = process.env.PUBLISH_DIR || '.';
-const EVID_DIR = 'evidence';
-
-async function readEvidence() {
-  let items = [];
-  async function walk(dir){
-    const ents = await fs.readdir(dir, {withFileTypes:true}).catch(()=>[]);
-    for (const ent of ents){
-      const p = path.join(dir, ent.name);
-      if (ent.isDirectory()) await walk(p);
-      else if (ent.isFile() && ent.name.endsWith('.json')) {
-        try{
-          const raw = await fs.readFile(p,'utf-8');
-          const j = JSON.parse(raw);
-          // expected fields: vendor, url, title, snippet, ts
-          items.push({
-            vendor: j.vendor || 'unknown',
-            url: j.url || '',
-            title: j.title || j.vendor || 'Change detected',
-            snippet: j.snippet || '',
-            ts: j.ts || new Date().toISOString(),
-            link: j.link || j.url || '',
-          });
-        }catch{}
-      }
-    }
-  }
-  await walk(EVID_DIR);
-  // newest first
-  items.sort((a,b)=> String(b.ts).localeCompare(String(a.ts)));
-  return items;
-}
-
-function htmlShell(title, content){
-return `<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${title}</title>
+const evidenceDir = 'evidence';
+const outRoot = 'reports';
+const head = `<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Report — CG Alert</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="manifest" href="/site.webmanifest">
-<link rel="stylesheet" href="/assets/style.css">
-<link rel="stylesheet" href="/assets/overrides.css">
-</head><body><div class="container">
-<header class="header">
-  <div class="logo"><img src="/icon.svg" alt="CG Alert"><span>CG Alert</span></div>
-  <nav>
-    <a href="/">Home</a>
-    <a href="/pricing/">Pricing</a>
-    <a href="/reports/">Reports</a>
+<link rel="canonical" href="https://www.cg-alert.com/"/>
+<link rel="stylesheet" href="/assets/home-v3c.css">
+</head><body>
+<header class="cg-topbar">
+  <div class="cg-wrap cg-nav">
+    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
+    <nav class="cg-links" id="topnav">
+      <a href="/#pricing">Pricing</a>
+      <a href="#how">How it works</a>
+      <a href="#evidence">Evidence</a>
+      <a href="#compare">Compare</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>`;
+const foot = `<footer class="cg-footer">
+  <div class="cg-wrap cg-footlinks">
+    <a href="/who-uses/">Who uses</a>
     <a href="/about/">About</a>
+    <a href="/reports/">Reports</a>
+    <a href="/rss/index.html">RSS</a>
     <a href="/terms/">Terms</a>
     <a href="/privacy/">Privacy</a>
-  </nav>
-</header>
-${content}
-<footer class="footer">
-  <div>© CG Alert · <a href="/terms/">Terms</a> · <a href="/privacy/">Privacy</a> · Contact: <a href="mailto:ops@cg-alert.com">ops@cg-alert.com</a></div>
+    <span>© CG Alert — evidence-backed vendor change alerts.</span>
+  </div>
 </footer>
-</div></body></html>`;
+<script src="/assets/home-v3c.js"></script>
+</body></html>`;
+
+let files = [];
+try {
+  files = await fs.readdir(evidenceDir);
+} catch {
+  files = [];
 }
-
-function escapeHtml(s){ return String(s).replace(/[&<>"]/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m])); }
-
-async function renderReports(items){
-  const cards = items.map(it=>`
-    <article class="card">
-      <h3>${escapeHtml(it.title)}</h3>
-      <p class="small">${escapeHtml(it.snippet || '')}</p>
-      <p class="small">${escapeHtml(it.vendor)} · ${escapeHtml(it.ts)}</p>
-      <p><a class="btn" href="${escapeHtml(it.link || it.url || '#')}">View source</a></p>
-    </article>
-  `).join('');
-
-  const body = `
-    <section class="section">
-      <h2>Recent vendor changes</h2>
-      <p class="small">Subscribe <a href="/rss/index.xml">via RSS</a>.</p>
-      <div class="cg-cards">${cards || '<div class="small">No reports yet.</div>'}</div>
-    </section>`;
-
-  const html = htmlShell('Reports · CG Alert', body);
-  await fs.mkdir(path.join(PUBLISH_DIR,'reports'), {recursive:true});
-  await fs.writeFile(path.join(PUBLISH_DIR,'reports','index.html'), html, 'utf-8');
+let count = 0;
+for (const f of files) {
+  if (!f.endsWith('.json')) continue;
+  try {
+    const raw = await fs.readFile(path.join(evidenceDir, f), 'utf-8');
+    const j = JSON.parse(raw);
+    const vendor = j.vendor || j.name || (j.url ? new URL(j.url).hostname : 'vendor');
+    const when = j.timestamp || j.date || new Date().toISOString();
+    const page = j.page || j.section || 'Change';
+    const slug = (j.sha256 || j.hash || f.replace(/\.json$/,''));
+    const vendorSlug = vendor.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$|--+/g,'');
+    const datePart = (when || '').slice(0,10);
+    const outDir = path.join(outRoot, vendorSlug, datePart);
+    await fs.mkdir(outDir, { recursive: true });
+    const title = `${vendor} — ${page}`;
+    const snippet = (j.snippet || j.diff || j.note || '').toString();
+    const url = j.url || j.link || '#';
+    const html = `${head}
+<section class="cg-wrap">
+  <h1>${title}</h1>
+  <p class="muted"><a href="${url}">Source</a> · <code>${when}</code> · <code>${slug}</code></p>
+  <div class="cg-card"><pre style="white-space:pre-wrap">${snippet.replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}</pre></div>
+</section>
+${foot}`;
+    await fs.writeFile(path.join(outDir, `${slug}.html`), html, 'utf-8');
+    count++;
+  } catch {
+    // ignore bad json
+  }
 }
-
-async function renderRSS(items){
-  const site = 'https://www.cg-alert.com';
-  const now = new Date().toUTCString();
-  const entries = items.slice(0,100).map(it=>`
-    <item>
-      <title>${escapeHtml(it.title)}</title>
-      <link>${escapeHtml(it.link || it.url || site)}</link>
-      <pubDate>${new Date(it.ts).toUTCString() || now}</pubDate>
-      <description>${escapeHtml(it.snippet || '')}</description>
-      <guid>${escapeHtml((it.link || it.url || site) + '#' + (it.ts || ''))}</guid>
-    </item>`).join('');
-
-  const rss = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-  <channel>
-    <title>CG Alert — Reports</title>
-    <link>${site}/reports/</link>
-    <description>Evidence-backed vendor change alerts</description>
-    <lastBuildDate>${now}</lastBuildDate>
-    ${entries}
-  </channel>
-</rss>`;
-
-  await fs.mkdir(path.join(PUBLISH_DIR,'rss'), {recursive:true});
-  await fs.writeFile(path.join(PUBLISH_DIR,'rss','index.xml'), rss, 'utf-8');
-}
-
-const items = await readEvidence();
-await renderReports(items);
-await renderRSS(items);
-console.log(`Rendered reports (${items.length} items) and RSS.`);
+console.log(`rendered pages ${count}`);
