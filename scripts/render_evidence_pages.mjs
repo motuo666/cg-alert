@@ -2,10 +2,12 @@
 /**
  * Render very simple static HTML pages for evidence.
  * - For each evidence/vendor/key, create a static index.html
- * - Create /public/evidence/index.html with links
+ * - Create /evidence/index.html (respect PUBLISH_DIR) with links
  */
 import fs from "fs/promises";
 import path from "path";
+
+const PUBLISH_DIR = process.env.PUBLISH_DIR || '.';
 
 function htmlPage(title, body) {
   return `<!doctype html><html lang="en"><head>
@@ -48,7 +50,7 @@ async function listEvidenceJson() {
 
 async function main() {
   const files = await listEvidenceJson();
-  const pub = path.join("public","evidence");
+  const pub = path.join(PUBLISH_DIR, "evidence");
   await ensureDir(pub);
   const links = [];
 
