@@ -1,12 +1,10 @@
 name: Vendors Build
 on:
   schedule:
-    - cron: '23 3 * * *'
+    - cron: '7 2 * * *'   # daily 11:07 JST
   workflow_dispatch: {}
-
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,13 +15,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install deps (if any)
-        run: |
-          npm ci || npm install
-      - name: Build reports & rss
-        run: |
-          node scripts/reports_build.mjs
-      - name: Commit & push changes
+      - name: Install deps
+        run: npm ci || npm install
+      - name: Build reports (cards + index.json + RSS)
+        run: node scripts/reports_build.mjs
+      - name: Commit & push
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
@@ -32,7 +28,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else
-            git commit -m "build: reports/rss"
+            git commit -m "Reports build: cards/index.json/rss"
             git pull --rebase --autostash || true
             git push
           fi
