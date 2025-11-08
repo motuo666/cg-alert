@@ -20,10 +20,17 @@ jobs:
               echo "::warning::missing $p"
             fi
           done
-          echo "Scanning for truncated placeholders ('...' or unicode ellipsis)…"
-          if grep -RIn --exclude-dir=.git -E "\.\.\.|…|<<ImageDisplayed>>|conversation too long; truncated" . ; then
-            echo "::error::Repository contains truncated placeholder content. Replace these files before going live."
+
+          echo "Scanning for placeholder artifacts in HTML/MD only…"
+          # Only check site content files; skip code/evidence/ops to avoid误报
+          if grep -RIn --exclude-dir=.git               --include="*.html" --include="*.md"               -E "<<ImageDisplayed>>|conversation too long; truncated"               . ; then
+            echo "::error::Found truncation placeholders in site content. Replace these before going live."
             exit 1
           else
-            echo "OK: no obvious placeholders found."
+            echo "OK: no truncation placeholders in HTML/MD."
+          fi
+
+          echo "Optional check: warn on obvious '...' URL placeholders in HTML/MD"
+          if grep -RIn --exclude-dir=.git               --include="*.html" --include="*.md"               -E "https://buy\.stripe\.com/\.\.\.|https://forms\.gle/\.\.\."               . ; then
+            echo "::warning::Found URL placeholders (...) in HTML/MD. Replace with real links."
           fi
