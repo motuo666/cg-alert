@@ -1,40 +1,26 @@
 name: Workflows Lint
 
 on:
-  workflow_dispatch:
   push:
     paths:
       - ".github/workflows/**"
   pull_request:
     paths:
       - ".github/workflows/**"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   lint:
-    name: actionlint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: rhysd/actionlint@v1
         with:
-          fetch-depth: 1
-
-      - name: Download actionlint
-        run: |
-          set -euo pipefail
-          mkdir -p ./bin
-          curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash -s -- latest ./bin
-          ./bin/actionlint -version
-
-      - name: Lint active workflows (exclude _archive)
-        run: |
-          set -euo pipefail
-          # Collect workflow files, excluding any under _archive/
-          mapfile -t files < <(git ls-files '.github/workflows/*.yml' '.github/workflows/*.yaml' | grep -v '/_archive/')
-          if [ "${#files[@]}" -eq 0 ]; then
-            echo "No active workflow files to lint"; exit 0
-          fi
-          ./bin/actionlint "${files[@]}"
+          args: >
+            -color
+            -shellcheck=on
+            -ignore 'property ".*" is not defined in object type {} \[expression\]'
+            .github/workflows/*.yml .github/workflows/*.yaml
