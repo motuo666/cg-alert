@@ -1,15 +1,12 @@
-name: Unsub/Bounce/Complaint Sync
-
+name: Unsubscribe / Suppression Sync
 on:
   schedule:
-    - cron: '55 4 * * *'
+    - cron: '23 1 * * *'
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
-  run:
+  unsubsync:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,46 +18,16 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
+      - name: Apply suppression lists (if present)
+        shell: bash
         run: |
           set -euo pipefail
-          npm ci || npm i
-- name: Apply suppression
-  run: |
-   set -euo pipefail
-
-   if [ -f "scripts/suppression_apply.js" ]; then
-     echo "→ Running: scripts/suppression_apply.js"
-     case ".js" in
-       .mjs|.js)
-         node "scripts/suppression_apply.js"
-         ;;
-       .sh)
-         bash "scripts/suppression_apply.js"
-         ;;
-       *)
-         echo "Unknown extension for scripts/suppression_apply.js, trying bash"
-         bash "scripts/suppression_apply.js"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/suppression_apply.mjs" ]; then
-     echo "→ Running: scripts/suppression_apply.mjs"
-     case ".mjs" in
-       .mjs|.js)
-         node "scripts/suppression_apply.mjs"
-         ;;
-       .sh)
-         bash "scripts/suppression_apply.mjs"
-         ;;
-       *)
-         echo "Unknown extension for scripts/suppression_apply.mjs, trying bash"
-         bash "scripts/suppression_apply.mjs"
-         ;;
-     esac
-     exit 0
-   fi
-   echo "skip: none of expected scripts found"; exit 0
+          if [ -f scripts/suppression_apply.js ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/suppression_apply.js
+          elif [ -f scripts/suppression_apply.mjs ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/suppression_apply.mjs
+          else
+            echo "No suppression apply script; skipping."
+          fi

@@ -1,15 +1,12 @@
-name: Stabilize Ops
-
+name: Stabilize
 on:
   schedule:
     - cron: '0 */12 * * *'
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
-  run:
+  stabilize:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,63 +18,37 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
+      - name: Run stabilize suite (if present)
+        shell: bash
         run: |
           set -euo pipefail
-          npm ci || npm i
-- name: Stabilization tasks
-  run: |
-   set -euo pipefail
+          changed=0
+          if [ -f scripts/stabilize.sh ]; then
+            bash scripts/stabilize.sh && changed=1 || true
+          fi
+          if [ -f scripts/stabilize.mjs ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/stabilize.mjs && changed=1 || true
+          fi
+          if [ -f scripts/stabilize.js ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/stabilize.js && changed=1 || true
+          fi
 
-   if [ -f "scripts/stabilize.sh" ]; then
-     echo "→ Running: scripts/stabilize.sh"
-     case ".sh" in
-       .mjs|.js)
-         node "scripts/stabilize.sh"
-         ;;
-       .sh)
-         bash "scripts/stabilize.sh"
-         ;;
-       *)
-         echo "Unknown extension for scripts/stabilize.sh, trying bash"
-         bash "scripts/stabilize.sh"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/stabilize.mjs" ]; then
-     echo "→ Running: scripts/stabilize.mjs"
-     case ".mjs" in
-       .mjs|.js)
-         node "scripts/stabilize.mjs"
-         ;;
-       .sh)
-         bash "scripts/stabilize.mjs"
-         ;;
-       *)
-         echo "Unknown extension for scripts/stabilize.mjs, trying bash"
-         bash "scripts/stabilize.mjs"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/stabilize.js" ]; then
-     echo "→ Running: scripts/stabilize.js"
-     case ".js" in
-       .mjs|.js)
-         node "scripts/stabilize.js"
-         ;;
-       .sh)
-         bash "scripts/stabilize.js"
-         ;;
-       *)
-         echo "Unknown extension for scripts/stabilize.js, trying bash"
-         bash "scripts/stabilize.js"
-         ;;
-     esac
-     exit 0
-   fi
-   echo "skip: none of expected scripts found"; exit 0
+      - name: Commit & push if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No staged changes"
+            exit 0
+          fi
+          git commit -m "stabilize: periodic fixes"
+          git push

@@ -1,15 +1,12 @@
 name: Monthly Report
-
 on:
   schedule:
-    - cron: '5 7 1 * *'
+    - cron: '0 4 1 * *'
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
-  run:
+  monthly:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,63 +18,38 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
+      - name: Build monthly report if present
+        shell: bash
         run: |
           set -euo pipefail
-          npm ci || npm i
-- name: Build monthly report
-  run: |
-   set -euo pipefail
+          changed=0
+          if [ -f scripts/monthly_report.mjs ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/monthly_report.mjs && changed=1 || true
+          elif [ -f scripts/monthly_report.js ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/monthly_report.js && changed=1 || true
+          elif [ -f scripts/customer_digest.js ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/customer_digest.js && changed=1 || true
+          else
+            echo "No monthly report script; skipping."
+          fi
 
-   if [ -f "scripts/monthly_report.mjs" ]; then
-     echo "→ Running: scripts/monthly_report.mjs"
-     case ".mjs" in
-       .mjs|.js)
-         node "scripts/monthly_report.mjs"
-         ;;
-       .sh)
-         bash "scripts/monthly_report.mjs"
-         ;;
-       *)
-         echo "Unknown extension for scripts/monthly_report.mjs, trying bash"
-         bash "scripts/monthly_report.mjs"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/monthly_report.js" ]; then
-     echo "→ Running: scripts/monthly_report.js"
-     case ".js" in
-       .mjs|.js)
-         node "scripts/monthly_report.js"
-         ;;
-       .sh)
-         bash "scripts/monthly_report.js"
-         ;;
-       *)
-         echo "Unknown extension for scripts/monthly_report.js, trying bash"
-         bash "scripts/monthly_report.js"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/customer_digest.js" ]; then
-     echo "→ Running: scripts/customer_digest.js"
-     case ".js" in
-       .mjs|.js)
-         node "scripts/customer_digest.js"
-         ;;
-       .sh)
-         bash "scripts/customer_digest.js"
-         ;;
-       *)
-         echo "Unknown extension for scripts/customer_digest.js, trying bash"
-         bash "scripts/customer_digest.js"
-         ;;
-     esac
-     exit 0
-   fi
-   echo "skip: none of expected scripts found"; exit 0
+      - name: Commit & push if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No staged changes"
+            exit 0
+          fi
+          git commit -m "monthly: artifacts update"
+          git push

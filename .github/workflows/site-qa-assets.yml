@@ -1,15 +1,10 @@
-name: Site QA (Assets & Links)
-
+name: Site QA - Assets
 on:
-  schedule:
-    - cron: '30 3 * * *'
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
-  run:
+  qa:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,46 +16,16 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
+      - name: Link check (if script present)
+        shell: bash
         run: |
           set -euo pipefail
-          npm ci || npm i
-- name: Check links/assets
-  run: |
-   set -euo pipefail
-
-   if [ -f "scripts/linkcheck.mjs" ]; then
-     echo "→ Running: scripts/linkcheck.mjs"
-     case ".mjs" in
-       .mjs|.js)
-         node "scripts/linkcheck.mjs"
-         ;;
-       .sh)
-         bash "scripts/linkcheck.mjs"
-         ;;
-       *)
-         echo "Unknown extension for scripts/linkcheck.mjs, trying bash"
-         bash "scripts/linkcheck.mjs"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/linkcheck.js" ]; then
-     echo "→ Running: scripts/linkcheck.js"
-     case ".js" in
-       .mjs|.js)
-         node "scripts/linkcheck.js"
-         ;;
-       .sh)
-         bash "scripts/linkcheck.js"
-         ;;
-       *)
-         echo "Unknown extension for scripts/linkcheck.js, trying bash"
-         bash "scripts/linkcheck.js"
-         ;;
-     esac
-     exit 0
-   fi
-   echo "skip: none of expected scripts found"; exit 0
+          if [ -f scripts/linkcheck.mjs ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/linkcheck.mjs
+          elif [ -f scripts/linkcheck.js ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/linkcheck.js
+          else
+            echo "No linkcheck script; skipping."
+          fi

@@ -1,15 +1,12 @@
-name: Daily Bounce Sweep
-
+name: Daily Bounce
 on:
   schedule:
-    - cron: '15 3 * * *'
+    - cron: '17 2 * * *'
   workflow_dispatch:
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
-  run:
+  bounce:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,46 +18,18 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
+      - name: Run bounce sweep if present
+        shell: bash
         run: |
           set -euo pipefail
-          npm ci || npm i
-- name: Run bounce sweep
-  run: |
-    set -euo pipefail
-
-    if [ -f "scripts/bounce_sweep.js" ]; then
-      echo "→ Running: scripts/bounce_sweep.js"
-      case ".js" in
-        .mjs|.js)
-          node "scripts/bounce_sweep.js"
-          ;;
-        .sh)
-          bash "scripts/bounce_sweep.js"
-          ;;
-        *)
-          echo "Unknown extension for scripts/bounce_sweep.js, trying bash"
-          bash "scripts/bounce_sweep.js"
-          ;;
-      esac
-      exit 0
-    fi
-
-    if [ -f "scripts/bounce/bounce_sweep.js" ]; then
-      echo "→ Running: scripts/bounce/bounce_sweep.js"
-      case ".js" in
-        .mjs|.js)
-          node "scripts/bounce/bounce_sweep.js"
-          ;;
-        .sh)
-          bash "scripts/bounce/bounce_sweep.js"
-          ;;
-        *)
-          echo "Unknown extension for scripts/bounce/bounce_sweep.js, trying bash"
-          bash "scripts/bounce/bounce_sweep.js"
-          ;;
-      esac
-      exit 0
-    fi
-    echo "skip: none of expected scripts found"; exit 0
+          if [ -f scripts/bounce_sweep.js ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/bounce_sweep.js
+          elif [ -f scripts/bounce_sweep.mjs ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/bounce_sweep.mjs
+          elif [ -f scripts/bounce_sweep.sh ]; then
+            bash scripts/bounce_sweep.sh
+          else
+            echo "No bounce sweep script found; skipping."
+          fi

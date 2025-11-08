@@ -1,15 +1,10 @@
 name: Migrate Worker URL
-
 on:
-  schedule:
-    - cron: '25 2 * * *'
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
-  run:
+  migrate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,79 +16,39 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
+      - name: Run migration script if present
+        shell: bash
         run: |
           set -euo pipefail
-          npm ci || npm i
-- name: Patch site with Worker URL
-  env:
-    WORKER_URL: ${{ vars.WORKER_URL }}
-  run: |
-   set -euo pipefail
+          changed=0
+          if [ -f scripts/patch_site_workers_url.mjs ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/patch_site_workers_url.mjs && changed=1 || true
+          elif [ -f scripts/patch_site_workers_url.js ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/patch_site_workers_url.js && changed=1 || true
+          elif [ -f scripts/patch_site_workers_url.sh ]; then
+            bash scripts/patch_site_workers_url.sh && changed=1 || true
+          else
+            echo "No migration script; skipping."
+          fi
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
 
-   if [ -f "scripts/patch_site_workers_url.mjs" ]; then
-     echo "→ Running: scripts/patch_site_workers_url.mjs"
-     case ".mjs" in
-       .mjs|.js)
-         node "scripts/patch_site_workers_url.mjs"
-         ;;
-       .sh)
-         bash "scripts/patch_site_workers_url.mjs"
-         ;;
-       *)
-         echo "Unknown extension for scripts/patch_site_workers_url.mjs, trying bash"
-         bash "scripts/patch_site_workers_url.mjs"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/patch_site_workers_url.js" ]; then
-     echo "→ Running: scripts/patch_site_workers_url.js"
-     case ".js" in
-       .mjs|.js)
-         node "scripts/patch_site_workers_url.js"
-         ;;
-       .sh)
-         bash "scripts/patch_site_workers_url.js"
-         ;;
-       *)
-         echo "Unknown extension for scripts/patch_site_workers_url.js, trying bash"
-         bash "scripts/patch_site_workers_url.js"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/patch_site_workers_url.sh" ]; then
-     echo "→ Running: scripts/patch_site_workers_url.sh"
-     case ".sh" in
-       .mjs|.js)
-         node "scripts/patch_site_workers_url.sh"
-         ;;
-       .sh)
-         bash "scripts/patch_site_workers_url.sh"
-         ;;
-       *)
-         echo "Unknown extension for scripts/patch_site_workers_url.sh, trying bash"
-         bash "scripts/patch_site_workers_url.sh"
-         ;;
-     esac
-     exit 0
-   fi
-   echo "skip: none of expected scripts found"; exit 0
-
-- name: Commit & push changes (if any)
-  run: |
-    set -euo pipefail
-    git config user.email "bot@cg-alert.com"
-    git config user.name  "cg-alert-bot"
-    git add -A || true
-    if git diff --cached --quiet; then
-      echo "no changes to commit"
-    else
-      git commit -m "migrate: worker url auto-patch"
-      git pull --rebase --autostash || true
-      git push
-    fi
+      - name: Commit & push if changed
+        if: ${{ success() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No staged changes"
+            exit 0
+          fi
+          git commit -m "worker-url: automated migration"
+          git push

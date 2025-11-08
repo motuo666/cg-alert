@@ -1,15 +1,10 @@
 name: Site Patch
-
 on:
-  schedule:
-    - cron: '0 2 * * *'
   workflow_dispatch:
-
 permissions:
   contents: write
-
 jobs:
-  run:
+  sitepatch:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,111 +16,37 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
+      - name: Apply site patch tools (if present)
+        shell: bash
         run: |
           set -euo pipefail
-          npm ci || npm i
-- name: Patch site (canonical/CTA/meta)
-  run: |
-   set -euo pipefail
+          changed=0
+          if [ -f ops_fix_canonical_www.sh ]; then
+            bash ops_fix_canonical_www.sh && changed=1 || true
+          fi
+          if [ -f scripts/inject_meta.mjs ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/inject_meta.mjs && changed=1 || true
+          fi
+          if [ -f scripts/cta_hotpatch.js ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/cta_hotpatch.js && changed=1 || true
+          fi
 
-   if [ -f "ops_fix_canonical_www.sh" ]; then
-     echo "→ Running: ops_fix_canonical_www.sh"
-     case ".sh" in
-       .mjs|.js)
-         node "ops_fix_canonical_www.sh"
-         ;;
-       .sh)
-         bash "ops_fix_canonical_www.sh"
-         ;;
-       *)
-         echo "Unknown extension for ops_fix_canonical_www.sh, trying bash"
-         bash "ops_fix_canonical_www.sh"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/inject_meta.mjs" ]; then
-     echo "→ Running: scripts/inject_meta.mjs"
-     case ".mjs" in
-       .mjs|.js)
-         node "scripts/inject_meta.mjs"
-         ;;
-       .sh)
-         bash "scripts/inject_meta.mjs"
-         ;;
-       *)
-         echo "Unknown extension for scripts/inject_meta.mjs, trying bash"
-         bash "scripts/inject_meta.mjs"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/inject_meta.js" ]; then
-     echo "→ Running: scripts/inject_meta.js"
-     case ".js" in
-       .mjs|.js)
-         node "scripts/inject_meta.js"
-         ;;
-       .sh)
-         bash "scripts/inject_meta.js"
-         ;;
-       *)
-         echo "Unknown extension for scripts/inject_meta.js, trying bash"
-         bash "scripts/inject_meta.js"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/cta_hotpatch.mjs" ]; then
-     echo "→ Running: scripts/cta_hotpatch.mjs"
-     case ".mjs" in
-       .mjs|.js)
-         node "scripts/cta_hotpatch.mjs"
-         ;;
-       .sh)
-         bash "scripts/cta_hotpatch.mjs"
-         ;;
-       *)
-         echo "Unknown extension for scripts/cta_hotpatch.mjs, trying bash"
-         bash "scripts/cta_hotpatch.mjs"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/cta_hotpatch.js" ]; then
-     echo "→ Running: scripts/cta_hotpatch.js"
-     case ".js" in
-       .mjs|.js)
-         node "scripts/cta_hotpatch.js"
-         ;;
-       .sh)
-         bash "scripts/cta_hotpatch.js"
-         ;;
-       *)
-         echo "Unknown extension for scripts/cta_hotpatch.js, trying bash"
-         bash "scripts/cta_hotpatch.js"
-         ;;
-     esac
-     exit 0
-   fi
-   echo "skip: none of expected scripts found"; exit 0
-
-- name: Commit & push changes (if any)
-  run: |
-    set -euo pipefail
-    git config user.email "bot@cg-alert.com"
-    git config user.name  "cg-alert-bot"
-    git add -A || true
-    if git diff --cached --quiet; then
-      echo "no changes to commit"
-    else
-      git commit -m "site: auto patch"
-      git pull --rebase --autostash || true
-      git push
-    fi
+      - name: Commit & push if changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No staged changes"
+            exit 0
+          fi
+          git commit -m "site: hotpatch applied"
+          git push

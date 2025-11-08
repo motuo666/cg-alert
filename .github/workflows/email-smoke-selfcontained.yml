@@ -1,19 +1,32 @@
-name: Email Smoke (Self-contained)
-
+name: Email Smoke (Selfcontained)
 on:
-  schedule:
-    - cron: '5 1 * * *'
   workflow_dispatch:
-
+  schedule:
+    - cron: '33 3 * * *'
 permissions:
-  contents: write
-
+  contents: read
 jobs:
-  run:
+  smoke:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Report env availability
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for k in IMAP_HOST IMAP_USER IMAP_PASS SMTP_HOST SMTP_USER SMTP_PASS; do
+            v=$(printenv "$k" || true)
+            if [ -z "${v:-}" ]; then
+              echo "::warning::ENV $k is empty"
+              missing=$((missing+1))
+            fi
+          done
+          if [ "$missing" -gt 0 ]; then
+            echo "::notice::Email smoke will run with available env only."
+          fi
 
       - name: Setup Node (if package.json present)
         if: ${{ hashFiles('package.json') != '' }}
@@ -21,55 +34,18 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
+      - name: Run smoke script if present
+        shell: bash
         run: |
           set -euo pipefail
-          npm ci || npm i
-- name: Email smoke
-  env:
-    SMTP_HOST: ${{ secrets.SMTP_HOST }}
-    SMTP_USER: ${{ secrets.SMTP_USER }}
-    SMTP_PASS: ${{ secrets.SMTP_PASS }}
-    IMAP_HOST: ${{ secrets.IMAP_HOST }}
-    IMAP_USER: ${{ secrets.IMAP_USER }}
-    IMAP_PASS: ${{ secrets.IMAP_PASS }}
-  run: |
-   set -euo pipefail
-   echo "[info] Smoke env presence check:"
-   for k in SMTP_HOST SMTP_USER SMTP_PASS IMAP_HOST IMAP_USER IMAP_PASS; do v="${!k:-}"; [ -n "$v" ] && echo "  $k=✓" || echo "::warning:: $k is empty"; done
-
-   if [ -f "scripts/email_smoke_selfcontained.sh" ]; then
-     echo "→ Running: scripts/email_smoke_selfcontained.sh"
-     case ".sh" in
-       .mjs|.js)
-         node "scripts/email_smoke_selfcontained.sh"
-         ;;
-       .sh)
-         bash "scripts/email_smoke_selfcontained.sh"
-         ;;
-       *)
-         echo "Unknown extension for scripts/email_smoke_selfcontained.sh, trying bash"
-         bash "scripts/email_smoke_selfcontained.sh"
-         ;;
-     esac
-     exit 0
-   fi
-
-   if [ -f "scripts/email_smoke_selfcontained.js" ]; then
-     echo "→ Running: scripts/email_smoke_selfcontained.js"
-     case ".js" in
-       .mjs|.js)
-         node "scripts/email_smoke_selfcontained.js"
-         ;;
-       .sh)
-         bash "scripts/email_smoke_selfcontained.js"
-         ;;
-       *)
-         echo "Unknown extension for scripts/email_smoke_selfcontained.js, trying bash"
-         bash "scripts/email_smoke_selfcontained.js"
-         ;;
-     esac
-     exit 0
-   fi
-   echo "skip: none of expected scripts found"; exit 0
+          if [ -f scripts/email_smoke_selfcontained.js ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/email_smoke_selfcontained.js
+          elif [ -f scripts/email_smoke_selfcontained.mjs ]; then
+            if [ -f package.json ]; then npm ci || npm i; fi
+            node scripts/email_smoke_selfcontained.mjs
+          elif [ -f scripts/email_smoke_selfcontained.sh ]; then
+            bash scripts/email_smoke_selfcontained.sh
+          else
+            echo "No selfcontained email smoke script; skipping."
+          fi
