@@ -1,0 +1,72 @@
+name: Preflight Vars
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || secrets.SITE_ORIGIN }}
+      WORKER_URL: ${{ vars.WORKER_URL || secrets.WORKER_URL }}
+      INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL || secrets.INTAKE_FORM_URL }}
+      MAIL_FROM: ${{ vars.MAIL_FROM || secrets.MAIL_FROM }}
+      REPLY_TO: ${{ vars.REPLY_TO || secrets.REPLY_TO }}
+      SENDER_NAME: ${{ vars.SENDER_NAME || secrets.SENDER_NAME }}
+      MAIL_POSTAL_ADDRESS: ${{ vars.MAIL_POSTAL_ADDRESS || secrets.MAIL_POSTAL_ADDRESS }}
+      MAIL_RETURN_PATH: ${{ vars.MAIL_RETURN_PATH || secrets.MAIL_RETURN_PATH }}
+      SMTP_PORT: ${{ vars.SMTP_PORT || secrets.SMTP_PORT }}
+      IMAP_PORT: ${{ vars.IMAP_PORT || secrets.IMAP_PORT }}
+      STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO }}
+      STRIPE_LINK_BUSINESS: ${{ vars.STRIPE_LINK_BUSINESS || secrets.STRIPE_LINK_BUSINESS }}
+
+      SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
+      SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+      IMAP_HOST: ${{ secrets.IMAP_HOST || vars.IMAP_HOST }}
+      IMAP_USER: ${{ secrets.IMAP_USER || vars.IMAP_USER }}
+      IMAP_PASS: ${{ secrets.IMAP_PASS || vars.IMAP_PASS }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+      UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET || vars.UNSUB_HMAC_SECRET }}
+      CF_ACCOUNT_ID: ${{ vars.CF_ACCOUNT_ID || secrets.CF_ACCOUNT_ID }}
+      CF_KV_NAMESPACE: ${{ vars.CF_KV_NAMESPACE || vars.KV_NAMESPACE_ID || secrets.CF_KV_NAMESPACE || secrets.KV_NAMESPACE_ID }}
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+      BCC_TO: ${{ secrets.BCC_TO }}
+    steps:
+      - name: Check presence & format
+        shell: bash
+        run: |
+          set -euo pipefail
+          fail=0
+
+          check_nonempty() { var="$1"; val="${!1:-}"; if [ -z "$val" ]; then echo "::error ::$var is EMPTY"; fail=1; else echo "✔ $var present"; fi; }
+          check_url() { var="$1"; val="${!1:-}"; if [[ -n "$val" && ! "$val" =~ ^https:// ]]; then echo "::error ::$var must start with https://"; fail=1; fi; }
+          check_now_trailing_slash() { var="$1"; val="${!1:-}"; if [[ -n "$val" && "$val" =~ /$ ]]; then echo "::warning ::$var should NOT end with /"; fi; }
+          check_prefix() { var="$1"; prefix="$2"; val="${!1:-}"; if [[ -n "$val" && "$val" != ${prefix}* ]]; then echo "::error ::$var must start with ${prefix}"; fail=1; fi; }
+
+          for v in SITE_ORIGIN WORKER_URL MAIL_FROM REPLY_TO SENDER_NAME MAIL_RETURN_PATH SMTP_PORT IMAP_PORT STRIPE_LINK_PORTFOLIO STRIPE_LINK_BUSINESS; do
+            check_nonempty "$v"
+          done
+
+          for s in SMTP_HOST SMTP_USER SMTP_PASS IMAP_HOST IMAP_USER IMAP_PASS SLACK_WEBHOOK_URL UNSUB_HMAC_SECRET; do
+            check_nonempty "$s"
+          done
+
+          check_url SITE_ORIGIN
+          check_url WORKER_URL
+          check_now_trailing_slash WORKER_URL
+          check_prefix STRIPE_LINK_PORTFOLIO "https://buy.stripe.com/"
+          check_prefix STRIPE_LINK_BUSINESS "https://buy.stripe.com/"
+          if [[ -n "${SLACK_WEBHOOK_URL:-}" && "$SLACK_WEBHOOK_URL" != https://hooks.slack.com/services/* ]]; then
+            echo "::error ::SLACK_WEBHOOK_URL must start with https://hooks.slack.com/services/"; fail=1
+          fi
+
+          if [ $fail -ne 0 ]; then
+            echo "::error ::Preflight failed. Fix items above."
+            exit 1
+          fi
+          echo "✅ Preflight passed."
