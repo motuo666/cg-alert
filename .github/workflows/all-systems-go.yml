@@ -1,18 +1,18 @@
 name: All Systems Go
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '23 1 * * *'
-
+  push:
+    paths:
+      - ".github/workflows/all-systems-go.yml"
 permissions:
   contents: read
-
 jobs:
   dryrun:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Check required paths
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Sanity checks
         shell: bash
         run: |
           set -euo pipefail
@@ -22,7 +22,10 @@ jobs:
               echo "::warning::missing $p"
             fi
           done
-      - name: Placeholder scan (code only)
-        shell: bash
-        run: |
-          bash scripts/ci/scan_placeholders.sh
+          echo "Scanning for dangerous placeholders"
+          if grep -RIn --exclude-dir=.git -E "<<ImageDisplayed>>|conversation too long; truncated|FIXME|TODO" . ; then
+            echo "::error::Repository contains dangerous placeholder content. Replace these files before going live."
+            exit 1
+          else
+            echo "OK: no dangerous placeholders found."
+          fi
