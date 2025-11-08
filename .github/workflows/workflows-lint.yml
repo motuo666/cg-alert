@@ -4,31 +4,37 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - ".github/workflows/**.yml"
-      - ".github/workflows/**.yaml"
+      - ".github/workflows/**"
   pull_request:
     paths:
-      - ".github/workflows/**.yml"
-      - ".github/workflows/**.yaml"
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
 
 jobs:
   lint:
+    name: actionlint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-      - name: Download actionlint (latest)
+      - name: Download actionlint
         run: |
           set -euo pipefail
+          mkdir -p ./bin
           curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash -s -- latest ./bin
           ./bin/actionlint -version
 
-      - name: Run actionlint (ignore _archive/)
+      - name: Lint active workflows (exclude _archive)
         run: |
           set -euo pipefail
-          files=$(git ls-files ".github/workflows/*.yml" ".github/workflows/*.yaml" | grep -v "^.github/workflows/_archive/") || true
-          if [ -n "$files" ]; then
-            echo "$files" | xargs -r ./bin/actionlint -color
-          else
-            echo "No workflows to lint"
+          # Collect workflow files, excluding any under _archive/
+          mapfile -t files < <(git ls-files '.github/workflows/*.yml' '.github/workflows/*.yaml' | grep -v '/_archive/')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No active workflow files to lint"; exit 0
           fi
+          ./bin/actionlint "${files[@]}"
