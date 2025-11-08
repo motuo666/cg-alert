@@ -1,0 +1,29 @@
+{
+  "generated_at": "2025-11-08T04:51:59.111Z",
+  "items": [
+    {
+      "vendor": "_last_poll",
+      "url": "/reports/cards/last-poll-2025-11-08t04-51-59-101z.html",
+      "date": "2025-11-08T04:51:59.101Z",
+      "summary": ""
+    },
+    {
+      "vendor": "Fabrikam Analytics",
+      "url": "/reports/cards/fabrikam-analytics-2025-11-07t09-46-06-032638z.html",
+      "date": "2025-11-07T09:46:06.032638Z",
+      "summary": ""
+    },
+    {
+      "vendor": "Contoso CRM",
+      "url": "/reports/cards/contoso-crm-2025-11-07t09-46-06-032636z.html",
+      "date": "2025-11-07T09:46:06.032636Z",
+      "summary": ""
+    },
+    {
+      "vendor": "Example SaaS",
+      "url": "/reports/cards/example-saas-2025-11-07t09-46-06-032625z.html",
+      "date": "2025-11-07T09:46:06.032625Z",
+      "summary": ""
+    }
+  ]
+}
