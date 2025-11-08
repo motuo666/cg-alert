@@ -8,17 +8,18 @@
   <link rel="stylesheet" href="/assets/home-v3c.css">
   <link rel="stylesheet" href="/assets/form-enterprise.css">
 
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;"></head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;"><script>window.INTAKE_FORM_URL="__INTAKE_FORM_URL__";window.WORKER_URL="__WORKER_URL__";</script>
+</head>
 <body>
 <header class="cg-topbar">
 <div class="cg-wrap cg-nav">
 <a class="cg-brand" href="/"><img alt="CG Alert" height="40" src="/icon.svg" width="40"/><span>CG Alert</span></a>
 <nav class="cg-links" id="topnav">
 <a href="/#pricing">Pricing</a>
-<a href="/#how">How it works</a>
-<a href="/#evidence">Evidence</a>
-<a href="/#compare">Compare</a>
-<a href="/#faq">FAQ</a>
+<a href="#how">How it works</a>
+<a href="#evidence">Evidence</a>
+<a href="#compare">Compare</a>
+<a href="#faq">FAQ</a>
 </nav>
 </div>
 </header>
@@ -27,7 +28,7 @@
   
 <meta name="worker-url" content="https://api.cg-alert.com"> <!-- Fill with your Worker URL, e.g., https://lead-gateway.<zone>.workers.dev -->
 <p>Tell us where to deliver your alerts. Email-only delivery.</p>
-<form id="intake" method="post">
+<form id="intake" method="post" novalidate>
   <div class="intake-hero cg-wrap">
     <h1>Tell us where to deliver</h1>
     <p>Email‑only delivery. Fully async. No calls.</p>
@@ -116,4 +117,101 @@
   });
 })();
 </script>
+
+<script>
+(function(){
+  var form = document.getElementById('intake');
+  if(!form) return;
+
+  var INTK = (window.INTAKE_FORM_URL && !/^__/.test(String(window.INTAKE_FORM_URL))) ? window.INTAKE_FORM_URL : null;
+  var WURL = (window.WORKER_URL && !/^__/.test(String(window.WORKER_URL))) ? String(window.WORKER_URL).replace(/\/+\$/,'') : null;
+  var ENDPOINT = INTK || (WURL ? (WURL + '/intake') : null);
+
+  function msgRequired(name){
+    if(name==='email') return 'Please enter a valid work email.';
+    if(name==='company') return 'Company is required.';
+    if(name==='plan') return 'Please choose a plan.';
+    return 'Please complete this field.';
+  }
+
+  function validate(){
+    var bad = false;
+    ['email','company','plan'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el) return;
+      el.setCustomValidity('');
+      if(!el.value || (id==='email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(el.value))){
+        el.setCustomValidity(msgRequired(id));
+        bad = true;
+      }
+    });
+    if(bad){ form.reportValidity(); }
+    return !bad;
+  }
+
+  function toast(kind, text){
+    var box = document.getElementById('intake-toast');
+    if(!box){
+      box = document.createElement('div');
+      box.id = 'intake-toast';
+      box.style.margin = '16px 0';
+      box.style.padding = '12px 14px';
+      box.style.borderRadius = '12px';
+      box.style.fontSize = '14px';
+      form.parentNode.insertBefore(box, form);
+    }
+    box.style.background = (kind==='ok') ? '#e6ffed' : '#fff5f5';
+    box.style.border = '1px solid ' + ((kind==='ok') ? '#a3d9a5' : '#f1a5a5');
+    box.textContent = text;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!validate()) return;
+
+    if(!ENDPOINT){
+      toast('err', 'Intake endpoint not configured. Set INTAKE_FORM_URL or WORKER_URL.');
+      return;
+    }
+
+    var payload = {
+      email: document.getElementById('email')?.value || '',
+      company: document.getElementById('company')?.value || '',
+      plan: document.getElementById('plan')?.value || '',
+      vendors: document.getElementById('vendors')?.value || '',
+      region: document.getElementById('region')?.value || '',
+      notes: document.getElementById('notes')?.value || '',
+      utm: (function(){ var q={}; location.search.replace(/^\?/,'').split('&').forEach(function(p){ if(!p) return; var kv=p.split('='); q[decodeURIComponent(kv[0]||'')] = decodeURIComponent(kv[1]||''); }); return q; })(),
+      ua: navigator.userAgent,
+      ts: new Date().toISOString(),
+      path: location.pathname
+    };
+
+    fetch(ENDPOINT, {
+      method: 'POST',
+      headers: {'content-type':'application/json'},
+      body: JSON.stringify(payload),
+      credentials: 'omit',
+      cache: 'no-store',
+      redirect: 'manual'
+    }).then(function(res){
+      if(res.ok){
+        toast('ok', 'Thanks — your intake has been received. We will deliver via email.');
+        try{ form.reset(); }catch(_){}
+      }else{
+        toast('err', 'Submission failed ('+res.status+'). Please try again or email us.');
+      }
+    }).catch(function(err){
+      toast('err', 'Network error: '+String(err));
+    });
+  });
+
+  ['email','company','plan'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){ el.addEventListener('input', function(){ el.setCustomValidity(''); }); }
+  });
+
+})();
+</script>
+
 </body></html>
