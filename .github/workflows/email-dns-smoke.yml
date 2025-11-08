@@ -1,74 +1,101 @@
 name: Email DNS & SMTP/IMAP Smoke
 
 on:
-  schedule:
-    - cron: '12 2 * * *'
   workflow_dispatch:
+  schedule:
+    - cron: '50 0 * * *'
 
 permissions:
   contents: write
 
 jobs:
-  dns:
-    runs-on: ubuntu-latest
-    env:
-      MAIL_FROM: ${{ vars.MAIL_FROM || secrets.MAIL_FROM || vars.SMTP_USER || secrets.SMTP_USER }}
-      DKIM_SELECTOR: ${{ vars.DKIM_SELECTOR || 'default' }}
-    outputs:
-      ok: ${{ steps.chk.outputs.ok }}
-      domain: ${{ steps.chk.outputs.domain }}
-      ok_spf: ${{ steps.chk.outputs.ok_spf }}
-      ok_dmarc: ${{ steps.chk.outputs.ok_dmarc }}
-      ok_dkim: ${{ steps.chk.outputs.ok_dkim }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: DNS check (SPF/DKIM/DMARC)
-        id: chk
-        run: |
-          sudo apt-get update && sudo apt-get install -y dnsutils
-          bash scripts/dns_check.sh
-
   probe:
-    needs: dns
+    name: SMTP/IMAP Probe
     runs-on: ubuntu-latest
-    env:
-      SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
-      SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
-      SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
-      IMAP_HOST: ${{ secrets.IMAP_HOST || vars.IMAP_HOST }}
-      IMAP_USER: ${{ secrets.IMAP_USER || vars.IMAP_USER }}
-      IMAP_PASS: ${{ secrets.IMAP_PASS || vars.IMAP_PASS }}
-      IMAP_PORT: ${{ vars.IMAP_PORT || '993' }}
-    outputs:
-      ok: ${{ steps.probe.outputs.ok }}
-      reason: ${{ steps.probe.outputs.reason }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - name: SMTP/IMAP probe
+        with:
+          node-version: 20
+      - name: Run probe
         id: probe
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
+          SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || vars.SMTP_PORT || 587 }}
+          IMAP_HOST: ${{ secrets.IMAP_HOST || vars.IMAP_HOST }}
+          IMAP_USER: ${{ secrets.IMAP_USER || vars.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS || vars.IMAP_PASS }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT || vars.IMAP_PORT || 993 }}
         run: node scripts/smtp_imap_probe.js
-      - name: Install deps
-        run: npm ci
+    outputs:
+      ok: ${{ steps.probe.outputs.ok }}
+      reason: ${{ steps.probe.outputs.reason }}
+
+  dns:
+    name: Email DNS Check (SPF/DKIM/DMARC)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve domain
+        id: domain
+        shell: bash
+        env:
+          MAIL_FROM: ${{ secrets.MAIL_FROM || vars.MAIL_FROM }}
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: |
+          set -e
+          domain="${MAIL_FROM##*@}"
+          if [ -z "$domain" ] || [[ "$domain" != *.* ]]; then
+            dom="${SITE_ORIGIN#*//}"
+            dom="${dom%%/*}"
+            domain="$dom"
+          fi
+          echo "domain=$domain" >> "$GITHUB_OUTPUT"
+      - name: Check SPF/DKIM/DMARC
+        id: dns
+        shell: bash
+        run: |
+          set -e
+          domain="${{ steps.domain.outputs.domain }}"
+          spf=$(dig +short TXT "$domain" | tr -d '"' | grep -qi 'v=spf1' && echo true || echo false)
+          dmarc=$(dig +short TXT "_dmarc.$domain" | tr -d '"' | grep -qi 'v=dmarc1' && echo true || echo false)
+          dk=false
+          for s in default s1 s2 k1 google selector1 selector2; do
+            if dig +short TXT "$s._domainkey.$domain" | tr -d '"' | grep -qi 'v=dkim1'; then dk=true; break; fi
+          done
+          dns_ok=false
+          if [ "$spf" = true ] && [ "$dmarc" = true ] && [ "$dk" = true ]; then dns_ok=true; fi
+          {
+            echo "spf=$spf"
+            echo "dkim=$dk"
+            echo "dmarc=$dmarc"
+            echo "dns_ok=$dns_ok"
+          } >> "$GITHUB_OUTPUT"
+    outputs:
+      spf: ${{ steps.dns.outputs.spf }}
+      dkim: ${{ steps.dns.outputs.dkim }}
+      dmarc: ${{ steps.dns.outputs.dmarc }}
+      ok: ${{ steps.dns.outputs.dns_ok }}
 
   gate:
-    needs: [dns, probe]
+    name: Send Gate Marker
     runs-on: ubuntu-latest
-    env:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+    needs: [probe, dns]
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Update sending gate marker
+      - name: Update SENDING_BLOCKED marker
+        shell: bash
         run: |
           set -e
           mkdir -p ops
           if [ "${{ needs.dns.outputs.ok }}" != "true" ] || [ "${{ needs.probe.outputs.ok }}" != "true" ]; then
             echo "SENDING BLOCKED" > ops/SENDING_BLOCKED.md
-            echo "" >> ops/SENDING_BLOCKED.md
-            echo "DNS ok=${{ needs.dns.outputs.ok }} (SPF=${{ needs.dns.outputs.ok_spf }}, DMARC=${{ needs.dns.outputs.ok_dmarc }}, DKIM=${{ needs.dns.outputs.ok_dkim }})" >> ops/SENDING_BLOCKED.md
-            echo "Probe ok=${{ needs.probe.outputs.ok }} (${% raw %}{{% endraw %}}{ needs.probe.outputs.reason })" >> ops/SENDING_BLOCKED.md || true
+            echo >> ops/SENDING_BLOCKED.md
+            echo "DNS ok=${{ needs.dns.outputs.ok }} (SPF=${{ needs.dns.outputs.spf }}, DMARC=${{ needs.dns.outputs.dmarc }}, DKIM=${{ needs.dns.outputs.dkim }})" >> ops/SENDING_BLOCKED.md
+            echo "Probe ok=${{ needs.probe.outputs.ok }} (${{ needs.probe.outputs.reason }})" >> ops/SENDING_BLOCKED.md
           else
             if [ -f ops/SENDING_BLOCKED.md ]; then rm -f ops/SENDING_BLOCKED.md; fi
           fi
@@ -82,9 +109,3 @@ jobs:
             git pull --rebase --autostash || true
             git push
           fi
-      - name: Slack notify (optional)
-        if: env.SLACK_WEBHOOK_URL != ''
-        run: |
-          STATUS="OK"
-          if [ "${{ needs.dns.outputs.ok }}" != "true" ] || [ "${{ needs.probe.outputs.ok }}" != "true" ]; then STATUS="BLOCKED"; fi
-          jq -n --arg text "Email DNS/SMTP/IMAP: ${STATUS}\nSPF=${{ needs.dns.outputs.ok_spf }}, DMARC=${{ needs.dns.outputs.ok_dmarc }}, DKIM=${{ needs.dns.outputs.ok_dkim }}\nProbe=${{ needs.probe.outputs.ok }}: ${{ needs.probe.outputs.reason }}" '{text:$text}' | curl -sS -X POST -H 'Content-type: application/json' --data @- "$SLACK_WEBHOOK_URL" || true
