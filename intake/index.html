@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Request Enterprise — CG Alert</title>
   <meta name="description" content="Tell us your vendors and delivery preferences.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;"self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
+  <meta http-equiv="Content-Security-Policy" content="default-src; connect-src 'self' https://api.cg-alert.com; form-action 'self' https://buy.stripe.com https://forms.gle'self'; img-src 'self' data:; connect-src 'self' https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;"self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
   <link rel="canonical" href="https://www.cg-alert.com/intake/">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
 
@@ -51,7 +51,85 @@
     window.WORKER_URL = window.WORKER_URL || "";
     window.INTAKE_FORM_URL = window.INTAKE_FORM_URL || "";
   </script>
-  <script src="/assets/app-intake.js" defer></script>
+  <script src="/assets/app-intake.js" defer>
+document.addEventListener('DOMContentLoaded', function(){
+  const form = document.getElementById('intake');
+  if (!form) return;
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const meta = document.querySelector('meta[name="worker-url"]');
+  const WORKER = (window.WORKER_URL || (meta && meta.content) || '').replace(/\/$/, '');
+  const INTAKE_FALLBACK = (window.INTAKE_FORM_URL || '').trim();
+  const ok = (msg) => {
+    let box = document.getElementById('intake-success');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'intake-success';
+      box.style.marginTop = '16px';
+      box.style.padding = '12px 14px';
+      box.style.border = '1px solid #10b981';
+      box.style.background = '#ecfdf5';
+      box.style.color = '#065f46';
+      box.style.borderRadius = '8px';
+      form.parentNode.insertBefore(box, form.nextSibling);
+    }
+    box.textContent = msg || 'Submitted successfully. We will contact you within 24h.';
+  };
+  const fail = (msg) => {
+    let box = document.getElementById('intake-error');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'intake-error';
+      box.style.marginTop = '16px';
+      box.style.padding = '12px 14px';
+      box.style.border = '1px solid #ef4444';
+      box.style.background = '#fef2f2';
+      box.style.color = '#991b1b';
+      box.style.borderRadius = '8px';
+      form.parentNode.insertBefore(box, form.nextSibling);
+    }
+    box.textContent = msg || 'Submit failed. Please try again.';
+  };
+  form.addEventListener('submit', async (e) => {
+    if (WORKER) e.preventDefault();
+    const fd = new FormData(form);
+    const payload = Object.fromEntries(fd.entries());
+    const required = ['company','email'];
+    for (const k of required) {
+      if (!payload[k] || String(payload[k]).trim()==='') {
+        if (WORKER) {
+          e.preventDefault();
+          fail('Missing required field: ' + k);
+          return;
+        }
+      }
+    }
+    if (!WORKER) {
+      return; // normal HTML submit (fallback target URL)
+    }
+    try {
+      submitBtn && (submitBtn.disabled = true, submitBtn.textContent = 'Submitting');
+      const res = await fetch(WORKER + '/intake', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload),
+        mode: 'cors',
+        credentials: 'omit'
+      });
+      if (res.ok) {
+        ok('提交成功✓  我们会在 24 小时内与您联系。');
+        form.reset();
+      } else {
+        const t = await res.text().catch(()=>'');
+        fail('提交失败：' + (t || res.status));
+      }
+    } catch (err) {
+      fail('网络异常，请稍后重试。');
+    } finally {
+      submitBtn && (submitBtn.disabled = false, submitBtn.textContent = 'Submit');
+    }
+  }, {passive: false});
+});
+</script>
 </section>
 
 <footer class="cg-footer">
