@@ -1,75 +1,66 @@
-name: Migrate WORKER_URL
+  name: Migrate Worker URL
 
-env:
-  SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}"
-  WORKER_URL:  "${{ vars.WORKER_URL }}"
-  UNSUB_ORIGIN: "${{ vars.UNSUB_ORIGIN || secrets.UNSUB_ORIGIN }}"
-  INTAKE_FORM_URL: "${{ vars.INTAKE_FORM_URL }}"
+  on:
+    workflow_dispatch:
+      inputs:
+        dry:
+          description: "Dry run? (true/false)"
+          required: true
+          default: "true"
+          type: choice
+          options: ["true","false"]
+        limit:
+          description: "Soft limit / batch size"
+          required: false
+          default: "12"
+        window_h:
+          description: "Primary window hours"
+          required: false
+          default: "336"
+    schedule:
+      - cron: '17 3 * * *'
 
-  MAIL_FROM: "${{ vars.MAIL_FROM }}"
-  REPLY_TO:  "${{ vars.REPLY_TO }}"
-  SENDER_NAME: "${{ vars.SENDER_NAME }}"
-  MAIL_POSTAL_ADDRESS: "${{ vars.MAIL_POSTAL_ADDRESS }}"
-  MAIL_RETURN_PATH: "${{ vars.MAIL_RETURN_PATH }}"
-  BCC_TO: "${{ secrets.BCC_TO }}"
+  permissions:
+    contents: read
 
-  SLACK_WEBHOOK_URL: "${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}"
+  jobs:
+    job:
+      runs-on: ubuntu-latest
+      env:
+        DRY: ${{ github.event_name == 'workflow_dispatch' && inputs.dry || 'true' }}
+        LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '12' }}
+        WINDOW_H: ${{ github.event_name == 'workflow_dispatch' && inputs.window_h || '336' }}
+        SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+        WORKER_URL: ${{ vars.WORKER_URL }}
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+        - name: Setup Node
+          uses: actions/setup-node@v4
+          with:
+            node-version: '20'
+            cache: 'npm'
+        - name: Install deps
+          run: |
+            set -euo pipefail
+            if [ -f package-lock.json ] || [ -f package.json ]; then
+              npm ci || npm i
+            fi
+        - name: Patch site worker url
+shell: bash
+run: |
+  set -euo pipefail
+  SCRIPT="scripts/patch_site_workers_url.js"
+  ALT="scripts/patch_site_workers_url.mjs"
+  if [ -n "${WORKER_URL:-}" ]; then
+    if [ -f "$SCRIPT" ]; then
+      node "$SCRIPT"
+    elif [ -f "$ALT" ]; then
+      node "$ALT"
+    else
+      echo "skip: patch script not found"
+    fi
+  else
+    echo "WORKER_URL is empty, nothing to do"
+  fi
 
-  SMTP_HOST: "${{ secrets.SMTP_HOST }}"
-  SMTP_PORT: "${{ secrets.SMTP_PORT }}"
-  SMTP_USER: "${{ secrets.SMTP_USER }}"
-  SMTP_PASS: "${{ secrets.SMTP_PASS }}"
-  IMAP_HOST: "${{ secrets.IMAP_HOST }}"
-  IMAP_PORT: "${{ secrets.IMAP_PORT }}"
-  IMAP_USER: "${{ secrets.IMAP_USER }}"
-  IMAP_PASS: "${{ secrets.IMAP_PASS }}"
-
-  CF_ACCOUNT_ID: "${{ vars.CF_ACCOUNT_ID }}"
-  CF_API_TOKEN:  "${{ secrets.CF_API_TOKEN }}"
-  KV_NAMESPACE_ID: "${{ vars.KV_NAMESPACE_ID || secrets.KV_NAMESPACE_ID }}"
-  KV_LEADS_ID:    "${{ vars.KV_LEADS_ID || secrets.KV_LEADS_ID }}"
-
-  STRIPE_LINK_PORTFOLIO: "${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO }}"
-  STRIPE_LINK_BUSINESS:  "${{ vars.STRIPE_LINK_BUSINESS  || secrets.STRIPE_LINK_BUSINESS  }}"
-  STRIPE_WEBHOOK_SECRET: "${{ secrets.STRIPE_WEBHOOK_SECRET }}"
-
-  INDEXNOW_KEY: "${{ secrets.INDEXNOW_KEY }}"
-  OBS_KEY: "${{ secrets.OBS_KEY }}"
-  ENRICH_API_TOKEN: "${{ secrets.ENRICH_API_TOKEN }}"
-
-  TARGET_DISCOVERY_API_URL:   "${{ vars.TARGET_DISCOVERY_API_URL }}"
-  TARGET_DISCOVERY_API_TOKEN: "${{ secrets.TARGET_DISCOVERY_API_TOKEN }}"
-
-  MIN_HASH_RATIO: "${{ vars.MIN_HASH_RATIO }}"
-  MIN_SENT7_FOR_DLVR: "${{ vars.MIN_SENT7_FOR_DLVR }}"
-  P95_TTD_MAX_HOURS: "${{ vars.P95_TTD_MAX_HOURS }}"
-  TARGET_EVID_TODAY: "${{ vars.TARGET_EVID_TODAY }}"
-  TARGET_SENT: "${{ vars.TARGET_SENT }}"
-  TTD_LOOKBACK_HOURS: "${{ vars.TTD_LOOKBACK_HOURS }}"
-  UNSUB_7D_MAX: "${{ vars.UNSUB_7D_MAX }}"
-  COMPLAINT_7D_MAX: "${{ vars.COMPLAINT_7D_MAX }}"
-  BOUNCE_7D_MAX: "${{ vars.BOUNCE_7D_MAX }}"
-  REQUIRE_CHANGED_VENDORS: "${{ vars.REQUIRE_CHANGED_VENDORS }}"
-
-on:
-  workflow_dispatch:
-
-jobs:
-  migrate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: node scripts/patch_workflows.js
-      - name: Commit changes (if any)
-        run: |
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A .github/workflows
-          if git diff --cached --quiet; then echo "no changes"; else git commit -m "migrate: replace hardcoded workers.dev with \${{ vars.WORKER_URL }}"; git pull --rebase --autostash || true; git push; fi
-          
-          fi
-      - name: Install deps
-        run: npm ci
-        fi
