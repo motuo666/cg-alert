@@ -1,70 +1,77 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta name="worker-url" content="https://api.cg-alert.com">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Request Enterprise — CG Alert</title>
-  <meta name="description" content="Tell us your vendors and delivery preferences.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
-  <link rel="canonical" href="https://www.cg-alert.com/intake/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CG Alert — Enterprise Intake</title>
+  <meta name="description" content="Tell us your vendors and company details to start Enterprise monitoring.">
+  <!-- CSP widened to allow Workers fetch and Google Forms redirect -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://*.workers.dev https://buy.stripe.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle">
+  <!-- Optional: these meta can be prefilled by your CI injectors -->
+  <meta name="worker-url" content="">
+  <meta name="google-form-url" content="">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
-
-<link rel="stylesheet" href="/assets/home-v3c.css">
+  <link rel="canonical" href="https://www.cg-alert.com/intake/">
+  <link rel="preconnect" href="https://buy.stripe.com" crossorigin>
+  <meta name="theme-color" content="#0b0f3b">
+  <style>
+    body{font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Apple Color Emoji','Segoe UI Emoji';margin:0;background:#f8fafc;color:#0f172a}
+    .wrap{max-width:860px;margin:40px auto;padding:0 16px}
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);padding:24px}
+    h1{font-size:28px;margin:0 0 6px}
+    p.lead{color:#475569;margin:0 0 18px}
+    label{display:block;margin:12px 0 8px;font-weight:600}
+    input,textarea{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;background:#fff}
+    textarea{min-height:120px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .row .full{grid-column:1/-1}
+    .actions{margin-top:18px;display:flex;gap:12px;align-items:center}
+    .btn{appearance:none;border:0;border-radius:12px;background:#0b0f3b;color:#fff;padding:12px 16px;font-weight:700;cursor:pointer}
+    .btn[aria-busy="true"]{opacity:.7;cursor:progress}
+    .muted{font-size:12px;color:#64748b}
+  </style>
 </head>
 <body>
-<header class="cg-topbar">
-  <div class="cg-wrap cg-nav">
-    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
-    <nav class="cg-links" id="topnav">
-      <a href="/#pricing">Pricing</a>
-      <a href="/#how">How it works</a>
-      <a href="/#evidence">Evidence</a>
-      <a href="/#compare">Compare</a>
-      <a href="/#faq">FAQ</a>
-      
-    </nav>
-  </div>
-</header>
-<section class="cg-wrap">
-<form id="intake" novalidate data-worker="" data-form="">
-    <input type="hidden" name="plan" value="enterprise">
-    <label>Company Email<br><input name="email" type="email" required placeholder="you@company.com" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
-    <div style="height:12px"></div>
-    <label>Company Name<br><input name="company" required placeholder="Acme Inc." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
-    <div style="height:12px"></div>
-    <label>Vendors (comma separated)<br><input name="vendors" placeholder="okta.com, slack.com, ... " style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
-    <div style="height:12px"></div>
-    <label>Frequency<br>
-      <select name="cadence" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;">
-        <option value="weekly">Weekly</option>
-        <option value="daily">Daily</option>
-      </select>
-    </label>
-    <div style="height:16px"></div>
-    <button type="submit" style="background:#0e7490;color:white;border:none;padding:10px 16px;border-radius:10px;">Submit</button>
-    <div id="notice" aria-live="polite"></div>
-  </form>
+  <div class="wrap">
+    <div class="card">
+      <h1>Enterprise Intake</h1>
+      <p class="lead">We will set up monitoring for your named vendors and deliver high-signal evidence to your team.</p>
 
-  <script>
-    // If you deploy with ENV replacements, set window.WORKER_URL / window.INTAKE_FORM_URL here.
-    window.WORKER_URL = window.WORKER_URL || "";
-    window.INTAKE_FORM_URL = window.INTAKE_FORM_URL || "";
-  </script>
+      <form id="intake-form" novalidate>
+        <div class="row">
+          <div>
+            <label>Work Email
+              <input name="email" type="email" required placeholder="name@company.com" autocomplete="email">
+            </label>
+          </div>
+          <div>
+            <label>Company
+              <input name="company" required placeholder="ACME Inc." autocomplete="organization">
+            </label>
+          </div>
+          <div class="full">
+            <label>Vendors (comma separated)
+              <input name="vendors" placeholder="okta.com, slack.com, box.com">
+            </label>
+          </div>
+          <div class="full">
+            <label>Notes (optional)
+              <textarea name="notes" placeholder="Anything we should know"></textarea>
+            </label>
+          </div>
+        </div>
+
+        <input type="hidden" name="plan" value="enterprise">
+        <input type="hidden" name="cadence" value="weekly">
+
+        <div class="actions">
+          <button id="submit" type="submit" class="btn">Submit</button>
+          <span class="muted">No calls required. We email you the first evidence packet when ready.</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/assets/app-intake.js" defer></script>
-</section>
-
-<footer class="cg-footer">
-  <div class="cg-wrap cg-footlinks">
-    <a href="/who-uses/">Who uses</a>
-    <a href="/about/">About</a>
-    <a href="/reports/">Reports</a>
-    <a href="/rss/index.xml">RSS</a>
-    <a href="/terms/">Terms</a>
-    <a href="/privacy/">Privacy</a>
-    <span>© CG Alert — evidence-backed vendor change alerts.</span>
-  </div>
-</footer>
-
 </body>
 </html>

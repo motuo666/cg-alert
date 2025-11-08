@@ -1,69 +1,151 @@
-// Minimal, robust Enterprise intake handler (no placeholders, no external deps)
-(() => {
-  const form = document.querySelector('form[data-worker][data-form]') || document.querySelector('form');
-  if (!form) return;
+(function () {
+  'use strict';
+  document.addEventListener('DOMContentLoaded', function () {
+    var form = document.querySelector('#intake-form');
+    if (!form) return;
 
-  const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
-  const WORKER = (window.WORKER_URL || '').replace(/\/+$/,''); // e.g. https://lead-gateway.example.workers.dev
-  const FORM = window.INTAKE_FORM_URL || '';                   // e.g. Google Form (prefill optional)
+    // Ensure submit button is a true submit and clickable
+    var submitBtn = form.querySelector('button[type="submit"], input[type="submit"], #submit');
+    if (submitBtn) {
+      if (!submitBtn.getAttribute('type')) submitBtn.setAttribute('type', 'submit');
+      submitBtn.removeAttribute('disabled');
+      submitBtn.style.pointerEvents = 'auto';
+    }
 
-  function getFormJSON(f) {
-    const entries = Array.from(new FormData(f).entries());
-    const obj = {};
-    for (const [k, v] of entries) obj[k] = String(v).trim();
-    return obj;
-  }
+    // Hidden defaults (force enterprise weekly)
+    var planEl = form.querySelector('input[name="plan"]');
+    if (!planEl) {
+      planEl = document.createElement('input');
+      planEl.type = 'hidden';
+      planEl.name = 'plan';
+      form.appendChild(planEl);
+    }
+    planEl.value = 'enterprise';
 
-  async function tryWorkerPost(json) {
-    if (!WORKER) return false;
-    const url = `${WORKER}/lead`;
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(json),
-    });
-    return res.ok;
-  }
+    var cadenceEl = form.querySelector('input[name="cadence"]');
+    if (!cadenceEl) {
+      cadenceEl = document.createElement('input');
+      cadenceEl.type = 'hidden';
+      cadenceEl.name = 'cadence';
+      form.appendChild(cadenceEl);
+    }
+    cadenceEl.value = 'weekly';
 
-  function openFormPage(json) {
-    if (!FORM) return false;
-    const u = new URL(FORM);
-    // Best-effort pass-through; if your Form has entry IDs, map here.
-    for (const [k, v] of Object.entries(json)) u.searchParams.set(k, v);
-    window.open(u.toString(), '_blank', 'noopener');
-    return true;
-  }
+    function lock(on) {
+      if (submitBtn) {
+        submitBtn.disabled = !!on;
+        submitBtn.setAttribute('aria-busy', String(!!on));
+      }
+    }
 
-  function mailtoFallback(json) {
-    const body = encodeURIComponent(JSON.stringify(json, null, 2));
-    const u = `mailto:sales@cg-alert.com?subject=Enterprise%20intake&body=${body}`;
-    window.location.href = u;
-    return true;
-  }
+    function toast(msg) {
+      var box = document.getElementById('intake-error');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'intake-error';
+        box.style.background = '#fee2e2';
+        box.style.border = '1px solid #fecaca';
+        box.style.color = '#991b1b';
+        box.style.padding = '10px 12px';
+        box.style.borderRadius = '10px';
+        box.style.margin = '0 0 12px 0';
+        form.prepend(box);
+      }
+      box.textContent = msg;
+    }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
+    function validEmail(v) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v || '');
+    }
 
-    const data = getFormJSON(form);
-    // Force Enterprise defaults
-    data.plan = 'enterprise';
-    data.cadence = data.cadence || 'weekly';
+    function getMeta(name) {
+      var el = document.querySelector('meta[name="' + name + '"]');
+      return el && el.content ? el.content : '';
+    }
 
-    try {
-      const ok = await tryWorkerPost(data);
-      if (ok) {
-        window.location.assign('/intake/thanks/');
+    function thanks() {
+      window.location.href = '/intake/thanks/';
+    }
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      // Basic validations
+      var email = (form.querySelector('input[name="email"]') || {}).value || '';
+      var company = (form.querySelector('input[name="company"]') || {}).value || '';
+      var vendors = (form.querySelector('input[name="vendors"]') || {}).value || '';
+
+      if (!validEmail(email)) {
+        toast('请输入有效邮箱');
         return;
       }
-    } catch (_) {
-      // swallow and fall through to FORM / mailto
-    }
+      if (!company.trim()) {
+        toast('请输入公司名称');
+        return;
+      }
 
-    if (openFormPage(data)) {
-      window.location.assign('/intake/thanks/');
-      return;
-    }
-    mailtoFallback(data);
+      lock(true);
+      try {
+        // Build payload
+        var fd = new FormData(form);
+        fd.set('plan', 'enterprise');
+        fd.set('cadence', 'weekly');
+        var payload = {};
+        fd.forEach(function (v, k) { payload[k] = v; });
+        payload.source = 'intake';
+
+        // Worker URL from meta or global
+        var worker = getMeta('worker-url') || (window.WORKER_URL || '');
+        var ok = false;
+
+        if (worker) {
+          try {
+            var r = await fetch(worker.replace(/\/+$/,'') + '/lead', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify(payload),
+              credentials: 'omit',
+              mode: 'cors',
+            });
+            if (r && r.ok) {
+              ok = true;
+            }
+          } catch (err) {
+            console.warn('worker submit failed', err);
+          }
+        }
+
+        if (ok) {
+          thanks();
+          return;
+        }
+
+        // Fallback: Google Form
+        var gf = (window.INTAKE_FORM_URL || getMeta('google-form-url') || '').trim();
+        if (gf) {
+          var qs = new URLSearchParams({
+            email: email,
+            company: company,
+            vendors: vendors,
+            plan: 'enterprise',
+            cadence: 'weekly'
+          }).toString();
+          window.location.href = gf + (gf.includes('?') ? '&' : '?') + qs;
+          return;
+        }
+
+        // Final fallback: mailto
+        var body = encodeURIComponent(
+          'Email: ' + email + '\n' +
+          'Company: ' + company + '\n' +
+          'Vendors: ' + vendors + '\n' +
+          'Plan: enterprise\n' +
+          'Cadence: weekly\n'
+        );
+        window.location.href = 'mailto:sales@cg-alert.com?subject=Enterprise Intake&body=' + body;
+      } finally {
+        lock(false);
+      }
+    }, { passive: false });
   });
 })();
