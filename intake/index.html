@@ -3,74 +3,111 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CG Alert — Enterprise Intake</title>
-  <meta name="description" content="Tell us your vendors and company details to start Enterprise monitoring.">
-  <!-- CSP widened to allow Workers fetch and Google Forms redirect -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://*.workers.dev https://buy.stripe.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle">
-  <!-- Optional: these meta can be prefilled by your CI injectors -->
-  <meta name="worker-url" content="">
-  <meta name="google-form-url" content="">
-  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <title>Enterprise Intake — CG Alert</title>
+  <meta name="description" content="Tell us your vendors and receive enterprise onboarding within one business day.">
   <link rel="canonical" href="https://www.cg-alert.com/intake/">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/site.webmanifest">
   <link rel="preconnect" href="https://buy.stripe.com" crossorigin>
-  <meta name="theme-color" content="#0b0f3b">
+  <meta name="theme-color" content="#0b0f14">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://api.cg-alert.com; frame-src https://buy.stripe.com; form-action 'self' https://buy.stripe.com https://forms.gle; base-uri 'self'; frame-ancestors 'none'">
+  <meta name="worker-url" content="https://api.cg-alert.com">
+  <link rel="stylesheet" href="/assets/home-v3c.css">
   <style>
-    body{font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans','Apple Color Emoji','Segoe UI Emoji';margin:0;background:#f8fafc;color:#0f172a}
-    .wrap{max-width:860px;margin:40px auto;padding:0 16px}
-    .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04);padding:24px}
-    h1{font-size:28px;margin:0 0 6px}
-    p.lead{color:#475569;margin:0 0 18px}
-    label{display:block;margin:12px 0 8px;font-weight:600}
-    input,textarea{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;background:#fff}
-    textarea{min-height:120px;resize:vertical}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .row .full{grid-column:1/-1}
-    .actions{margin-top:18px;display:flex;gap:12px;align-items:center}
-    .btn{appearance:none;border:0;border-radius:12px;background:#0b0f3b;color:#fff;padding:12px 16px;font-weight:700;cursor:pointer}
-    .btn[aria-busy="true"]{opacity:.7;cursor:progress}
-    .muted{font-size:12px;color:#64748b}
+    /* Minimal hardening to ensure layout if external CSS is partial */
+    body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0b0f14;margin:0;background:#f8fafc}
+    .cg-topbar{border-bottom:1px solid #e5e7eb;background:#fff}
+    .cg-wrap{max-width:1160px;margin:0 auto;padding:12px 16px}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+    .brand svg{width:26px;height:26px}
+    nav a{margin:0 8px;color:#0b0f14;text-decoration:none}
+    nav a:hover{text-decoration:underline}
+    .hero{padding:24px 0}
+    .cg-grid{display:grid;grid-template-columns:1fr;gap:16px}
+    .cg-card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.04);padding:18px}
+    label{display:block;margin:10px 0 6px;font-weight:600}
+    input,textarea{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;font-size:14px}
+    .row2{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{display:inline-block;background:#0b0f14;color:#fff;border:1px solid #0b0f14;border-radius:12px;padding:10px 14px;text-decoration:none;cursor:pointer}
+    .btn.secondary{background:#fff;color:#0b0f14}
+    .muted{color:#6b7280;font-size:13px}
+    .ok{color:#166534;background:#ecfdf5;border:1px solid #bbf7d0;border-radius:12px;padding:10px 12px;margin-top:10px;display:none}
+    .err{color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:10px 12px;margin-top:10px;display:none}
+    footer{margin-top:32px;padding:24px 0;border-top:1px solid #e5e7eb;background:#fff}
+    .right-ctas a{margin-left:8px}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Enterprise Intake</h1>
-      <p class="lead">We will set up monitoring for your named vendors and deliver high-signal evidence to your team.</p>
-
-      <form id="intake-form" novalidate>
-        <div class="row">
-          <div>
-            <label>Work Email
-              <input name="email" type="email" required placeholder="name@company.com" autocomplete="email">
-            </label>
-          </div>
-          <div>
-            <label>Company
-              <input name="company" required placeholder="ACME Inc." autocomplete="organization">
-            </label>
-          </div>
-          <div class="full">
-            <label>Vendors (comma separated)
-              <input name="vendors" placeholder="okta.com, slack.com, box.com">
-            </label>
-          </div>
-          <div class="full">
-            <label>Notes (optional)
-              <textarea name="notes" placeholder="Anything we should know"></textarea>
-            </label>
-          </div>
+  <header class="cg-topbar">
+    <div class="cg-wrap">
+      <div class="row">
+        <a class="brand" href="/">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke="#0b0f14" stroke-width="1.5"/><path d="M6 13.5h12M9.5 7.8l2.5 8.4 2.5-8.4" stroke="#0b0f14" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <strong>CG Alert</strong>
+        </a>
+        <nav>
+          <a href="/pricing/">Pricing</a>
+          <a href="/reports/">Reports</a>
+          <a href="/rss/">RSS</a>
+          <a href="/who-uses/">Who uses</a>
+          <a href="/about/">About</a>
+          <a href="/terms/">Terms</a>
+          <a href="/privacy/">Privacy</a>
+        </nav>
+        <div class="right-ctas">
+          <a class="btn secondary" href="https://buy.stripe.com">Buy $2,988</a>
+          <a class="btn secondary" href="https://buy.stripe.com">Buy $6,000</a>
+          <a class="btn" href="/intake/">Enterprise</a>
         </div>
+      </div>
+    </div>
+  </header>
 
+  <main class="cg-wrap hero">
+    <h1>Enterprise intake</h1>
+    <p class="muted">Tell us your named vendors. We onboard you on the enterprise plan and start monitoring with evidence-backed alerts.</p>
+
+    <div class="cg-grid">
+      <form id="enterprise-intake" class="cg-card" autocomplete="on" novalidate>
         <input type="hidden" name="plan" value="enterprise">
-        <input type="hidden" name="cadence" value="weekly">
-
-        <div class="actions">
-          <button id="submit" type="submit" class="btn">Submit</button>
-          <span class="muted">No calls required. We email you the first evidence packet when ready.</span>
+        <div class="row2">
+          <div style="flex:1 1 280px">
+            <label for="company">Company</label>
+            <input id="company" name="company" required placeholder="Acme Corp">
+          </div>
+          <div style="flex:1 1 280px">
+            <label for="email">Work email</label>
+            <input id="email" name="email" type="email" inputmode="email" autocomplete="email" required placeholder="name@company.com">
+          </div>
         </div>
+
+        <label for="vendors">Vendors to monitor (comma separated)</label>
+        <input id="vendors" name="vendors" required placeholder="okta.com, slack.com, zoom.us">
+
+        <label for="notes">Anything else</label>
+        <textarea id="notes" name="notes" rows="4" placeholder="Purchase timeline, success criteria, special requirements"></textarea>
+
+        <div class="row2" style="align-items:center;justify-content:space-between;margin-top:10px">
+          <div class="muted">No calls required. We start within one business day.</div>
+          <button id="submit-intake" class="btn" type="submit">Submit</button>
+        </div>
+
+        <div id="ok" class="ok">Thanks — you’re in. We’ve queued onboarding and sent a confirmation to your email.</div>
+        <div id="err" class="err"></div>
       </form>
     </div>
-  </div>
+  </main>
+
+  <footer>
+    <div class="cg-wrap row" style="justify-content:space-between">
+      <div>© CG Alert</div>
+      <div>
+        <a href="/sitemap.xml">Sitemap</a> ·
+        <a href="/security.txt">security.txt</a>
+      </div>
+    </div>
+  </footer>
 
   <script src="/assets/app-intake.js" defer></script>
 </body>

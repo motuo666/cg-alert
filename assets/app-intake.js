@@ -1,151 +1,96 @@
-(function () {
+// assets/app-intake.js — stable, no dependencies
+(function(){
   'use strict';
-  document.addEventListener('DOMContentLoaded', function () {
-    var form = document.querySelector('#intake-form');
-    if (!form) return;
 
-    // Ensure submit button is a true submit and clickable
-    var submitBtn = form.querySelector('button[type="submit"], input[type="submit"], #submit');
-    if (submitBtn) {
-      if (!submitBtn.getAttribute('type')) submitBtn.setAttribute('type', 'submit');
-      submitBtn.removeAttribute('disabled');
-      submitBtn.style.pointerEvents = 'auto';
+  function $(sel, el){ return (el||document).querySelector(sel); }
+  function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  function vendorsToArray(s){
+    return s.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean).slice(0, 200);
+  }
+  function emailOk(s){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s); }
+
+  function workerURL(){
+    const meta = document.querySelector('meta[name="worker-url"]');
+    let base = (meta && meta.content) ? meta.content.trim() : '';
+    if (!base) return '';
+    if (base.endsWith('/')) base = base.slice(0,-1);
+    return base + '/lead';
+  }
+
+  async function submitLead(payload){
+    const url = workerURL();
+    if (!url) throw new Error('Missing worker URL');
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {'content-type':'application/json','x-site-origin': location.origin},
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(()=>'');
+      throw new Error('Upstream ' + res.status + ' ' + text);
     }
+    return await res.json().catch(()=>({ok:true}));
+  }
 
-    // Hidden defaults (force enterprise weekly)
-    var planEl = form.querySelector('input[name="plan"]');
-    if (!planEl) {
-      planEl = document.createElement('input');
-      planEl.type = 'hidden';
-      planEl.name = 'plan';
-      form.appendChild(planEl);
-    }
-    planEl.value = 'enterprise';
+  function mailtoFallback(payload){
+    const to = 'sales@cg-alert.com';
+    const subj = encodeURIComponent('Enterprise intake — ' + (payload.company||''));
+    const body = encodeURIComponent(
+      'Plan: ' + payload.plan + '\n' +
+      'Company: ' + payload.company + '\n' +
+      'Email: ' + payload.email + '\n' +
+      'Vendors: ' + (payload.vendors||[]).join(', ') + '\n' +
+      'Notes: ' + (payload.notes||'') + '\n' +
+      'UA: ' + (navigator.userAgent||'') + '\n' +
+      'TS: ' + new Date().toISOString()
+    );
+    window.location.href = 'mailto:' + to + '?subject=' + subj + '&body=' + body;
+  }
 
-    var cadenceEl = form.querySelector('input[name="cadence"]');
-    if (!cadenceEl) {
-      cadenceEl = document.createElement('input');
-      cadenceEl.type = 'hidden';
-      cadenceEl.name = 'cadence';
-      form.appendChild(cadenceEl);
-    }
-    cadenceEl.value = 'weekly';
+  window.addEventListener('DOMContentLoaded', function(){
+    const form = document.getElementById('enterprise-intake');
+    const btn = document.getElementById('submit-intake');
+    const ok = document.getElementById('ok');
+    const err = document.getElementById('err');
+    if (!form || !btn) return;
 
-    function lock(on) {
-      if (submitBtn) {
-        submitBtn.disabled = !!on;
-        submitBtn.setAttribute('aria-busy', String(!!on));
-      }
-    }
-
-    function toast(msg) {
-      var box = document.getElementById('intake-error');
-      if (!box) {
-        box = document.createElement('div');
-        box.id = 'intake-error';
-        box.style.background = '#fee2e2';
-        box.style.border = '1px solid #fecaca';
-        box.style.color = '#991b1b';
-        box.style.padding = '10px 12px';
-        box.style.borderRadius = '10px';
-        box.style.margin = '0 0 12px 0';
-        form.prepend(box);
-      }
-      box.textContent = msg;
-    }
-
-    function validEmail(v) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v || '');
-    }
-
-    function getMeta(name) {
-      var el = document.querySelector('meta[name="' + name + '"]');
-      return el && el.content ? el.content : '';
-    }
-
-    function thanks() {
-      window.location.href = '/intake/thanks/';
-    }
-
-    form.addEventListener('submit', async function (e) {
+    form.addEventListener('submit', async function(e){
       e.preventDefault();
+      err.style.display = 'none';
+      ok.style.display = 'none';
 
-      // Basic validations
-      var email = (form.querySelector('input[name="email"]') || {}).value || '';
-      var company = (form.querySelector('input[name="company"]') || {}).value || '';
-      var vendors = (form.querySelector('input[name="vendors"]') || {}).value || '';
+      const company = val('company');
+      const email = val('email');
+      const vendors = vendorsToArray(val('vendors'));
+      const notes = val('notes');
 
-      if (!validEmail(email)) {
-        toast('请输入有效邮箱');
-        return;
-      }
-      if (!company.trim()) {
-        toast('请输入公司名称');
-        return;
-      }
+      if (!company) { err.textContent = 'Company is required'; err.style.display='block'; return; }
+      if (!emailOk(email)) { err.textContent = 'Enter a valid work email'; err.style.display='block'; return; }
+      if (!vendors.length) { err.textContent = 'Add at least one vendor domain'; err.style.display='block'; return; }
 
-      lock(true);
+      const payload = {
+        plan: 'enterprise',
+        company, email, vendors, notes,
+        source: 'web:intake',
+        ts: new Date().toISOString()
+      };
+
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
       try {
-        // Build payload
-        var fd = new FormData(form);
-        fd.set('plan', 'enterprise');
-        fd.set('cadence', 'weekly');
-        var payload = {};
-        fd.forEach(function (v, k) { payload[k] = v; });
-        payload.source = 'intake';
-
-        // Worker URL from meta or global
-        var worker = getMeta('worker-url') || (window.WORKER_URL || '');
-        var ok = false;
-
-        if (worker) {
-          try {
-            var r = await fetch(worker.replace(/\/+$/,'') + '/lead', {
-              method: 'POST',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify(payload),
-              credentials: 'omit',
-              mode: 'cors',
-            });
-            if (r && r.ok) {
-              ok = true;
-            }
-          } catch (err) {
-            console.warn('worker submit failed', err);
-          }
-        }
-
-        if (ok) {
-          thanks();
-          return;
-        }
-
-        // Fallback: Google Form
-        var gf = (window.INTAKE_FORM_URL || getMeta('google-form-url') || '').trim();
-        if (gf) {
-          var qs = new URLSearchParams({
-            email: email,
-            company: company,
-            vendors: vendors,
-            plan: 'enterprise',
-            cadence: 'weekly'
-          }).toString();
-          window.location.href = gf + (gf.includes('?') ? '&' : '?') + qs;
-          return;
-        }
-
-        // Final fallback: mailto
-        var body = encodeURIComponent(
-          'Email: ' + email + '\n' +
-          'Company: ' + company + '\n' +
-          'Vendors: ' + vendors + '\n' +
-          'Plan: enterprise\n' +
-          'Cadence: weekly\n'
-        );
-        window.location.href = 'mailto:sales@cg-alert.com?subject=Enterprise Intake&body=' + body;
+        await submitLead(payload);
+        ok.style.display = 'block';
+        form.reset();
+        btn.textContent = 'Submitted';
+      } catch (ex) {
+        // Fallback to mailto so the click always does something user-visible
+        try { mailtoFallback(payload); } catch(_) {}
+        err.textContent = 'Online submit failed. We opened an email draft so you can send intake directly.';
+        err.style.display = 'block';
+        btn.textContent = 'Submit';
       } finally {
-        lock(false);
+        btn.disabled = false;
       }
-    }, { passive: false });
-  });
+    }, false);
+  }, false);
 })();
