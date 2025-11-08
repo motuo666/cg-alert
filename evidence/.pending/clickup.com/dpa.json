@@ -1,0 +1,12 @@
+{
+  "vendor": "clickup.com",
+  "url": "https://clickup.com/dpa",
+  "page": "/dpa",
+  "key": "dpa",
+  "old_hash": "c2253c7fac1f98fe15c3fad3b391f58c902304cb2972ee25b409a0994b1d445b",
+  "new_hash": "592bfdff1f7aab5e36ae7ba7fbe0a4ff06529a9298d38f1f260851b6b9a231f3",
+  "first_seen_at": "2025-11-08T05:14:56.678Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "Data Protection Addendum ClickUp Product Product {/* ClickUp Text */} The only AI solution that's custom-built for you Tasks Break down any size project into customized tasks. Docs Create beautiful docs and connect them to tasks. Goals Trac"
+}

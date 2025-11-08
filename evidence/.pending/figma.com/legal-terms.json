@@ -1,0 +1,12 @@
+{
+  "vendor": "figma.com",
+  "url": "https://figma.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "ff88d415d20083effe9dd6be6fa84001084e8c587a3addb53998ee8f3d72e2c4",
+  "new_hash": "774a8613d75c0846c2001ab8b85c5b993fb2887dd247ed8167a0165ee3f15ea2",
+  "first_seen_at": "2025-11-08T05:16:38.194Z",
+  "confirmed_at": null,
+  "status_code": 404,
+  "snippet": "Error: Page Not Found"
+}

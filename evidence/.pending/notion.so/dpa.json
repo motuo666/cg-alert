@@ -1,0 +1,12 @@
+{
+  "vendor": "notion.so",
+  "url": "https://notion.so/dpa",
+  "page": "/dpa",
+  "key": "dpa",
+  "old_hash": "a058269de4f7dbac359f42a454c47ddbd6ade9218b6420724f1a6807b1b6d782",
+  "new_hash": "455be3feb4bfe711a187d1554020787c8c1174624f215c6f6a733e3256704ae6",
+  "first_seen_at": "2025-11-08T05:14:37.814Z",
+  "confirmed_at": null,
+  "status_code": 401,
+  "snippet": "Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue."
+}

@@ -1,0 +1,12 @@
+{
+  "vendor": "datadoghq.com",
+  "url": "https://datadoghq.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "906ecb3bd1da0084f2bf499e84f9bc022aa5af1093d20b597d41db08626ad294",
+  "new_hash": "59dcbc8430d907fb7efdc50c88a7efed570c3412a548841d8a02da4af933aa0e",
+  "first_seen_at": "2025-11-08T05:15:18.581Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "Website Terms of Use | Datadog Product { this.openCategory = category; const productMenu = document.querySelector('.product-menu'); window.DD_RUM.onReady(function() { if (productMenu.classList.contains('show')) { window.DD_RUM.addAction(`Pr"
+}

@@ -4,9 +4,9 @@
   "page": "/pricing",
   "key": "pricing",
   "old_hash": "",
-  "new_hash": "ee44929fe231a1f6abfb9b0fcd67585dae185972e072640654e780b77cec6621",
-  "first_seen_at": "2025-11-07T09:27:27.368Z",
+  "new_hash": "8a69d7344bcd69a4a5a2b290252ae9b1cfdc830c57546eee24a968e13fe51af4",
+  "first_seen_at": "2025-11-08T05:15:09.370Z",
   "confirmed_at": null,
-  "status_code": 200,
-  "snippet": "Our Plans | Pricing | Cloudflare Sign up Languages English English (United Kingdom) Deutsch Español (Latinoamérica) Español (España) Français Italiano 日本語 한국어 Polski Português (Brasil) Русский 繁體中文 简体中文 Platform Connectivity cloud Cloudflar"
+  "status_code": 404,
+  "snippet": "Page not found | Cloudflare Sign up Languages English English (United Kingdom) Deutsch Español (Latinoamérica) Español (España) Français Italiano 日本語 한국어 Polski Português (Brasil) Русский 繁體中文 简体中文 Platform Connectivity cloud Cloudflare’s c"
 }
