@@ -25,25 +25,25 @@ jobs:
           set -euo pipefail
           test -z "$IMAP_HOST" && echo "::warning::IMAP_HOST empty"; true
           python3 - <<'PY'
-import imaplib, os, sys
-host=os.environ.get("IMAP_HOST",""); user=os.environ.get("IMAP_USER",""); pw=os.environ.get("IMAP_PASS","")
-if not host or not user or not pw: sys.exit(0)
-m=imaplib.IMAP4_SSL(host, 993); m.login(user, pw); m.select("INBOX"); print("OK IMAP:", m.list()[1][:1]); m.logout()
-PY
+          import imaplib, os, sys
+          host=os.environ.get("IMAP_HOST",""); user=os.environ.get("IMAP_USER",""); pw=os.environ.get("IMAP_PASS","")
+          if not host or not user or not pw: sys.exit(0)
+          m=imaplib.IMAP4_SSL(host, 993); m.login(user, pw); m.select("INBOX"); print("OK IMAP:", m.list()[1][:1]); m.logout()
+          PY
       - name: SMTP login (587)
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
-import smtplib, os, sys, ssl
-host=os.environ.get("SMTP_HOST",""); user=os.environ.get("SMTP_USER",""); pw=os.environ.get("SMTP_PASS","")
-if not host or not user or not pw: sys.exit(0)
-ctx=ssl.create_default_context()
-with smtplib.SMTP(host, 587) as s:
-    s.starttls(context=ctx)
-    s.login(user, pw)
-    print("OK SMTP: logged in")
-PY
+          import smtplib, os, sys, ssl
+          host=os.environ.get("SMTP_HOST",""); user=os.environ.get("SMTP_USER",""); pw=os.environ.get("SMTP_PASS","")
+          if not host or not user or not pw: sys.exit(0)
+          ctx=ssl.create_default_context()
+          with smtplib.SMTP(host, 587) as s:
+              s.starttls(context=ctx)
+              s.login(user, pw)
+              print("OK SMTP: logged in")
+          PY
       - name: Slack notify
         if: always()
         env:
