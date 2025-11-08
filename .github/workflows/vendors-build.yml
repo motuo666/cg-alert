@@ -1,8 +1,9 @@
 name: Vendors Build
 on:
   schedule:
-    - cron: '17 3 * * *'
+    - cron: '23 3 * * *'
   workflow_dispatch: {}
+
 permissions:
   contents: write
 
@@ -16,24 +17,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install deps
-        run: npm ci || npm install
-      - name: Build reports (cards + feed.json + rss.xml)
-        env:
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      - name: Install deps (if any)
         run: |
-          set -e
+          npm ci || npm install
+      - name: Build reports & rss
+        run: |
           node scripts/reports_build.mjs
-      - name: Commit & push
+      - name: Commit & push changes
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
           git add -A reports rss
           if git diff --cached --quiet; then
-            echo "no changes"
+            echo "no changes to commit"
           else
-            git commit -m "vendors: rebuild reports & rss"
+            git commit -m "build: reports/rss"
             git pull --rebase --autostash || true
             git push
           fi
