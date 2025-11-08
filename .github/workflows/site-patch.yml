@@ -1,58 +1,131 @@
-  name: Site Patch
+name: Site Patch
 
-  on:
-    workflow_dispatch:
-      inputs:
-        dry:
-          description: "Dry run? (true/false)"
-          required: true
-          default: "true"
-          type: choice
-          options: ["true","false"]
-        limit:
-          description: "Soft limit / batch size"
-          required: false
-          default: "12"
-        window_h:
-          description: "Primary window hours"
-          required: false
-          default: "336"
-    schedule:
-      - cron: '17 3 * * *'
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
 
-  permissions:
-    contents: read
+permissions:
+  contents: write
 
-  jobs:
-    job:
-      runs-on: ubuntu-latest
-      env:
-        DRY: ${{ github.event_name == 'workflow_dispatch' && inputs.dry || 'true' }}
-        LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '12' }}
-        WINDOW_H: ${{ github.event_name == 'workflow_dispatch' && inputs.window_h || '336' }}
-        SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
-        WORKER_URL: ${{ vars.WORKER_URL }}
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-        - name: Setup Node
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
-            cache: 'npm'
-        - name: Install deps
-          run: |
-            set -euo pipefail
-            if [ -f package-lock.json ] || [ -f package.json ]; then
-              npm ci || npm i
-            fi
-        - name: Site patch
-shell: bash
-run: |
-  set -euo pipefail
-  if [ -f scripts/site_patch.mjs ]; then
-    node scripts/site_patch.mjs || true
-  else
-    echo "skip: scripts/site_patch.mjs not found"
-  fi
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup Node (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        run: |
+          set -euo pipefail
+          npm ci || npm i
+- name: Patch site (canonical/CTA/meta)
+  run: |
+   set -euo pipefail
+
+   if [ -f "ops_fix_canonical_www.sh" ]; then
+     echo "→ Running: ops_fix_canonical_www.sh"
+     case ".sh" in
+       .mjs|.js)
+         node "ops_fix_canonical_www.sh"
+         ;;
+       .sh)
+         bash "ops_fix_canonical_www.sh"
+         ;;
+       *)
+         echo "Unknown extension for ops_fix_canonical_www.sh, trying bash"
+         bash "ops_fix_canonical_www.sh"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/inject_meta.mjs" ]; then
+     echo "→ Running: scripts/inject_meta.mjs"
+     case ".mjs" in
+       .mjs|.js)
+         node "scripts/inject_meta.mjs"
+         ;;
+       .sh)
+         bash "scripts/inject_meta.mjs"
+         ;;
+       *)
+         echo "Unknown extension for scripts/inject_meta.mjs, trying bash"
+         bash "scripts/inject_meta.mjs"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/inject_meta.js" ]; then
+     echo "→ Running: scripts/inject_meta.js"
+     case ".js" in
+       .mjs|.js)
+         node "scripts/inject_meta.js"
+         ;;
+       .sh)
+         bash "scripts/inject_meta.js"
+         ;;
+       *)
+         echo "Unknown extension for scripts/inject_meta.js, trying bash"
+         bash "scripts/inject_meta.js"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/cta_hotpatch.mjs" ]; then
+     echo "→ Running: scripts/cta_hotpatch.mjs"
+     case ".mjs" in
+       .mjs|.js)
+         node "scripts/cta_hotpatch.mjs"
+         ;;
+       .sh)
+         bash "scripts/cta_hotpatch.mjs"
+         ;;
+       *)
+         echo "Unknown extension for scripts/cta_hotpatch.mjs, trying bash"
+         bash "scripts/cta_hotpatch.mjs"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/cta_hotpatch.js" ]; then
+     echo "→ Running: scripts/cta_hotpatch.js"
+     case ".js" in
+       .mjs|.js)
+         node "scripts/cta_hotpatch.js"
+         ;;
+       .sh)
+         bash "scripts/cta_hotpatch.js"
+         ;;
+       *)
+         echo "Unknown extension for scripts/cta_hotpatch.js, trying bash"
+         bash "scripts/cta_hotpatch.js"
+         ;;
+     esac
+     exit 0
+   fi
+   echo "skip: none of expected scripts found"; exit 0
+
+- name: Commit & push changes (if any)
+  run: |
+    set -euo pipefail
+    git config user.email "bot@cg-alert.com"
+    git config user.name  "cg-alert-bot"
+    git add -A || true
+    if git diff --cached --quiet; then
+      echo "no changes to commit"
+    else
+      git commit -m "site: auto patch"
+      git pull --rebase --autostash || true
+      git push
+    fi

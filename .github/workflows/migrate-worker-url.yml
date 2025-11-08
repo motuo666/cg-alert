@@ -1,66 +1,99 @@
-  name: Migrate Worker URL
+name: Migrate Worker URL
 
-  on:
-    workflow_dispatch:
-      inputs:
-        dry:
-          description: "Dry run? (true/false)"
-          required: true
-          default: "true"
-          type: choice
-          options: ["true","false"]
-        limit:
-          description: "Soft limit / batch size"
-          required: false
-          default: "12"
-        window_h:
-          description: "Primary window hours"
-          required: false
-          default: "336"
-    schedule:
-      - cron: '17 3 * * *'
+on:
+  schedule:
+    - cron: '25 2 * * *'
+  workflow_dispatch:
 
-  permissions:
-    contents: read
+permissions:
+  contents: write
 
-  jobs:
-    job:
-      runs-on: ubuntu-latest
-      env:
-        DRY: ${{ github.event_name == 'workflow_dispatch' && inputs.dry || 'true' }}
-        LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '12' }}
-        WINDOW_H: ${{ github.event_name == 'workflow_dispatch' && inputs.window_h || '336' }}
-        SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
-        WORKER_URL: ${{ vars.WORKER_URL }}
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-        - name: Setup Node
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
-            cache: 'npm'
-        - name: Install deps
-          run: |
-            set -euo pipefail
-            if [ -f package-lock.json ] || [ -f package.json ]; then
-              npm ci || npm i
-            fi
-        - name: Patch site worker url
-shell: bash
-run: |
-  set -euo pipefail
-  SCRIPT="scripts/patch_site_workers_url.js"
-  ALT="scripts/patch_site_workers_url.mjs"
-  if [ -n "${WORKER_URL:-}" ]; then
-    if [ -f "$SCRIPT" ]; then
-      node "$SCRIPT"
-    elif [ -f "$ALT" ]; then
-      node "$ALT"
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        run: |
+          set -euo pipefail
+          npm ci || npm i
+- name: Patch site with Worker URL
+  env:
+    WORKER_URL: ${{ vars.WORKER_URL }}
+  run: |
+   set -euo pipefail
+
+   if [ -f "scripts/patch_site_workers_url.mjs" ]; then
+     echo "→ Running: scripts/patch_site_workers_url.mjs"
+     case ".mjs" in
+       .mjs|.js)
+         node "scripts/patch_site_workers_url.mjs"
+         ;;
+       .sh)
+         bash "scripts/patch_site_workers_url.mjs"
+         ;;
+       *)
+         echo "Unknown extension for scripts/patch_site_workers_url.mjs, trying bash"
+         bash "scripts/patch_site_workers_url.mjs"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/patch_site_workers_url.js" ]; then
+     echo "→ Running: scripts/patch_site_workers_url.js"
+     case ".js" in
+       .mjs|.js)
+         node "scripts/patch_site_workers_url.js"
+         ;;
+       .sh)
+         bash "scripts/patch_site_workers_url.js"
+         ;;
+       *)
+         echo "Unknown extension for scripts/patch_site_workers_url.js, trying bash"
+         bash "scripts/patch_site_workers_url.js"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/patch_site_workers_url.sh" ]; then
+     echo "→ Running: scripts/patch_site_workers_url.sh"
+     case ".sh" in
+       .mjs|.js)
+         node "scripts/patch_site_workers_url.sh"
+         ;;
+       .sh)
+         bash "scripts/patch_site_workers_url.sh"
+         ;;
+       *)
+         echo "Unknown extension for scripts/patch_site_workers_url.sh, trying bash"
+         bash "scripts/patch_site_workers_url.sh"
+         ;;
+     esac
+     exit 0
+   fi
+   echo "skip: none of expected scripts found"; exit 0
+
+- name: Commit & push changes (if any)
+  run: |
+    set -euo pipefail
+    git config user.email "bot@cg-alert.com"
+    git config user.name  "cg-alert-bot"
+    git add -A || true
+    if git diff --cached --quiet; then
+      echo "no changes to commit"
     else
-      echo "skip: patch script not found"
+      git commit -m "migrate: worker url auto-patch"
+      git pull --rebase --autostash || true
+      git push
     fi
-  else
-    echo "WORKER_URL is empty, nothing to do"
-  fi
-

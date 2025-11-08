@@ -1,58 +1,83 @@
-  name: Weekly Report
+name: Weekly Report
 
-  on:
-    workflow_dispatch:
-      inputs:
-        dry:
-          description: "Dry run? (true/false)"
-          required: true
-          default: "true"
-          type: choice
-          options: ["true","false"]
-        limit:
-          description: "Soft limit / batch size"
-          required: false
-          default: "12"
-        window_h:
-          description: "Primary window hours"
-          required: false
-          default: "336"
-    schedule:
-      - cron: '17 3 * * *'
+on:
+  schedule:
+    - cron: '5 7 * * 1'
+  workflow_dispatch:
 
-  permissions:
-    contents: read
+permissions:
+  contents: write
 
-  jobs:
-    job:
-      runs-on: ubuntu-latest
-      env:
-        DRY: ${{ github.event_name == 'workflow_dispatch' && inputs.dry || 'true' }}
-        LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '12' }}
-        WINDOW_H: ${{ github.event_name == 'workflow_dispatch' && inputs.window_h || '336' }}
-        SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
-        WORKER_URL: ${{ vars.WORKER_URL }}
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-        - name: Setup Node
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
-            cache: 'npm'
-        - name: Install deps
-          run: |
-            set -euo pipefail
-            if [ -f package-lock.json ] || [ -f package.json ]; then
-              npm ci || npm i
-            fi
-        - name: Generate weekly report
-shell: bash
-run: |
-  set -euo pipefail
-  if [ -f scripts/weekly_report.js ]; then
-    node scripts/weekly_report.js || true
-  else
-    echo "skip: scripts/weekly_report.js not found"
-  fi
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup Node (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        run: |
+          set -euo pipefail
+          npm ci || npm i
+- name: Build weekly report
+  run: |
+   set -euo pipefail
+
+   if [ -f "scripts/customer_digest.js" ]; then
+     echo "→ Running: scripts/customer_digest.js"
+     case ".js" in
+       .mjs|.js)
+         node "scripts/customer_digest.js"
+         ;;
+       .sh)
+         bash "scripts/customer_digest.js"
+         ;;
+       *)
+         echo "Unknown extension for scripts/customer_digest.js, trying bash"
+         bash "scripts/customer_digest.js"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/weekly_report.mjs" ]; then
+     echo "→ Running: scripts/weekly_report.mjs"
+     case ".mjs" in
+       .mjs|.js)
+         node "scripts/weekly_report.mjs"
+         ;;
+       .sh)
+         bash "scripts/weekly_report.mjs"
+         ;;
+       *)
+         echo "Unknown extension for scripts/weekly_report.mjs, trying bash"
+         bash "scripts/weekly_report.mjs"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/weekly_report.js" ]; then
+     echo "→ Running: scripts/weekly_report.js"
+     case ".js" in
+       .mjs|.js)
+         node "scripts/weekly_report.js"
+         ;;
+       .sh)
+         bash "scripts/weekly_report.js"
+         ;;
+       *)
+         echo "Unknown extension for scripts/weekly_report.js, trying bash"
+         bash "scripts/weekly_report.js"
+         ;;
+     esac
+     exit 0
+   fi
+   echo "skip: none of expected scripts found"; exit 0

@@ -1,58 +1,66 @@
-  name: Unsubscribe Sync
+name: Unsub/Bounce/Complaint Sync
 
-  on:
-    workflow_dispatch:
-      inputs:
-        dry:
-          description: "Dry run? (true/false)"
-          required: true
-          default: "true"
-          type: choice
-          options: ["true","false"]
-        limit:
-          description: "Soft limit / batch size"
-          required: false
-          default: "12"
-        window_h:
-          description: "Primary window hours"
-          required: false
-          default: "336"
-    schedule:
-      - cron: '17 3 * * *'
+on:
+  schedule:
+    - cron: '55 4 * * *'
+  workflow_dispatch:
 
-  permissions:
-    contents: read
+permissions:
+  contents: write
 
-  jobs:
-    job:
-      runs-on: ubuntu-latest
-      env:
-        DRY: ${{ github.event_name == 'workflow_dispatch' && inputs.dry || 'true' }}
-        LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '12' }}
-        WINDOW_H: ${{ github.event_name == 'workflow_dispatch' && inputs.window_h || '336' }}
-        SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
-        WORKER_URL: ${{ vars.WORKER_URL }}
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-        - name: Setup Node
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
-            cache: 'npm'
-        - name: Install deps
-          run: |
-            set -euo pipefail
-            if [ -f package-lock.json ] || [ -f package.json ]; then
-              npm ci || npm i
-            fi
-        - name: Unsubscribe sync
-shell: bash
-run: |
-  set -euo pipefail
-  if [ -f scripts/suppression_apply.js ]; then
-    node scripts/suppression_apply.js || true
-  else
-    echo "skip: scripts/suppression_apply.js not found"
-  fi
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup Node (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        run: |
+          set -euo pipefail
+          npm ci || npm i
+- name: Apply suppression
+  run: |
+   set -euo pipefail
+
+   if [ -f "scripts/suppression_apply.js" ]; then
+     echo "→ Running: scripts/suppression_apply.js"
+     case ".js" in
+       .mjs|.js)
+         node "scripts/suppression_apply.js"
+         ;;
+       .sh)
+         bash "scripts/suppression_apply.js"
+         ;;
+       *)
+         echo "Unknown extension for scripts/suppression_apply.js, trying bash"
+         bash "scripts/suppression_apply.js"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/suppression_apply.mjs" ]; then
+     echo "→ Running: scripts/suppression_apply.mjs"
+     case ".mjs" in
+       .mjs|.js)
+         node "scripts/suppression_apply.mjs"
+         ;;
+       .sh)
+         bash "scripts/suppression_apply.mjs"
+         ;;
+       *)
+         echo "Unknown extension for scripts/suppression_apply.mjs, trying bash"
+         bash "scripts/suppression_apply.mjs"
+         ;;
+     esac
+     exit 0
+   fi
+   echo "skip: none of expected scripts found"; exit 0

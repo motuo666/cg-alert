@@ -1,63 +1,75 @@
-  name: Email Smoke (Self-contained)
+name: Email Smoke (Self-contained)
 
-  on:
-    workflow_dispatch:
-      inputs:
-        dry:
-          description: "Dry run? (true/false)"
-          required: true
-          default: "true"
-          type: choice
-          options: ["true","false"]
-        limit:
-          description: "Soft limit / batch size"
-          required: false
-          default: "12"
-        window_h:
-          description: "Primary window hours"
-          required: false
-          default: "336"
-    schedule:
-      - cron: '17 3 * * *'
+on:
+  schedule:
+    - cron: '5 1 * * *'
+  workflow_dispatch:
 
-  permissions:
-    contents: read
+permissions:
+  contents: write
 
-  jobs:
-    job:
-      runs-on: ubuntu-latest
-      env:
-        DRY: ${{ github.event_name == 'workflow_dispatch' && inputs.dry || 'true' }}
-        LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '12' }}
-        WINDOW_H: ${{ github.event_name == 'workflow_dispatch' && inputs.window_h || '336' }}
-        SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
-        WORKER_URL: ${{ vars.WORKER_URL }}
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-        - name: Setup Node
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
-            cache: 'npm'
-        - name: Install deps
-          run: |
-            set -euo pipefail
-            if [ -f package-lock.json ] || [ -f package.json ]; then
-              npm ci || npm i
-            fi
-        - name: Email self-contained smoke
-shell: bash
-env:
-  SMTP_HOST: ${{ secrets.SMTP_HOST }}
-  SMTP_USER: ${{ secrets.SMTP_USER }}
-  SMTP_PASS: ${{ secrets.SMTP_PASS }}
-  TO: ${{ secrets.SMOKE_TO || vars.SMOKE_TO }}
-run: |
-  set -euo pipefail
-  if [ -z "${SMTP_HOST:-}" ] || [ -z "${SMTP_USER:-}" ] || [ -z "${SMTP_PASS:-}" ] || [ -z "${TO:-}" ]; then
-    echo "::warning::missing SMTP_* or TO - skipping"
-    exit 0
-  fi
-  node -e 'console.log("smtp ok to", process.env.TO)'
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup Node (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        run: |
+          set -euo pipefail
+          npm ci || npm i
+- name: Email smoke
+  env:
+    SMTP_HOST: ${{ secrets.SMTP_HOST }}
+    SMTP_USER: ${{ secrets.SMTP_USER }}
+    SMTP_PASS: ${{ secrets.SMTP_PASS }}
+    IMAP_HOST: ${{ secrets.IMAP_HOST }}
+    IMAP_USER: ${{ secrets.IMAP_USER }}
+    IMAP_PASS: ${{ secrets.IMAP_PASS }}
+  run: |
+   set -euo pipefail
+   echo "[info] Smoke env presence check:"
+   for k in SMTP_HOST SMTP_USER SMTP_PASS IMAP_HOST IMAP_USER IMAP_PASS; do v="${!k:-}"; [ -n "$v" ] && echo "  $k=✓" || echo "::warning:: $k is empty"; done
+
+   if [ -f "scripts/email_smoke_selfcontained.sh" ]; then
+     echo "→ Running: scripts/email_smoke_selfcontained.sh"
+     case ".sh" in
+       .mjs|.js)
+         node "scripts/email_smoke_selfcontained.sh"
+         ;;
+       .sh)
+         bash "scripts/email_smoke_selfcontained.sh"
+         ;;
+       *)
+         echo "Unknown extension for scripts/email_smoke_selfcontained.sh, trying bash"
+         bash "scripts/email_smoke_selfcontained.sh"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/email_smoke_selfcontained.js" ]; then
+     echo "→ Running: scripts/email_smoke_selfcontained.js"
+     case ".js" in
+       .mjs|.js)
+         node "scripts/email_smoke_selfcontained.js"
+         ;;
+       .sh)
+         bash "scripts/email_smoke_selfcontained.js"
+         ;;
+       *)
+         echo "Unknown extension for scripts/email_smoke_selfcontained.js, trying bash"
+         bash "scripts/email_smoke_selfcontained.js"
+         ;;
+     esac
+     exit 0
+   fi
+   echo "skip: none of expected scripts found"; exit 0

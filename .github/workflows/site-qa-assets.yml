@@ -1,58 +1,66 @@
-  name: Site QA (Assets)
+name: Site QA (Assets & Links)
 
-  on:
-    workflow_dispatch:
-      inputs:
-        dry:
-          description: "Dry run? (true/false)"
-          required: true
-          default: "true"
-          type: choice
-          options: ["true","false"]
-        limit:
-          description: "Soft limit / batch size"
-          required: false
-          default: "12"
-        window_h:
-          description: "Primary window hours"
-          required: false
-          default: "336"
-    schedule:
-      - cron: '17 3 * * *'
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
 
-  permissions:
-    contents: read
+permissions:
+  contents: write
 
-  jobs:
-    job:
-      runs-on: ubuntu-latest
-      env:
-        DRY: ${{ github.event_name == 'workflow_dispatch' && inputs.dry || 'true' }}
-        LIMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.limit || '12' }}
-        WINDOW_H: ${{ github.event_name == 'workflow_dispatch' && inputs.window_h || '336' }}
-        SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
-        WORKER_URL: ${{ vars.WORKER_URL }}
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
-        - name: Setup Node
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
-            cache: 'npm'
-        - name: Install deps
-          run: |
-            set -euo pipefail
-            if [ -f package-lock.json ] || [ -f package.json ]; then
-              npm ci || npm i
-            fi
-        - name: Site QA (assets)
-shell: bash
-run: |
-  set -euo pipefail
-  if [ -f scripts/linkcheck.mjs ]; then
-    node scripts/linkcheck.mjs || true
-  else
-    echo "skip: scripts/linkcheck.mjs not found"
-  fi
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup Node (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps (if package.json present)
+        if: ${{ hashFiles('package.json') != '' }}
+        run: |
+          set -euo pipefail
+          npm ci || npm i
+- name: Check links/assets
+  run: |
+   set -euo pipefail
+
+   if [ -f "scripts/linkcheck.mjs" ]; then
+     echo "→ Running: scripts/linkcheck.mjs"
+     case ".mjs" in
+       .mjs|.js)
+         node "scripts/linkcheck.mjs"
+         ;;
+       .sh)
+         bash "scripts/linkcheck.mjs"
+         ;;
+       *)
+         echo "Unknown extension for scripts/linkcheck.mjs, trying bash"
+         bash "scripts/linkcheck.mjs"
+         ;;
+     esac
+     exit 0
+   fi
+
+   if [ -f "scripts/linkcheck.js" ]; then
+     echo "→ Running: scripts/linkcheck.js"
+     case ".js" in
+       .mjs|.js)
+         node "scripts/linkcheck.js"
+         ;;
+       .sh)
+         bash "scripts/linkcheck.js"
+         ;;
+       *)
+         echo "Unknown extension for scripts/linkcheck.js, trying bash"
+         bash "scripts/linkcheck.js"
+         ;;
+     esac
+     exit 0
+   fi
+   echo "skip: none of expected scripts found"; exit 0
