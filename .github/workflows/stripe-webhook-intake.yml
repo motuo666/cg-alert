@@ -1,55 +1,78 @@
-name: Stripe Webhook → Intake
+name: Stripe Webhook Intake
 
 on:
   repository_dispatch:
-    types: [stripe_webhook_intake]
+    types: [stripe-webhook]
+  workflow_dispatch:
+    inputs:
+      email:
+        description: "Test only: buyer email"
+        required: false
+        default: ""
+      customer_id:
+        description: "Test only: Stripe customer id"
+        required: false
+        default: ""
+      event_type:
+        description: "Test only: event type"
+        required: false
+        default: "checkout.session.completed"
 
 permissions:
   contents: write
 
 jobs:
-  append:
+  intake:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Append to data/intakes.csv
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse incoming payload (supports repository_dispatch & workflow_dispatch)
+        id: parse
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p data
-          if command -v jq >/dev/null 2>&1; then
-            EMAIL=$(jq -r '.client_payload.email // empty' "$GITHUB_EVENT_PATH" || true)
-            COMPANY=$(jq -r '.client_payload.company // empty' "$GITHUB_EVENT_PATH" || true)
-            VENDORS=$(jq -r '.client_payload.vendors // empty' "$GITHUB_EVENT_PATH" || true)
-            CADENCE=$(jq -r '.client_payload.cadence // empty' "$GITHUB_EVENT_PATH" || true)
-          else
-            readjson() { python3 - "$@" <<'PY'
-import json,sys,os
-p=json.load(open(os.environ.get("GITHUB_EVENT_PATH")))
-cp=p.get("client_payload") or {}
-def get(k): 
-    v=cp.get(k,"")
-    print(v if isinstance(v,str) else (",".join(v) if isinstance(v,list) else str(v)))
-get(sys.argv[1])
-PY
-            }
-            EMAIL=$(GITHUB_EVENT_PATH="$GITHUB_EVENT_PATH" readjson email || true)
-            COMPANY=$(GITHUB_EVENT_PATH="$GITHUB_EVENT_PATH" readjson company || true)
-            VENDORS=$(GITHUB_EVENT_PATH="$GITHUB_EVENT_PATH" readjson vendors || true)
-            CADENCE=$(GITHUB_EVENT_PATH="$GITHUB_EVENT_PATH" readjson cadence || true)
-          fi
-          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          printf "%s,%s,%s,%s,%s\n" "$ts" "${EMAIL:-}" "${COMPANY:-}" "${VENDORS:-}" "${CADENCE:-}" >> data/intakes.csv
-      - name: Commit
+          payload="$(cat "$GITHUB_EVENT_PATH" 2>/dev/null || echo '{}')"
+          # Extract values from either repository_dispatch.client_payload.* or workflow_dispatch.inputs.*
+          email="$(jq -r '.client_payload.email // .inputs.email // ""' <<<"$payload")"
+          customer_id="$(jq -r '.client_payload.customer_id // .inputs.customer_id // ""' <<<"$payload")"
+          event_type="$(jq -r '.client_payload.event_type // .inputs.event_type // ""' <<<"$payload")"
+          echo "email=${email}" >> "$GITHUB_OUTPUT"
+          echo "customer_id=${customer_id}" >> "$GITHUB_OUTPUT"
+          echo "event_type=${event_type}" >> "$GITHUB_OUTPUT"
+
+      - name: Log parsed values
         shell: bash
         run: |
-          set -e
+          echo "email=${{ steps.parse.outputs.email }}"
+          echo "customer_id=${{ steps.parse.outputs.customer_id }}"
+          echo "event_type=${{ steps.parse.outputs.event_type }}"
+
+      - name: Persist intake record to repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data/intakes
+          ts="$(date -u +%Y%m%dT%H%M%SZ)"
+          file="data/intakes/${ts}.json"
+          cat > "${file}" <<JSON
+          {
+            "email": "${{ steps.parse.outputs.email }}",
+            "customer_id": "${{ steps.parse.outputs.customer_id }}",
+            "event_type": "${{ steps.parse.outputs.event_type }}",
+            "source_event": "${{ github.event_name }}",
+            "run_id": "${{ github.run_id }}",
+            "run_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+          JSON
+
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add data/intakes.csv
+          git add "${file}"
           if git diff --cached --quiet; then
-            echo "no changes"
+            echo "no changes to commit"
           else
-            git commit -m "intake: append from webhook"
-            git push
+            git commit -m "intake: stripe webhook ${{ steps.parse.outputs.event_type }} (${{ steps.parse.outputs.email }})"
+            git push || true
           fi
