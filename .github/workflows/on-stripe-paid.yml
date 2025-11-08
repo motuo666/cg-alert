@@ -47,7 +47,6 @@ jobs:
           vendors="$(jq -r '.client_payload.vendors // .inputs.vendors // ""' <<<"$payload")"
           rhythm="$(jq -r '.client_payload.rhythm // .inputs.rhythm // "weekly"' <<<"$payload")"
 
-          # Basic validation
           if [ -z "$email" ]; then
             echo "::error::email is required"; exit 1
           fi
@@ -60,38 +59,39 @@ jobs:
             *) echo "::error::invalid rhythm: $rhythm (expect daily|weekly)"; exit 1 ;;
           esac
 
-          printf 'email=%s
-plan=%s
-vendors=%s
-rhythm=%s
-' "$email" "$plan" "$vendors" "$rhythm" >> "$GITHUB_OUTPUT"
+          {
+            echo "email=$email"
+            echo "plan=$plan"
+            echo "vendors=$vendors"
+            echo "rhythm=$rhythm"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Upsert customers.csv
         shell: bash
+        env:
+          EMAIL: ${{ steps.parse.outputs.email }}
+          PLAN: ${{ steps.parse.outputs.plan }}
+          VENDORS: ${{ steps.parse.outputs.vendors }}
+          RHYTHM: ${{ steps.parse.outputs.rhythm }}
         run: |
           set -euo pipefail
           file="customers.csv"
           test -f "$file" || echo 'email,company,plan,rhythm,vendors,created_at' > "$file"
           ts="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-
-          email="${{ steps.parse.outputs.email }}"
-          plan="${{ steps.parse.outputs.plan }}"
-          vendors="${{ steps.parse.outputs.vendors }}"
-          rhythm="${{ steps.parse.outputs.rhythm }}"
-
           tmp="$(mktemp)"
-          awk -F, -v em="$email" 'BEGIN{IGNORECASE=1} NR==1{print; next} {gsub(/^\"|\"$/,"",$1); if($1!=em) print $0}' "$file" > "$tmp" || true
+          awk -F, -v em="$EMAIL" 'BEGIN{IGNORECASE=1} NR==1{print; next} {gsub(/^\"|\"$/,"",$1); if($1!=em) print $0}' "$file" > "$tmp" || true
           mv "$tmp" "$file"
-
-          printf '"%s","","%s","%s","%s","%s"\n' "$email" "$plan" "$rhythm" "$vendors" "$ts" >> "$file"
+          printf '"%s","","%s","%s","%s","%s"\n' "$EMAIL" "$PLAN" "$RHYTHM" "$VENDORS" "$ts" >> "$file"
 
       - name: Commit reconciliation
         shell: bash
+        env:
+          EMAIL: ${{ steps.parse.outputs.email }}
         run: |
           set -euo pipefail
           if [ -x scripts/ci/commit_or_skip.sh ]; then
             chmod +x scripts/ci/commit_or_skip.sh
-            scripts/ci/commit_or_skip.sh "stripe: reconcile customers (${% raw %}{{% endraw %} steps.parse.outputs.email }})"
+            scripts/ci/commit_or_skip.sh "stripe: reconcile customers ($EMAIL)"
           else
             git config user.email "bot@cg-alert.com"
             git config user.name  "cg-alert-bot"
@@ -99,7 +99,7 @@ rhythm=%s
             if git diff --cached --quiet; then
               echo "no changes to commit"
             else
-              git commit -m "stripe: reconcile customers (${{ steps.parse.outputs.email }})"
+              git commit -m "stripe: reconcile customers ($EMAIL)"
               git pull --rebase --autostash || true
               git push || true
             fi
@@ -109,9 +109,13 @@ rhythm=%s
         if: always()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+          EMAIL: ${{ steps.parse.outputs.email }}
+          PLAN: ${{ steps.parse.outputs.plan }}
+          VENDORS: ${{ steps.parse.outputs.vendors }}
+          RHYTHM: ${{ steps.parse.outputs.rhythm }}
+          RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
         shell: bash
         run: |
           test -z "$SLACK_WEBHOOK_URL" && exit 0
-          jq -n             --arg t "✅ Stripe reconcile: ${{ steps.parse.outputs.plan }} → ${{ steps.parse.outputs.email }}"             --arg v "${{ steps.parse.outputs.vendors }}"             --arg r "${{ steps.parse.outputs.rhythm }}"             --arg u "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"             '{text: "\($t)
-vendors=\($v) rhythm=\($r)
-\($u)"}'           | curl -sS -X POST -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
+          msg="✅ Stripe reconcile: $PLAN → $EMAIL"$'\n'"vendors=$VENDORS rhythm=$RHYTHM"$'\n'"$RUN_URL"
+          jq -n --arg t "$msg" '{text: $t}'             | curl -sS -X POST -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
