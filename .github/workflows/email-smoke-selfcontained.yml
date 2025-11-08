@@ -1,51 +1,33 @@
 name: Email Smoke (Selfcontained)
-on:
-  workflow_dispatch:
+true:
+  workflow_dispatch: null
   schedule:
-    - cron: '33 3 * * *'
+  - cron: 33 3 * * *
 permissions:
   contents: read
 jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Report env availability
-        shell: bash
-        run: |
-          set -euo pipefail
-          missing=0
-          for k in IMAP_HOST IMAP_USER IMAP_PASS SMTP_HOST SMTP_USER SMTP_PASS; do
-            v=$(printenv "$k" || true)
-            if [ -z "${v:-}" ]; then
-              echo "::warning::ENV $k is empty"
-              missing=$((missing+1))
-            fi
-          done
-          if [ "$missing" -gt 0 ]; then
-            echo "::notice::Email smoke will run with available env only."
-          fi
-
-      - name: Setup Node (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Run smoke script if present
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -f scripts/email_smoke_selfcontained.js ]; then
-            if [ -f package.json ]; then npm ci || npm i; fi
-            node scripts/email_smoke_selfcontained.js
-          elif [ -f scripts/email_smoke_selfcontained.mjs ]; then
-            if [ -f package.json ]; then npm ci || npm i; fi
-            node scripts/email_smoke_selfcontained.mjs
-          elif [ -f scripts/email_smoke_selfcontained.sh ]; then
-            bash scripts/email_smoke_selfcontained.sh
-          else
-            echo "No selfcontained email smoke script; skipping."
-          fi
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Report env availability
+      shell: bash
+      run: "set -euo pipefail\nmissing=0\nfor k in IMAP_HOST IMAP_USER IMAP_PASS SMTP_HOST\
+        \ SMTP_USER SMTP_PASS; do\n  v=$(printenv \"$k\" || true)\n  if [ -z \"${v:-}\"\
+        \ ]; then\n    echo \"::warning::ENV $k is empty\"\n    missing=$((missing+1))\n\
+        \  fi\ndone\nif [ \"$missing\" -gt 0 ]; then\n  echo \"::notice::Email smoke\
+        \ will run with available env only.\"\nfi\n"
+    - name: Setup Node (if package.json present)
+      if: ${{ hashFiles('package.json') != '' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Run smoke script if present
+      shell: bash
+      run: "set -euo pipefail\nif [ -f scripts/email_smoke_selfcontained.js ]; then\n\
+        \  if [ -f package.json ]; then npm ci || npm i; fi\n  node scripts/email_smoke_selfcontained.js\n\
+        elif [ -f scripts/email_smoke_selfcontained.mjs ]; then\n  if [ -f package.json\
+        \ ]; then npm ci || npm i; fi\n  node scripts/email_smoke_selfcontained.mjs\n\
+        elif [ -f scripts/email_smoke_selfcontained.sh ]; then\n  bash scripts/email_smoke_selfcontained.sh\n\
+        else\n  echo \"No selfcontained email smoke script; skipping.\"\nfi\nfi\n"

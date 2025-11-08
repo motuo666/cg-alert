@@ -1,31 +1,22 @@
 name: Site QA - Assets
-on:
-  workflow_dispatch:
+true:
+  workflow_dispatch: null
 permissions:
   contents: read
 jobs:
   qa:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Link check (if script present)
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -f scripts/linkcheck.mjs ]; then
-            if [ -f package.json ]; then npm ci || npm i; fi
-            node scripts/linkcheck.mjs
-          elif [ -f scripts/linkcheck.js ]; then
-            if [ -f package.json ]; then npm ci || npm i; fi
-            node scripts/linkcheck.js
-          else
-            echo "No linkcheck script; skipping."
-          fi
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Node (if package.json present)
+      if: ${{ hashFiles('package.json') != '' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Link check (if script present)
+      shell: bash
+      run: "set -euo pipefail\nif [ -f scripts/linkcheck.mjs ]; then\n  if [ -f package.json\
+        \ ]; then npm ci || npm i; fi\n  node scripts/linkcheck.mjs\nelif [ -f scripts/linkcheck.js\
+        \ ]; then\n  if [ -f package.json ]; then npm ci || npm i; fi\n  node scripts/linkcheck.js\n\
+        else\n  echo \"No linkcheck script; skipping.\"\nfi\nfi\n"

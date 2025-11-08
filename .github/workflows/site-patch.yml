@@ -1,52 +1,31 @@
 name: Site Patch
-on:
-  workflow_dispatch:
+true:
+  workflow_dispatch: null
 permissions:
   contents: write
 jobs:
   sitepatch:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Apply site patch tools (if present)
-        shell: bash
-        run: |
-          set -euo pipefail
-          changed=0
-          if [ -f ops_fix_canonical_www.sh ]; then
-            bash ops_fix_canonical_www.sh && changed=1 || true
-          fi
-          if [ -f scripts/inject_meta.mjs ]; then
-            if [ -f package.json ]; then npm ci || npm i; fi
-            node scripts/inject_meta.mjs && changed=1 || true
-          fi
-          if [ -f scripts/cta_hotpatch.js ]; then
-            if [ -f package.json ]; then npm ci || npm i; fi
-            node scripts/cta_hotpatch.js && changed=1 || true
-          fi
-
-      - name: Commit & push if changed
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git diff --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No staged changes"
-            exit 0
-          fi
-          git commit -m "site: hotpatch applied"
-          git push
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Node (if package.json present)
+      if: ${{ hashFiles('package.json') != '' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Apply site patch tools (if present)
+      shell: bash
+      run: "set -euo pipefail\nchanged=0\nif [ -f ops_fix_canonical_www.sh ]; then\n\
+        \  bash ops_fix_canonical_www.sh && changed=1 || true\nfi\nif [ -f scripts/inject_meta.mjs\
+        \ ]; then\n  if [ -f package.json ]; then npm ci || npm i; fi\n  node scripts/inject_meta.mjs\
+        \ && changed=1 || true\nfi\nif [ -f scripts/cta_hotpatch.js ]; then\n  if\
+        \ [ -f package.json ]; then npm ci || npm i; fi\n  node scripts/cta_hotpatch.js\
+        \ && changed=1 || true\nfi\nfi\n"
+    - name: Commit & push if changed
+      shell: bash
+      run: "set -euo pipefail\nif git diff --quiet; then\n  echo \"No changes to commit\"\
+        \n  exit 0\nfi\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add -A\nif git diff --cached --quiet; then\n  echo\
+        \ \"No staged changes\"\n  exit 0\nfi\ngit commit -m \"site: hotpatch applied\"\
+        \ngit push\n"

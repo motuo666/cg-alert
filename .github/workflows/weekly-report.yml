@@ -1,55 +1,35 @@
 name: Weekly Report
-on:
+true:
   schedule:
-    - cron: '0 5 * * MON'
-  workflow_dispatch:
+  - cron: 0 5 * * MON
+  workflow_dispatch: null
 permissions:
   contents: write
 jobs:
   weekly:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node (if package.json present)
-        if: ${{ hashFiles('package.json') != '' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Build weekly report if present
-        shell: bash
-        run: |
-          set -euo pipefail
-          changed=0
-          if [ -f scripts/weekly_report.mjs ]; then
-            if [ -f package.json ]; then npm ci || npm i; fi
-            node scripts/weekly_report.mjs && changed=1 || true
-          elif [ -f scripts/weekly_report.js ]; then
-            if [ -f package.json ]; then npm ci || npm i; fi
-            node scripts/weekly_report.js && changed=1 || true
-          elif [ -f scripts/customer_digest.js ]; then
-            if [ -f package.json ]; then npm ci || npm i; fi
-            node scripts/customer_digest.js && changed=1 || true
-          else
-            echo "No weekly report script; skipping."
-          fi
-
-      - name: Commit & push if changed
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git diff --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No staged changes"
-            exit 0
-          fi
-          git commit -m "weekly: artifacts update"
-          git push
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Node (if package.json present)
+      if: ${{ hashFiles('package.json') != '' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Build weekly report if present
+      shell: bash
+      run: "set -euo pipefail\nchanged=0\nif [ -f scripts/weekly_report.mjs ]; then\n\
+        \  if [ -f package.json ]; then npm ci || npm i; fi\n  node scripts/weekly_report.mjs\
+        \ && changed=1 || true\nelif [ -f scripts/weekly_report.js ]; then\n  if [\
+        \ -f package.json ]; then npm ci || npm i; fi\n  node scripts/weekly_report.js\
+        \ && changed=1 || true\nelif [ -f scripts/customer_digest.js ]; then\n  if\
+        \ [ -f package.json ]; then npm ci || npm i; fi\n  node scripts/customer_digest.js\
+        \ && changed=1 || true\nelse\n  echo \"No weekly report script; skipping.\"\
+        \nfi\nfi\n"
+    - name: Commit & push if changed
+      shell: bash
+      run: "set -euo pipefail\nif git diff --quiet; then\n  echo \"No changes to commit\"\
+        \n  exit 0\nfi\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add -A\nif git diff --cached --quiet; then\n  echo\
+        \ \"No staged changes\"\n  exit 0\nfi\ngit commit -m \"weekly: artifacts update\"\
+        \ngit push\n"
