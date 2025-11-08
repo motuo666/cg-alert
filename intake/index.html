@@ -140,5 +140,37 @@ document.addEventListener('DOMContentLoaded', function(){
 <span>© CG Alert — evidence-backed vendor change alerts.</span>
 </div>
 </footer>
+
+<!-- intake submit enhancer -->
+<script id="cg-intake-hook">
+(function(){
+  const form = document.querySelector('form');
+  if(!form) return;
+  const btn = form.querySelector('button, input[type="submit"]');
+  if(btn && btn.tagName === 'BUTTON' && !btn.getAttribute('type')) btn.setAttribute('type','submit');
+  // success toast
+  if(!document.getElementById('cg-intake-success')){
+    const div=document.createElement('div');
+    div.id='cg-intake-success';
+    div.style.cssText='display:none;margin:16px 0;padding:12px;border-radius:10px;background:#ecfdf5;color:#065f46;border:1px solid #34d399;font-size:14px;';
+    div.textContent='Submitted. We will contact you shortly.';
+    form.parentNode.insertBefore(div, form);
+  }
+  form.addEventListener('submit', function(ev){
+    const action=form.getAttribute('action')||'';
+    const isExternal=/^https?:\/\//i.test(action) && !action.startsWith(location.origin);
+    if(!isExternal){
+      ev.preventDefault();
+      const fd=new FormData(form);
+      btn && (btn.disabled=true);
+      fetch(action || location.pathname, {method:'POST', body:fd})
+      .then(r=>{ if(r.ok){ document.getElementById('cg-intake-success').style.display='block'; form.reset(); } else { alert('Submit failed. Please retry or email support@cg-alert.com'); } })
+      .catch(()=>alert('Network error. Please retry.'))
+      .finally(()=>{ btn && (btn.disabled=false); });
+    }
+  }, false);
+})();
+</script>
+
 </body>
 </html>
