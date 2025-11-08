@@ -1,75 +1,69 @@
-/* Intake form JS: no mailto fallback, strict fetch only */
+// Minimal, robust Enterprise intake handler (no placeholders, no external deps)
 (() => {
-  // Block any mailto anchors just in case
-  document.addEventListener('click', (e) => {
-    const a = e.target.closest('a[href^="mailto:"]');
-    if (a) {
-      e.preventDefault();
-      e.stopPropagation();
-      alert('Email compose is disabled on this page.');
-    }
-  }, { capture: true });
-
-  const form = document.querySelector('form#intake');
+  const form = document.querySelector('form[data-worker][data-form]') || document.querySelector('form');
   if (!form) return;
 
-  /** Endpoint preferences */
-  const WORKER_URL = (window.WORKER_URL || form.dataset.worker || '').trim();
-  const INTAKE_FORM_URL = (window.INTAKE_FORM_URL || form.dataset.form || '').trim();
+  const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+  const WORKER = (window.WORKER_URL || '').replace(/\/+$/,''); // e.g. https://lead-gateway.example.workers.dev
+  const FORM = window.INTAKE_FORM_URL || '';                   // e.g. Google Form (prefill optional)
 
-  function toast(msg, ok = true) {
-    const el = document.querySelector('#notice') || document.createElement('div');
-    el.id = 'notice';
-    el.setAttribute('role', 'status');
-    el.style.marginTop = '12px';
-    el.style.padding = '10px 12px';
-    el.style.borderRadius = '8px';
-    el.style.fontSize = '14px';
-    el.style.border = ok ? '1px solid #16a34a' : '1px solid #dc2626';
-    el.style.background = ok ? '#ecfdf5' : '#fef2f2';
-    el.style.color = ok ? '#065f46' : '#991b1b';
-    el.textContent = msg;
-    form.appendChild(el);
+  function getFormJSON(f) {
+    const entries = Array.from(new FormData(f).entries());
+    const obj = {};
+    for (const [k, v] of entries) obj[k] = String(v).trim();
+    return obj;
   }
 
-  async function postJSON(url, body) {
+  async function tryWorkerPost(json) {
+    if (!WORKER) return false;
+    const url = `${WORKER}/lead`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(json),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res;
+    return res.ok;
   }
 
-  async function postForm(url, data) {
-    const res = await fetch(url, { method: 'POST', mode: 'no-cors', body: data });
-    return res;
+  function openFormPage(json) {
+    if (!FORM) return false;
+    const u = new URL(FORM);
+    // Best-effort pass-through; if your Form has entry IDs, map here.
+    for (const [k, v] of Object.entries(json)) u.searchParams.set(k, v);
+    window.open(u.toString(), '_blank', 'noopener');
+    return true;
   }
 
-  form.addEventListener('submit', async (ev) => {
-    ev.preventDefault();
-    const btn = form.querySelector('button[type="submit"]');
-    btn && (btn.disabled = true);
+  function mailtoFallback(json) {
+    const body = encodeURIComponent(JSON.stringify(json, null, 2));
+    const u = `mailto:sales@cg-alert.com?subject=Enterprise%20intake&body=${body}`;
+    window.location.href = u;
+    return true;
+  }
 
-    const fd = new FormData(form);
-    const payload = Object.fromEntries(fd.entries());
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
+
+    const data = getFormJSON(form);
+    // Force Enterprise defaults
+    data.plan = 'enterprise';
+    data.cadence = data.cadence || 'weekly';
 
     try {
-      if (WORKER_URL) {
-        await postJSON(WORKER_URL.replace(/\/+$/,''), payload);
-      } else if (INTAKE_FORM_URL) {
-        await postForm(INTAKE_FORM_URL, fd);
-      } else {
-        throw new Error('No endpoint configured');
+      const ok = await tryWorkerPost(data);
+      if (ok) {
+        window.location.assign('/intake/thanks/');
+        return;
       }
-      toast('Submitted. We will reach out by email shortly.', true);
-      form.reset();
-    } catch (e) {
-      console.error(e);
-      toast('Submit failed. Please try again later.', false);
-    } finally {
-      btn && (btn.disabled = false);
+    } catch (_) {
+      // swallow and fall through to FORM / mailto
     }
+
+    if (openFormPage(data)) {
+      window.location.assign('/intake/thanks/');
+      return;
+    }
+    mailtoFallback(data);
   });
 })();
