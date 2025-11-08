@@ -34,7 +34,7 @@
 <section class="cg-wrap">
 <h1>Reports</h1>
 <div class="cg-searchbar">
-<input #ddd;border-radius:12px;font-size:16px;\"="" 14px;border:1px="" id='\"q\"' placeholder="Search vendor, title, URL, hash…" solid="" style='\"width:100%;max-width:680px;height:44px;padding:10px' type="search"/>
+<input id="q" type="search" placeholder="Search vendor, title, hash" aria-label="Search" />
 </div>
 <div class="cg-grid3" id="grid"></div>
 <div class="cg-note" id="empty" style="display:none;margin:1rem 0;">
@@ -59,7 +59,7 @@
   let items = [];
   try {
     const res = await fetch('/reports/feed.json', {cache:'no-store'});
-    if (res.ok) items = await res.json();
+    if (res.ok) const out = await res.json(); items = Array.isArray(out) ? out : (out.items || []);
   } catch(_) {}
   const render = (list) => {
     grid.innerHTML = '';
@@ -77,7 +77,7 @@
     });
   };
   render(items);
-  document.getElementById('q').addEventListener('input', e=>{
+  var _q=document.getElementById('q'); if(_q) _q.addEventListener('input', e=>{
     const q = e.target.value.trim().toLowerCase();
     if(!q){ render(items); return; }
     render(items.filter(it =>
