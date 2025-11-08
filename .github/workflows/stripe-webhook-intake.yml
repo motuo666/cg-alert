@@ -1,56 +1,37 @@
-name: Stripe Webhook Intake
+name: Stripe Webhook → Intake
+
 on:
   repository_dispatch:
     types: [stripe_webhook_intake]
-  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  intake:
+  append:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Append to data/intakes.csv
+        env:
+          EMAIL: ${{ github.event.client_payload.email }}
+          COMPANY: ${{ github.event.client_payload.company }}
+          VENDORS: ${{ github.event.client_payload.vendors }}
+          CADENCE: ${{ github.event.client_payload.cadence }}
         run: |
-          set -e
-          email="${{ github.event.client_payload.email || inputs.email }}"
-          company="${{ github.event.client_payload.company || inputs.company || '' }}"
-          plan="${{ github.event.client_payload.plan || 'portfolio' }}"
-          cadence="${{ github.event.client_payload.cadence || '' }}"
-          vendors="${{ github.event.client_payload.vendors || '' }}"
-          [ -n "$email" ] || { echo "::error::no email"; exit 1; }
-          node -e "require('fs').existsSync('scripts/util/append_csv.js')||process.exit(1)"
-          node scripts/util/append_csv.js data/intakes.csv "$email,$company,$plan,$cadence,$vendors"
-
-      - name: Promote to customers.csv
-        run: |
-          set -e
-          node scripts/customers_sync.js
-
+          set -euo pipefail
+          mkdir -p data
+          ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          printf "%s,%s,%s,%s,%s\n" "$ts" "${EMAIL:-}" "${COMPANY:-}" "${VENDORS:-}" "${CADENCE:-}" >> data/intakes.csv
       - name: Commit
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add data/intakes.csv customers.csv
+          git add data/intakes.csv
           if git diff --cached --quiet; then
             echo "no changes"
           else
-            git commit -m "stripe: activate ${{ github.event.client_payload.email }} plan=${{ github.event.client_payload.plan }}"
-            git pull --rebase --autostash || true
+            git commit -m "intake: append from webhook"
             git push
           fi
-
-      - name: Slack notify (activation)
-        if: always()
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
-        run: |
-          set -e
-          email="${{ github.event.client_payload.email }}"
-          plan="${{ github.event.client_payload.plan }}"
-          jq -n --arg t "🎉 Stripe activation: \\($plan) • \\($email)" '{text:$t}' \
-          | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null

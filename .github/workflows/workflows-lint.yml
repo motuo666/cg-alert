@@ -1,33 +1,34 @@
 name: Workflows Lint
 
 on:
+  workflow_dispatch:
   push:
     paths:
-      - ".github/workflows/**"
+      - ".github/workflows/**.yml"
+      - ".github/workflows/**.yaml"
   pull_request:
     paths:
-      - ".github/workflows/**"
-  workflow_dispatch:
-
-permissions:
-  contents: read
+      - ".github/workflows/**.yml"
+      - ".github/workflows/**.yaml"
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Download actionlint (latest)
         run: |
           set -euo pipefail
           curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash -s -- latest ./bin
-          echo "$PWD/bin" >> $GITHUB_PATH
+          ./bin/actionlint -version
 
-      - name: Run actionlint (YAML only, skip shellcheck & archives)
+      - name: Run actionlint (ignore _archive/)
         run: |
           set -euo pipefail
-          actionlint -version
-          # Only check top-level YAML under .github/workflows/, to avoid archived jobs
-          actionlint -no-use-default-glob             -glob '.github/workflows/*.yml'             -color             -shellcheck=
+          files=$(git ls-files ".github/workflows/*.yml" ".github/workflows/*.yaml" | grep -v "^.github/workflows/_archive/") || true
+          if [ -n "$files" ]; then
+            echo "$files" | xargs -r ./bin/actionlint -color
+          else
+            echo "No workflows to lint"
+          fi

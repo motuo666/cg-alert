@@ -2,8 +2,13 @@ name: Site Hardening
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '23 * * * *'  # hourly
+  push:
+    paths:
+      - "public/**"
+      - "intake/**"
+      - "assets/**"
+      - "scripts/render_reports_static.js"
+      - ".github/workflows/site-hardening.yml"
 
 permissions:
   contents: write
@@ -11,32 +16,31 @@ permissions:
 jobs:
   harden:
     runs-on: ubuntu-latest
-
+    env:
+      ORIGIN: https://www.cg-alert.com
+      DESC: Evidence-backed vendor change alerts.
     steps:
       - uses: actions/checkout@v4
 
-      - name: Detect repo root
-        id: root
-        shell: bash
+      - id: root
+        name: Detect project root
         run: |
-          set -eo pipefail
           if [ -d "cg-alert-main" ]; then
             echo "root=cg-alert-main" >> "$GITHUB_OUTPUT"
           else
             echo "root=." >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Inject head meta / canonical / CSP
+      - name: Inject CSP/Canonical/Description
         uses: actions/github-script@v7
         env:
           ROOT: ${{ steps.root.outputs.root }}
-          ORIGIN: https://www.cg-alert.com
-          DESC: Evidence-backed vendor change alerts.
+          ORIGIN: ${{ env.ORIGIN }}
+          DESC: ${{ env.DESC }}
         with:
           script: |
             const fs = require('fs');
             const path = require('path');
-            // NOTE: Do NOT require('@actions/core'); github-script already injects `core`.
             const root = process.env.ROOT || '.';
             const origin = (process.env.ORIGIN || '').replace(/\/+$/,'');
             const defaultDesc = process.env.DESC || 'Evidence-backed vendor change alerts.';
@@ -49,7 +53,6 @@ jobs:
               }
               return acc;
             }
-
             function canonicalFor(file) {
               const absRoot = path.resolve(root);
               const rel = path.resolve(file).slice(absRoot.length).replace(/\\/g,'/');
@@ -58,7 +61,6 @@ jobs:
               if (!urlPath.startsWith('/')) urlPath = '/' + urlPath;
               return origin ? (origin + urlPath) : urlPath;
             }
-
             function ensure(head, needle, make) {
               return head.includes(needle) ? head : (head + '\n' + make());
             }
@@ -80,7 +82,7 @@ jobs:
                   `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">`
                 );
               }
-              if (!/rel=['"]canonical['"]/i.test(head) && origin) {
+              if (origin && !/rel=['"]canonical['"]/i.test(head)) {
                 head = ensure(head, 'rel="canonical"', () => `<link rel="canonical" href="${canonicalFor(f)}">`);
               }
               if (!/name=['"]description['"]/i.test(head)) {
@@ -93,9 +95,24 @@ jobs:
                 touched++;
               }
             }
+            core.info(`Hardening updated ${touched} HTML files.`);
 
-            if (typeof core !== 'undefined' && core.info) {
-              core.info(`Hardening updated ${touched} HTML files.`);
-            } else {
-              console.log(`Hardening updated ${touched} HTML files.`);
-            }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Render reports (static)
+        run: node scripts/render_reports_static.js || true
+
+      - name: Commit & push if changed
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "site: hardening + reports render"
+            git push
+          fi
