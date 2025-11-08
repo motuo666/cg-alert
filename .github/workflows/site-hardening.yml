@@ -12,44 +12,41 @@ on:
         default: "Evidence-backed vendor change alerts."
 permissions:
   contents: write
-
 jobs:
   harden:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Resolve site root
         id: loc
-        shell: bash
         run: |
-          set -eo pipefail
           if [ -d "cg-alert-main" ]; then
-            echo "root=cg-alert-main" >> "$GITHUB_OUTPUT"
+            echo "root=cg-alert-main" >> $GITHUB_ENV
           else
-            echo "root=." >> "$GITHUB_OUTPUT"
+            echo "root=." >> $GITHUB_ENV
           fi
 
       - name: Ensure inject_head_meta.js exists (self-create if missing)
-        shell: bash
         run: |
-          set -eo pipefail
-          ROOT="${{ steps.loc.outputs.root }}"
+          ROOT="${{ env.root }}"
           mkdir -p "$ROOT/scripts"
           TARGET="$ROOT/scripts/inject_head_meta.js"
           if [ ! -f "$TARGET" ]; then
-cat > "$TARGET" <<'JS'
+            cat > "$TARGET" <<'JS'
 // Node: inject CSP, canonical, description across HTML files.
 // Usage: node scripts/inject_head_meta.js <root> <origin> <defaultDesc>
 'use strict';
-const fs = require('node:fs');
-const path = require('node:path');
+const fs = require('fs');
+const path = require('path');
 const root = process.argv[2] || 'cg-alert-main';
-const originArg = (process.argv[3] || '').replace(/\/+$/,'');
+const originArg = (process.argv[3] || '').replace(/\/+$/, '');
 const defaultDesc = process.argv[4] || 'Evidence-backed vendor change alerts.';
 function walk(dir, acc=[]) {
   for (const ent of fs.readdirSync(dir, {withFileTypes:true})) {
@@ -103,22 +100,14 @@ JS
           fi
 
       - name: Inject head meta (CSP/canonical/description)
-        shell: bash
         run: |
-          set -eo pipefail
-          ROOT="${{ steps.loc.outputs.root }}"
+          ROOT="${{ env.root }}"
           node "$ROOT/scripts/inject_head_meta.js" "$ROOT" "${{ inputs.origin }}" "${{ inputs.desc }}"
 
       - name: Commit changes
-        shell: bash
         run: |
-          set -e
           git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
+          git config user.name "cg-alert-bot"
           git add -A
-          if git diff --cached --quiet; then
-            echo "no changes to commit"
-          else
-            git commit -m "Site hardening: inject CSP/canonical/description"
-            git push
-          fi
+          git diff --cached --quiet || git commit -m "Site hardening: inject CSP/canonical/description"
+          git push
