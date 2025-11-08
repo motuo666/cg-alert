@@ -2,7 +2,8 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RSS — CG Alert</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="canonical" href="https://www.cg-alert.com/"/>
+<link rel="canonical" href="https://www.cg-alert.com/rss/"/>
+<link rel="alternate" type="application/rss+xml" title="CG Alert Reports RSS" href="/rss/index.xml">
 <link rel="stylesheet" href="/assets/home-v3c.css">
 </head><body>
 <header class="cg-topbar">
@@ -10,18 +11,19 @@
     <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
     <nav class="cg-links" id="topnav">
       <a href="/#pricing">Pricing</a>
-      <a href="#how">How it works</a>
-      <a href="#evidence">Evidence</a>
-      <a href="#compare">Compare</a>
-      <a href="#faq">FAQ</a>
+      <a href="/#how">How it works</a>
+      <a href="/#evidence">Evidence</a>
+      <a href="/#compare">Compare</a>
+      <a href="/#faq">FAQ</a>
     </nav>
   </div>
 </header>
 
 <section class="cg-wrap">
-  <h1>RSS Feed</h1>
-  <p class="muted">Human‑readable view of <code>/rss/index.xml</code>. Use your feed reader with that URL.</p>
-  <div id="rss-list" class="cg-grid3"></div>
+  <h1>RSS</h1>
+  <p>Subscribe in your reader: <a class="cg-btn" href="/rss/index.xml">Subscribe to RSS</a></p>
+  <div id="list" class="cg-grid3"></div>
+  <div id="empty" class="cg-note" style="display:none;margin:1rem 0;">No items yet.</div>
 </section>
 
 <footer class="cg-footer">
@@ -29,13 +31,31 @@
     <a href="/who-uses/">Who uses</a>
     <a href="/about/">About</a>
     <a href="/reports/">Reports</a>
-    <a href="/rss/index.html">RSS</a>
+    <a href="/rss/index.xml">RSS</a>
     <a href="/terms/">Terms</a>
     <a href="/privacy/">Privacy</a>
     <span>© CG Alert — evidence-backed vendor change alerts.</span>
   </div>
 </footer>
-<script src="/assets/home-v3c.js"></script>
-</body></html>
 
-<script src="/assets/rss.js" defer></script>
+<script>
+(async () => {
+  const box = document.getElementById('list'), empty=document.getElementById('empty');
+  let items = [];
+  try {
+    const r = await fetch('/reports/feed.json', {cache:'no-store'});
+    if (r.ok) items = await r.json();
+  } catch(_) {}
+  if (!items.length){ empty.style.display='block'; return; }
+  items.slice(0,60).forEach(it=>{
+    const a = document.createElement('a');
+    a.className = 'cg-card hover';
+    a.href = it.page || it.url || '#';
+    a.innerHTML = `<div class="card-meta">${it.vendor || ''} · ${it.captured || ''}</div>
+                   <h3>${it.title || 'Change detected'}</h3>
+                   <p>${it.snippet || ''}</p>`;
+    box.appendChild(a);
+  });
+})();
+</script>
+</body></html>

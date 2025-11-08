@@ -2,29 +2,38 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Reports — CG Alert</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="canonical" href="https://www.cg-alert.com/"/>
+<link rel="canonical" href="https://www.cg-alert.com/reports/"/>
 <link rel="stylesheet" href="/assets/home-v3c.css">
+<meta name="description" content="Evidence-backed vendor change reports. Search and browse recent alerts.">
+<style>
+  .cg-searchbar{display:flex;gap:.75rem;align-items:center;margin:1.25rem 0;}
+  .cg-searchbar input{flex:1; padding:.75rem 1rem; border:1px solid #e5e7eb; border-radius:12px; font-size:16px; outline:none}
+  .cg-searchbar input:focus{box-shadow:0 0 0 3px rgba(59,130,246,.2); border-color:#93c5fd}
+  .card-meta{color:#6b7280;font-size:.9rem;margin-bottom:.5rem}
+</style>
 </head><body>
 <header class="cg-topbar">
   <div class="cg-wrap cg-nav">
     <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
     <nav class="cg-links" id="topnav">
       <a href="/#pricing">Pricing</a>
-      <a href="#how">How it works</a>
-      <a href="#evidence">Evidence</a>
-      <a href="#compare">Compare</a>
-      <a href="#faq">FAQ</a>
+      <a href="/#how">How it works</a>
+      <a href="/#evidence">Evidence</a>
+      <a href="/#compare">Compare</a>
+      <a href="/#faq">FAQ</a>
     </nav>
   </div>
 </header>
 
 <section class="cg-wrap">
-  <h1>Vendor change reports</h1>
-  <div class="cg-searchbar" style="margin: 12px 0 20px;">
-    <input id="q" class="cg-input" type="search" placeholder="Search vendor, page type, or text…" aria-label="Search reports">
+  <h1>Reports</h1>
+  <div class="cg-searchbar">
+    <input id="q" type="search" placeholder="Search vendor, title, URL, hash…">
   </div>
-  <div id="cards" class="cg-grid3"></div>
-  <div id="empty" class="muted" style="display:none;margin:16px 0;">No results.</div>
+  <div id="grid" class="cg-grid3"></div>
+  <div id="empty" class="cg-note" style="display:none;margin:1rem 0;">
+    No reports yet. New evidence will appear here automatically after the daily build.
+  </div>
 </section>
 
 <footer class="cg-footer">
@@ -32,13 +41,45 @@
     <a href="/who-uses/">Who uses</a>
     <a href="/about/">About</a>
     <a href="/reports/">Reports</a>
-    <a href="/rss/index.html">RSS</a>
+    <a href="/rss/index.xml">RSS</a>
     <a href="/terms/">Terms</a>
     <a href="/privacy/">Privacy</a>
     <span>© CG Alert — evidence-backed vendor change alerts.</span>
   </div>
 </footer>
-<script src="/assets/home-v3c.js"></script>
-</body></html>
 
-<script src="/assets/reports.js" defer></script>
+<script>
+(async () => {
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  let items = [];
+  try {
+    const res = await fetch('/reports/feed.json', {cache:'no-store'});
+    if (res.ok) items = await res.json();
+  } catch(_) {}
+  const render = (list) => {
+    grid.innerHTML = '';
+    if (!list.length){ empty.style.display='block'; return; }
+    empty.style.display='none';
+    list.forEach(it => {
+      const a = document.createElement('a');
+      a.className = 'cg-card hover';
+      a.href = it.page || it.url || '#';
+      a.innerHTML =
+        `<div class="card-meta">${it.vendor || 'Vendor'} · ${it.captured || ''} · ${it.sha256 ? ('SHA256 ' + it.sha256.slice(0,8)+'…') : ''}</div>
+         <h3>${it.title || 'Change detected'}</h3>
+         <p>${it.snippet || ''}</p>`;
+      grid.appendChild(a);
+    });
+  };
+  render(items);
+  document.getElementById('q').addEventListener('input', e=>{
+    const q = e.target.value.trim().toLowerCase();
+    if(!q){ render(items); return; }
+    render(items.filter(it =>
+      [it.vendor,it.title,it.snippet,it.url,it.sha256].join(' ').toLowerCase().includes(q)
+    ));
+  });
+})();
+</script>
+</body></html>
