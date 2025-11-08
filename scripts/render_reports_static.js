@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Render public/reports/index.html by injecting simple cards from evidence/*.json.
+ * Render public/reports/index.html by injecting cards from evidence/*.json.
  * Safe no-op if templates or data are missing. Always exits 0.
  */
 const fs = require('fs');
@@ -14,69 +14,75 @@ function findRoot() {
 function readJSONFiles(dir) {
   const out = [];
   if (!fs.existsSync(dir)) return out;
-  for (const f of fs.readdirSync(dir)) {
-    if (!f.endsWith('.json')) continue;
+  for (const file of fs.readdirSync(dir)) {
+    if (!file.endsWith('.json')) continue;
+    const p = path.join(dir, file);
     try {
-      const j = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
-      out.push({ file: f, data: j });
-    } catch {}
+      const obj = JSON.parse(fs.readFileSync(p, 'utf8'));
+      out.push(obj);
+    } catch { /* skip bad json */ }
   }
   return out;
 }
 
-function main() {
-  const root = findRoot();
+function loadHTML(root) {
   const candidates = [
     path.join(root, 'public', 'reports', 'index.html'),
     path.join(root, 'reports', 'index.html'),
     path.join(root, 'public', 'reports.html'),
   ];
-  let target = candidates.find((p) => fs.existsSync(p));
-  if (!target) {
-    console.log('render_reports_static: no reports template found, noop');
-    process.exit(0);
+  for (const p of candidates) {
+    if (fs.existsSync(p)) return { file: p, html: fs.readFileSync(p, 'utf8') };
   }
+  return null;
+}
 
-  let html = fs.readFileSync(target, 'utf8');
-  const marker = '<div id="grid"></div>';
-  if (!html.includes(marker)) {
-    console.log('render_reports_static: marker not found, noop');
-    process.exit(0);
-  }
+function escapeHTML(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
-  const evidenceDir = path.join(root, 'evidence');
-  const items = readJSONFiles(evidenceDir);
+function buildCards(items) {
   let cards = '';
-
-  for (const { data, file } of items) {
-    const vendor = data.vendor || data.domain || file.replace(/\.json$/,'');
-    const url = data.url || (Array.isArray(data.urls) ? data.urls[0] : '') || '#';
-    const when = data.timestamp || data.ts || '';
-    const gist = data.change || data.summary || '';
-    cards += `<a class="card" href="${url}" target="_blank" rel="noopener">
-<h3>${vendor}</h3>
-<p>${when}</p>
-<p>${gist}</p>
-</a>\n`;
+  for (const it of items) {
+    const vendor = it.vendor || it.name || it.domain || '';
+    const url    = it.url || it.link || '#';
+    const when   = it.timestamp || it.time || it.date || '';
+    const gist   = it.change || it.summary || it.title || '';
+    cards += [
+      '<a class="card" href="', escapeHTML(url), '" target="_blank" rel="noopener">',
+      '<h3>', escapeHTML(vendor), '</h3>',
+      '<p>', escapeHTML(when), '</p>',
+      '<p>', escapeHTML(gist), '</p>',
+      '</a>\n'
+    ].join('');
   }
-
-  if (!cards) {
-    cards = '<p class="muted">No evidence yet.</p>';
-  }
-
-  html = html.replace(marker, `<div id="grid">\n${cards}</div>`);
-
-  // Always write to public/reports/index.html to be safe
-  const outPath = path.join(root, 'public', 'reports', 'index.html');
-  fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, html);
-  console.log('render_reports_static: wrote', outPath);
+  return cards || '<p class="muted">No evidence yet.</p>';
 }
 
-try {
-  main();
-  process.exit(0);
-} catch (e) {
-  console.log('render_reports_static: soft-fail:', e && e.message || e);
-  process.exit(0);
-}
+(function main() {
+  try {
+    const root = findRoot();
+    const data = readJSONFiles(path.join(root, 'evidence'));
+    const tpl  = loadHTML(root);
+    if (!tpl) process.exit(0);
+    const cards = buildCards(data);
+
+    const gridOpen   = /<div[^>]*id=["']grid["'][^>]*>/i;
+    const gridCloser = />\s*<\/div>/i;
+
+    let html = tpl.html;
+    if (gridOpen.test(html) && gridCloser.test(html)) {
+      let seen = false;
+      html = html.replace(gridOpen, (m) => { seen = true; return m; });
+      if (seen) html = html.replace(gridCloser, () => '>\n' + cards + '\n</div>');
+    } else {
+      html = html.replace(/<\/main>/i, '<div id="grid">\n' + cards + '\n</div>\n</main>');
+    }
+
+    fs.mkdirSync(require('path').dirname(tpl.file), { recursive: true });
+    fs.writeFileSync(tpl.file, html);
+    process.exit(0);
+  } catch {
+    process.exit(0);
+  }
+})();
