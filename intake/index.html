@@ -1,80 +1,95 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta name="worker-url" content="https://api.cg-alert.com">
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CG Alert — Enterprise Intake</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intake — CG Alert</title>
+<meta name="description" content="Tell us your enterprise vendors and requirements. We'll set up monitoring and evidence-backed alerts.">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="canonical" href="https://www.cg-alert.com/"/>
+<link rel="canonical" href="https://www.cg-alert.com/intake/">
+<link rel="preconnect" href="https://buy.stripe.com" crossorigin>
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#0b0f1a">
 <link rel="stylesheet" href="/assets/home-v3c.css">
-
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
-<meta name="description" content="Evidence-backed vendor change alerts."></head>
-<body>
-<header class="cg-topbar">
-  <div class="cg-wrap cg-nav">
-    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
-    <nav class="cg-links" id="topnav">
-      <a href="/#pricing">Pricing</a>
-      <a href="/#how">How it works</a>
-      <a href="/#evidence">Evidence</a>
-      <a href="/#compare">Compare</a>
-      <a href="/#faq">FAQ</a>
-      
-    </nav>
-  </div>
-</header>
-
-<main>
-  <section class="wrap section">
-    <div class="container" style="max-width:960px;margin:0 auto;padding:24px;">
-      <h1 style="margin:0 0 12px;">Enterprise Intake</h1>
-      <p style="color:#475569; margin:0 0 20px;">Tell us your vendors and where to deliver alerts. We’ll spin up enterprise monitoring with evidence-backed changes.</p>
-
-      <form id="intakeForm" style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;">
-        <input type="hidden" name="plan" value="enterprise">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          <label>Company<br>
-            <input name="company" required placeholder="Acme Corp" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;">
-          </label>
-          <label>Work email<br>
-            <input type="email" name="email" required placeholder="you@acme.com" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;">
-          </label>
-        </div>
-
-        <div style="margin-top:16px;">
-          <label>Vendors (comma separated)<br>
-            <input name="vendors" required placeholder="okta.com, slack.com, box.com" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;">
-          </label>
-        </div>
-
-        <div style="margin-top:16px;">
-          <label>Notes (optional)<br>
-            <textarea name="notes" rows="4" placeholder="Renewal month, target clauses, thresholds…" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></textarea>
-          </label>
-        </div>
-
-        <div style="display:flex;gap:12px;align-items:center;margin-top:20px;">
-          <button id="submitBtn" type="submit" style="padding:10px 16px;border-radius:10px;background:#0b5fff;color:#fff;border:none;cursor:pointer;">Submit</button>
-          <span id="msg" style="font-size:14px;color:#059669;display:none;">Submitted. We’ll confirm by email.</span>
-          <span id="errmsg" style="font-size:14px;color:#dc2626;display:none;"></span>
-        </div>
-      </form>
+<meta name="worker-url" content="{{WORKER_URL}}">
+<script defer src="/assets/app-intake.js"></script>
+</head>
+<body class="cg-body">
+  <header class="cg-topbar">
+    <div class="cg-wrap">
+      <a class="cg-logo" href="/"><img src="/assets/logo.svg" alt="CG Alert" width="124" height="28"></a>
+      <nav class="cg-nav">
+        <a href="/who-uses/">Who uses</a>
+        <a href="/reports/">Reports</a>
+        <a href="/pricing/">Pricing</a>
+        <a class="cg-btn" href="/intake/">Request Enterprise →</a>
+      </nav>
     </div>
-  </section>
-</main>
+  </header>
+  <main class="cg-main">
+    <section class="cg-hero slim">
+      <div class="cg-wrap">
+        <h1>Enterprise Intake</h1>
+        <p class="cg-subtle">Tell us your vendors and cadence. We’ll provision Enterprise monitoring and delivery.</p>
+      </div>
+    </section>
+    <section class="cg-wrap">
 
-<footer class="cg-footer">
-  <div class="cg-wrap cg-footlinks">
-    <a href="/who-uses/">Who uses</a>
-    <a href="/about/">About</a>
-    <a href="/reports/">Reports</a>
-    <a href="/rss/index.xml">RSS</a>
-    <a href="/terms/">Terms</a>
-    <a href="/privacy/">Privacy</a>
-    <span>© CG Alert — evidence-backed vendor change alerts.</span>
-  </div>
-</footer>
-<script src="/assets/app-intake.js" defer></script>
+<div class="card">
+  <form id="intake-form" class="cg-form" novalidate>
+    <input type="hidden" name="plan" value="enterprise">
+    <div class="grid-2">
+      <label>Full name
+        <input name="name" required placeholder="Leslie Knope">
+      </label>
+      <label>Work email
+        <input name="email" type="email" required placeholder="leslie@pawnee.gov">
+      </label>
+    </div>
+    <div class="grid-2">
+      <label>Company
+        <input name="company" required placeholder="Pawnee Parks & Rec">
+      </label>
+      <label>Role / Title
+        <input name="title" placeholder="Procurement Lead">
+      </label>
+    </div>
+    <label>Vendors (comma separated)
+      <input name="vendors" required placeholder="okta.com, slack.com, box.com">
+    </label>
+    <label>Cadence
+      <select name="cadence">
+        <option value="weekly">Weekly</option>
+        <option value="daily">Daily</option>
+        <option value="monthly">Monthly</option>
+      </select>
+    </label>
+    <label>Notes (context, timelines, specific pages)
+      <textarea name="notes" rows="4" placeholder="Renewal targets, must‑watch pages, liabilities, DPA/SLA constraints…"></textarea>
+    </label>
+    <div class="actions">
+      <button id="intake-submit" class="cg-btn primary" type="submit">Submit</button>
+      <span id="intake-status" class="cg-subtle" aria-live="polite"></span>
+    </div>
+  </form>
+</div>
+
+    </section>
+  </main>
+  <footer class="cg-footer">
+    <div class="cg-wrap">
+      <div class="cg-col">
+        <strong>CG Alert</strong>
+        <p class="cg-subtle">Evidence‑backed vendor change alerts.</p>
+      </div>
+      <nav class="cg-col cg-footer-nav">
+        <a href="/who-uses/">Who uses</a>
+        <a href="/pricing/">Pricing</a>
+        <a href="/terms/">Terms</a>
+        <a href="/privacy/">Privacy</a>
+        <a href="/rss/">RSS</a>
+      </nav>
+    </div>
+  </footer>
 </body>
 </html>
