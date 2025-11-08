@@ -13,17 +13,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Append to data/intakes.csv
-        env:
-          EMAIL: ${{ github.event.client_payload.email }}
-          COMPANY: ${{ github.event.client_payload.company }}
-          VENDORS: ${{ github.event.client_payload.vendors }}
-          CADENCE: ${{ github.event.client_payload.cadence }}
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p data
+          if command -v jq >/dev/null 2>&1; then
+            EMAIL=$(jq -r '.client_payload.email // empty' "$GITHUB_EVENT_PATH" || true)
+            COMPANY=$(jq -r '.client_payload.company // empty' "$GITHUB_EVENT_PATH" || true)
+            VENDORS=$(jq -r '.client_payload.vendors // empty' "$GITHUB_EVENT_PATH" || true)
+            CADENCE=$(jq -r '.client_payload.cadence // empty' "$GITHUB_EVENT_PATH" || true)
+          else
+            readjson() { python3 - "$@" <<'PY'
+import json,sys,os
+p=json.load(open(os.environ.get("GITHUB_EVENT_PATH")))
+cp=p.get("client_payload") or {}
+def get(k): 
+    v=cp.get(k,"")
+    print(v if isinstance(v,str) else (",".join(v) if isinstance(v,list) else str(v)))
+get(sys.argv[1])
+PY
+            }
+            EMAIL=$(GITHUB_EVENT_PATH="$GITHUB_EVENT_PATH" readjson email || true)
+            COMPANY=$(GITHUB_EVENT_PATH="$GITHUB_EVENT_PATH" readjson company || true)
+            VENDORS=$(GITHUB_EVENT_PATH="$GITHUB_EVENT_PATH" readjson vendors || true)
+            CADENCE=$(GITHUB_EVENT_PATH="$GITHUB_EVENT_PATH" readjson cadence || true)
+          fi
           ts=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           printf "%s,%s,%s,%s,%s\n" "$ts" "${EMAIL:-}" "${COMPANY:-}" "${VENDORS:-}" "${CADENCE:-}" >> data/intakes.csv
       - name: Commit
+        shell: bash
         run: |
           set -e
           git config user.email "bot@cg-alert.com"

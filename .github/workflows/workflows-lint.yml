@@ -2,11 +2,9 @@ name: Workflows Lint
 
 on:
   push:
+    branches: [ main ]
     paths:
-      - ".github/workflows/**"
-  pull_request:
-    paths:
-      - ".github/workflows/**"
+      - '.github/workflows/*.yml'
   workflow_dispatch:
 
 permissions:
@@ -17,10 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: rhysd/actionlint@v1
-        with:
-          args: >
-            -color
-            -shellcheck=on
-            -ignore 'property ".*" is not defined in object type {} \[expression\]'
-            .github/workflows/*.yml .github/workflows/*.yaml
+      - name: Install actionlint (latest)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p ./bin
+          curl -sSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash | bash -s -- latest ./bin
+          ./bin/actionlint -version
+      - name: Lint workflows
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./bin/actionlint -color
