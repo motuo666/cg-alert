@@ -1,9 +1,9 @@
 name: Site Hardening
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
   schedule:
-    - cron: '20 * * * *'
+    - cron: '23 * * * *'  # hourly
 
 permissions:
   contents: write
@@ -11,9 +11,9 @@ permissions:
 jobs:
   harden:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Detect repo root
         id: root
@@ -26,7 +26,7 @@ jobs:
             echo "root=." >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Inject canonical/description/CSP
+      - name: Inject head meta / canonical / CSP
         uses: actions/github-script@v7
         env:
           ROOT: ${{ steps.root.outputs.root }}
@@ -36,7 +36,7 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const core = require('@actions/core');
+            // NOTE: Do NOT require('@actions/core'); github-script already injects `core`.
             const root = process.env.ROOT || '.';
             const origin = (process.env.ORIGIN || '').replace(/\/+$/,'');
             const defaultDesc = process.env.DESC || 'Evidence-backed vendor change alerts.';
@@ -93,10 +93,9 @@ jobs:
                 touched++;
               }
             }
-            core.info(`Hardening updated ${touched} HTML files.`);
 
-      - name: Render reports static grid
-        working-directory: ${{ steps.root.outputs.root }}
-        shell: bash
-        run: |
-          node scripts/render_reports_static.js
+            if (typeof core !== 'undefined' && core.info) {
+              core.info(`Hardening updated ${touched} HTML files.`);
+            } else {
+              console.log(`Hardening updated ${touched} HTML files.`);
+            }
