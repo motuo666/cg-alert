@@ -16,15 +16,20 @@ permissions:
 jobs:
   harden:
     runs-on: ubuntu-latest
+    env:
+      ORIGIN: ${{ inputs.origin }}
+      DESC: ${{ inputs.desc }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: 20
 
-      - name: Resolve site root
-        id: loc
+      - name: Determine root
+        id: root
         shell: bash
         run: |
           set -eo pipefail
@@ -34,12 +39,12 @@ jobs:
             echo "root=." >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Inject CSP/canonical/description across HTML
+      - name: Inject CSP/Canonical/Description
         uses: actions/github-script@v7
         env:
-          ROOT: ${{ steps.loc.outputs.root }}
-          ORIGIN: ${{ inputs.origin }}
-          DESC: ${{ inputs.desc }}
+          ROOT: ${{ steps.root.outputs.root }}
+          ORIGIN: ${{ env.ORIGIN }}
+          DESC: ${{ env.DESC }}
         with:
           script: |
             const fs = require('fs');
@@ -101,6 +106,8 @@ jobs:
             core.info(`Hardening updated ${touched} HTML files.`);
 
       - name: Render static reports grid
+        env:
+          ROOT: ${{ steps.root.outputs.root }}
         run: |
           node scripts/render_reports_static.js
 
@@ -114,6 +121,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else
-            git commit -m "Site hardening: inject CSP/canonical/description"
+            git commit -m "Site hardening: inject CSP/canonical/description + render reports"
             git push
           fi
