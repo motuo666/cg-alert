@@ -1,96 +1,88 @@
-// assets/app-intake.js — stable, no dependencies
+
 (function(){
   'use strict';
-
-  function $(sel, el){ return (el||document).querySelector(sel); }
-  function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
-  function vendorsToArray(s){
-    return s.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean).slice(0, 200);
-  }
-  function emailOk(s){ return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s); }
-
-  function workerURL(){
+  function $(sel){ return document.querySelector(sel); }
+  function getWorkerURL(){
     const meta = document.querySelector('meta[name="worker-url"]');
-    let base = (meta && meta.content) ? meta.content.trim() : '';
-    if (!base) return '';
-    if (base.endsWith('/')) base = base.slice(0,-1);
-    return base + '/lead';
+    const v = meta && meta.getAttribute('content') || '';
+    return (v || '').replace(/\/+$/,''); // trim trailing slash
   }
-
-  async function submitLead(payload){
-    const url = workerURL();
-    if (!url) throw new Error('Missing worker URL');
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {'content-type':'application/json','x-site-origin': location.origin},
-      body: JSON.stringify(payload)
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(()=>'');
-      throw new Error('Upstream ' + res.status + ' ' + text);
-    }
-    return await res.json().catch(()=>({ok:true}));
+  function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+  function parseDomains(s){
+    return (s||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean);
   }
-
-  function mailtoFallback(payload){
-    const to = 'sales@cg-alert.com';
-    const subj = encodeURIComponent('Enterprise intake — ' + (payload.company||''));
-    const body = encodeURIComponent(
-      'Plan: ' + payload.plan + '\n' +
-      'Company: ' + payload.company + '\n' +
-      'Email: ' + payload.email + '\n' +
-      'Vendors: ' + (payload.vendors||[]).join(', ') + '\n' +
-      'Notes: ' + (payload.notes||'') + '\n' +
-      'UA: ' + (navigator.userAgent||'') + '\n' +
-      'TS: ' + new Date().toISOString()
-    );
-    window.location.href = 'mailto:' + to + '?subject=' + subj + '&body=' + body;
+  function disableBtn(btn, on){
+    if(!btn) return;
+    btn.disabled = !!on;
+    btn.style.opacity = on ? '0.6' : '1';
+    btn.style.cursor = on ? 'not-allowed' : 'pointer';
+    btn.textContent = on ? 'Submitting' : 'Submit';
   }
-
+  function show(el, ok){
+    if(!el) return;
+    el.style.display = ok ? 'inline' : 'none';
+  }
   window.addEventListener('DOMContentLoaded', function(){
-    const form = document.getElementById('enterprise-intake');
-    const btn = document.getElementById('submit-intake');
-    const ok = document.getElementById('ok');
-    const err = document.getElementById('err');
-    if (!form || !btn) return;
-
+    const form = $('#intakeForm');
+    const btn = $('#submitBtn');
+    const ok = $('#msg');
+    const err = $('#errmsg');
+    if(!form){ return; }
     form.addEventListener('submit', async function(e){
       e.preventDefault();
-      err.style.display = 'none';
-      ok.style.display = 'none';
+      show(ok,false); show(err,false);
+      const fd = new FormData(form);
+      const company = String(fd.get('company')||'').trim();
+      const email = String(fd.get('email')||'').trim();
+      const vendors = parseDomains(String(fd.get('vendors')||''));
+      const notes = String(fd.get('notes')||'').trim();
+      const plan = String(fd.get('plan')||'enterprise');
 
-      const company = val('company');
-      const email = val('email');
-      const vendors = vendorsToArray(val('vendors'));
-      const notes = val('notes');
+      if(!company){ show(err,true); err.textContent='Company is required.'; return; }
+      if(!isEmail(email)){ show(err,true); err.textContent='Valid work email required.'; return; }
+      if(!vendors.length){ show(err,true); err.textContent='Provide at least one vendor domain.'; return; }
 
-      if (!company) { err.textContent = 'Company is required'; err.style.display='block'; return; }
-      if (!emailOk(email)) { err.textContent = 'Enter a valid work email'; err.style.display='block'; return; }
-      if (!vendors.length) { err.textContent = 'Add at least one vendor domain'; err.style.display='block'; return; }
+      disableBtn(btn,true);
+      const payload = { company, email, vendors, notes, plan };
+      const worker = getWorkerURL();
+      let okSent = false, errorMsg = '';
 
-      const payload = {
-        plan: 'enterprise',
-        company, email, vendors, notes,
-        source: 'web:intake',
-        ts: new Date().toISOString()
-      };
+      if(worker){
+        try{
+          const resp = await fetch(worker + '/lead', {
+            method: 'POST',
+            headers: { 'content-type':'application/json' },
+            body: JSON.stringify(payload),
+            mode: 'cors',
+            redirect: 'follow',
+            credentials: 'omit'
+          });
+          if(resp.ok){
+            okSent = true;
+          }else{
+            errorMsg = 'Gateway responded ' + resp.status;
+          }
+        }catch(ex){
+          errorMsg = ex && ex.message || 'Network error';
+        }
+      } else {
+        errorMsg = 'No worker endpoint configured';
+      }
 
-      btn.disabled = true;
-      btn.textContent = 'Submitting…';
-      try {
-        await submitLead(payload);
-        ok.style.display = 'block';
+      if(okSent){
+        show(ok,true);
         form.reset();
         btn.textContent = 'Submitted';
-      } catch (ex) {
-        // Fallback to mailto so the click always does something user-visible
-        try { mailtoFallback(payload); } catch(_) {}
-        err.textContent = 'Online submit failed. We opened an email draft so you can send intake directly.';
-        err.style.display = 'block';
-        btn.textContent = 'Submit';
-      } finally {
-        btn.disabled = false;
+      } else {
+        // fallback: open mailto
+        const subject = encodeURIComponent('[CG Alert] Enterprise intake');
+        const body = encodeURIComponent(
+          `Company: ${company}\nEmail: ${email}\nVendors: ${vendors.join(', ')}\nNotes: ${notes}\nPlan: ${plan}`
+        );
+        window.location.href = `mailto:sales@cg-alert.com?subject=${subject}&body=${body}`;
+        show(err,true); err.textContent = 'We could not reach the gateway, opened your email client as fallback.';
+        disableBtn(btn,false);
       }
-    }, false);
-  }, false);
+    });
+  });
 })();
