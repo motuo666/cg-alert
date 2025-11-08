@@ -103,6 +103,7 @@ jobs:
             core.info(`Hardening updated ${touched} HTML files.`);
 
       - name: Render reports static grid
+  working-directory: ${{ steps.root.outputs.root }}
         shell: bash
         env:
           ROOT: ${{ steps.root.outputs.root }}
