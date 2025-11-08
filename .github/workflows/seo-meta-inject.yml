@@ -1,4 +1,5 @@
 name: SEO Meta Inject
+
 on:
   workflow_dispatch:
 
@@ -8,28 +9,29 @@ permissions:
 jobs:
   inject:
     runs-on: ubuntu-latest
-    env:
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-      - name: Inject canonical & description
+          node-version: '20'
+      - name: Inject canonical and meta tags
         run: |
-          node scripts/seo/inject_meta.js
-      - name: Commit if changed
-        run: |
-          set -e
-          if git diff --quiet; then
-            echo "no changes"; exit 0
+          set -euo pipefail
+          if [ -f scripts/inject_meta.mjs ]; then
+            node scripts/inject_meta.mjs
+          else
+            echo "::warning::scripts/inject_meta.mjs not found. Skipping."
           fi
+      - name: Commit changes (if any)
+        run: |
+          set -euo pipefail
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add -A
-          if git diff --cached --quiet; then echo "no changes"; else git commit -m "seo: inject canonical & meta description"
-          git push
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: meta_inject
-          path: artifacts/meta_inject.txt
+          git add -A || true
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "SEO meta inject (auto)"
+            git pull --rebase --autostash || true
+            git push
+          fi

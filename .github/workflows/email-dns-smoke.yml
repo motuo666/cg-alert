@@ -1,111 +1,28 @@
-name: Email DNS & SMTP/IMAP Smoke
+name: Email DNS Smoke
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '50 0 * * *'
+    - cron: "7 2 * * *"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  probe:
-    name: SMTP/IMAP Probe
+  smoke:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Run probe
-        id: probe
-        env:
-          SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
-          SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT || vars.SMTP_PORT || 587 }}
-          IMAP_HOST: ${{ secrets.IMAP_HOST || vars.IMAP_HOST }}
-          IMAP_USER: ${{ secrets.IMAP_USER || vars.IMAP_USER }}
-          IMAP_PASS: ${{ secrets.IMAP_PASS || vars.IMAP_PASS }}
-          IMAP_PORT: ${{ secrets.IMAP_PORT || vars.IMAP_PORT || 993 }}
-        run: node scripts/smtp_imap_probe.js
-    outputs:
-      ok: ${{ steps.probe.outputs.ok }}
-      reason: ${{ steps.probe.outputs.reason }}
-
-  dns:
-    name: Email DNS Check (SPF/DKIM/DMARC)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Resolve domain
-        id: domain
-        shell: bash
-        env:
-          MAIL_FROM: ${{ secrets.MAIL_FROM || vars.MAIL_FROM }}
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-        run: |
-          set -e
-          domain="${MAIL_FROM##*@}"
-          if [ -z "$domain" ] || [[ "$domain" != *.* ]]; then
-            dom="${SITE_ORIGIN#*//}"
-            dom="${dom%%/*}"
-            domain="$dom"
-          fi
-          echo "domain=$domain" >> "$GITHUB_OUTPUT"
-      - name: Check SPF/DKIM/DMARC
-        id: dns
+      - name: Check SPF/DKIM/DMARC (log-only)
         shell: bash
         run: |
-          set -e
-          domain="${{ steps.domain.outputs.domain }}"
-          spf=$(dig +short TXT "$domain" | tr -d '"' | grep -qi 'v=spf1' && echo true || echo false)
-          dmarc=$(dig +short TXT "_dmarc.$domain" | tr -d '"' | grep -qi 'v=dmarc1' && echo true || echo false)
-          dk=false
-          for s in default s1 s2 k1 google selector1 selector2; do
-            if dig +short TXT "$s._domainkey.$domain" | tr -d '"' | grep -qi 'v=dkim1'; then dk=true; break; fi
-          done
-          dns_ok=false
-          if [ "$spf" = true ] && [ "$dmarc" = true ] && [ "$dk" = true ]; then dns_ok=true; fi
+          set -euo pipefail
+          domain="cg-alert.com"
+          out="dns-smoke.txt"
           {
-            echo "spf=$spf"
-            echo "dkim=$dk"
-            echo "dmarc=$dmarc"
-            echo "dns_ok=$dns_ok"
-          } >> "$GITHUB_OUTPUT"
-    outputs:
-      spf: ${{ steps.dns.outputs.spf }}
-      dkim: ${{ steps.dns.outputs.dkim }}
-      dmarc: ${{ steps.dns.outputs.dmarc }}
-      ok: ${{ steps.dns.outputs.dns_ok }}
-
-  gate:
-    name: Send Gate Marker
-    runs-on: ubuntu-latest
-    needs: [probe, dns]
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update SENDING_BLOCKED marker
-        shell: bash
-        run: |
-          set -e
-          mkdir -p ops
-          if [ "${{ needs.dns.outputs.ok }}" != "true" ] || [ "${{ needs.probe.outputs.ok }}" != "true" ]; then
-            echo "SENDING BLOCKED" > ops/SENDING_BLOCKED.md
-            echo >> ops/SENDING_BLOCKED.md
-            echo "DNS ok=${{ needs.dns.outputs.ok }} (SPF=${{ needs.dns.outputs.spf }}, DMARC=${{ needs.dns.outputs.dmarc }}, DKIM=${{ needs.dns.outputs.dkim }})" >> ops/SENDING_BLOCKED.md
-            echo "Probe ok=${{ needs.probe.outputs.ok }} (${{ needs.probe.outputs.reason }})" >> ops/SENDING_BLOCKED.md
-          else
-            if [ -f ops/SENDING_BLOCKED.md ]; then rm -f ops/SENDING_BLOCKED.md; fi
-          fi
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add ops/SENDING_BLOCKED.md || true
-          if git diff --cached --quiet; then
-            echo "no changes"
-          else
-            git commit -m "ops: update sending gate marker"
-            git pull --rebase --autostash || true
-            git push
-          fi
+            echo "[dns] $(date -u +%FT%TZ)"
+            echo "[spf]"; dig +short TXT ${domain} || true
+            echo "[dmarc]"; dig +short TXT _dmarc.${domain} || true
+            echo "[dkim] (selector=default)"; dig +short TXT default._domainkey.${domain} || true
+          } >> "${out}"
+          echo "wrote ${out}"

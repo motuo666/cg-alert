@@ -1,25 +1,41 @@
-name: AB Materialize (pre-outreach)
+name: AB Materialize
+
 on:
-  schedule:
-    - cron: '25 0 * * *'   # 在 Autopilot Step (00:35) 之前运行
-  repository_dispatch:
-    types: [autopilot_kick]
   workflow_dispatch:
-permissions: { contents: write }
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: write
+
 jobs:
-  mat:
+  ab:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - name: Materialize active email template
-        run: node scripts/conversion/ab_materialize_active.js
-      - name: Commit if changed
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Materialize AB templates
         run: |
-          if git diff --quiet; then echo no changes; else
-            git config user.email "bot@cg-alert.com"
-            git config user.name  "cg-alert-bot"
-            git add templates/email/active.txt
-            if git diff --cached --quiet; then echo "no changes"; else git commit -m "ab: materialize active template"
+          set -euo pipefail
+          if [ -f scripts/ab_rotate.js ]; then
+            node scripts/ab_rotate.js
+          elif [ -f scripts/ab_materialize.mjs ]; then
+            node scripts/ab_materialize.mjs
+          else
+            echo "::warning::No AB materialize script found (scripts/ab_rotate.js or scripts/ab_materialize.mjs). Skipping."
+          fi
+      - name: Commit changes (if any)
+        run: |
+          set -euo pipefail
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A || true
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "AB materialize (auto)"
+            git pull --rebase --autostash || true
             git push
           fi

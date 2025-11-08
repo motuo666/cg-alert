@@ -1,35 +1,39 @@
 name: Blacklist Refresh
+
 on:
   schedule:
-    - cron: '20 0 * * *'
-  repository_dispatch:
-    types: [kv_sync_kick]
+    - cron: "9 4 * * *"
   workflow_dispatch:
-permissions: { contents: write }
+
+permissions:
+  contents: write
+
 jobs:
-  bl:
+  refresh:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - name: Merge free domains + manual + high-bounce
-        run: node scripts/bounce/blacklist_refresh.js
-      - name: Commit if changed
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Refresh bounce blacklist
         run: |
-          if git diff --quiet; then echo no changes; else
-            git config user.email "bot@cg-alert.com"
-            git config user.name  "cg-alert-bot"
-            git add config/blacklist/domains_auto.txt
-            if git diff --cached --quiet; then
-              echo "no changes"
-            else
-              git commit -m "blacklist: refresh (free+manual+bounce)"
-              git push
-            fi
-      - name: Trigger kv_sync & autopilot
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPO: ${{ github.repository }}
+          set -euo pipefail
+          if [ -f scripts/bounce/blacklist_refresh.js ]; then
+            node scripts/bounce/blacklist_refresh.js
+          else
+            echo "::warning::scripts/bounce/blacklist_refresh.js not found. Skipping."
+          fi
+      - name: Commit changes (if any)
         run: |
-          curl -s -X POST -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json"             https://api.github.com/repos/${GITHUB_REPO}/dispatches -d '{"event_type":"kv_sync_kick"}' || true
-          curl -s -X POST -H "Authorization: Bearer ${GITHUB_TOKEN}" -H "Accept: application/vnd.github+json"             https://api.github.com/repos/${GITHUB_REPO}/dispatches -d '{"event_type":"autopilot_kick"}' || true
+          set -euo pipefail
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A || true
+          if git diff --cached --quiet; then
+            echo "no changes"
+          else
+            git commit -m "Blacklist refresh (auto)"
+            git pull --rebase --autostash || true
+            git push
+          fi
