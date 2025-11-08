@@ -1,88 +1,124 @@
-'use strict';
+// Minimal, robust intake form handling
 (function () {
-  function $(sel, root) { return (root || document).querySelector(sel); }
-  function getWorkerURL() {
-    const m = $('meta[name="worker-url"]');
-    if (m && m.content) return m.content.trim().replace(/\/+$/, '');
-    if (window.WORKER_URL) return String(window.WORKER_URL).trim().replace(/\/+$/, '');
-    return '';
-  }
-  function ensureStatusEl(form) {
-    let el = document.getElementById('intake-status');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'intake-status';
-      el.setAttribute('role', 'status');
-      el.style.marginTop = '12px';
-      el.style.fontSize = '14px';
-      el.style.opacity = '0.95';
-      form.appendChild(el);
+  function $(sel) { return document.querySelector(sel); }
+  function notify(msg, ok) {
+    var c = document.getElementById('msg');
+    if (!c) {
+      c = document.createElement('div');
+      c.id = 'msg';
+      c.style.marginTop = '12px';
+      c.style.fontSize = '14px';
+      document.body.appendChild(c);
     }
-    return el;
-  }
-  function notify(form, text, ok) {
-    const el = ensureStatusEl(form);
-    el.textContent = text;
-    el.style.color = ok ? '#0a7' : '#b00';
+    c.textContent = msg;
+    c.style.color = ok ? '#0f766e' : '#b91c1c';
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    const form = $('form#intake');
+  function emailOK(e) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e || '');
+  }
+
+  function getMeta(name) {
+    var m = document.querySelector('meta[name="'+name+'"]');
+    return m ? m.content : '';
+  }
+
+  function pickWorker() {
+    var form = document.querySelector('form');
+    var fromData = form ? (form.getAttribute('data-worker') || '') : '';
+    return window.WORKER_URL || getMeta('worker-url') || fromData || '';
+  }
+
+  function pickFallback() {
+    var form = document.querySelector('form');
+    var fromData = form ? (form.getAttribute('data-form') || '') : '';
+    return window.INTAKE_FORM_URL || getMeta('intake-form') || fromData || '';
+  }
+
+  function onReady(fn){
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn);
+    } else { fn(); }
+  }
+
+  onReady(function() {
+    var form = document.querySelector('form');
     if (!form) return;
 
-    const btn = form.querySelector('button[type="submit"], input[type="submit"]');
-    const origBtnText = btn ? (btn.textContent || btn.value) : '';
+    var btn = document.getElementById('submitBtn') || form.querySelector('button[type=submit],input[type=submit]');
+    var email = form.querySelector('input[name=email],input[type=email]');
+    var vendors = form.querySelector('input[name=vendors],textarea[name=vendors]');
+    var company = form.querySelector('input[name=company]');
+    var plan = form.querySelector('select[name=plan],input[name=plan]');
 
-    form.addEventListener('submit', async function (ev) {
-      ev.preventDefault();
+    form.addEventListener('submit', async function (e) {
+      // choose target
+      var worker = pickWorker();
+      var fallback = pickFallback();
 
-      const fd = new FormData(form);
-      const email = String(fd.get('email') || '').trim();
-      const company = String(fd.get('company') || '').trim();
-      const vendorsRaw = String(fd.get('vendors') || '').trim();
-      const cadence = String(fd.get('cadence') || 'weekly').trim();
-      const vendors = vendorsRaw ? vendorsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
-
-      // Basic validation
-      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-      if (!emailOk) {
-        notify(form, '请输入有效邮箱（Please enter a valid email）', false);
+      // If no endpoints, do nothing special and let browser submit (if action provided)
+      if (!worker && !fallback && !form.getAttribute('action')) {
+        notify('Submission endpoint missing. Please try again later.', false);
+        e.preventDefault();
         return;
       }
-      if (btn) { btn.disabled = true; if (btn.textContent !== undefined) btn.textContent = 'Submitting'; else btn.value = 'Submitting'; }
 
-      const payload = { plan: 'enterprise', email, company, vendors, cadence, ts: new Date().toISOString() };
-      const worker = getWorkerURL();
-      const endpoint = worker ? (worker + '/intake') : '/api/intake';
+      // If worker exists, we intercept
+      if (worker) e.preventDefault();
 
-      let ok = false, resText = '';
+      // basic validation
+      var emailVal = email ? (email.value||'').trim() : '';
+      if (!emailOK(emailVal)) {
+        notify('请输入有效邮箱 / Please enter a valid email.', false);
+        return;
+      }
+
+      // disable button
+      if (btn) {
+        if ('textContent' in btn) btn.textContent = 'Submitting…';
+        if ('value' in btn) btn.value = 'Submitting…';
+        btn.disabled = true;
+      }
+
       try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(payload),
-          mode: 'cors',
-          credentials: 'omit',
-        });
-        ok = res.ok;
-        resText = await res.text();
-      } catch (err) {
-        ok = false;
-        resText = String(err && err.message || err || '');
-      }
+        var payload = {
+          email: emailVal,
+          vendors: vendors ? vendors.value : '',
+          company: company ? company.value : '',
+          plan: plan ? (plan.value||'enterprise') : 'enterprise',
+          ts: new Date().toISOString(),
+          source: 'intake'
+        };
 
-      if (ok) {
-        notify(form, '提交成功，已收到你的需求，我们会尽快联系你（Submitted ✓）', true);
-        if (btn) { if (btn.textContent !== undefined) btn.textContent = 'Submitted ✓'; else btn.value = 'Submitted ✓'; }
-        try { form.reset(); } catch (_) {}
-        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
-        setTimeout(function () {
-          if (btn) { btn.disabled = false; if (btn.textContent !== undefined) btn.textContent = origBtnText; else btn.value = origBtnText; }
-        }, 4000);
-      } else {
-        notify(form, '提交失败，请稍后重试或邮件至 hello@cg-alert.com' + (resText ? (' (' + resText + ')') : ''), false);
-        if (btn) { btn.disabled = false; if (btn.textContent !== undefined) btn.textContent = origBtnText; else btn.value = origBtnText; }
+        if (worker) {
+          var url = worker.replace(/\/+$/,'') + '/intake';
+          var res = await fetch(url, {
+            method: 'POST',
+            headers: {'content-type':'application/json'},
+            body: JSON.stringify(payload),
+            mode: 'cors'
+          });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          var data = await res.json().catch(function(){ return {}; });
+          notify('已收到，我们会尽快联系你。Thanks—request received.', true);
+          form.reset();
+        } else {
+          // fall back to external form endpoint by creating hidden inputs and submitting
+          form.setAttribute('action', fallback);
+          form.submit();
+          return;
+        }
+
+      } catch (err) {
+        console.error(err);
+        notify('提交失败，请重试 / Failed to submit. Please try again.', false);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          if ('textContent' in btn) btn.textContent = 'Submit';
+          if ('value' in btn) btn.value = 'Submit';
+        }
       }
-    }, { passive: false });
+    }, false);
   });
 })();
