@@ -1,4 +1,10 @@
-(function(){
+
+// --- Global guard: never open mailto: from intake page ---
+document.addEventListener('click', (ev) => {
+  const a = ev.target && ev.target.closest ? ev.target.closest('a[href^="mailto:"]') : null;
+  if (a) { ev.preventDefault(); return false; }
+}, { capture: true });
+\n(function(){
   const form   = document.getElementById('intake');
   const status = document.getElementById('intake_status');
   if(!form) return;
