@@ -1,88 +1,88 @@
-(function(){
-  'use strict';
-  function $(sel, el){ return (el||document).querySelector(sel); }
-  function $all(sel, el){ return Array.from((el||document).querySelectorAll(sel)); }
-
-  function serialize(form){
-    const data = new FormData(form);
-    const obj = {};
-    data.forEach((v,k)=>{ obj[k]=typeof v==='string'?v.trim():v; });
-    return obj;
+'use strict';
+(function () {
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function getWorkerURL() {
+    const m = $('meta[name="worker-url"]');
+    if (m && m.content) return m.content.trim().replace(/\/+$/, '');
+    if (window.WORKER_URL) return String(window.WORKER_URL).trim().replace(/\/+$/, '');
+    return '';
+  }
+  function ensureStatusEl(form) {
+    let el = document.getElementById('intake-status');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'intake-status';
+      el.setAttribute('role', 'status');
+      el.style.marginTop = '12px';
+      el.style.fontSize = '14px';
+      el.style.opacity = '0.95';
+      form.appendChild(el);
+    }
+    return el;
+  }
+  function notify(form, text, ok) {
+    const el = ensureStatusEl(form);
+    el.textContent = text;
+    el.style.color = ok ? '#0a7' : '#b00';
   }
 
-  function disable(btn, on){
-    if(!btn) return;
-    btn.disabled = !!on;
-    btn.setAttribute('aria-busy', on ? 'true':'false');
-  }
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = $('form#intake');
+    if (!form) return;
 
-  async function postJSON(url, payload){
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {'content-type':'application/json'},
-      body: JSON.stringify(payload),
-      credentials: 'omit',
-      mode: 'cors',
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    return await res.json().catch(()=>({ok:true}));
-  }
+    const btn = form.querySelector('button[type="submit"], input[type="submit"]');
+    const origBtnText = btn ? (btn.textContent || btn.value) : '';
 
-  function getWorkerURL(){
-    const m = document.querySelector('meta[name="worker-url"]');
-    return m && m.content && m.content.startsWith('http') ? m.content : '';
-  }
-
-  function validate(form){
-    let ok = true;
-    $all('input[required],select[required],textarea[required]', form).forEach(el=>{
-      el.classList.remove('cg-invalid');
-      if(!el.value || (el.type==='email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(el.value))){
-        el.classList.add('cg-invalid');
-        ok = false;
-      }
-    });
-    return ok;
-  }
-
-  function hook(){
-    const form = $('#intake-form');
-    if(!form) return;
-    const btn = $('#intake-submit');
-    const status = $('#intake-status');
-    form.addEventListener('submit', async (ev)=>{
+    form.addEventListener('submit', async function (ev) {
       ev.preventDefault();
-      status.textContent = '';
-      if(!validate(form)){
-        status.textContent = 'Please fill the required fields.';
+
+      const fd = new FormData(form);
+      const email = String(fd.get('email') || '').trim();
+      const company = String(fd.get('company') || '').trim();
+      const vendorsRaw = String(fd.get('vendors') || '').trim();
+      const cadence = String(fd.get('cadence') || 'weekly').trim();
+      const vendors = vendorsRaw ? vendorsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+      // Basic validation
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!emailOk) {
+        notify(form, '请输入有效邮箱（Please enter a valid email）', false);
         return;
       }
-      disable(btn, true);
-      const payload = serialize(form);
-      const worker = getWorkerURL();
-      try{
-        if(worker){
-          await postJSON(worker + '/intake', {type:'enterprise', payload});
-          status.textContent = 'Received. We will confirm within 1 business day.';
-        }else{
-          // Fallback: mailto
-          const body = encodeURIComponent(JSON.stringify(payload,null,2));
-          window.location.href = 'mailto:hello@cg-alert.com?subject=Enterprise%20Intake&body=' + body;
-          status.textContent = 'Opened email client as fallback.';
-        }
-        form.reset();
-      }catch(e){
-        console.error(e);
-        status.textContent = 'Submit failed. Try again or email hello@cg-alert.com';
-      }finally{
-        disable(btn, false);
-      }
-    }, {passive:false});
-  }
+      if (btn) { btn.disabled = true; if (btn.textContent !== undefined) btn.textContent = 'Submitting'; else btn.value = 'Submitting'; }
 
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', hook);
-  }else{
-    hook();
-  }
+      const payload = { plan: 'enterprise', email, company, vendors, cadence, ts: new Date().toISOString() };
+      const worker = getWorkerURL();
+      const endpoint = worker ? (worker + '/intake') : '/api/intake';
+
+      let ok = false, resText = '';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+          mode: 'cors',
+          credentials: 'omit',
+        });
+        ok = res.ok;
+        resText = await res.text();
+      } catch (err) {
+        ok = false;
+        resText = String(err && err.message || err || '');
+      }
+
+      if (ok) {
+        notify(form, '提交成功，已收到你的需求，我们会尽快联系你（Submitted ✓）', true);
+        if (btn) { if (btn.textContent !== undefined) btn.textContent = 'Submitted ✓'; else btn.value = 'Submitted ✓'; }
+        try { form.reset(); } catch (_) {}
+        try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (_) {}
+        setTimeout(function () {
+          if (btn) { btn.disabled = false; if (btn.textContent !== undefined) btn.textContent = origBtnText; else btn.value = origBtnText; }
+        }, 4000);
+      } else {
+        notify(form, '提交失败，请稍后重试或邮件至 hello@cg-alert.com' + (resText ? (' (' + resText + ')') : ''), false);
+        if (btn) { btn.disabled = false; if (btn.textContent !== undefined) btn.textContent = origBtnText; else btn.value = origBtnText; }
+      }
+    }, { passive: false });
+  });
 })();
