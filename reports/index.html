@@ -1,54 +1,55 @@
-<!doctype html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Reports — CG Alert</title>
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="canonical" href="https://www.cg-alert.com/reports/"/>
-<link rel="stylesheet" href="/assets/home-v3c.css">
-<meta name="description" content="Evidence-backed vendor change reports. Search and browse recent alerts.">
+<link href="/icon.svg" rel="icon" type="image/svg+xml"/>
+<link href="https://www.cg-alert.com/reports/" rel="canonical">
+<link href="/assets/home-v3c.css" rel="stylesheet"/>
+<meta content="Evidence-backed vendor change reports. Search and browse recent alerts." name="description"/>
 <style>
   .cg-searchbar{display:flex;gap:.75rem;align-items:center;margin:1.25rem 0;}
   .cg-searchbar input{flex:1; padding:.75rem 1rem; border:1px solid #e5e7eb; border-radius:12px; font-size:16px; outline:none}
   .cg-searchbar input:focus{box-shadow:0 0 0 3px rgba(59,130,246,.2); border-color:#93c5fd}
   .card-meta{color:#6b7280;font-size:.9rem;margin-bottom:.5rem}
 </style>
-</head><body>
+</link><style id="reports-searchbar-patch">
+.cg-searchbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:16px 0 8px 0;}
+.cg-searchbar input[type='search']{flex:1;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;font-size:16px;outline:none;}
+.cg-searchbar a.cg-btn{white-space:nowrap;}
+</style></head><body>
 <header class="cg-topbar">
-  <div class="cg-wrap cg-nav">
-    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
-    <nav class="cg-links" id="topnav">
-      <a href="/#pricing">Pricing</a>
-      <a href="#how">How it works</a>
-      <a href="#evidence">Evidence</a>
-      <a href="#compare">Compare</a>
-      <a href="#faq">FAQ</a>
-      
-    </nav>
-  </div>
+<div class="cg-wrap cg-nav">
+<a class="cg-brand" href="/"><img alt="CG Alert" height="40" src="/icon.svg" width="40"/><span>CG Alert</span></a>
+<nav class="cg-links" id="topnav">
+<a href="/#pricing">Pricing</a>
+<a href="#how">How it works</a>
+<a href="#evidence">Evidence</a>
+<a href="#compare">Compare</a>
+<a href="#faq">FAQ</a>
+</nav>
+</div>
 </header>
-
 <section class="cg-wrap">
-  <h1>Reports</h1>
-  <div class="cg-searchbar">
-    <input id=\"q\" type="search" placeholder="Search vendor, title, URL, hash…" style=\"width:100%;max-width:680px;height:44px;padding:10px 14px;border:1px solid #ddd;border-radius:12px;font-size:16px;\">
-  </div>
-  <div id="grid" class="cg-grid3"></div>
-  <div id="empty" class="cg-note" style="display:none;margin:1rem 0;">
+<h1>Reports</h1>
+<div class="cg-searchbar">
+<input #ddd;border-radius:12px;font-size:16px;\"="" 14px;border:1px="" id='\"q\"' placeholder="Search vendor, title, URL, hash…" solid="" style='\"width:100%;max-width:680px;height:44px;padding:10px' type="search"/>
+</div>
+<div class="cg-grid3" id="grid"></div>
+<div class="cg-note" id="empty" style="display:none;margin:1rem 0;">
     No reports yet. New evidence will appear here automatically after the daily build.
   </div>
 </section>
-
 <footer class="cg-footer">
-  <div class="cg-wrap cg-footlinks">
-    <a href="/who-uses/">Who uses</a>
-    <a href="/about/">About</a>
-    <a href="/reports/">Reports</a>
-    <a href="/rss/index.xml">RSS</a>
-    <a href="/terms/">Terms</a>
-    <a href="/privacy/">Privacy</a>
-    <span>© CG Alert — evidence-backed vendor change alerts.</span>
-  </div>
+<div class="cg-wrap cg-footlinks">
+<a href="/who-uses/">Who uses</a>
+<a href="/about/">About</a>
+<a href="/reports/">Reports</a>
+<a href="/rss/index.xml">RSS</a>
+<a href="/terms/">Terms</a>
+<a href="/privacy/">Privacy</a>
+<span>© CG Alert — evidence-backed vendor change alerts.</span>
+</div>
 </footer>
-
 <script>
 (async () => {
   const grid = document.getElementById('grid');
