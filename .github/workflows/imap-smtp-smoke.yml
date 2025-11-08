@@ -1,9 +1,8 @@
 name: IMAP/SMTP Smoke
-
 on:
-  workflow_dispatch:
   schedule:
     - cron: '50 0 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,19 +11,46 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     env:
-      SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
-      SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
-      SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
       IMAP_HOST: ${{ secrets.IMAP_HOST || vars.IMAP_HOST }}
       IMAP_USER: ${{ secrets.IMAP_USER || vars.IMAP_USER }}
       IMAP_PASS: ${{ secrets.IMAP_PASS || vars.IMAP_PASS }}
-      IMAP_PORT: ${{ vars.IMAP_PORT || '993' }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
+      SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - name: Probe
-        run: node scripts/smtp_imap_probe.js
-      - name: Install deps
-        run: npm ci
+      - name: IMAP login (993)
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$IMAP_HOST" && echo "::warning::IMAP_HOST empty"; true
+          python3 - <<'PY'
+import imaplib, os, sys
+host=os.environ.get("IMAP_HOST",""); user=os.environ.get("IMAP_USER",""); pw=os.environ.get("IMAP_PASS","")
+if not host or not user or not pw: sys.exit(0)
+m=imaplib.IMAP4_SSL(host, 993); m.login(user, pw); m.select("INBOX"); print("OK IMAP:", m.list()[1][:1]); m.logout()
+PY
+      - name: SMTP login (587)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+import smtplib, os, sys, ssl
+host=os.environ.get("SMTP_HOST",""); user=os.environ.get("SMTP_USER",""); pw=os.environ.get("SMTP_PASS","")
+if not host or not user or not pw: sys.exit(0)
+ctx=ssl.create_default_context()
+with smtplib.SMTP(host, 587) as s:
+    s.starttls(context=ctx)
+    s.login(user, pw)
+    print("OK SMTP: logged in")
+PY
+      - name: Slack notify
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+        run: |
+          test -z "$SLACK_WEBHOOK_URL" && exit 0
+          status="${{ job.status }}"
+          jq -n --arg t "📮 IMAP/SMTP smoke: $status" \
+                '{text: $t}' \
+            | curl -sS -X POST -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null

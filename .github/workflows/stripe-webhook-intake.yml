@@ -1,5 +1,4 @@
 name: Stripe Webhook Intake
-
 on:
   repository_dispatch:
     types: [stripe-webhook]
@@ -14,9 +13,9 @@ on:
         required: false
         default: ""
       event_type:
-        description: "Test only: event type"
+        description: "Test only: Stripe event type"
         required: false
-        default: "checkout.session.completed"
+        default: ""
 
 permissions:
   contents: write
@@ -37,42 +36,41 @@ jobs:
           # Extract values from either repository_dispatch.client_payload.* or workflow_dispatch.inputs.*
           email="$(jq -r '.client_payload.email // .inputs.email // ""' <<<"$payload")"
           customer_id="$(jq -r '.client_payload.customer_id // .inputs.customer_id // ""' <<<"$payload")"
-          event_type="$(jq -r '.client_payload.event_type // .inputs.event_type // ""' <<<"$payload")"
-          echo "email=${email}" >> "$GITHUB_OUTPUT"
-          echo "customer_id=${customer_id}" >> "$GITHUB_OUTPUT"
-          echo "event_type=${event_type}" >> "$GITHUB_OUTPUT"
+          event_type="$(jq -r '.client_payload.event_type // .inputs.event_type // .action // ""' <<<"$payload")"
+          printf 'email=%s\ncustomer_id=%s\nevent_type=%s\n' "$email" "$customer_id" "$event_type" >> "$GITHUB_OUTPUT"
 
-      - name: Log parsed values
-        shell: bash
-        run: |
-          echo "email=${{ steps.parse.outputs.email }}"
-          echo "customer_id=${{ steps.parse.outputs.customer_id }}"
-          echo "event_type=${{ steps.parse.outputs.event_type }}"
-
-      - name: Persist intake record to repo
+      - name: Append intake row
+        id: write
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p data/intakes
-          ts="$(date -u +%Y%m%dT%H%M%SZ)"
-          file="data/intakes/${ts}.json"
-          cat > "${file}" <<JSON
-          {
-            "email": "${{ steps.parse.outputs.email }}",
-            "customer_id": "${{ steps.parse.outputs.customer_id }}",
-            "event_type": "${{ steps.parse.outputs.event_type }}",
-            "source_event": "${{ github.event_name }}",
-            "run_id": "${{ github.run_id }}",
-            "run_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          }
-          JSON
+          mkdir -p data
+          file="data/intakes.csv"
+          test -f "$file" || echo "timestamp,email,customer_id,event_type,source_event,run_id,run_url" > "$file"
+          ts="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          src="${{ github.event_name }}"
+          run_id="${{ github.run_id }}"
+          run_url="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # CSV-safe append
+          printf '"%s","%s","%s","%s","%s","%s","%s"\n' \
+            "$ts" "${{ steps.parse.outputs.email }}" "${{ steps.parse.outputs.customer_id }}" \
+            "${{ steps.parse.outputs.event_type }}" "$src" "$run_id" "$run_url" >> "$file"
 
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add "${file}"
-          if git diff --cached --quiet; then
-            echo "no changes to commit"
-          else
-            git commit -m "intake: stripe webhook ${{ steps.parse.outputs.event_type }} (${{ steps.parse.outputs.email }})"
-            git push || true
-          fi
+      - name: Commit intake
+        shell: bash
+        run: |
+          chmod +x scripts/ci/commit_or_skip.sh || true
+          scripts/ci/commit_or_skip.sh "intake: stripe webhook ${{ steps.parse.outputs.event_type }} (${{ steps.parse.outputs.email }})"
+
+      - name: Slack notify
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+        shell: bash
+        run: |
+          test -z "$SLACK_WEBHOOK_URL" && exit 0
+          jq -n \
+            --arg t "✅ Stripe webhook: ${{ steps.parse.outputs.event_type }} (${{ steps.parse.outputs.email }})" \
+            --arg u "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            '{text: "\($t)\n\($u)"}' \
+          | curl -sS -X POST -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null

@@ -14,27 +14,41 @@ jobs:
       STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY || secrets.STRIPE_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
-      - name: Reconcile recent paid sessions → customers.csv
+
+      - name: Reconcile customers.csv from dispatch payload
+        if: ${{ github.event_name == 'repository_dispatch' }}
+        id: reconcile_from_dispatch
+        shell: bash
         run: |
-          set -e
-          node ops/stripe_reconcile.js || true
-      - name: Commit customers.csv (if changed)
+          set -euo pipefail
+          payload="$(cat "$GITHUB_EVENT_PATH" 2>/dev/null || echo '{}')"
+          email="$(jq -r '.client_payload.email // ""' <<<"$payload")"
+          plan="$(jq -r '.client_payload.plan // ""' <<<"$payload")"
+          vendors="$(jq -r '.client_payload.vendors // ""' <<<"$payload")"
+          rhythm="$(jq -r '.client_payload.rhythm // "weekly"' <<<"$payload")"
+          mkdir -p data
+          file="customers.csv"
+          test -f "$file" || echo "email,company,plan,rhythm,vendors,created_at" > "$file"
+          ts="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          # Upsert naive (remove existing email if any, then append)
+          tmp="$(mktemp)"
+          grep -viE "^[^\"]*\"?$email\"?," "$file" > "$tmp" || true
+          mv "$tmp" "$file"
+          printf '"%s","","%s","%s","%s","%s"\n' "$email" "$plan" "$rhythm" "$vendors" "$ts" >> "$file"
+
+      - name: Commit reconciliation
+        shell: bash
         run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add customers.csv data/intakes.csv || true
-          if git diff --cached --quiet; then
-            echo "no changes"
-          else
-            git commit -m "stripe: reconcile customers (dispatch: stripe_paid)"
-            git pull --rebase --autostash || true
-            git push
-          fi
+          chmod +x scripts/ci/commit_or_skip.sh || true
+          scripts/ci/commit_or_skip.sh "stripe: reconcile customers (dispatch: stripe_paid)"
+
       - name: Slack notify
         if: always()
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
         run: |
           test -z "$SLACK_WEBHOOK_URL" && exit 0
-          jq -n --arg t "✅ Stripe dispatch: stripe_paid reconciled" '{text:$t}'           | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
+          jq -n --arg t "✅ Stripe dispatch: stripe_paid reconciled" \
+                --arg u "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                '{text: "\($t)\n\($u)"}' \
+            | curl -sS -X POST -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
