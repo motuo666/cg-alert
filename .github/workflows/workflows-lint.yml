@@ -16,5 +16,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: reviewdog/action-actionlint@v1
         with:
-          reporter: local
-          fail_on_error: true
+          reporter: local        # 输出到日志；不要求 checks: write
+          fail_level: error      # 替代 fail_on_error，出现 error 级别即失败
+          actionlint_version: latest
