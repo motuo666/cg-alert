@@ -3,13 +3,13 @@ name: All Systems Go
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 3 * * *'  # daily sanity
+    - cron: '17 1 * * *'
 
 permissions:
   contents: read
 
 jobs:
-  dryrun:
+  check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,61 +19,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "Checking required paths..."
+          echo "Checking required paths"
           for p in index.html pricing/index.html reports/index.html rss/index.html intake/index.html assets; do
             if [ ! -e "$p" ]; then
               echo "::warning::missing $p"
             fi
           done
 
-      - name: Placeholder scan
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ ! -x scripts/ci/scan_placeholders.sh ]; then
-            echo "::warning::scripts/ci/scan_placeholders.sh not found; creating a temp copy"
-            mkdir -p scripts/ci
-            cat > scripts/ci/scan_placeholders.sh <<'EOS'
-#!/usr/bin/env bash
-set -euo pipefail
+      - name: Make scanner executable
+        run: chmod +x scripts/ci/scan_placeholders.sh || true
 
-echo "[scan] placeholder scan starting..."
-
-EXCLUDES=( ".git" "node_modules" "dist" "build" "out" "docs" "evidence/.pending" )
-PRUNE_EXPR=""
-for d in "${EXCLUDES[@]}"; do PRUNE_EXPR+="-path ./$d -prune -o "; done
-INCLUDE_EXT="\( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' -o -name '*.ts' -o -name '*.tsx' -o -name '*.sh' -o -name '*.py' -o -name '*.go' -o -name '*.rb' -o -name '*.yml' -o -name '*.yaml' -o -name '*.json' -o -name '*.md' -o -name '*.txt' -o -name '*.env' \)"
-ERROR_PAT='(<<ImageDisplayed>>|conversation too long; truncated|https://buy\.stripe\.com/\.\.\.|https://forms\.gle/\.\.\.|YOUR_NETLIFY_SITE_URL)'
-WARN_PAT='(^|\W)(TODO|FIXME)(\W|$)'
-
-errs=0
-mapfile -t files < <(eval "find . ${PRUNE_EXPR} -type f ${INCLUDE_EXT} -print")
-if [ "${#files[@]}" -eq 0 ]; then echo "[scan] no files to scan (ok)"; exit 0; fi
-
-echo "[scan] scanning ${#files[@]} files..."
-
-if grep -RIn -- "${files[@]}" -E "$ERROR_PAT" >/tmp/scan_errors.txt 2>/dev/null; then
-  echo "::group::Error: Found hard placeholder patterns"
-  cat /tmp/scan_errors.txt
-  echo "::endgroup::"
-  echo "::error::Hard placeholder(s) detected (see group above)."
-  errs=1
-else
-  echo "[scan] no hard placeholders found"
-fi
-
-if grep -RIn -- "${files[@]}" -E "$WARN_PAT" >/tmp/scan_warnings.txt 2>/dev/null; then
-  echo "::group::Warning: Found TODO/FIXME"
-  cat /tmp/scan_warnings.txt
-  echo "::endgroup::"
-  echo "::warning::Found TODO/FIXME comments (non-blocking)."
-else
-  echo "[scan] no TODO/FIXME found"
-fi
-
-if [ "$errs" -ne 0 ]; then exit 1; fi
-echo "[scan] done."
-EOS
-            chmod +x scripts/ci/scan_placeholders.sh
-          fi
-          bash scripts/ci/scan_placeholders.sh
+      - name: Scan for hard placeholders
+        run: scripts/ci/scan_placeholders.sh
