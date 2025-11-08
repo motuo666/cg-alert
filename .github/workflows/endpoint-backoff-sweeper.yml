@@ -1,9 +1,8 @@
 name: Endpoint Backoff Sweeper
-
 on:
-  schedule:
-    - cron: "23 * * * *"
   workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * *'
 
 permissions:
   contents: write
@@ -16,24 +15,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Sweep endpoints with backoff
+      - name: Sweep backoff endpoints
+        shell: bash
         run: |
           set -euo pipefail
           if [ -f scripts/discovery/endpoint_backoff_sweeper.js ]; then
             node scripts/discovery/endpoint_backoff_sweeper.js
           else
-            echo "::warning::scripts/discovery/endpoint_backoff_sweeper.js not found. Skipping."
-          fi
-      - name: Commit changes (if any)
-        run: |
-          set -euo pipefail
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A || true
-          if git diff --cached --quiet; then
-            echo "no changes"
-          else
-            git commit -m "Endpoint backoff sweep (auto)"
-            git pull --rebase --autostash || true
-            git push
+            echo "::warning::scripts/discovery/endpoint_backoff_sweeper.js not found"
           fi

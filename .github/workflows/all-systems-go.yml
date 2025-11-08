@@ -1,33 +1,28 @@
 name: All Systems Go
-
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 1 * * *'
+    - cron: '23 1 * * *'
 
 permissions:
   contents: read
 
 jobs:
-  check:
+  dryrun:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Check required paths
         shell: bash
         run: |
           set -euo pipefail
-          echo "Checking required paths"
+          echo "Checking required paths..."
           for p in index.html pricing/index.html reports/index.html rss/index.html intake/index.html assets; do
             if [ ! -e "$p" ]; then
               echo "::warning::missing $p"
             fi
           done
-
-      - name: Make scanner executable
-        run: chmod +x scripts/ci/scan_placeholders.sh || true
-
-      - name: Scan for hard placeholders
-        run: scripts/ci/scan_placeholders.sh
+      - name: Placeholder scan (code only)
+        shell: bash
+        run: |
+          bash scripts/ci/scan_placeholders.sh

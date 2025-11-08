@@ -1,49 +1,26 @@
 name: RSS Postprocess
-
 on:
   workflow_dispatch:
   schedule:
-    - cron: "33 1 * * *"
+    - cron: '7 1 * * *'
 
 permissions:
   contents: write
 
 jobs:
-  post:
+  rss:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Build full sitemaps and RSS
+      - name: Build site RSS/Index
+        shell: bash
         run: |
           set -euo pipefail
           if [ -f scripts/sitemaps_full.cjs ]; then
             node scripts/sitemaps_full.cjs
-          elif [ -f scripts/build_sitemap.mjs ]; then
-            node scripts/build_sitemap.mjs
           else
-            echo "::warning::No sitemap builder found. Skipping."
-          fi
-      - name: Ping IndexNow (optional)
-        run: |
-          set -euo pipefail
-          if [ -f scripts/seo/ping_indexnow.js ]; then
-            node scripts/seo/ping_indexnow.js || echo "::warning::IndexNow ping failed (non-blocking)"
-          else
-            echo "::notice::No ping_indexnow script. Skipping."
-          fi
-      - name: Commit changes (if any)
-        run: |
-          set -euo pipefail
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A || true
-          if git diff --cached --quiet; then
-            echo "no changes"
-          else
-            git commit -m "RSS & sitemap postprocess (auto)"
-            git pull --rebase --autostash || true
-            git push
+            echo "::warning::scripts/sitemaps_full.cjs not found"
           fi

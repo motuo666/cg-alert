@@ -1,41 +1,25 @@
 name: AB Materialize
-
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 3 * * *"
+    inputs:
+      variant:
+        description: "A/B variant name"
+        required: false
+        default: "A"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  ab:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
       - name: Materialize AB templates
+        shell: bash
         run: |
           set -euo pipefail
-          if [ -f scripts/ab_rotate.js ]; then
-            node scripts/ab_rotate.js
-          elif [ -f scripts/ab_materialize.mjs ]; then
-            node scripts/ab_materialize.mjs
-          else
-            echo "::warning::No AB materialize script found (scripts/ab_rotate.js or scripts/ab_materialize.mjs). Skipping."
-          fi
-      - name: Commit changes (if any)
-        run: |
-          set -euo pipefail
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A || true
-          if git diff --cached --quiet; then
-            echo "no changes"
-          else
-            git commit -m "AB materialize (auto)"
-            git pull --rebase --autostash || true
-            git push
-          fi
+          echo "[ab] variant=${{ inputs.variant }}"
+          [ -f outreach/templates/A.html ] || echo "::warning::missing outreach/templates/A.html"
+          [ -f outreach/templates/B.html ] || echo "::warning::missing outreach/templates/B.html"
+          echo "[ab] done"

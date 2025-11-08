@@ -1,37 +1,26 @@
 name: SEO Meta Inject
-
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '33 0 * * *'
 
 permissions:
   contents: write
 
 jobs:
-  inject:
+  seo:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Inject canonical and meta tags
+      - name: Inject meta tags
+        shell: bash
         run: |
           set -euo pipefail
           if [ -f scripts/inject_meta.mjs ]; then
             node scripts/inject_meta.mjs
           else
-            echo "::warning::scripts/inject_meta.mjs not found. Skipping."
-          fi
-      - name: Commit changes (if any)
-        run: |
-          set -euo pipefail
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A || true
-          if git diff --cached --quiet; then
-            echo "no changes"
-          else
-            git commit -m "SEO meta inject (auto)"
-            git pull --rebase --autostash || true
-            git push
+            echo "::warning::scripts/inject_meta.mjs not found"
           fi
