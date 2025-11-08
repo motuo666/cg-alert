@@ -1,156 +1,43 @@
-<!doctype html><html lang="en">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Intake — CG Alert</title>
-  <link rel="canonical" href="https://www.cg-alert.com/intake/"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CG Alert — Enterprise Intake</title>
+  <meta name="description" content="Tell us your vendors and delivery preferences.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
+  <link rel="canonical" href="https://www.cg-alert.com/intake/">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <meta name="description" content="Intake — CG Alert">
-  <link rel="stylesheet" href="/assets/home-v3c.css">
-  <link rel="stylesheet" href="/assets/form-enterprise.css">
+</head>
+<body style="font-family: ui-sans-serif, system-ui, -apple-system; max-width: 720px; margin: 40px auto; padding: 0 16px;">
+  <header>
+    <h1 style="font-size: 28px; margin: 0 0 8px;">Enterprise Intake</h1>
+    <p style="color:#334155;margin:0 0 24px;">No calls required. Fully async.</p>
+  </header>
 
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;"><script>window.INTAKE_FORM_URL="__INTAKE_FORM_URL__";window.WORKER_URL="__WORKER_URL__";</script></head>
-<body>
-<header class="cg-topbar">
-<div class="cg-wrap cg-nav">
-<a class="cg-brand" href="/"><img alt="CG Alert" height="40" src="/icon.svg" width="40"/><span>CG Alert</span></a>
-<nav class="cg-links" id="topnav">
-<a href="/#pricing">Pricing</a>
-<a href="#how">How it works</a>
-<a href="#evidence">Evidence</a>
-<a href="#compare">Compare</a>
-<a href="#faq">FAQ</a>
-</nav>
-</div>
-</header>
-<main class="cg-wrap" style="padding-top:28px">
-  <h1 style="font-weight:900;margin:0 0 10px">Intake</h1>
-  
-<meta name="worker-url" content="https://api.cg-alert.com"> <!-- Fill with your Worker URL, e.g., https://lead-gateway.<zone>.workers.dev -->
-<p>Tell us where to deliver your alerts. Email-only delivery.</p>
-<form id="intake" method="post" novalidate>
-  <div class="intake-hero cg-wrap">
-    <h1>Tell us where to deliver</h1>
-    <p>Email‑only delivery. Fully async. No calls.</p>
-  </div>
-  <div class="cg-wrap form-card">
-    <div class="form-grid">
-      <div class="field">
-        <label for="email">Work email</label>
-        <input id="email" name="email" type="email" required placeholder="you@company.com" autocomplete="email">
-        <small>We’ll send evidence and receipts here.</small>
-      </div>
-      <div class="field">
-        <label for="company">Company</label>
-        <input id="company" name="company" required placeholder="ACME Inc.">
-      </div>
-      <div class="field">
-        <label for="domain">Company domain</label>
-        <input id="domain" name="domain" required placeholder="acme.com">
-      </div>
-      <div class="field">
-        <label for="plan">Plan</label>
-        <select id="plan" name="plan" required>
-          <option value="">Choose a plan…</option>
-          <option value="portfolio">Portfolio — $2,988/yr</option>
-          <option value="business">Business — $6,000/yr</option>
-          <option value="enterprise">Enterprise — $18,000+/yr (we'll contact you)</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="vendors">Vendors to monitor (comma‑separated)</label>
-        <input id="vendors" name="vendors" placeholder="e.g., HubSpot, Salesforce, Snowflake">
-      </div>
-      <div class="field">
-        <label for="region">Region</label>
-        <select id="region" name="region">
-          <option value="">Select region…</option>
-          <option>APAC</option><option>EMEA</option><option>AMER</option>
-        </select>
-      </div>
-      <div class="field" style="grid-column:1/-1">
-        <label for="notes">Notes (optional)</label>
-        <textarea id="notes" name="notes" rows="4" placeholder="Anything we should know?"></textarea>
-      </div>
-      <input type="hidden" name="description" value="CG Alert intake">
-    </div>
-    <div class="actions">
-      <button class="btn-primary" type="submit">Submit</button>
-      <span class="badge-ok">Email delivery</span>
-      <span id="intake_status" class="note"></span>
-    </div>
-    <p class="note">By submitting, you agree to our <a href="/terms/">Terms</a> and <a href="/privacy/">Privacy Policy</a>.</p>
-    <div id="intake_success" class="success">Received. We’ll email you shortly.</div>
-    <div id="intake_error" class="error">Something went wrong. Please try again or email <a href="/intake/">ops@cg-alert.com</a>.</div>
-  </div>
-</form>
-<script src="/assets/app-intake.js"></script>
+  <form id="intake" novalidate data-worker="" data-form="">
+    <label>Company Email<br><input name="email" type="email" required placeholder="you@company.com" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
+    <div style="height:12px"></div>
+    <label>Company Name<br><input name="company" required placeholder="Acme Inc." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
+    <div style="height:12px"></div>
+    <label>Vendors (comma separated)<br><input name="vendors" placeholder="okta.com, slack.com, ... " style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
+    <div style="height:12px"></div>
+    <label>Frequency<br>
+      <select name="cadence" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;">
+        <option value="weekly">Weekly</option>
+        <option value="daily">Daily</option>
+      </select>
+    </label>
+    <div style="height:16px"></div>
+    <button type="submit" style="background:#0e7490;color:white;border:none;padding:10px 16px;border-radius:10px;">Submit</button>
+    <div id="notice" aria-live="polite"></div>
+  </form>
 
-</main>
-<footer class="cg-footer"><div class="cg-wrap cg-footlinks">
-  <a href="/who-uses/">Who uses</a><a href="/about/">About</a><a href="/reports/">Reports</a><a href="/rss/">RSS</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a>
-  <span>© CG Alert — evidence-backed vendor change alerts.</span>
-</div></footer>
-<script>
-(function(){
-  var form = document.querySelector('form');
-  if(!form) return;
-  function setMsg(el, msg){
-    if(el && el.setCustomValidity){
-      el.setCustomValidity('');
-      if(!el.value || (el.type==='email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(el.value))){
-        el.setCustomValidity(msg);
-      }
-    }
-  }
-  var required = Array.from(form.querySelectorAll('input[required], textarea[required], input[name=email], input[name=company]'));
-  form.addEventListener('submit', function(e){
-    var bad = false;
-    required.forEach(function(el){
-      setMsg(el, 'Please complete all required fields.');
-      if(!el.checkValidity()) bad = true;
-    });
-    if(bad){ e.preventDefault(); form.reportValidity(); }
-  });
-  required.forEach(function(el){
-    el.addEventListener('input', function(){ el.setCustomValidity(''); });
-  });
-})();
-</script>
-
-<script>
-(function(){
-  var form = document.getElementById('intake');
-  if(!form) return;
-  var INTK = (window.INTAKE_FORM_URL && !/^__/.test(String(window.INTAKE_FORM_URL))) ? window.INTAKE_FORM_URL : null;
-  var WURL = (window.WORKER_URL && !/^__/.test(String(window.WORKER_URL))) ? String(window.WORKER_URL).replace(/\/+$/,'') : null;
-  var ENDPOINT = INTK || (WURL ? (WURL + '/intake_lead') : null);
-  function reqMsg(n){ if(n==='email') return 'Please enter a valid work email.'; if(n==='company') return 'Company is required.'; if(n==='plan') return 'Please choose a plan.'; return 'Please complete this field.'; }
-  function validate(){
-    var bad=false; ['email','company','plan'].forEach(function(id){ var el=document.getElementById(id); if(!el) return;
-      el.setCustomValidity(''); if(!el.value || (id==='email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(el.value))){ el.setCustomValidity(reqMsg(id)); bad=true; } });
-    if(bad) form.reportValidity(); return !bad;
-  }
-  function toast(kind, text){
-    var box=document.getElementById('intake-toast'); if(!box){ box=document.createElement('div'); box.id='intake-toast'; box.style.margin='16px 0'; box.style.padding='12px 14px'; box.style.borderRadius='12px'; box.style.fontSize='14px'; form.parentNode.insertBefore(box, form); }
-    box.style.background=(kind==='ok')?'#e6ffed':'#fff5f5'; box.style.border='1px solid '+((kind==='ok')?'#a3d9a5':'#f1a5a5'); box.textContent=text;
-  }
-  form.addEventListener('submit', function(e){
-    e.preventDefault(); if(!validate()) return;
-    if(!ENDPOINT){ toast('err','Intake endpoint not configured. Set INTAKE_FORM_URL or WORKER_URL.'); return; }
-    var payload={ email:document.getElementById('email')?.value||'', company:document.getElementById('company')?.value||'', plan:document.getElementById('plan')?.value||'',
-      vendors:document.getElementById('vendors')?.value||'', region:document.getElementById('region')?.value||'', notes:document.getElementById('notes')?.value||'',
-      utm:(function(){var q={}; location.search.replace(/^\?/,'').split('&').forEach(function(p){ if(!p) return; var kv=p.split('='); q[decodeURIComponent(kv[0]||'')]=decodeURIComponent(kv[1]||''); }); return q; })(),
-      ua:navigator.userAgent, ts:new Date().toISOString(), path:location.pathname };
-    fetch(ENDPOINT,{ method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify(payload), credentials:'omit', cache:'no-store', redirect:'manual'}).then(function(res){
-      if(res.ok){ toast('ok','Thanks — your intake has been received. We will deliver via email.'); try{form.reset();}catch(_){}} else { toast('err','Submission failed ('+res.status+'). Please try again or email us.'); }
-    }).catch(function(err){ toast('err','Network error: '+String(err)); });
-  });
-  ['email','company','plan'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.addEventListener('input', function(){ el.setCustomValidity(''); }); }});
-})();
-</script>
-
-<script>(function(){var f=document.getElementById('intake'); if(!f) return;
-document.addEventListener('click', function(ev){ var a=ev.target&&ev.target.closest?ev.target.closest('a[href^="mailto:"]'):null;
-if(a && f.contains(a)){ ev.preventDefault(); if(f.requestSubmit) f.requestSubmit(); else f.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true})); }}, true);
-})();</script>
-</body></html>
+  <script>
+    // If you deploy with ENV replacements, set window.WORKER_URL / window.INTAKE_FORM_URL here.
+    window.WORKER_URL = window.WORKER_URL || "";
+    window.INTAKE_FORM_URL = window.INTAKE_FORM_URL || "";
+  </script>
+  <script src="/assets/app-intake.js" defer></script>
+</body>
+</html>
