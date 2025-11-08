@@ -1,5 +1,5 @@
 timestamp,email,company,message
 Mon Oct 06 2025 17:29:12 GMT+0800 (China Standard Time),312@gmail.com,Test Co,Email only
 10/6/2025 17:52:20,678@gmail.com,123,Email only
-"2025-11-08T11:53:25Z","test@yourco.com","cus_xxx","checkout.session.completed","workflow_dispatch","19192653650","https://github.com/motuo666/cg-alert/actions/runs/19192653650"
-"2025-11-08T12:04:19Z","buyer@testco.com","cus_test_123","checkout.session.completed","workflow_dispatch","19192748874","https://github.com/motuo666/cg-alert/actions/runs/19192748874"
+"2025-11-08T11:53:25Z","test@yourco.com","cus_xxx","checkout.session.completed"
+"2025-11-08T12:04:19Z","buyer@testco.com","cus_test_123","checkout.session.completed"
