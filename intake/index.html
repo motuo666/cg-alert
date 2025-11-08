@@ -123,7 +123,7 @@
   if(!form) return;
   var INTK = (window.INTAKE_FORM_URL && !/^__/.test(String(window.INTAKE_FORM_URL))) ? window.INTAKE_FORM_URL : null;
   var WURL = (window.WORKER_URL && !/^__/.test(String(window.WORKER_URL))) ? String(window.WORKER_URL).replace(/\/+$/,'') : null;
-  var ENDPOINT = INTK || (WURL ? (WURL + '/intake') : null);
+  var ENDPOINT = INTK || (WURL ? (WURL + '/intake_lead') : null);
   function reqMsg(n){ if(n==='email') return 'Please enter a valid work email.'; if(n==='company') return 'Company is required.'; if(n==='plan') return 'Please choose a plan.'; return 'Please complete this field.'; }
   function validate(){
     var bad=false; ['email','company','plan'].forEach(function(id){ var el=document.getElementById(id); if(!el) return;

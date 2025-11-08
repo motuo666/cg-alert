@@ -58,9 +58,13 @@
   const empty = document.getElementById('empty');
   let items = [];
   try {
-    const res = await fetch('/reports/feed.json', {cache:'no-store'});
-    if (res.ok) const out = await res.json(); items = Array.isArray(out) ? out : (out.items || []);
-  } catch(_) {}
+    const res = await fetch('/reports/feed.json', { cache: 'no-store' });
+    if (res.ok) {
+      const out = await res.json();
+      items = Array.isArray(out) ? out : (out.items || []);
+    }
+  } catch (_) {}
+  const fmt = (s)=> (s||'').toString().trim();
   const render = (list) => {
     grid.innerHTML = '';
     if (!list.length){ empty.style.display='block'; return; }
@@ -68,11 +72,16 @@
     list.forEach(it => {
       const a = document.createElement('a');
       a.className = 'cg-card hover';
-      a.href = it.page || it.url || '#';
+      a.href = it.url || it.page || '#';
+      const vendor = fmt(it.vendor);
+      const date = fmt(it.date);
+      const sha = fmt(it.sha256);
+      const title = fmt(it.title) || (vendor ? vendor + ' update' : 'Change detected');
+      const snippet = fmt(it.summary || it.snippet);
       a.innerHTML =
-        `<div class="card-meta">${it.vendor || 'Vendor'} · ${it.captured || ''} · ${it.sha256 ? ('SHA256 ' + it.sha256.slice(0,8)+'…') : ''}</div>
-         <h3>${it.title || 'Change detected'}</h3>
-         <p>${it.snippet || ''}</p>`;
+        `<div class="card-meta">${vendor || 'Vendor'}${date ? ' · ' + date : ''}${sha ? ' · SHA256 ' + sha.slice(0,8) + '…' : ''}</div>
+         <h3>${title}</h3>
+         <p>${snippet}</p>`;
       grid.appendChild(a);
     });
   };
@@ -81,7 +90,7 @@
     const q = e.target.value.trim().toLowerCase();
     if(!q){ render(items); return; }
     render(items.filter(it =>
-      [it.vendor,it.title,it.snippet,it.url,it.sha256].join(' ').toLowerCase().includes(q)
+      [it.vendor,it.title,it.summary,it.snippet,it.url,it.sha256].join(' ').toLowerCase().includes(q)
     ));
   });
 })();
