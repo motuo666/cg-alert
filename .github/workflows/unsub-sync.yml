@@ -73,6 +73,8 @@ jobs:
           git config user.name  "cg-alert-bot"
           git add -A data/suppressions.csv
           if git diff --cached --quiet; then echo "no new unsubs"; else git commit -m "unsub: sync KV → repo"; git pull --rebase --autostash || true; git push; fi
+          
+          fi
       - name: Install deps
         run: npm ci
         fi

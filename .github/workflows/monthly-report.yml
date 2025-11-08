@@ -69,6 +69,8 @@ jobs:
           git config user.name  "cg-alert-bot"
           git add -A ops/monthly
           if git diff --cached --quiet; then echo "no monthly changes"; else git commit -m "ops: monthly report"; git pull --rebase --autostash || true; git push; fi
+          
+          fi
       - name: Install deps
         run: npm ci
         fi

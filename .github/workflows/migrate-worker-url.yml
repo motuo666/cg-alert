@@ -68,6 +68,8 @@ jobs:
           git config user.name  "cg-alert-bot"
           git add -A .github/workflows
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "migrate: replace hardcoded workers.dev with \${{ vars.WORKER_URL }}"; git pull --rebase --autostash || true; git push; fi
+          
+          fi
       - name: Install deps
         run: npm ci
         fi

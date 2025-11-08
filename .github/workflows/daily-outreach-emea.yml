@@ -102,6 +102,10 @@ jobs:
           if [ -d out ]; then if [ -d out ]; then git add -A out; fi; fi
           if [ -f data/suppressions.csv ]; then if [ -f data/suppressions.csv ]; then git add data/suppressions.csv; fi; fi
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "outreach: EMEA window"; git pull --rebase --autostash || true; git push; fi
+          
+          fi
+          fi
+          fi
       - name: Slack on failure
         if: failure()
         env:

@@ -37,6 +37,8 @@ jobs:
             echo "Missing critical vars/secrets"; exit 1
           fi
           echo "Vars/Secrets OK"
+          
+          fi
       - name: Site smoke (core routes)
         run: |
           set -e

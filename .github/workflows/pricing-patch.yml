@@ -69,6 +69,8 @@ jobs:
           git config user.name  "cg-alert-bot"
           git add pricing/config.json
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "pricing: normalize to 3-tier (Email-first)"; git pull --rebase --autostash || true; git push; fi
+          
+          fi
       - name: Install deps
         run: npm ci
         fi
