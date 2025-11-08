@@ -69,3 +69,5 @@ jobs:
           git config user.name  "cg-alert-bot"
           git add -A _redirects
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "stabilize: canonical & force-www redirects"; git pull --rebase --autostash || true; git push; fi
+      - name: Install deps
+        run: npm ci

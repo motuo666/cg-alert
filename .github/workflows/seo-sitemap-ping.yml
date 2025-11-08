@@ -46,6 +46,8 @@ jobs:
             git pull --rebase --autostash || true
             git push || true
           fi
+      - name: Install deps
+        run: npm ci
 
       - name: Ping IndexNow
         run: |

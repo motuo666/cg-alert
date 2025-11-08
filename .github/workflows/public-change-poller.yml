@@ -19,6 +19,8 @@ jobs:
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
+      - name: Install deps
+        run: npm ci
 
       - name: Install (none required)
         run: echo "Node 20 has fetch; no deps needed"

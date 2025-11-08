@@ -26,3 +26,5 @@ jobs:
         with: { node-version: '20' }
       - name: Probe
         run: node scripts/smtp_imap_probe.js
+      - name: Install deps
+        run: npm ci

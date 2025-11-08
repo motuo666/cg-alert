@@ -22,3 +22,5 @@ jobs:
         run: |
           set -e
           node scripts/pricing_sync.mjs
+      - name: Install deps
+        run: npm ci

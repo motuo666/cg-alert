@@ -26,6 +26,8 @@ jobs:
           SEND_CAP:  ${{ vars.SEND_CAP  || '100' }}
           TARGET_SENT: ${{ vars.TARGET_SENT || '0' }}
         run: node scripts/send_limit_daily.js
+      - name: Install deps
+        run: npm ci
 
   kpi:
     runs-on: ubuntu-latest

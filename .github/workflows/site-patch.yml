@@ -71,3 +71,5 @@ jobs:
           git config user.name  "cg-alert-bot"
           git add -A
           if git diff --cached --quiet; then echo "no changes"; else git commit -m "site: swap workers.dev → WORKER_URL and refresh CSP"; git pull --rebase --autostash || true; git push; fi
+      - name: Install deps
+        run: npm ci

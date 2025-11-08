@@ -19,3 +19,5 @@ jobs:
           git add -A evidence
           git commit -m "demo: seed sample evidence" || true
           git push || true
+      - name: Install deps
+        run: npm ci

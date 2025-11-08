@@ -84,3 +84,5 @@ jobs:
           else
             echo "no changes"
           fi
+      - name: Install deps
+        run: npm ci

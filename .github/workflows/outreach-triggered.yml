@@ -93,3 +93,5 @@ jobs:
         run: npm i nodemailer@6.9.13 crypto-js@4.2.0
       - name: Send emails
         run: node scripts/outreach_send.js
+      - name: Install deps
+        run: npm ci

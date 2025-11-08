@@ -110,3 +110,5 @@ jobs:
           set -e
           jq -n --arg t "❌ ${{ github.workflow }} failed • run=${{ github.run_id }}" '{text:$t}' \
           | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
+      - name: Install deps
+        run: npm ci
