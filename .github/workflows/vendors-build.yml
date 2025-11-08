@@ -1,37 +1,39 @@
 name: Vendors Build
 on:
-  workflow_dispatch: {}
   schedule:
-    - cron: '13 3 * * *'
+    - cron: '17 3 * * *'
+  workflow_dispatch: {}
 permissions:
   contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      PUBLISH_DIR: .
       NODE_OPTIONS: --max-old-space-size=2048
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install
+      - name: Install deps
         run: npm ci || npm install
-      - name: Build reports index
-        run: node scripts/build_vendors_index.mjs
-      - name: Render evidence pages
-        run: node scripts/render_evidence_pages.mjs
-      - name: Commit & push if changes
+      - name: Build reports (cards + feed.json + rss.xml)
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: |
+          set -e
+          node scripts/reports_build.mjs
+      - name: Commit & push
         run: |
           set -e
           git config user.email "bot@cg-alert.com"
           git config user.name  "cg-alert-bot"
-          git add reports
+          git add -A reports rss
           if git diff --cached --quiet; then
-            echo "no changes to commit"
+            echo "no changes"
           else
-            git commit -m "Vendors Build: render reports index & pages"
+            git commit -m "vendors: rebuild reports & rss"
             git pull --rebase --autostash || true
             git push
           fi
