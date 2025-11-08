@@ -74,3 +74,4 @@ jobs:
           if git diff --cached --quiet; then echo 'no changes'; else git commit -m "qa: assets check"; git pull --rebase --autostash || true; git push; fi
       - name: Install deps
         run: npm ci
+        fi

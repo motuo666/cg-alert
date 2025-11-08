@@ -31,3 +31,4 @@ jobs:
           # guard-missing:scripts/ops/autopilot_step.js
           if [ ! -f scripts/ops/autopilot_step.js ]; then echo 'missing, skip'; exit 0; fi
           node scripts/ops/autopilot_step.js
+          fi

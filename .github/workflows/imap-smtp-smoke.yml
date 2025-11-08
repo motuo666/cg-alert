@@ -54,3 +54,4 @@ jobs:
           jq -n --arg t "📮 IMAP/SMTP smoke: $status" \
                 '{text: $t}' \
             | curl -sS -X POST -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
+            fi

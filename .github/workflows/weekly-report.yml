@@ -71,3 +71,4 @@ jobs:
           if git diff --cached --quiet; then echo "no weekly changes"; else git commit -m "ops: weekly report"; git pull --rebase --autostash || true; git push; fi
       - name: Install deps
         run: npm ci
+        fi

@@ -70,4 +70,5 @@ jobs:
           (async function main(){ const s=await smtpVerifyRaw(); const i=await imapVerify(); const ok=Boolean(s.ok&&i.ok); const reason=[s.msg,i.msg].join(' | '); console.log('probe',{smtp:s.msg,imap:i.msg,ok}); appendOutput('ok',ok); appendOutput('reason',reason); if(!ok) process.exit(0); })().catch(e=>{ console.error(e); process.exit(0); });
           JS
       - name: Run probe
+      fi
         run: node scripts/smtp_imap_probe.js
