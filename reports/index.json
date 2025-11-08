@@ -1,37 +1,37 @@
 {
-  "generated_at": "2025-11-07T15:49:52.029Z",
+  "generated_at": "2025-11-08T03:39:48.252Z",
   "items": [
     {
       "vendor": "Example SaaS",
       "page": "Change",
       "url": "https://example.com/pricing",
-      "timestamp": "2025-11-07T15:49:52.028Z",
+      "timestamp": "2025-11-08T03:39:48.251Z",
       "snippet": "",
-      "local_path": "/reports/example-saas/2025-11-07/demo-hash-1.html"
+      "local_path": "/reports/example-saas/2025-11-08/demo-hash-1.html"
     },
     {
       "vendor": "Contoso CRM",
       "page": "Change",
       "url": "https://contoso.com/terms",
-      "timestamp": "2025-11-07T15:49:52.029Z",
+      "timestamp": "2025-11-08T03:39:48.251Z",
       "snippet": "",
-      "local_path": "/reports/contoso-crm/2025-11-07/demo-hash-2.html"
+      "local_path": "/reports/contoso-crm/2025-11-08/demo-hash-2.html"
     },
     {
       "vendor": "Fabrikam Analytics",
       "page": "Change",
       "url": "https://fabrikam.io/subprocessors",
-      "timestamp": "2025-11-07T15:49:52.029Z",
+      "timestamp": "2025-11-08T03:39:48.252Z",
       "snippet": "",
-      "local_path": "/reports/fabrikam-analytics/2025-11-07/demo-hash-3.html"
+      "local_path": "/reports/fabrikam-analytics/2025-11-08/demo-hash-3.html"
     },
     {
       "vendor": "vendor",
       "page": "Change",
       "url": "",
-      "timestamp": "2025-11-07T15:49:52.029Z",
+      "timestamp": "2025-11-08T03:39:48.252Z",
       "snippet": "",
-      "local_path": "/reports/vendor/2025-11-07/_last_poll.html"
+      "local_path": "/reports/vendor/2025-11-08/_last_poll.html"
     }
   ]
 }
