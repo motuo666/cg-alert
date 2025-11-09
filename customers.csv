@@ -1,4 +1,5 @@
 email,company,tier,cadence,vendors
 312@gmail.com,Test Co,portfolio,weekly,
 678@gmail.com,123,portfolio,weekly,
-"buyer@testco.com","","enterprise","weekly","okta.com, slack.com","2025-11-08T12:03:22Z"
+"buyer@testco.com","cus_test_123",portfolio,weekly,"okta.com
+"test@yourco.com","cus_xxx",portfolio,weekly,
