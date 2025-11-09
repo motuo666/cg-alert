@@ -27,24 +27,143 @@
   </div>
 </header>
 <section class="cg-wrap">
-<form id="intake" novalidate data-worker="" data-form="">
-    <input type="hidden" name="plan" value="enterprise">
-    <label>Company Email<br><input name="email" type="email" required placeholder="you@company.com" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
-    <div style="height:12px"></div>
-    <label>Company Name<br><input name="company" required placeholder="Acme Inc." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
-    <div style="height:12px"></div>
-    <label>Vendors (comma separated)<br><input name="vendors" placeholder="okta.com, slack.com, ... " style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
-    <div style="height:12px"></div>
-    <label>Frequency<br>
-      <select name="cadence" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;">
-        <option value="weekly">Weekly</option>
-        <option value="daily">Daily</option>
+<form id="intake-app" novalidate>
+  <h1 class="cg-title">Request Enterprise</h1>
+  <p class="cg-sub">Tell us who you need monitored. We’ll reply shortly.</p>
+
+  <div class="cg-grid">
+    <label>Email (work preferred)
+      <input type="email" name="email" placeholder="you@company.com" required autocomplete="email">
+      <small class="hint">We'll contact you at this address.</small>
+    </label>
+
+    <label>Company name
+      <input type="text" name="company" placeholder="Acme Corp" required autocomplete="organization">
+    </label>
+
+    <label>Vendors to monitor (comma or newline separated)
+      <textarea name="vendors" rows="4" placeholder="okta.com, slack.com, atlassian.com" required></textarea>
+      <small class="hint">Add 3–200 domains. We’ll expand to pricing / terms / DPA / subprocessors / status pages automatically.</small>
+    </label>
+
+    <label>Budget
+      <select name="budget" required>
+        <option value="" selected disabled>Choose…</option>
+        <option>$3k–$6k / yr</option>
+        <option>$6k–$18k / yr</option>
+        <option>$18k–$50k / yr</option>
+        <option>$50k+ / yr</option>
       </select>
     </label>
-    <div style="height:16px"></div>
-    <button type="submit" style="background:#0e7490;color:white;border:none;padding:10px 16px;border-radius:10px;">Submit</button>
-    <div id="notice" aria-live="polite"></div>
-  </form>
+
+    <label>Notes (optional)
+      <textarea name="notes" rows="3" placeholder="Anything we should know? Renewal dates, SLAs, data residency, etc."></textarea>
+    </label>
+  </div>
+
+  <div class="cg-actions">
+    <button id="btn-submit" type="submit">Submit</button>
+    <span id="status" role="status" aria-live="polite"></span>
+  </div>
+
+  <style>
+  /* scoped styles */
+  #intake-app { max-width: 880px; margin: 0 auto; background: #fff; border:1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,.03); }
+  #intake-app .cg-title { margin: 0 0 6px; font-size: 28px; line-height: 1.2; color:#0b1e3a; }
+  #intake-app .cg-sub { margin: 0 0 18px; color:#475569; }
+  #intake-app .cg-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  #intake-app label { display:block; font-weight:600; color:#0b1e3a; }
+  #intake-app input, #intake-app textarea, #intake-app select { width:100%; margin-top:8px; padding:12px 14px; border:1px solid #cbd5e1; border-radius:10px; font: inherit; }
+  #intake-app input:focus, #intake-app textarea:focus, #intake-app select:focus { outline: 2px solid #2563eb22; border-color:#2563eb; }
+  #intake-app .hint { display:block; color:#64748b; font-weight:400; }
+  #intake-app .cg-actions { display:flex; align-items:center; gap:12px; margin-top: 10px; }
+  #intake-app button { background:#0b66ff; color:#fff; border:0; padding:12px 18px; border-radius:10px; cursor:pointer; font-weight:700; }
+  #intake-app button[disabled] { opacity:.6; cursor:not-allowed; }
+  #status { min-height: 1.2em; font-size: 14px; color:#0b1e3a; }
+  #status.ok { color:#047857; } 
+  #status.err { color:#b91c1c; }
+  @media (min-width: 860px){ #intake-app .cg-grid { grid-template-columns: 1fr 1fr; } #intake-app .cg-grid > label:nth-child(3), #intake-app .cg-grid > label:nth-child(5) { grid-column: 1/-1; } }
+  </style>
+
+  <script>
+  (function(){
+    const form = document.currentScript.closest('#intake-app');
+    const btn = form.querySelector('#btn-submit');
+    const status = form.querySelector('#status');
+
+    function getWorkerBase(){
+      const m = document.querySelector('meta[name="worker-url"]');
+      return (m && m.content) ? m.content.replace(/\/$/, '') : '';
+    }
+
+    function collect(){
+      const fd = new FormData(form);
+      return {
+        email: (fd.get('email')||'').trim(),
+        company: (fd.get('company')||'').trim(),
+        vendors: (fd.get('vendors')||'').trim(),
+        budget: (fd.get('budget')||'').trim(),
+        notes: (fd.get('notes')||'').trim(),
+        source: 'intake-form'
+      };
+    }
+
+    function validate(){
+      // rely on HTML5; plus vendors must include at least one dot
+      const vendors = form.querySelector('[name="vendors"]');
+      const v = vendors.value.trim();
+      if(!v || !/[a-z0-9.-]+\.[a-z]{2,}/i.test(v)){
+        vendors.setCustomValidity('Please provide at least one vendor domain.');
+      } else {
+        vendors.setCustomValidity('');
+      }
+      return form.reportValidity();
+    }
+
+    async function submitLead(e){
+      e.preventDefault();
+      if(!validate()) return;
+      const data = collect();
+      const base = getWorkerBase();
+      const url = base ? (base + '/lead') : '/lead';
+      btn.disabled = true;
+      status.className = '';
+      status.textContent = 'Submitting…';
+
+      try{
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          credentials: 'omit',
+          mode: 'cors',
+        });
+        let ok = false, payload = null;
+        if (res && res.ok) {
+          const ct = res.headers.get('content-type') || '';
+          if (ct.includes('application/json')) payload = await res.json();
+          ok = !payload || payload.ok !== false;
+        }
+        if (ok){
+          status.className = 'ok';
+          status.textContent = 'Success — we will get back to you shortly.';
+          form.reset();
+        } else {
+          status.className = 'err';
+          status.textContent = 'Submission failed — please try again.';
+        }
+      } catch(err){
+        status.className = 'err';
+        status.textContent = 'Submission failed — please try again.';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    form.addEventListener('submit', submitLead);
+  })();
+  </script>
+</form>
 
   <script>
     // If you deploy with ENV replacements, set window.WORKER_URL / window.INTAKE_FORM_URL here.
