@@ -1,58 +1,36 @@
 name: Final Acceptance
-on:
-  workflow_dispatch:
+true:
+  workflow_dispatch: null
   push:
     paths:
-      - ".github/workflows/**"
-      - "index.html"
-      - "reports/**"
-      - "terms/**"
-      - "privacy/**"
+    - .github/workflows/**
+    - index.html
+    - reports/**
+    - terms/**
+    - privacy/**
 jobs:
   qa:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      # 1) workflow 语法守门
-      - name: actionlint
-        uses: reviewdog/action-actionlint@v1
-        with:
-          fail_on_error: true
-
-      # 2) 全面禁止 '||' 表达式残留（空值合并误用）
-      - name: Forbid '||' in workflows
-        run: |
-          set -e
-          BAD=$(grep -RIn --exclude='*.md' '\|\|' .github/workflows || true)
-          if [ -n "$BAD" ]; then
-            echo "::error::Found '||' in workflows. Use explicit \${{ secrets.X }} or \${{ vars.X }}."
-            echo "$BAD"
-            exit 1
-          fi
-
-      # 3) 根目录制式与关键路由存在性
-      - name: Root site structure check
-        run: |
-          set -e
-          reqs=(index.html reports/index.html terms/index.html privacy/index.html)
-          for f in "${reqs[@]}"; do
-            if [ ! -f "$f" ]; then
-              echo "::error::missing $f"; exit 1;
-            fi
-          done
-          echo "Root structure OK"
-
-      # 4) CSS 404 风险快速体检（@import 指向的绝对路径必须存在）
-      - name: CSS import sanity
-        run: |
-          set -e
-          miss=0
-          while IFS= read -r -d '' css; do
-            while read -r line; do
-              path=$(echo "$line" | sed -E "s/.*@import[[:space:]]+url\(['\"]?([^'\")]+)['\"]?\).*/\1/")
-              case "$path" in /*) [ -f ".$path" ] || { echo "::error file=$css::missing import $path"; miss=1; } ;; esac
-            done < <(grep -oE "@import[^;]+;" "$css" || true)
-          done < <(find . -maxdepth 3 -type f -name "*.css" -print0)
-          [ $miss -eq 0 ] || exit 1
-          echo "CSS imports OK"
+    - uses: actions/checkout@v4
+    - name: actionlint
+      uses: reviewdog/action-actionlint@v1
+      with:
+        fail_level: error
+    - name: Forbid '||' in workflows
+      run: "set -e\nBAD=$(grep -RIn --exclude='*.md' '\\|\\|' .github/workflows ||\
+        \ true)\nif [ -n \"$BAD\" ]; then\n  echo \"::error::Found '||' in workflows.\
+        \ Use explicit \\${{ secrets.X }} or \\${{ vars.X }}.\"\n  echo \"$BAD\"\n\
+        \  exit 1\nfi\n"
+    - name: Root site structure check
+      run: "set -e\nreqs=(index.html reports/index.html terms/index.html privacy/index.html)\n\
+        for f in \"${reqs[@]}\"; do\n  if [ ! -f \"$f\" ]; then\n    echo \"::error::missing\
+        \ $f\"; exit 1;\n  fi\ndone\necho \"Root structure OK\"\n"
+    - name: CSS import sanity
+      run: "set -e\nmiss=0\nwhile IFS= read -r -d '' css; do\n  while read -r line;\
+        \ do\n    path=$(echo \"$line\" | sed -E \"s/.*@import[[:space:]]+url\\(['\\\
+        \"]?([^'\\\")]+)['\\\"]?\\).*/\\1/\")\n    case \"$path\" in /*) [ -f \".$path\"\
+        \ ] || { echo \"::error file=$css::missing import $path\"; miss=1; } ;; esac\n\
+        \  done < <(grep -oE \"@import[^;]+;\" \"$css\" || true)\ndone < <(find .\
+        \ -maxdepth 3 -type f -name \"*.css\" -print0)\n[ $miss -eq 0 ] || exit 1\n\
+        echo \"CSS imports OK\"\n"
