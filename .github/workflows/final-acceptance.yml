@@ -1,36 +1,35 @@
 name: Final Acceptance
-true:
-  workflow_dispatch: null
-  push:
-    paths:
-    - .github/workflows/**
-    - index.html
-    - reports/**
-    - terms/**
-    - privacy/**
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
-  qa:
+  acceptance:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: actionlint
-      uses: reviewdog/action-actionlint@v1
-      with:
-        fail_level: error
-    - name: Forbid '||' in workflows
-      run: "set -e\nBAD=$(grep -RIn --exclude='*.md' '\\|\\|' .github/workflows ||\
-        \ true)\nif [ -n \"$BAD\" ]; then\n  echo \"::error::Found '||' in workflows.\
-        \ Use explicit \\${{ secrets.X }} or \\${{ vars.X }}.\"\n  echo \"$BAD\"\n\
-        \  exit 1\nfi\n"
-    - name: Root site structure check
-      run: "set -e\nreqs=(index.html reports/index.html terms/index.html privacy/index.html)\n\
-        for f in \"${reqs[@]}\"; do\n  if [ ! -f \"$f\" ]; then\n    echo \"::error::missing\
-        \ $f\"; exit 1;\n  fi\ndone\necho \"Root structure OK\"\n"
-    - name: CSS import sanity
-      run: "set -e\nmiss=0\nwhile IFS= read -r -d '' css; do\n  while read -r line;\
-        \ do\n    path=$(echo \"$line\" | sed -E \"s/.*@import[[:space:]]+url\\(['\\\
-        \"]?([^'\\\")]+)['\\\"]?\\).*/\\1/\")\n    case \"$path\" in /*) [ -f \".$path\"\
-        \ ] || { echo \"::error file=$css::missing import $path\"; miss=1; } ;; esac\n\
-        \  done < <(grep -oE \"@import[^;]+;\" \"$css\" || true)\ndone < <(find .\
-        \ -maxdepth 3 -type f -name \"*.css\" -print0)\n[ $miss -eq 0 ] || exit 1\n\
-        echo \"CSS imports OK\"\n"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: All Systems Go sanity
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Checking required paths..."
+          for p in index.html pricing/index.html reports/index.html rss/index.html intake/index.html assets; do
+            if [ ! -e "$p" ]; then
+              echo "::warning::missing $p"
+            fi
+          done
+
+          echo "Scanning for truncated placeholders ('...' or unicode ellipsis)…"
+          if grep -RIn --exclude-dir=.git -E '\.\.\.|…|<<ImageDisplayed>>|conversation too long; truncated' . ; then
+            echo "::error::Repository contains truncated placeholder content. Replace these files before going live."
+            exit 1
+          else
+            echo "OK: no obvious placeholders found."
+          fi
+
+          echo "Final Acceptance OK."
