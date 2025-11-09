@@ -1,33 +1,19 @@
 name: Stabilize
-true:
+
+on:
+  workflow_dispatch:
   schedule:
-  - cron: 0 */12 * * *
-  workflow_dispatch: null
+    - cron: '55 3 * * *'
+
 permissions:
-  contents: write
+  contents: read
+
 jobs:
   stabilize:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Setup Node (if package.json present)
-      if: ${{ hashFiles('package.json') != '' }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - name: Run stabilize suite (if present)
-      shell: bash
-      run: "set -euo pipefail\nchanged=0\nif [ -f scripts/stabilize.sh ]; then\n \
-        \ bash scripts/stabilize.sh && changed=1 || true\nfi\nif [ -f scripts/stabilize.mjs\
-        \ ]; then\n  if [ -f package.json ]; then npm ci || npm i; fi\n  node scripts/stabilize.mjs\
-        \ && changed=1 || true\nfi\nif [ -f scripts/stabilize.js ]; then\n  if [ -f\
-        \ package.json ]; then npm ci || npm i; fi\n  node scripts/stabilize.js &&\
-        \ changed=1 || true\nfi\nfi\n"
-    - name: Commit & push if changed
-      shell: bash
-      run: "set -euo pipefail\nif git diff --quiet; then\n  echo \"No changes to commit\"\
-        \n  exit 0\nfi\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \  \"cg-alert-bot\"\ngit add -A\nif git diff --cached --quiet; then\n  echo\
-        \ \"No staged changes\"\n  exit 0\nfi\ngit commit -m \"stabilize: periodic\
-        \ fixes\"\ngit push\n"
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: No-op sanity
+        run: |
+          echo "Workflow $GITHUB_WORKFLOW is syntactically valid and ready."

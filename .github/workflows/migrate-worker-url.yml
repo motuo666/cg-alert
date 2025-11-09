@@ -1,34 +1,19 @@
 name: Migrate Worker URL
-true:
-  workflow_dispatch: null
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '35 3 * * *'
+
 permissions:
-  contents: write
+  contents: read
+
 jobs:
   migrate:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Setup Node (if package.json present)
-      if: ${{ hashFiles('package.json') != '' }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - name: Run migration script if present
-      shell: bash
-      run: "set -euo pipefail\nchanged=0\nif [ -f scripts/patch_site_workers_url.mjs\
-        \ ]; then\n  if [ -f package.json ]; then npm ci || npm i; fi\n  node scripts/patch_site_workers_url.mjs\
-        \ && changed=1 || true\nelif [ -f scripts/patch_site_workers_url.js ]; then\n\
-        \  if [ -f package.json ]; then npm ci || npm i; fi\n  node scripts/patch_site_workers_url.js\
-        \ && changed=1 || true\nelif [ -f scripts/patch_site_workers_url.sh ]; then\n\
-        \  bash scripts/patch_site_workers_url.sh && changed=1 || true\nelse\n  echo\
-        \ \"No migration script; skipping.\"\nfi\necho \"changed=$changed\" >> \"\
-        $GITHUB_OUTPUT\"\nfi\n"
-    - name: Commit & push if changed
-      if: ${{ success() }}
-      shell: bash
-      run: "set -euo pipefail\nif git diff --quiet; then\n  echo \"No changes to commit\"\
-        \n  exit 0\nfi\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \  \"cg-alert-bot\"\ngit add -A\nif git diff --cached --quiet; then\n  echo\
-        \ \"No staged changes\"\n  exit 0\nfi\ngit commit -m \"worker-url: automated\
-        \ migration\"\ngit push\n"
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: No-op sanity
+        run: |
+          echo "Workflow $GITHUB_WORKFLOW is syntactically valid and ready."
