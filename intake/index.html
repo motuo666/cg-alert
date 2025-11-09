@@ -1,96 +1,71 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
+<meta name="worker-url" content="https://api.cg-alert.com">
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>企业版申请 · CG Alert</title>
-  <meta name="worker-url" content="">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Request Enterprise — CG Alert</title>
+  <meta name="description" content="Tell us your vendors and delivery preferences.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
+  <link rel="canonical" href="https://www.cg-alert.com/intake/">
   <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <meta name="description" content="提交您的信息以开通 CG Alert 企业版试用或咨询。">
-  <style>
-    .container{max-width:880px;margin:32px auto;padding:0 16px;}
-    h1{font-size:28px;margin:8px 0 16px}
-    p.lead{color:#334155;margin:0 0 20px}
-    form{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:20px}
-    label{display:block;margin:0 0 14px;font-weight:600}
-    .help{font-weight:400;color:#64748b;margin-top:6px}
-    input[type="text"],input[type="email"],textarea,select{
-      width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;
-      font:inherit;box-sizing:border-box;background:#fff
-    }
-    textarea{min-height:120px;resize:vertical}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .row-1{display:block}
-    .err{display:none;color:#b91c1c;font-size:12px;margin-top:6px}
-    .actions{display:flex;gap:12px;align-items:center;margin-top:8px}
-    button[type="submit"]{
-      padding:10px 16px;border:0;border-radius:10px;cursor:pointer;
-      background:#0b5fff;color:#fff;font-weight:700
-    }
-    button[disabled]{opacity:.6;cursor:not-allowed}
-    .flash{display:none;margin:14px 0;padding:12px 14px;border-radius:10px;border:1px solid}
-    .flash.ok{display:block;background:#ecfdf5;border-color:#10b981;color:#065f46}
-    .flash.err{display:block;background:#fef2f2;border-color:#ef4444;color:#991b1b}
-  </style>
+
+<link rel="stylesheet" href="/assets/home-v3c.css">
 </head>
 <body>
-  <main class="container">
-    <h1>Enterprise Intake</h1>
-    <p class="lead">留下信息，我们会尽快联系您。</p>
+<header class="cg-topbar">
+  <div class="cg-wrap cg-nav">
+    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
+    <nav class="cg-links" id="topnav">
+      <a href="/#pricing">Pricing</a>
+      <a href="/#how">How it works</a>
+      <a href="/#evidence">Evidence</a>
+      <a href="/#compare">Compare</a>
+      <a href="/#faq">FAQ</a>
+      
+    </nav>
+  </div>
+</header>
+<section class="cg-wrap">
+<form id="intake" novalidate data-worker="" data-form="">
+    <input type="hidden" name="plan" value="enterprise">
+    <label>Company Email<br><input name="email" type="email" required placeholder="you@company.com" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
+    <div style="height:12px"></div>
+    <label>Company Name<br><input name="company" required placeholder="Acme Inc." style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
+    <div style="height:12px"></div>
+    <label>Vendors (comma separated)<br><input name="vendors" placeholder="okta.com, slack.com, ... " style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;"></label>
+    <div style="height:12px"></div>
+    <label>Frequency<br>
+      <select name="cadence" style="width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;">
+        <option value="weekly">Weekly</option>
+        <option value="daily">Daily</option>
+      </select>
+    </label>
+    <div style="height:16px"></div>
+    <button type="submit" style="background:#0e7490;color:white;border:none;padding:10px 16px;border-radius:10px;">Submit</button>
+    <div id="notice" aria-live="polite"></div>
+  </form>
 
-    <div id="flash-ok" class="flash ok">提交成功，我们会尽快给您回复。</div>
-    <div id="flash-err" class="flash err"></div>
+  <script>
+    // If you deploy with ENV replacements, set window.WORKER_URL / window.INTAKE_FORM_URL here.
+    window.WORKER_URL = window.WORKER_URL || "";
+    window.INTAKE_FORM_URL = window.INTAKE_FORM_URL || "";
+  </script>
+  <script src="/assets/app-intake.js" defer></script>
+</section>
 
-    <form id="intake-form" method="post" novalidate>
-      <div class="row">
-        <div>
-          <label>公司邮箱
-            <input name="email" type="email" placeholder="name@company.com" required>
-            <div class="err" data-for="email">请填写公司邮箱</div>
-          </label>
-        </div>
-        <div>
-          <label>公司名称
-            <input name="company" type="text" placeholder="Company Inc." required>
-            <div class="err" data-for="company">请填写公司名称</div>
-          </label>
-        </div>
-      </div>
+<footer class="cg-footer">
+  <div class="cg-wrap cg-footlinks">
+    <a href="/who-uses/">Who uses</a>
+    <a href="/about/">About</a>
+    <a href="/reports/">Reports</a>
+    <a href="/rss/index.xml">RSS</a>
+    <a href="/terms/">Terms</a>
+    <a href="/privacy/">Privacy</a>
+    <span>© CG Alert — evidence-backed vendor change alerts.</span>
+  </div>
+</footer>
 
-      <div class="row-1">
-        <label>监控厂商域名列表
-          <textarea name="vendors" placeholder="okta.com, slack.com, zoom.us" required></textarea>
-          <div class="help">请用逗号或换行分隔；至少填 1 个域名</div>
-          <div class="err" data-for="vendors">请填写监控厂商域名列表</div>
-        </label>
-      </div>
-
-      <div class="row">
-        <div>
-          <label>预算
-            <select name="budget" required>
-              <option value="" selected disabled>请选择预算</option>
-              <option value="portfolio">$2,988/年（Portfolio，≤25 vendors）</option>
-              <option value="business">$6,000/年（Business，≤50 vendors）</option>
-              <option value="enterprise">$18,000+/年（Enterprise，200+ vendors）</option>
-              <option value="tbd">不确定 / 待评估</option>
-            </select>
-            <div class="err" data-for="budget">请选择预算</div>
-          </label>
-        </div>
-        <div>
-          <label>备注（可选）
-            <input name="notes" type="text" placeholder="可选：期望上线时间/合规优先级等">
-          </label>
-        </div>
-      </div>
-
-      <div class="actions">
-        <button id="btn-submit" type="submit">Submit</button>
-        <span id="progress" style="display:none;">正在提交…</span>
-      </div>
-    </form>
-  </main>
-  <script src="/assets/app-intake-min.js" defer></script>
+<script src="/assets/intake-submit.js" defer></script>
 </body>
 </html>
