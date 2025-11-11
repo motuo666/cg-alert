@@ -1,36 +1,57 @@
-name: content-gen
+
+name: Content Auto-Gen
+
 on:
   schedule:
-    - cron: '13 3 * * *'
+    - cron: "17 3 * * *"   # 每日 03:17 UTC
+  workflow_dispatch:
   push:
     paths:
-      - 'data/**'
-      - 'scripts/**'
-      - 'reports/**'
-      - 'rss/**'
-      - '.github/workflows/content-gen.yml'
-  workflow_dispatch:
+      - "data/**"
+      - "scripts/**"
+      - "reports/**"
+      - "rss/**"
+      - "sitemap.xml"
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
-      - name: Generate feeds & update pages
+          python-version: '3.12'
+      - name: Optional IMAP ingest (Zoho)
+        env:
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ secrets.IMAP_PORT }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          IMAP_FOLDER: ${{ secrets.IMAP_FOLDER }}
         run: |
           set -e
-          python3 scripts/gen_feeds.py
-      - name: Commit changes (if any)
+          if [ -n "${IMAP_HOST}" ] && [ -n "${IMAP_USER}" ] && [ -n "${IMAP_PASS}" ]; then
+            python3 scripts/ingest_from_imap.py || true
+          else
+            echo "IMAP secrets not set, skip ingest."
+          fi
+      - name: Normalize & Generate (RSS/Reports/Sitemap)
         run: |
           set -e
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "cg-alert bot"
-            git config user.email "bot@cg-alert.com"
+          python3 scripts/normalize_events.py
+      - name: Commit & Push if changed
+        run: |
+          set -e
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "cg-alert-bot"
+            git config user.email "bot@users.noreply.github.com"
             git add -A
-            git commit -m "chore(content): auto-generate RSS/reports/sitemap [skip ci]"
+            git commit -m "chore(content): auto-ingest & generate feeds"
             git push
           else
-            echo "No changes to commit."
+            echo "No changes."
           fi
