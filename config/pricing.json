@@ -1,0 +1,57 @@
+{
+  "currency": "USD",
+  "tiers": [
+    {
+      "id": "starter",
+      "name": "Starter",
+      "price_month": 99,
+      "price_year": 999,
+      "features": [
+        "X",
+        "Y",
+        "Z"
+      ],
+      "automation_delivery": true,
+      "sla_hours": 0
+    },
+    {
+      "id": "pro",
+      "name": "Pro",
+      "price_month": 399,
+      "price_year": 3990,
+      "features": [
+        "全部Starter",
+        "更多站点",
+        "深度报告"
+      ],
+      "automation_delivery": true,
+      "sla_hours": 0
+    },
+    {
+      "id": "enterprise",
+      "name": "Enterprise",
+      "price_month": 1499,
+      "price_year": 14990,
+      "features": [
+        "SSO",
+        "自定义报表",
+        "支持"
+      ],
+      "automation_delivery": true,
+      "sla_hours": 4
+    }
+  ],
+  "one_off": [
+    {
+      "id": "custom_report",
+      "name": "定制行业深度报告",
+      "price_once": 6000,
+      "delivery_auto": false,
+      "notes": "需要人工校对"
+    }
+  ],
+  "guardrails": {
+    "deny_mismatched_mapping": true,
+    "price_display_source": "config/pricing.json"
+  }
+}
