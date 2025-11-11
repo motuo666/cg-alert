@@ -8,9 +8,23 @@
 <link rel="stylesheet" href="/assets/home-v3c.css">
 
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
-<meta name="description" content="Evidence-backed vendor change alerts."></head>
+<meta name="description" content="Evidence-backed vendor change alerts.">
+<style>
+  .intake-wrap{max-width:980px;margin:0 auto;padding:24px 16px;}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;}
+  @media(min-width:900px){.grid{grid-template-columns:1fr 1fr;} .grid .full{grid-column:1/-1;}}
+  .btn-primary{display:inline-block;padding:12px 20px;border-radius:12px;border:0;background:#111;color:#fff;font-weight:600;cursor:pointer}
+  .btn-primary:disabled{opacity:.6;cursor:not-allowed}
+  .help{color:#666;font-size:.9rem}
+  .card{background:#fff;border:1px solid #eee;border-radius:16px;padding:20px}
+  .title{font-size:28px;font-weight:700;margin:0 0 8px}
+  .subtitle{color:#666;margin:0 0 16px}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:10px}
+  label{font-weight:600;margin-bottom:6px;display:block}
+  .row{display:flex;flex-direction:column;gap:6px}
+</style>
+</head>
 <body>
-<div class="cg-wrap">
 <nav class="cg-links" id="topnav">
       <a href="/#pricing">Pricing</a>
       <a href="/#how">How it works</a>
@@ -19,36 +33,36 @@
       <a href="/#faq">FAQ</a>
       
     </nav>
-</div>
-
-<main class="cg-wrap" style="max-width: 980px; padding: 24px 16px;">
-  <h1>Request Enterprise</h1>
-  <p class="cg-muted">Tell us about your company and vendors to monitor. We'll respond within one business day.</p>
-  <form id="intake-form" novalidate>
+<main class="intake-wrap">
+  <div class="card">
+    <h1 class="title">Request Enterprise</h1>
+    <p class="subtitle">Tell us about your company and vendors to monitor. We'll respond within one business day.</p>
+    <div class="grid">
+      <div class="full"><form method="post" id="intake-form">
       <div class="grid">
         <div class="field">
-          <label for="email">Email (work preferred)</label>
-          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required>
+          <div class="row"><label for="email">Email (work preferred)</label>
+          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required></div>
           <div class="help">We'll contact you at this address.</div>
           <div class="err" id="err-email">Please enter your email.</div>
         </div>
 
         <div class="field">
-          <label for="company">Company name</label>
-          <input id="company" name="company" type="text" placeholder="Acme Corp" required>
+          <div class="row"><label for="company">Company name</label>
+          <input id="company" name="company" type="text" placeholder="Acme Corp" required></div>
           <div class="err" id="err-company">Please enter your company name.</div>
         </div>
 
         <div class="field span-2">
-          <label for="vendors">Vendors to monitor (comma or newline separated)</label>
-          <textarea id="vendors" name="vendors" placeholder="okta.com, slack.com, atlassian.com" required></textarea>
+          <div class="row"><label for="vendors">Vendors to monitor (comma or newline separated)</label>
+          <textarea id="vendors" name="vendors" placeholder="okta.com, slack.com, atlassian.com" required></div></textarea>
           <div class="help">Add 3–200 domains. We'll expand to pricing / terms / DPA / subprocessors / status pages automatically.</div>
           <div class="err" id="err-vendors">Please provide at least one vendor domain.</div>
         </div>
 
         <div class="field">
-          <label for="budget">Budget</label>
-          <select id="budget" name="budget" required>
+          <div class="row"><label for="budget">Budget</label>
+          <select id="budget" name="budget" required></div>
             <option value="" selected>Choose…</option>
             <option value="<3k">&lt; $3,000 / yr</option>
             <option value="3-6k">$3,000 – $6,000 / yr</option>
@@ -59,18 +73,20 @@
         </div>
 
         <div class="field">
-          <label for="notes">Notes (optional)</label>
-          <textarea id="notes" name="notes" placeholder="Anything else we should know?"></textarea>
+          <div class="row"><label for="notes">Notes (optional)</label>
+          <textarea id="notes" name="notes" placeholder="Anything else we should know?"></div></textarea>
         </div>
 
         <div class="span-2" style="margin-top:6px;">
-          <button id="submitBtn" class="btn" type="submit">Submit</button>
+          <button class="btn-primary" id="submitBtn" class="btn" type="submit">Submit</button>
           <span id="submitNote" style="margin-left:10px; color:#64748b;"></span>
         </div>
       </div>
-    </form>
+    </form></div>
+      <p class="help full">Success — we will get back to you shortly.</p>
+    </div>
+  </div>
 </main>
-
 <footer class="cg-footer">
   <div class="cg-wrap cg-footlinks">
     <a href="/who-uses/">Who uses</a>
