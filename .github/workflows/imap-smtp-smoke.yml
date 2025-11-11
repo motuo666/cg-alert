@@ -1,8 +1,9 @@
+
 name: IMAP/SMTP Smoke
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 3 * * *'
+    - cron: '15 4 * * *'
 permissions:
   contents: read
 jobs:
@@ -12,14 +13,15 @@ jobs:
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      IMAP_HOST: ${{ secrets.IMAP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT || vars.SMTP_PORT || '587' }}
+      SMTP_SECURITY: ${{ vars.SMTP_SECURITY || 'starttls' }} # starttls|ssl|plain
+      IMAP_HOST: ${{ secrets.IMAP_HOST || 'imap.zoho.com' }}
+      IMAP_PORT: ${{ secrets.IMAP_PORT || '993' }}
       IMAP_USER: ${{ secrets.IMAP_USER }}
       IMAP_PASS: ${{ secrets.IMAP_PASS }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       MAIL_FROM: ${{ vars.MAIL_FROM || secrets.MAIL_FROM }}
       MAIL_TO:   ${{ vars.MAIL_TO || secrets.MAIL_TO || secrets.BCC_TO }}
-      SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
-      SMTP_SECURITY: ${{ vars.SMTP_SECURITY || 'starttls' }} # starttls|ssl|plain
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,55 +31,38 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y swaks openssl jq
 
-      - name: Echo effective SMTP config
+      - name: Echo effective config
         run: |
           echo "SMTP_HOST=$SMTP_HOST"
           echo "SMTP_PORT=$SMTP_PORT"
           echo "SMTP_SECURITY=$SMTP_SECURITY"
+          echo "IMAP_HOST=$IMAP_HOST"
+          echo "IMAP_PORT=$IMAP_PORT"
+          echo "MAIL_FROM=$MAIL_FROM"
+          echo "MAIL_TO=$MAIL_TO"
 
-      - name: SMTP probe (matrix)
+      - name: SMTP probe (Zoho-first)
         id: smtp
         continue-on-error: true
         run: |
-          set -e
           ok=0; mode="n/a"
-          echo "::group::DNS resolve"
-          getent hosts "$SMTP_HOST" || true
+          echo "::group::Preferred"
+          case "$SMTP_SECURITY" in
+            starttls) OPT="--tls";;
+            ssl)      OPT="--tls-on-connect";;
+            plain)    OPT="";;
+          esac
+          if swaks --server "$SMTP_HOST" --port "$SMTP_PORT" --timeout 15 $OPT                    --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                    --from "${MAIL_FROM:-$SMTP_USER}"                    --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke ($SMTP_PORT/$SMTP_SECURITY)" --body "SMTP OK"                    --quit-after DATA ; then ok=1; mode="$SMTP_PORT-$SMTP_SECURITY"; fi
           echo "::endgroup::"
 
-          # prefer explicit config first
-          case "$SMTP_SECURITY" in
-            starttls)
-              echo "::group::Try explicit $SMTP_HOST:$SMTP_PORT STARTTLS"
-              if swaks --server "$SMTP_HOST" --port "$SMTP_PORT" --timeout 15 --tls                        --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                        --from "${MAIL_FROM:-no-reply@cg-alert.com}"                        --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke ($SMTP_PORT starttls)" --body "SMTP OK"                        --quit-after DATA ; then ok=1; mode="$SMTP_PORT-starttls"; fi
-              echo "::endgroup::"
-              ;;
-            ssl)
-              echo "::group::Try explicit $SMTP_HOST:$SMTP_PORT SSL"
-              if swaks --server "$SMTP_HOST" --port "$SMTP_PORT" --timeout 15 --tls-on-connect                        --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                        --from "${MAIL_FROM:-no-reply@cg-alert.com}"                        --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke ($SMTP_PORT ssl)" --body "SMTP OK"                        --quit-after DATA ; then ok=1; mode="$SMTP_PORT-ssl"; fi
-              echo "::endgroup::"
-              ;;
-            plain)
-              echo "::group::Try explicit $SMTP_HOST:$SMTP_PORT PLAIN"
-              if swaks --server "$SMTP_HOST" --port "$SMTP_PORT" --timeout 15                        --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                        --from "${MAIL_FROM:-no-reply@cg-alert.com}"                        --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke ($SMTP_PORT plain)" --body "SMTP OK"                        --quit-after DATA ; then ok=1; mode="$SMTP_PORT-plain"; fi
-              echo "::endgroup::"
-              ;;
-          esac
-
-          # fallback permutations (587/starttls → 465/ssl → 25/plain)
           if [ $ok -eq 0 ]; then
             echo "::group::Fallback 587 STARTTLS"
-            if swaks --server "$SMTP_HOST" --port 587 --timeout 12 --tls                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-no-reply@cg-alert.com}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (587)" --body "SMTP OK 587"                      --quit-after DATA ; then ok=1; mode="587-starttls"; fi
+            if swaks --server "$SMTP_HOST" --port 587 --timeout 12 --tls                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-$SMTP_USER}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (587)" --body "SMTP OK 587"                      --quit-after DATA ; then ok=1; mode="587-starttls"; fi
             echo "::endgroup::"
           fi
           if [ $ok -eq 0 ]; then
             echo "::group::Fallback 465 SSL"
-            if swaks --server "$SMTP_HOST" --port 465 --timeout 12 --tls-on-connect                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-no-reply@cg-alert.com}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (465)" --body "SMTP OK 465"                      --quit-after DATA ; then ok=1; mode="465-ssl"; fi
-            echo "::endgroup::"
-          fi
-          if [ $ok -eq 0 ]; then
-            echo "::group::Fallback 25 plain"
-            if swaks --server "$SMTP_HOST" --port 25 --timeout 12                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-no-reply@cg-alert.com}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (25)" --body "SMTP OK 25"                      --quit-after DATA ; then ok=1; mode="25-plain"; fi
+            if swaks --server "$SMTP_HOST" --port 465 --timeout 12 --tls-on-connect                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-$SMTP_USER}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (465)" --body "SMTP OK 465"                      --quit-after DATA ; then ok=1; mode="465-ssl"; fi
             echo "::endgroup::"
           fi
 
@@ -93,20 +78,18 @@ jobs:
       - name: IMAP login test
         id: imap
         continue-on-error: true
-        if: ${{ env.IMAP_HOST && env.IMAP_USER && env.IMAP_PASS }}
         run: |
           python3 - <<'PY'
-          import imaplib, os, ssl, sys
-          h=os.environ.get("IMAP_HOST"); u=os.environ.get("IMAP_USER"); p=os.environ.get("IMAP_PASS")
+          import imaplib, os, sys
+          h=os.environ.get("IMAP_HOST"); p=int(os.environ.get("IMAP_PORT","993"))
+          u=os.environ.get("IMAP_USER"); pw=os.environ.get("IMAP_PASS")
           try:
-            M=imaplib.IMAP4_SSL(h); M.login(u,p); M.logout()
+            M=imaplib.IMAP4_SSL(h, p); M.login(u,pw); M.logout()
             print("IMAP OK")
-            open(os.getenv("GITHUB_OUTPUT"),"a").write("status=ok
-")
+            open(os.getenv("GITHUB_OUTPUT"),"a").write("status=ok\n")
           except Exception as e:
             print("IMAP FAIL:", e)
-            open(os.getenv("GITHUB_OUTPUT"),"a").write("status=fail
-")
+            open(os.getenv("GITHUB_OUTPUT"),"a").write("status=fail\n")
             sys.exit(1)
           PY
 
