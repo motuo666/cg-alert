@@ -1,2 +1,2 @@
-title,url,date,vendor,category,summary
-Sample vendor updated pricing,https://status.example.com/changes,2025-11-11,SampleVendor,pricing,Detected pricing uplift and packaging changes.
+title,url,date,vendor,category,summary,source,tags
+Example vendor event,https://example.com/terms,2025-11-11T00:00:00Z,example.com,terms,Example summary,email,terms

@@ -1,16 +1,1 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-<channel>
-<title>CG Alert — Evidence-backed vendor change alerts</title>
-<link>https://www.cg-alert.com</link>
-<description>Automated, human-readable change alerts for SaaS vendor pricing / terms / security / subprocessors / status.</description>
-<lastBuildDate>Tue, 11 Nov 2025 00:00:00 +0000</lastBuildDate>
-<generator>cg-alert/content-gen</generator>
-<item>
-<title>Okta updated subprocessors</title>
-<link>https://www.cg-alert.com/reports/#okta-subprocessors-2025-11-11</link>
-<guid isPermaLink="false">https://www.cg-alert.com/reports/#okta-subprocessors-2025-11-11#1762819200</guid>
-<pubDate>Tue, 11 Nov 2025 00:00:00 +0000</pubDate>
-<description>Subprocessor list change detected.</description>
-</item>
-</channel></rss>
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>CG Alert</title></channel></rss>

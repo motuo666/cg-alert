@@ -1,3 +1,2 @@
 Contact: mailto:security@cg-alert.com
-Expires: 2026-12-31T00:00:00Z
 Policy: https://www.cg-alert.com/security/
