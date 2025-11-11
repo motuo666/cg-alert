@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install swaks & openssl
+      - name: Install tools
         run: |
           sudo apt-get update -y
           sudo apt-get install -y swaks openssl jq
@@ -30,18 +30,23 @@ jobs:
         run: |
           set -e
           subj="CG Alert SMTP smoke $(date -u +%FT%TZ)"
-          swaks --server "$SMTP_HOST" --auth LOGIN                 --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                 --from "${MAIL_FROM:-no-reply@cg-alert.com}"                 --to "$MAIL_TO" --h-Subject "$subj" --body "SMTP OK"                 --timeout 25 --quit-after RCPT
+          swaks --server "$SMTP_HOST" --auth LOGIN \
+                --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS" \
+                --from "${MAIL_FROM:-no-reply@cg-alert.com}" \
+                --to "$MAIL_TO" --h-Subject "$subj" --body "SMTP OK" \
+                --timeout 25 --quit-after RCPT
       - name: IMAP login test
         if: ${{ env.IMAP_HOST && env.IMAP_USER && env.IMAP_PASS }}
         run: |
           set -e
           python3 - <<'PY'
-import imaplib,os,ssl
-h=os.environ.get("IMAP_HOST"); u=os.environ.get("IMAP_USER"); p=os.environ.get("IMAP_PASS")
-M=imaplib.IMAP4_SSL(h); M.login(u,p); M.logout()
-print("IMAP OK")
-PY
+          import imaplib, os
+          h=os.environ.get("IMAP_HOST"); u=os.environ.get("IMAP_USER"); p=os.environ.get("IMAP_PASS")
+          M=imaplib.IMAP4_SSL(h); M.login(u,p); M.logout()
+          print("IMAP OK")
+          PY
       - name: Slack notify (optional)
         if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         run: |
-          jq -n --arg t "IMAP/SMTP smoke passed at $(date -u +%FT%TZ)" '{text:$t}'           | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
+          jq -n --arg t "IMAP/SMTP smoke passed at $(date -u +%FT%TZ)" '{text:$t}' \
+          | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
