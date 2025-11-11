@@ -1,38 +1,48 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta name="worker-url" content="https://api.cg-alert.com">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Request Enterprise — CG Alert</title>
-  <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <link rel="canonical" href="https://www.cg-alert.com/intake/"/>
-  <link rel="stylesheet" href="/assets/home-v3c.css">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
-  <meta name="description" content="Evidence-backed vendor change alerts.">
-  <style>
-    /* scoped, non-invasive form polish */
-    .cg-intake{padding:28px;}
-    .cg-intake h2{margin:0 0 8px 0}
-    .cg-intake .sub{color:#555;margin:0 0 18px 0}
-    .cg-intake .grid{display:grid;grid-template-columns:1fr;gap:16px}
-    @media (min-width: 920px){ .cg-intake .grid{grid-template-columns:1fr 1fr} }
-    .cg-intake .full{grid-column:1/-1}
-    .cg-field{display:flex;flex-direction:column;gap:8px}
-    .cg-label{font-weight:600}
-    .cg-help{font-size:.9rem;color:#6b6b6b}
-    .cg-input,.cg-textarea,.cg-select{width:100%;padding:12px 14px;border:1px solid #e1e1e1;border-radius:10px;background:#fff;font:inherit;line-height:1.35}
-    .cg-textarea{min-height:120px;resize:vertical}
-    .cg-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
-    .cg-btn{appearance:none;border:0;border-radius:12px;padding:12px 18px;background:#111;color:#fff;font-weight:600;cursor:pointer}
-    .cg-btn:disabled{opacity:.6;cursor:not-allowed}
-    .cg-msg{margin-top:10px;font-size:.95rem}
-    .cg-msg.ok{color:#0a7a24}
-    .cg-msg.err{color:#b00020}
-    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-  </style>
-</head>
-<body>
+<!doctype html><html lang="en"><head>
+<meta name="worker-url" content="https://api.cg-alert.com">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Request Enterprise — CG Alert</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://www.cg-alert.com/intake/"/>
+<link rel="stylesheet" href="/assets/home-v3c.css">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
+<meta name="description" content="Tell us about your company and vendors to monitor.">
+
+<style>
+/* Scope all tweaks to intake only */
+.cg-intake{max-width:960px;margin:0 auto}
+.cg-intake h1{margin:24px 0 16px}
+.cg-form{display:grid;grid-template-columns:1fr;gap:16px}
+@media (min-width: 920px){.cg-form{grid-template-columns:1fr 1fr} .cg-form .span-2{grid-column:1 / -1}}
+
+.cg-field{display:flex;flex-direction:column;gap:8px}
+.cg-field label{font-weight:600}
+.cg-field .help{font-size:.9rem;color:#5b6470}
+.cg-input, .cg-textarea, .cg-select{
+  width:100%;
+  box-sizing:border-box;
+  border:1px solid #d6d9de;
+  border-radius:10px;
+  /* ensure equal padding at both ends */
+  padding:10px 14px;
+  outline:none;
+  background:#fff;
+}
+.cg-input:focus, .cg-textarea:focus, .cg-select:focus{border-color:#9ab9ff; box-shadow:0 0 0 3px rgba(56,132,255,.15)}
+.cg-textarea{min-height:108px; resize:vertical; line-height:1.45}
+/* align heights between Email and Budget */
+.cg-input, .cg-select{min-height:42px; line-height:1.2}
+/* actions */
+.cg-actions{display:flex;align-items:center;gap:12px;margin-top:4px}
+.cg-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:10px 18px; border-radius:999px; border:1px solid #1f64ff;
+  background:#1f64ff; color:#fff; font-weight:600; cursor:pointer
+}
+.cg-btn[disabled]{opacity:.6; cursor:not-allowed}
+#msg{min-height:1.25rem}
+</style>
+</head><body>
 <header class="cg-topbar">
   <div class="cg-wrap cg-nav">
     <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
@@ -46,58 +56,52 @@
   </div>
 </header>
 
-<section class="cg-wrap">
+<main class="cg-wrap cg-intake">
   <h1>Request Enterprise</h1>
-  <div class="cg-card cg-intake">
-    <h2 class="sr-only">Enterprise intake form</h2>
-    <p class="sub">Tell us about your company and vendors to monitor. We'll respond within one business day.</p>
+  <p>Tell us about your company and vendors to monitor. We'll respond within one business day.</p>
 
-    <form id="intake-form" novalidate>
-      <div class="grid">
-        <div class="cg-field">
-          <label for="email" class="cg-label">Email (work preferred)</label>
-          <input id="email" name="email" type="email" required class="cg-input" placeholder="you@company.com" autocomplete="email" />
-          <div class="cg-help">We'll contact you at this address.</div>
-        </div>
+  <form id="intake" class="cg-form" novalidate>
+    <!-- Email + Company name -->
+    <div class="cg-field">
+      <label for="email">Email</label>
+      <input class="cg-input" id="email" name="email" type="email" placeholder="you@company.com" autocomplete="work email" required>
+      <div class="help">Work email preferred.</div>
+    </div>
+    <div class="cg-field">
+      <label for="company">Company name</label>
+      <input class="cg-input" id="company" name="company" type="text" placeholder="Acme Corp" autocomplete="organization" required>
+    </div>
 
-        <div class="cg-field">
-          <label for="company" class="cg-label">Company name</label>
-          <input id="company" name="company" type="text" required class="cg-input" placeholder="Acme Corp" autocomplete="organization" />
-          <div class="cg-help">Please enter your company name.</div>
-        </div>
+    <!-- Vendors (span full width) -->
+    <div class="cg-field span-2">
+      <label for="vendors">Vendors to monitor (comma or newline separated)</label>
+      <textarea class="cg-textarea" id="vendors" name="vendors" placeholder="okta.com, slack.com, atlassian.com&#10;zendesk.com"></textarea>
+      <div class="help">Add 3–200 domains. We'll expand to pricing/terms/DPA/subprocessors/status pages automatically.</div>
+    </div>
 
-        <div class="cg-field full">
-          <label for="vendors" class="cg-label">Vendors to monitor (comma or newline separated)</label>
-          <textarea id="vendors" name="vendors" required class="cg-textarea" placeholder="okta.com, slack.com, atlassian.com&#10;zendesk.com"></textarea>
-          <div class="cg-help">Add 3–200 domains. We'll expand to pricing / terms / DPA / subprocessors / status pages automatically.</div>
-        </div>
+    <!-- Budget + Notes -->
+    <div class="cg-field">
+      <label for="budget">Budget</label>
+      <select class="cg-select" id="budget" name="budget" required>
+        <option value="" selected disabled>Choose…</option>
+        <option>$2,988 / year</option>
+        <option>$6,000 / year</option>
+        <option>$12,000 / year</option>
+        <option>Custom / Enterprise</option>
+      </select>
+    </div>
+    <div class="cg-field">
+      <label for="notes">Notes (optional)</label>
+      <textarea class="cg-textarea" id="notes" name="notes" placeholder="Anything else?"></textarea>
+    </div>
 
-        <div class="cg-field">
-          <label for="budget" class="cg-label">Budget</label>
-          <select id="budget" name="budget" required class="cg-select" aria-describedby="budgetHelp">
-            <option value="" selected>Choose…</option>
-            <option>&lt; $10k</option>
-            <option>$10k–$25k</option>
-            <option>$25k–$50k</option>
-            <option>$50k–$100k</option>
-            <option>$100k+</option>
-          </select>
-          <div id="budgetHelp" class="cg-help">Please choose a budget.</div>
-        </div>
-
-        <div class="cg-field">
-          <label for="notes" class="cg-label">Notes (optional)</label>
-          <textarea id="notes" name="notes" class="cg-textarea" placeholder="Any special vendors, timing, or compliance needs…"></textarea>
-        </div>
-      </div>
-
-      <div class="cg-row">
-        <button class="cg-btn" id="submitBtn" type="submit">Submit</button>
-        <span id="msg" class="cg-msg" aria-live="polite"></span>
-      </div>
-    </form>
-  </div>
-</section>
+    <!-- Actions -->
+    <div class="cg-actions span-2">
+      <button class="cg-btn" id="submitBtn" type="submit">Submit</button>
+      <span id="msg" aria-live="polite"></span>
+    </div>
+  </form>
+</main>
 
 <footer class="cg-footer">
   <div class="cg-wrap cg-footlinks">
@@ -113,63 +117,53 @@
 
 <script>
 (function(){
-  const form = document.getElementById('intake-form');
-  const btn = document.getElementById('submitBtn');
-  const msg = document.getElementById('msg');
-  const worker = (document.querySelector('meta[name=worker-url]')||{}).content || '';
+  const form = document.getElementById('intake');
+  const btn  = document.getElementById('submitBtn');
+  const msg  = document.getElementById('msg');
+  const meta = document.querySelector('meta[name="worker-url"]');
+  const worker = meta ? meta.getAttribute('content') : '';
+  const endpoint = (worker || '') + '/intake';
 
-  function setMsg(text, ok){
-    msg.textContent = text || '';
-    msg.className = 'cg-msg ' + (ok ? 'ok' : 'err');
+  function say(text, ok){
+    msg.textContent = text;
+    msg.style.color = ok ? '#0a7f3f' : '#b00020';
   }
-
-  function required(v){ return v && v.trim().length > 0; }
 
   form.addEventListener('submit', async (e)=>{
     e.preventDefault();
-    setMsg('', true);
+    // simple validation
+    const email = document.getElementById('email').value.trim();
+    const company = document.getElementById('company').value.trim();
+    const vendors = document.getElementById('vendors').value.trim();
+    const budget = document.getElementById('budget').value;
 
-    const data = {
-      email: document.getElementById('email').value.trim(),
-      company: document.getElementById('company').value.trim(),
-      vendors: document.getElementById('vendors').value.trim(),
-      budget: document.getElementById('budget').value,
-      notes: document.getElementById('notes').value.trim()
-    };
-
-    // simple client-side validation in English
-    if(!required(data.email) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)){
-      setMsg('Please enter a valid email.', false); return;
+    if(!email || !company || !vendors || !budget){
+      say('Please complete the required fields.', false); return;
     }
-    if(!required(data.company)){ setMsg('Please enter your company name.', false); return; }
-    if(!required(data.vendors)){ setMsg('Please provide at least one vendor domain.', false); return; }
-    if(!required(data.budget)){ setMsg('Please choose a budget.', false); return; }
+    // allow any company domain; just a basic shape check
+    const okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if(!okEmail){ say('Please enter a valid email.', false); return; }
 
-    btn.disabled = true;
+    btn.disabled = true; say('Submitting…', true);
+
     try{
-      const endpoint = worker ? worker.replace(/\/$/,'') + '/intake' : '/intake/api';
-      const r = await fetch(endpoint, {
+      const res = await fetch(endpoint, {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify(data),
-        credentials: 'omit',
-        mode: 'cors'
+        body: JSON.stringify({
+          email, company, vendors, budget,
+          notes: document.getElementById('notes').value || ''
+        })
       });
-      if(r.ok){
-        setMsg('Success — we will get back to you shortly.', true);
-        form.reset();
-        document.getElementById('budget').value = '';
-      }else{
-        setMsg('Submission failed — please try again.', false);
-      }
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      form.reset();
+      say('Success — we will get back to you shortly.', true);
     }catch(err){
-      setMsg('Submission failed — please try again.', false);
+      say('Submission failed — please try again.', false);
     }finally{
       btn.disabled = false;
     }
   });
 })();
 </script>
-<script src="/assets/home-v3c.js"></script>
-</body>
-</html>
+</body></html>
