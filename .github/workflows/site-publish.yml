@@ -1,50 +1,35 @@
-name: Site feeds & SEO publish
-
+name: site-publish
 on:
   push:
     branches: [ main ]
     paths:
-      - 'reports/**'
-      - 'templates/**'
-      - 'scripts/gen_feeds.py'
-      - '.github/workflows/site-publish.yml'
+      - "reports/**"
+      - "templates/**"
+      - "scripts/gen_feeds.py"
   schedule:
-    - cron: '17 3 * * *'  # daily 03:17 UTC
-  workflow_dispatch:
-
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
-
+          python-version: "3.11"
       - name: Install deps
-        run: |
-          python -m pip install --upgrade pip pyyaml
-
-      - name: Generate RSS, sitemap, reports index
+        run: pip install pyyaml
+      - name: Generate feeds & pages
         env:
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
         run: |
           python scripts/gen_feeds.py
-
-      - name: Commit changes (if any)
+      - name: Commit changes
         run: |
-          set -e
           git config user.name "cg-alert-bot"
-          git config user.email "bot@users.noreply.github.com"
-          if [ -n "$(git status --porcelain rss sitemap.xml reports/index.html)" ]; then
-            git add rss sitemap.xml reports/index.html
-            git commit -m "chore(site): auto-generate rss & sitemap & reports index [skip ci]"
-            git push
-          else
-            echo "No changes to commit."
-          fi
+          git config user.email "bot@cg-alert.com"
+          git add rss/index.xml sitemap.xml reports/index.html || true
+          git diff --cached --quiet || git commit -m "chore: auto-update rss/sitemap/reports index"
+          git push
