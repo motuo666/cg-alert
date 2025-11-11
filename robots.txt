@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
-Sitemap: https://www.cg-alert.com/sitemap-index.xml
 Sitemap: https://www.cg-alert.com/sitemap.xml
+
+# Helpful endpoints
+Disallow: /api/
+Disallow: /admin/
+
+# Feeds
+Allow: /rss/index.xml

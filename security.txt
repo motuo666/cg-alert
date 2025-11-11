@@ -1,2 +1,6 @@
-Contact: mailto:ops@cg-alert.com
-Policy: https://www.cg-alert.com/privacy/
+Contact: mailto:security@cg-alert.com
+Encryption: https://keys.openpgp.org/
+Acknowledgments: https://www.cg-alert.com/security/
+Preferred-Languages: en
+Policy: https://www.cg-alert.com/terms/
+Expires: 2026-12-31T23:59:59Z
