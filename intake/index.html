@@ -9,7 +9,28 @@
   <link rel="canonical" href="https://www.cg-alert.com/intake/"/>
   <link rel="stylesheet" href="/assets/home-v3c.css">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
-  <meta name="description" content="Request an enterprise plan and tell us which vendors to monitor.">
+  <meta name="description" content="Evidence-backed vendor change alerts.">
+  <style>
+    /* scoped, non-invasive form polish */
+    .cg-intake{padding:28px;}
+    .cg-intake h2{margin:0 0 8px 0}
+    .cg-intake .sub{color:#555;margin:0 0 18px 0}
+    .cg-intake .grid{display:grid;grid-template-columns:1fr;gap:16px}
+    @media (min-width: 920px){ .cg-intake .grid{grid-template-columns:1fr 1fr} }
+    .cg-intake .full{grid-column:1/-1}
+    .cg-field{display:flex;flex-direction:column;gap:8px}
+    .cg-label{font-weight:600}
+    .cg-help{font-size:.9rem;color:#6b6b6b}
+    .cg-input,.cg-textarea,.cg-select{width:100%;padding:12px 14px;border:1px solid #e1e1e1;border-radius:10px;background:#fff;font:inherit;line-height:1.35}
+    .cg-textarea{min-height:120px;resize:vertical}
+    .cg-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+    .cg-btn{appearance:none;border:0;border-radius:12px;padding:12px 18px;background:#111;color:#fff;font-weight:600;cursor:pointer}
+    .cg-btn:disabled{opacity:.6;cursor:not-allowed}
+    .cg-msg{margin-top:10px;font-size:.95rem}
+    .cg-msg.ok{color:#0a7a24}
+    .cg-msg.err{color:#b00020}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  </style>
 </head>
 <body>
 <header class="cg-topbar">
@@ -27,53 +48,53 @@
 
 <section class="cg-wrap">
   <h1>Request Enterprise</h1>
-  <div class="cg-card">
-    <form id="intake-form" action="/api/intake" method="post" novalidate>
-      <div class="cg-grid2">
-        <div>
-          <label for="email"><strong>Email</strong> (work preferred)</label>
-          <input id="email" name="email" type="email" placeholder="you@company.com" required>
-          <p class="muted">We’ll contact you at this address. Please enter your email.</p>
+  <div class="cg-card cg-intake">
+    <h2 class="sr-only">Enterprise intake form</h2>
+    <p class="sub">Tell us about your company and vendors to monitor. We'll respond within one business day.</p>
+
+    <form id="intake-form" novalidate>
+      <div class="grid">
+        <div class="cg-field">
+          <label for="email" class="cg-label">Email (work preferred)</label>
+          <input id="email" name="email" type="email" required class="cg-input" placeholder="you@company.com" autocomplete="email" />
+          <div class="cg-help">We'll contact you at this address.</div>
         </div>
-        <div>
-          <label for="company">Company name</label>
-          <input id="company" name="company" type="text" placeholder="Acme Corp" required>
-          <p class="muted">Please enter your company name.</p>
+
+        <div class="cg-field">
+          <label for="company" class="cg-label">Company name</label>
+          <input id="company" name="company" type="text" required class="cg-input" placeholder="Acme Corp" autocomplete="organization" />
+          <div class="cg-help">Please enter your company name.</div>
         </div>
-      </div>
 
-      <div class="spacer"></div>
+        <div class="cg-field full">
+          <label for="vendors" class="cg-label">Vendors to monitor (comma or newline separated)</label>
+          <textarea id="vendors" name="vendors" required class="cg-textarea" placeholder="okta.com, slack.com, atlassian.com&#10;zendesk.com"></textarea>
+          <div class="cg-help">Add 3–200 domains. We'll expand to pricing / terms / DPA / subprocessors / status pages automatically.</div>
+        </div>
 
-      <div>
-        <label for="vendors">Vendors to monitor (comma or newline separated)</label>
-        <textarea id="vendors" name="vendors" placeholder="okta.com&#10;slack.com&#10;atlassian.com" required></textarea>
-        <p class="muted">Add 3–200 domains. We'll expand to pricing / terms / DPA / subprocessors / status pages automatically. Please provide at least one vendor domain.</p>
-      </div>
-
-      <div class="cg-grid2">
-        <div>
-          <label for="budget">Budget</label>
-          <select id="budget" name="budget" required>
+        <div class="cg-field">
+          <label for="budget" class="cg-label">Budget</label>
+          <select id="budget" name="budget" required class="cg-select" aria-describedby="budgetHelp">
             <option value="" selected>Choose…</option>
-            <option>Under $5k</option>
-            <option>$5k–$20k</option>
-            <option>$20k–$50k</option>
-            <option>$50k+</option>
+            <option>&lt; $10k</option>
+            <option>$10k–$25k</option>
+            <option>$25k–$50k</option>
+            <option>$50k–$100k</option>
+            <option>$100k+</option>
           </select>
-          <p class="muted">Please choose a budget.</p>
+          <div id="budgetHelp" class="cg-help">Please choose a budget.</div>
         </div>
-        <div>
-          <label for="notes">Notes (optional)</label>
-          <textarea id="notes" name="notes" placeholder="Anything we should know? (optional)"></textarea>
+
+        <div class="cg-field">
+          <label for="notes" class="cg-label">Notes (optional)</label>
+          <textarea id="notes" name="notes" class="cg-textarea" placeholder="Any special vendors, timing, or compliance needs…"></textarea>
         </div>
       </div>
 
-      <div class="actions">
-        <button class="btn" type="submit">Submit</button>
-        <span class="ok" id="ok-msg" hidden>Success — we will get back to you shortly.</span>
-        <span class="err" id="err-msg" hidden>Submission failed — please try again.</span>
+      <div class="cg-row">
+        <button class="cg-btn" id="submitBtn" type="submit">Submit</button>
+        <span id="msg" class="cg-msg" aria-live="polite"></span>
       </div>
-      <input type="hidden" name="source" value="enterprise-intake">
     </form>
   </div>
 </section>
@@ -90,27 +111,65 @@
   </div>
 </footer>
 
-<script src="/assets/home-v3c.js"></script>
 <script>
-  (function(){
-    const f=document.getElementById('intake-form');
-    const ok=document.getElementById('ok-msg');
-    const err=document.getElementById('err-msg');
-    f.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      ok.hidden = err.hidden = true;
-      const fd = new FormData(f);
-      for (const k of ['email','company','vendors','budget']) {
-        const v = (fd.get(k)||'').toString().trim();
-        if (!v) { alert('Please fill out the form.'); return; }
+(function(){
+  const form = document.getElementById('intake-form');
+  const btn = document.getElementById('submitBtn');
+  const msg = document.getElementById('msg');
+  const worker = (document.querySelector('meta[name=worker-url]')||{}).content || '';
+
+  function setMsg(text, ok){
+    msg.textContent = text || '';
+    msg.className = 'cg-msg ' + (ok ? 'ok' : 'err');
+  }
+
+  function required(v){ return v && v.trim().length > 0; }
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    setMsg('', true);
+
+    const data = {
+      email: document.getElementById('email').value.trim(),
+      company: document.getElementById('company').value.trim(),
+      vendors: document.getElementById('vendors').value.trim(),
+      budget: document.getElementById('budget').value,
+      notes: document.getElementById('notes').value.trim()
+    };
+
+    // simple client-side validation in English
+    if(!required(data.email) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)){
+      setMsg('Please enter a valid email.', false); return;
+    }
+    if(!required(data.company)){ setMsg('Please enter your company name.', false); return; }
+    if(!required(data.vendors)){ setMsg('Please provide at least one vendor domain.', false); return; }
+    if(!required(data.budget)){ setMsg('Please choose a budget.', false); return; }
+
+    btn.disabled = true;
+    try{
+      const endpoint = worker ? worker.replace(/\/$/,'') + '/intake' : '/intake/api';
+      const r = await fetch(endpoint, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(data),
+        credentials: 'omit',
+        mode: 'cors'
+      });
+      if(r.ok){
+        setMsg('Success — we will get back to you shortly.', true);
+        form.reset();
+        document.getElementById('budget').value = '';
+      }else{
+        setMsg('Submission failed — please try again.', false);
       }
-      try{
-        const r = await fetch(f.action, {method:'POST', body:fd});
-        if (r.ok){ ok.hidden=false; f.reset(); }
-        else { err.hidden=false; }
-      }catch(e){ err.hidden=false; }
-    });
-  })();
+    }catch(err){
+      setMsg('Submission failed — please try again.', false);
+    }finally{
+      btn.disabled = false;
+    }
+  });
+})();
 </script>
+<script src="/assets/home-v3c.js"></script>
 </body>
 </html>
