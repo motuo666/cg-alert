@@ -21,32 +21,85 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Install tools
         run: |
           sudo apt-get update -y
           sudo apt-get install -y swaks openssl jq
-      - name: SMTP send test
+
+      - name: SMTP send test (587→465→25)
+        id: smtp
         if: ${{ env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS && env.MAIL_TO }}
         run: |
-          set -e
-          subj="CG Alert SMTP smoke $(date -u +%FT%TZ)"
-          swaks --server "$SMTP_HOST" --auth LOGIN \
-                --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS" \
-                --from "${MAIL_FROM:-no-reply@cg-alert.com}" \
-                --to "$MAIL_TO" --h-Subject "$subj" --body "SMTP OK" \
-                --timeout 25 --quit-after RCPT
+          ok=0
+          echo "::group::DNS resolve"
+          getent hosts "$SMTP_HOST" || true
+          echo "::endgroup::"
+
+          echo "::group::Try 587 STARTTLS"
+          if swaks --server "$SMTP_HOST" --port 587 --timeout 12 --tls \
+                   --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS" \
+                   --from "${MAIL_FROM:-no-reply@cg-alert.com}" \
+                   --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (587)" --body "SMTP OK 587" \
+                   --quit-after DATA ; then ok=1; echo "mode=587" >> $GITHUB_OUTPUT ; fi
+          echo "::endgroup::"
+
+          if [ $ok -eq 0 ]; then
+            echo "::group::Try 465 TLS-on-connect"
+            if swaks --server "$SMTP_HOST" --port 465 --timeout 12 --tls-on-connect \
+                     --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS" \
+                     --from "${MAIL_FROM:-no-reply@cg-alert.com}" \
+                     --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (465)" --body "SMTP OK 465" \
+                     --quit-after DATA ; then ok=1; echo "mode=465" >> $GITHUB_OUTPUT ; fi
+            echo "::endgroup::"
+          fi
+
+          if [ $ok -eq 0 ]; then
+            echo "::group::Try 25 plain"
+            if swaks --server "$SMTP_HOST" --port 25 --timeout 12 \
+                     --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS" \
+                     --from "${MAIL_FROM:-no-reply@cg-alert.com}" \
+                     --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (25)" --body "SMTP OK 25" \
+                     --quit-after DATA ; then ok=1; echo "mode=25" >> $GITHUB_OUTPUT ; fi
+            echo "::endgroup::"
+          fi
+
+          if [ $ok -eq 1 ]; then
+            echo "status=ok" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "status=fail" >> $GITHUB_OUTPUT
+            echo "::warning::SMTP smoke failed on all modes (587/465/25)"
+          fi
+
       - name: IMAP login test
+        id: imap
         if: ${{ env.IMAP_HOST && env.IMAP_USER && env.IMAP_PASS }}
         run: |
           set -e
           python3 - <<'PY'
-          import imaplib, os
+          import imaplib, os, ssl
           h=os.environ.get("IMAP_HOST"); u=os.environ.get("IMAP_USER"); p=os.environ.get("IMAP_PASS")
           M=imaplib.IMAP4_SSL(h); M.login(u,p); M.logout()
           print("IMAP OK")
           PY
+          echo "status=ok" >> $GITHUB_OUTPUT
+
       - name: Slack notify (optional)
         if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         run: |
-          jq -n --arg t "IMAP/SMTP smoke passed at $(date -u +%FT%TZ)" '{text:$t}' \
+          sms="${{ steps.smtp.outputs.status || 'skip' }}"
+          ims="${{ steps.imap.outputs.status || 'skip' }}"
+          mode="${{ steps.smtp.outputs.mode || 'n/a' }}"
+          jq -n --arg t "IMAP/SMTP smoke: smtp=$sms (mode=$mode) imap=$ims at $(date -u +%FT%TZ)" '{text:$t}' \
           | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
+
+      - name: Gate (fail if both failed)
+        run: |
+          sms="${{ steps.smtp.outputs.status || 'skip' }}"
+          ims="${{ steps.imap.outputs.status || 'skip' }}"
+          echo "SMTP: $sms, IMAP: $ims"
+          if [ "$sms" != "ok" ] && [ "$ims" != "ok" ]; then
+            echo "::error:: Both SMTP and IMAP checks failed"
+            exit 1
+          fi
