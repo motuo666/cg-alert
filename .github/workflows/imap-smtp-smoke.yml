@@ -13,8 +13,9 @@ jobs:
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      # Allow override via repository/environments vars; default to 587/STARTTLS for Zoho
       SMTP_PORT: ${{ secrets.SMTP_PORT || vars.SMTP_PORT || '587' }}
-      SMTP_SECURITY: ${{ vars.SMTP_SECURITY || 'starttls' }}
+      SMTP_SECURITY: ${{ secrets.SMTP_SECURITY || vars.SMTP_SECURITY || 'starttls' }}
       IMAP_HOST: ${{ secrets.IMAP_HOST }}
       IMAP_USER: ${{ secrets.IMAP_USER }}
       IMAP_PASS: ${{ secrets.IMAP_PASS }}
@@ -41,72 +42,52 @@ jobs:
           echo "MAIL_FROM=$MAIL_FROM"
           echo "MAIL_TO=$MAIL_TO"
 
-      - name: SMTP smoke
-        id: smtp
+      - id: smtp
+        name: SMTP probe (prefer config, fallback Zoho defaults)
         shell: bash
         run: |
           set -e
           ok=0; mode="n/a"
-
           echo "::group::Preferred"
-          # 统一使用 --quit-after RCPT，避免 DATA 在不同发行版的枚举差异
           case "$SMTP_SECURITY" in
             starttls) OPT="--tls";;
             ssl)      OPT="--tls-on-connect";;
             plain)    OPT="";;
             *)        OPT="--tls";;
           esac
-
-          if swaks --server "$SMTP_HOST" --port "$SMTP_PORT" --timeout 15 $OPT \
-                --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS" \
-                --from "${MAIL_FROM:-$SMTP_USER}" \
-                --to "$MAIL_TO" \
-                --h-Subject "CG Alert SMTP smoke ($SMTP_PORT/$SMTP_SECURITY)" \
-                --body "SMTP OK" \
-                --quit-after RCPT ; then
-            ok=1; mode="$SMTP_PORT-$SMTP_SECURITY"
+          # Some swaks builds reject unknown quit_after values; avoid using it.
+          if swaks --server "$SMTP_HOST" --port "$SMTP_PORT" --timeout 20 $OPT                 --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                 --from "${MAIL_FROM:-$SMTP_USER}"                 --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke ($SMTP_PORT/$SMTP_SECURITY)" --body "SMTP OK"; then
+            ok=1; mode="$SMTP_PORT-$SMTP_SECURITY";
           fi
           echo "::endgroup::"
 
           if [ $ok -eq 0 ]; then
             echo "::group::Fallback 587 STARTTLS"
-            if swaks --server "$SMTP_HOST" --port 587 --timeout 12 --tls \
-                  --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS" \
-                  --from "${MAIL_FROM:-$SMTP_USER}" \
-                  --to "$MAIL_TO" \
-                  --h-Subject "CG Alert SMTP smoke (587)" \
-                  --body "SMTP OK 587" \
-                  --quit-after RCPT ; then
-              ok=1; mode="587-starttls"
+            if swaks --server "$SMTP_HOST" --port 587 --timeout 15 --tls                   --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                   --from "${MAIL_FROM:-$SMTP_USER}"                   --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (587/starttls)" --body "SMTP OK 587"; then
+              ok=1; mode="587-starttls";
             fi
             echo "::endgroup::"
           fi
 
           if [ $ok -eq 0 ]; then
             echo "::group::Fallback 465 SSL"
-            if swaks --server "$SMTP_HOST" --port 465 --timeout 12 --tls-on-connect \
-                  --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS" \
-                  --from "${MAIL_FROM:-$SMTP_USER}" \
-                  --to "$MAIL_TO" \
-                  --h-Subject "CG Alert SMTP smoke (465)" \
-                  --body "SMTP OK 465" \
-                  --quit-after RCPT ; then
-              ok=1; mode="465-ssl"
+            if swaks --server "$SMTP_HOST" --port 465 --timeout 15 --tls-on-connect                   --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                   --from "${MAIL_FROM:-$SMTP_USER}"                   --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (465/ssl)" --body "SMTP OK 465"; then
+              ok=1; mode="465-ssl";
             fi
             echo "::endgroup::"
           fi
 
           if [ $ok -eq 1 ]; then
-            echo "status=ok"   >> "$GITHUB_OUTPUT"
-            echo "mode=$mode" >> "$GITHUB_OUTPUT"
+            echo "status=ok"   >> $GITHUB_OUTPUT
+            echo "mode=$mode"  >> $GITHUB_OUTPUT
           else
-            echo "status=fail" >> "$GITHUB_OUTPUT"
-            echo "mode=$mode"  >> "$GITHUB_OUTPUT"
+            echo "status=fail" >> $GITHUB_OUTPUT
+            echo "mode=$mode"  >> $GITHUB_OUTPUT
             exit 1
           fi
 
-      - name: IMAP smoke
-        id: imap
+      - id: imap
+        name: IMAP probe (SSL 993)
         run: |
           python3 - <<'PY'
           import imaplib, os, sys
@@ -114,9 +95,12 @@ jobs:
           u=os.environ.get("IMAP_USER"); pw=os.environ.get("IMAP_PASS")
           try:
             M=imaplib.IMAP4_SSL(h, p); M.login(u,pw); M.logout()
-            print("IMAP OK"); open(os.getenv("GITHUB_OUTPUT"),"a").write("status=ok\n")
+            print("IMAP OK")
+            open(os.getenv("GITHUB_OUTPUT"),"a").write("status=ok\n")
           except Exception as e:
-            print("IMAP FAIL:", e); open(os.getenv("GITHUB_OUTPUT"),"a").write("status=fail\n"); sys.exit(1)
+            print("IMAP FAIL:", e)
+            open(os.getenv("GITHUB_OUTPUT"),"a").write("status=fail\n")
+            sys.exit(1)
           PY
 
       - name: Slack notify
@@ -125,8 +109,7 @@ jobs:
           sms="${{ steps.smtp.outputs.status || 'fail' }}"
           ims="${{ steps.imap.outputs.status || 'fail' }}"
           mode="${{ steps.smtp.outputs.mode   || 'n/a'  }}"
-          jq -n --arg t "IMAP/SMTP smoke: smtp=$sms (mode=$mode) imap=$ims at $(date -u +%FT%TZ)" '{text:$t}' \
-            | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
+          jq -n --arg t "IMAP/SMTP smoke: smtp=$sms (mode=$mode) imap=$ims at $(date -u +%FT%TZ)" '{text:$t}'             | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
 
       - name: Gate (require at least one pass)
         run: |
