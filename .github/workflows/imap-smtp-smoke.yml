@@ -52,17 +52,17 @@ jobs:
             ssl)      OPT="--tls-on-connect";;
             plain)    OPT="";;
           esac
-          if swaks --server "$SMTP_HOST" --port "$SMTP_PORT" --timeout 15 $OPT                    --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                    --from "${MAIL_FROM:-$SMTP_USER}"                    --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke ($SMTP_PORT/$SMTP_SECURITY)" --body "SMTP OK"                    --quit-after DATA ; then ok=1; mode="$SMTP_PORT-$SMTP_SECURITY"; fi
+          if swaks --server "$SMTP_HOST" --port "$SMTP_PORT" --timeout 15 $OPT                    --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                    --from "${MAIL_FROM:-$SMTP_USER}"                    --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke ($SMTP_PORT/$SMTP_SECURITY)" --body "SMTP OK"                    --quit-after rcpt ; then ok=1; mode="$SMTP_PORT-$SMTP_SECURITY"; fi
           echo "::endgroup::"
 
           if [ $ok -eq 0 ]; then
             echo "::group::Fallback 587 STARTTLS"
-            if swaks --server "$SMTP_HOST" --port 587 --timeout 12 --tls                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-$SMTP_USER}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (587)" --body "SMTP OK 587"                      --quit-after DATA ; then ok=1; mode="587-starttls"; fi
+            if swaks --server "$SMTP_HOST" --port 587 --timeout 12 --tls                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-$SMTP_USER}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (587)" --body "SMTP OK 587"                      --quit-after rcpt ; then ok=1; mode="587-starttls"; fi
             echo "::endgroup::"
           fi
           if [ $ok -eq 0 ]; then
             echo "::group::Fallback 465 SSL"
-            if swaks --server "$SMTP_HOST" --port 465 --timeout 12 --tls-on-connect                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-$SMTP_USER}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (465)" --body "SMTP OK 465"                      --quit-after DATA ; then ok=1; mode="465-ssl"; fi
+            if swaks --server "$SMTP_HOST" --port 465 --timeout 12 --tls-on-connect                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-$SMTP_USER}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (465)" --body "SMTP OK 465"                      --quit-after rcpt ; then ok=1; mode="465-ssl"; fi
             echo "::endgroup::"
           fi
 
