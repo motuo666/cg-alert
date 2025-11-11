@@ -1,36 +1,247 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"><channel>
-<title>CG Alert Reports</title>
-<link>https://www.cg-alert.com/reports/</link>
-<description>Evidence-backed vendor change alerts</description>
-<lastBuildDate>Tue, 11 Nov 2025 03:19:42 GMT</lastBuildDate>
-
-  <item>
-    <title>_last_poll</title>
-    <link>/reports/cards/last-poll-2025-11-11t03-19-42-166z.html</link>
-    <pubDate>Tue, 11 Nov 2025 03:19:42 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">e8aa569b4179a6f9763b84876b3e5e22d106c9c7e9cfef9f67c2f31e095e5bfd</guid>
-  </item>
-  <item>
-    <title>Fabrikam Analytics</title>
-    <link>/reports/cards/fabrikam-analytics-2025-11-07t09-46-06-032638z.html</link>
-    <pubDate>Fri, 07 Nov 2025 09:46:06 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">demo-hash-3</guid>
-  </item>
-  <item>
-    <title>Contoso CRM</title>
-    <link>/reports/cards/contoso-crm-2025-11-07t09-46-06-032636z.html</link>
-    <pubDate>Fri, 07 Nov 2025 09:46:06 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">demo-hash-2</guid>
-  </item>
-  <item>
-    <title>Example SaaS</title>
-    <link>/reports/cards/example-saas-2025-11-07t09-46-06-032625z.html</link>
-    <pubDate>Fri, 07 Nov 2025 09:46:06 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">demo-hash-1</guid>
-  </item>
-</channel></rss>
+<rss version="2.0">
+  <channel>
+    <title>CG Alert — Vendor Change Reports</title>
+    <link>/reports/</link>
+    <description>Evidence-backed vendor change alerts.</description>
+    <lastBuildDate>2025-11-11T11:09:17Z</lastBuildDate>
+    <ttl>30</ttl>
+    <item>
+      <title>_Last_Poll</title>
+      <link>/reports/vendor/2025-11-11/_last_poll.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/vendor/2025-11-11/_last_poll.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ vendor — Change Source · 2025-11-11T06:46:16.322Z · _last_poll Who uses About Reports RSS Terms Privacy © …</description>
+    </item>
+    <item>
+      <title>_Last_Poll</title>
+      <link>/reports/vendor/2025-11-09/_last_poll.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/vendor/2025-11-09/_last_poll.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ vendor — Change Source · 2025-11-09T18:36:47.357Z · _last_poll Who uses About Reports RSS Terms Privacy © …</description>
+    </item>
+    <item>
+      <title>_Last_Poll</title>
+      <link>/reports/vendor/2025-11-10/_last_poll.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/vendor/2025-11-10/_last_poll.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ vendor — Change Source · 2025-11-10T18:43:59.358Z · _last_poll Who uses About Reports RSS Terms Privacy © …</description>
+    </item>
+    <item>
+      <title>_Last_Poll</title>
+      <link>/reports/vendor/2025-11-08/_last_poll.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/vendor/2025-11-08/_last_poll.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ vendor — Change Source · 2025-11-08T18:39:03.320Z · _last_poll Who uses About Reports RSS Terms Privacy © …</description>
+    </item>
+    <item>
+      <title>_Last_Poll</title>
+      <link>/reports/vendor/2025-11-07/_last_poll.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/vendor/2025-11-07/_last_poll.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ vendor — Change Source · 2025-11-07T18:41:31.368Z · _last_poll Who uses About Reports RSS Terms Privacy © …</description>
+    </item>
+    <item>
+      <title>Index</title>
+      <link>/reports/</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/</guid>
+      <description>Reports — CG Alert .cg-searchbar{display:flex;gap:.75rem;align-items:center;margin:1.25rem 0;} .cg-searchbar input{flex:1; padding:.75rem 1rem; border:1px solid #e5e7eb; border-rad…</description>
+    </item>
+    <item>
+      <title>Index</title>
+      <link>/reports/rss/</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/rss/</guid>
+      <description>RSS · CG Alert :root { --fg:#0b1220; --muted:#6b7280; --bd:#e5e7eb; --bg:#ffffff; } body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, &apos;Helvet…</description>
+    </item>
+    <item>
+      <title>Sample 1</title>
+      <link>/reports/evidence/sample-1.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/evidence/sample-1.html</guid>
+      <description>Example SaaS — Evidence Example SaaS (diff omitted) ← Back to Reports</description>
+    </item>
+    <item>
+      <title>Sample 2</title>
+      <link>/reports/evidence/sample-2.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/evidence/sample-2.html</guid>
+      <description>Contoso CRM — Evidence Contoso CRM (diff omitted) ← Back to Reports</description>
+    </item>
+    <item>
+      <title>Sample 3</title>
+      <link>/reports/evidence/sample-3.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/evidence/sample-3.html</guid>
+      <description>Fabrikam Analytics — Evidence Fabrikam Analytics (diff omitted) ← Back to Reports</description>
+    </item>
+    <item>
+      <title>Demo Hash 3</title>
+      <link>/reports/fabrikam-analytics/2025-11-11/demo-hash-3.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/fabrikam-analytics/2025-11-11/demo-hash-3.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Fabrikam Analytics — Change Source · 2025-11-11T06:46:16.322Z · demo-hash-3 Who uses About Reports RSS Ter…</description>
+    </item>
+    <item>
+      <title>Demo Hash 3</title>
+      <link>/reports/fabrikam-analytics/2025-11-09/demo-hash-3.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/fabrikam-analytics/2025-11-09/demo-hash-3.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Fabrikam Analytics — Change Source · 2025-11-09T18:36:47.356Z · demo-hash-3 Who uses About Reports RSS Ter…</description>
+    </item>
+    <item>
+      <title>Demo Hash 3</title>
+      <link>/reports/fabrikam-analytics/2025-11-10/demo-hash-3.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/fabrikam-analytics/2025-11-10/demo-hash-3.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Fabrikam Analytics — Change Source · 2025-11-10T18:43:59.358Z · demo-hash-3 Who uses About Reports RSS Ter…</description>
+    </item>
+    <item>
+      <title>Demo Hash 3</title>
+      <link>/reports/fabrikam-analytics/2025-11-08/demo-hash-3.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/fabrikam-analytics/2025-11-08/demo-hash-3.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Fabrikam Analytics — Change Source · 2025-11-08T18:39:03.319Z · demo-hash-3 Who uses About Reports RSS Ter…</description>
+    </item>
+    <item>
+      <title>Demo Hash 3</title>
+      <link>/reports/fabrikam-analytics/2025-11-07/demo-hash-3.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/fabrikam-analytics/2025-11-07/demo-hash-3.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Fabrikam Analytics — Change Source · 2025-11-07T18:41:31.368Z · demo-hash-3 Who uses About Reports RSS Ter…</description>
+    </item>
+    <item>
+      <title>Demo Hash 1</title>
+      <link>/reports/example-saas/2025-11-11/demo-hash-1.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/example-saas/2025-11-11/demo-hash-1.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Example SaaS — Change Source · 2025-11-11T06:46:16.320Z · demo-hash-1 Who uses About Reports RSS Terms Pri…</description>
+    </item>
+    <item>
+      <title>Demo Hash 1</title>
+      <link>/reports/example-saas/2025-11-09/demo-hash-1.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/example-saas/2025-11-09/demo-hash-1.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Example SaaS — Change Source · 2025-11-09T18:36:47.354Z · demo-hash-1 Who uses About Reports RSS Terms Pri…</description>
+    </item>
+    <item>
+      <title>Demo Hash 1</title>
+      <link>/reports/example-saas/2025-11-10/demo-hash-1.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/example-saas/2025-11-10/demo-hash-1.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Example SaaS — Change Source · 2025-11-10T18:43:59.356Z · demo-hash-1 Who uses About Reports RSS Terms Pri…</description>
+    </item>
+    <item>
+      <title>Demo Hash 1</title>
+      <link>/reports/example-saas/2025-11-08/demo-hash-1.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/example-saas/2025-11-08/demo-hash-1.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Example SaaS — Change Source · 2025-11-08T18:39:03.317Z · demo-hash-1 Who uses About Reports RSS Terms Pri…</description>
+    </item>
+    <item>
+      <title>Demo Hash 1</title>
+      <link>/reports/example-saas/2025-11-07/demo-hash-1.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/example-saas/2025-11-07/demo-hash-1.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Example SaaS — Change Source · 2025-11-07T18:41:31.366Z · demo-hash-1 Who uses About Reports RSS Terms Pri…</description>
+    </item>
+    <item>
+      <title>Contoso Crm 2025 11 07T09 46 06 032636Z</title>
+      <link>/reports/cards/contoso-crm-2025-11-07t09-46-06-032636z.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/cards/contoso-crm-2025-11-07t09-46-06-032636z.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Source URL: https://contoso.com/terms · Captured: 2025-11-07T09:46:06.032636Z · SHA256: demo-hash-2 Contos…</description>
+    </item>
+    <item>
+      <title>Last Poll 2025 11 08T05 23 43 796Z</title>
+      <link>/reports/cards/last-poll-2025-11-08t05-23-43-796z.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/cards/last-poll-2025-11-08t05-23-43-796z.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Source URL: # · Captured: 2025-11-08T05:23:43.796Z · SHA256: e8aa569b4179a6f9763b84876b3e5e22d106c9c7e9cfe…</description>
+    </item>
+    <item>
+      <title>Fabrikam Analytics 2025 11 07T09 46 06 032638Z</title>
+      <link>/reports/cards/fabrikam-analytics-2025-11-07t09-46-06-032638z.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/cards/fabrikam-analytics-2025-11-07t09-46-06-032638z.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Source URL: https://fabrikam.io/subprocessors · Captured: 2025-11-07T09:46:06.032638Z · SHA256: demo-hash-…</description>
+    </item>
+    <item>
+      <title>Last Poll 2025 11 09T03 19 04 938Z</title>
+      <link>/reports/cards/last-poll-2025-11-09t03-19-04-938z.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/cards/last-poll-2025-11-09t03-19-04-938z.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Source URL: # · Captured: 2025-11-09T03:19:04.938Z · SHA256: e8aa569b4179a6f9763b84876b3e5e22d106c9c7e9cfe…</description>
+    </item>
+    <item>
+      <title>Last Poll 2025 11 11T03 19 42 166Z</title>
+      <link>/reports/cards/last-poll-2025-11-11t03-19-42-166z.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/cards/last-poll-2025-11-11t03-19-42-166z.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Source URL: # · Captured: 2025-11-11T03:19:42.166Z · SHA256: e8aa569b4179a6f9763b84876b3e5e22d106c9c7e9cfe…</description>
+    </item>
+    <item>
+      <title>Last Poll 2025 11 08T04 51 59 101Z</title>
+      <link>/reports/cards/last-poll-2025-11-08t04-51-59-101z.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/cards/last-poll-2025-11-08t04-51-59-101z.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Source URL: # · Captured: 2025-11-08T04:51:59.101Z · SHA256: bbf2b9947b4923c162b08bb0153ed991145c22b3abb05…</description>
+    </item>
+    <item>
+      <title>Last Poll 2025 11 10T03 33 13 928Z</title>
+      <link>/reports/cards/last-poll-2025-11-10t03-33-13-928z.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/cards/last-poll-2025-11-10t03-33-13-928z.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Source URL: # · Captured: 2025-11-10T03:33:13.928Z · SHA256: e8aa569b4179a6f9763b84876b3e5e22d106c9c7e9cfe…</description>
+    </item>
+    <item>
+      <title>Example Saas 2025 11 07T09 46 06 032625Z</title>
+      <link>/reports/cards/example-saas-2025-11-07t09-46-06-032625z.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/cards/example-saas-2025-11-07t09-46-06-032625z.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Source URL: https://example.com/pricing · Captured: 2025-11-07T09:46:06.032625Z · SHA256: demo-hash-1 Exam…</description>
+    </item>
+    <item>
+      <title>_Last_Poll</title>
+      <link>/reports/evidence/_last_poll.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/evidence/_last_poll.html</guid>
+      <description>_last_poll — Evidence _last_poll (diff omitted) ← Back to Reports</description>
+    </item>
+    <item>
+      <title>Demo Hash 2</title>
+      <link>/reports/contoso-crm/2025-11-11/demo-hash-2.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/contoso-crm/2025-11-11/demo-hash-2.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Contoso CRM — Change Source · 2025-11-11T06:46:16.321Z · demo-hash-2 Who uses About Reports RSS Terms Priv…</description>
+    </item>
+    <item>
+      <title>Demo Hash 2</title>
+      <link>/reports/contoso-crm/2025-11-09/demo-hash-2.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/contoso-crm/2025-11-09/demo-hash-2.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Contoso CRM — Change Source · 2025-11-09T18:36:47.356Z · demo-hash-2 Who uses About Reports RSS Terms Priv…</description>
+    </item>
+    <item>
+      <title>Demo Hash 2</title>
+      <link>/reports/contoso-crm/2025-11-10/demo-hash-2.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/contoso-crm/2025-11-10/demo-hash-2.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Contoso CRM — Change Source · 2025-11-10T18:43:59.357Z · demo-hash-2 Who uses About Reports RSS Terms Priv…</description>
+    </item>
+    <item>
+      <title>Demo Hash 2</title>
+      <link>/reports/contoso-crm/2025-11-08/demo-hash-2.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/contoso-crm/2025-11-08/demo-hash-2.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Contoso CRM — Change Source · 2025-11-08T18:39:03.318Z · demo-hash-2 Who uses About Reports RSS Terms Priv…</description>
+    </item>
+    <item>
+      <title>Demo Hash 2</title>
+      <link>/reports/contoso-crm/2025-11-07/demo-hash-2.html</link>
+      <pubDate>2025-11-11T11:09:15Z</pubDate>
+      <guid>/reports/contoso-crm/2025-11-07/demo-hash-2.html</guid>
+      <description>Report — CG Alert CG&amp;nbsp;Alert Pricing How it works Evidence Compare FAQ Contoso CRM — Change Source · 2025-11-07T18:41:31.367Z · demo-hash-2 Who uses About Reports RSS Terms Priv…</description>
+    </item>  </channel>
+</rss>
