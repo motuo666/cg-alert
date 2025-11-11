@@ -75,3 +75,22 @@
         sm = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">" + "".join(urlset) + "</urlset>"
         (ROOT/"sitemap.xml").write_text(sm, "utf-8")
         print(f"Generated: {len(rss_items)} rss items, {len(items[:200])} report links, sitemap urls={len(urlset)}")
+
+
+def render_card_grid(items):
+    # Server-side render a 3-column card grid; keep classes consistent with site
+    def esc(s): 
+        return (s or "").replace("&","&amp;").replace("<","&lt;").replace(">","&gt;")
+    blocks=[]
+    blocks.append('<div class="cg-grid3">')
+    for it in items:
+        title = esc(it.get("title","").strip())
+        link = esc(it.get("link",""))
+        date = esc(it.get("date","")[:10])
+        vendor = esc(it.get("vendor",""))
+        change = esc(it.get("change_type",""))
+        desc = esc(it.get("desc",""))
+        short = (desc[:160] + '…') if len(desc)>160 else desc
+        blocks.append(f'<a class="cg-card hover" href="{link}"><h3>{title}</h3><p><strong>{date}</strong> — {vendor} — {change}</p><p>{short}</p></a>')
+    blocks.append('</div>')
+    return ''.join(blocks)
