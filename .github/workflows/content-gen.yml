@@ -1,44 +1,36 @@
 name: content-gen
-
 on:
-  workflow_dispatch:
   schedule:
-    - cron: "13 3 * * *"   # 每天 03:13 UTC 生成
+    - cron: '13 3 * * *'
   push:
     paths:
-      - "data/**"
-      - "scripts/**"
-      - "reports/**"
-      - "rss/**"
-      - ".github/workflows/content-gen.yml"
-
-permissions:
-  contents: write
+      - 'data/**'
+      - 'scripts/**'
+      - 'reports/**'
+      - 'rss/**'
+      - '.github/workflows/content-gen.yml'
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Generate reports & RSS
-        run: |
-          python3 scripts/gen_feeds.py
-      - name: Commit & Push if changed
+      - name: Generate feeds & update pages
         run: |
           set -e
-          if [ -n "$(git status --porcelain)" ]; then
-            git config user.name "cg-bot"
+          python3 scripts/gen_feeds.py
+      - name: Commit changes (if any)
+        run: |
+          set -e
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "cg-alert bot"
             git config user.email "bot@cg-alert.com"
             git add -A
-            git commit -m "chore(content): refresh reports/rss [skip ci]"
+            git commit -m "chore(content): auto-generate RSS/reports/sitemap [skip ci]"
             git push
           else
-            echo "No changes."
+            echo "No changes to commit."
           fi
