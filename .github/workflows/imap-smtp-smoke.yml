@@ -1,19 +1,47 @@
 name: IMAP/SMTP Smoke
-
 on:
   workflow_dispatch:
   schedule:
     - cron: '30 3 * * *'
-
 permissions:
   contents: read
-
 jobs:
   smoke:
     runs-on: ubuntu-latest
+    env:
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      IMAP_HOST: ${{ secrets.IMAP_HOST }}
+      IMAP_USER: ${{ secrets.IMAP_USER }}
+      IMAP_PASS: ${{ secrets.IMAP_PASS }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      MAIL_FROM: ${{ vars.MAIL_FROM || secrets.MAIL_FROM }}
+      MAIL_TO:   ${{ vars.MAIL_TO || secrets.MAIL_TO || secrets.BCC_TO }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: No-op sanity
+      - name: Install swaks & openssl
         run: |
-          echo "Workflow $GITHUB_WORKFLOW is syntactically valid and ready."
+          sudo apt-get update -y
+          sudo apt-get install -y swaks openssl jq
+      - name: SMTP send test
+        if: ${{ env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS && env.MAIL_TO }}
+        run: |
+          set -e
+          subj="CG Alert SMTP smoke $(date -u +%FT%TZ)"
+          swaks --server "$SMTP_HOST" --auth LOGIN                 --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                 --from "${MAIL_FROM:-no-reply@cg-alert.com}"                 --to "$MAIL_TO" --h-Subject "$subj" --body "SMTP OK"                 --timeout 25 --quit-after RCPT
+      - name: IMAP login test
+        if: ${{ env.IMAP_HOST && env.IMAP_USER && env.IMAP_PASS }}
+        run: |
+          set -e
+          python3 - <<'PY'
+import imaplib,os,ssl
+h=os.environ.get("IMAP_HOST"); u=os.environ.get("IMAP_USER"); p=os.environ.get("IMAP_PASS")
+M=imaplib.IMAP4_SSL(h); M.login(u,p); M.logout()
+print("IMAP OK")
+PY
+      - name: Slack notify (optional)
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
+        run: |
+          jq -n --arg t "IMAP/SMTP smoke passed at $(date -u +%FT%TZ)" '{text:$t}'           | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
