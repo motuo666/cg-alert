@@ -1,34 +1,20 @@
-(function () {
-  function ready(fn) {
-    if (document.readyState !== 'loading') return fn();
-    document.addEventListener('DOMContentLoaded', fn, { once: true });
-  }
-  ready(function () {
-    try {
-      const pricing = document.querySelector('#pricing, .cg-pricing');
-      if (!pricing) return;
-      const cards = pricing.querySelectorAll('.cg-card, .pcard');
-      let enterpriseCard = null;
-      for (const c of cards) {
-        const h3 = c.querySelector('h3');
-        if (h3 && /enterprise/i.test(h3.textContent || '')) { enterpriseCard = c; break; }
-      }
-      if (!enterpriseCard) return;
-      const hasBtn = enterpriseCard.querySelector('a.cg-btn');
-      if (hasBtn) return;
-      const btn = document.createElement('a');
-      btn.className = 'cg-btn align';
-      btn.href = '/intake/';
-      btn.textContent = 'Request Enterprise →';
-      btn.setAttribute('aria-label', 'Request Enterprise');
-      const ul = enterpriseCard.querySelector('ul');
-      if (ul && ul.parentElement === enterpriseCard) {
-        enterpriseCard.appendChild(btn);
-      } else {
-        enterpriseCard.appendChild(btn);
-      }
-    } catch (e) {
-      console && console.warn && console.warn('[cta-enterprise] failed:', e);
-    }
-  });
+// Enforce correct Stripe and Enterprise links on Pricing CTAs
+(function(){
+  try {
+    var link2988 = "https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801";
+    var link6000 = "https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800";
+    var enterprise = "/intake/";
+    function setHref(el, url){ if(el){ el.setAttribute('href', url); el.onclick=null; } }
+    // by data-plan
+    setHref(document.querySelector('[data-plan="basic"], a#buy-2988'), link2988);
+    setHref(document.querySelector('[data-plan="pro"], a#buy-6000'), link6000);
+    setHref(document.querySelector('[data-plan="enterprise"], a#buy-18000, a#request-enterprise'), enterprise);
+    // buttons with matching text (fallback)
+    Array.from(document.querySelectorAll('a,button')).forEach(function(a){
+      var t=(a.textContent||"").toLowerCase();
+      if(t.includes("2988")) setHref(a, link2988);
+      if(t.includes("6000")) setHref(a, link6000);
+      if(t.includes("enterprise")) setHref(a, enterprise);
+    });
+  } catch(e){ /* no-op */ }
 })();
