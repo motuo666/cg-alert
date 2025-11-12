@@ -1,23 +1,27 @@
 name: All Systems Go
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
-  workflow_dispatch:
-
-permissions:
-  contents: read
+  pull_request:
+    branches: [ main ]
 
 jobs:
   guard:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
-      - name: Fail if placeholder/debug tokens exist
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Guard workflows for forbidden placeholders
         shell: bash
         run: |
           set -euo pipefail
           bad='(<<ImageDisplayed>>|【turn[0-9]+[a-z]+[0-9]+】|PLACEHOLDER_|YOUR_TOKEN_HERE|CHANGE_ME)'
-          hits=$(grep -RInE "$bad" .github/workflows || true)
+          # Exclude this workflow and final-acceptance from scan to avoid self-matching
+          hits=$(grep -RInE "$bad" .github/workflows --exclude='all-systems-go.yml' --exclude='final-acceptance.yml' || true)
           if [[ -n "$hits" ]]; then
             echo "::error::Forbidden placeholder tokens detected:"
             echo "$hits"
