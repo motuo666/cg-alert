@@ -5,11 +5,12 @@ def iter_html(root):
     for p in pathlib.Path(root).rglob("*.html"):
         yield p
 
-_href_re = re.compile(rhref=["\']([^"\']+)["\'], re.I)
+# BUGFIX: missing opening quote in original regex; also anchor capture
+_href_re = re.compile(r'href=[\"\']([^\"\']+)[\"\']', re.I)
 
 def resolve(root, current_dir, href):
-    # ignore external and anchors/mail
-    if href.startswith(("http://", "https://", "mailto:", "tel:", "#", "javascript:")):
+    # ignore external and anchors/mail/tel/js
+    if href.startswith(("http://", "https://", "mailto:", "tel:", "javascript:")):
         return None
     # site-absolute
     if href.startswith("/"):
@@ -17,43 +18,61 @@ def resolve(root, current_dir, href):
     else:
         path = pathlib.Path(current_dir) / href
 
-    candidates = []
-    if path.suffix:
-        candidates.append(path)
-    else:
-        candidates.append(path / "index.html")
-        candidates.append(path.with_suffix(".html"))
-    for c in candidates:
-        if c.exists():
-            return c
-    return candidates[0]  # first attempted path, for error display
+    # strip anchors and query for file path resolution
+    path_str = str(path)
+    anchor = None
+    query = None
+    if "#" in path_str:
+        path_str, anchor = path_str.split("#", 1)
+    if "?" in path_str:
+        path_str, query = path_str.split("?", 1)
+    return pathlib.Path(path_str), anchor
+
+def has_anchor(file_path, anchor):
+    try:
+        txt = pathlib.Path(file_path).read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return False
+    if not anchor:
+        return True
+    # support id="anchor" or name="anchor"
+    return (re.search(r'id=[\"\']%s[\"\']' % re.escape(anchor), txt) or
+            re.search(r'name=[\"\']%s[\"\']' % re.escape(anchor), txt)) is not None
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--root", default=".")
+    ap.add_argument("--root", required=True, help="Site root")
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
 
-    root = pathlib.Path(args.root).resolve()
     missing = []
-
-    for html in iter_html(root):
-        text = html.read_text(encoding="utf-8", errors="ignore")
+    for html in iter_html(args.root):
+        try:
+            text = html.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            continue
         for href in _href_re.findall(text):
-            resolved = resolve(root, html.parent, href)
+            resolved = resolve(args.root, html.parent, href)
             if resolved is None:
                 continue
-            if not resolved.exists():
-                missing.append((str(html.relative_to(root)), href, str(resolved.relative_to(root))))
+            file_path, anchor = resolved
+            if not file_path.exists():
+                missing.append((str(html), href, str(file_path)))
                 if args.verbose:
-                    print(f"[MISS] {html} -> {href} (tried {resolved})")
+                    print(f"[MISS] {html} -> {href} (tried {file_path})")
+                continue
+            if not has_anchor(file_path, anchor):
+                missing.append((str(html), href + " (anchor)", f"{file_path}#{anchor}"))
+                if args.verbose:
+                    print(f"[MISS] {html} -> {href} (missing anchor {anchor})")
 
     if missing:
-        print("Broken internal links:", len(missing))
-        for src, href, tried in missing[:200]:
+        print(f"Broken internal links: {len(missing)}")
+        for src, href, tried in missing[:500]:
             print(f"- {src} : '{href}' -> missing '{tried}'")
         print("FAIL: link check")
         sys.exit(2)
+
     print("OK: link check passed")
     sys.exit(0)
 

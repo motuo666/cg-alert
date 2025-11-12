@@ -12,31 +12,44 @@ async function fileExists(p){
 async function listEvidenceDirs(){
   const res = [];
   const base = path.join(PUBLISH_DIR, 'evidence');
-  async function walk(dir){
-    let ents;
-    try { ents = await fs.readdir(dir, {withFileTypes: true}); } catch { return; }
-    for(const e of ents){
-      const p = path.join(dir, e.name);
-      if(e.isDirectory()){
-        await walk(p);
-        if(await fileExists(path.join(p,'index.html'))){
-          const webPath = '/' + path.posix.join('evidence', path.relative(path.join(PUBLISH_DIR,'evidence'), p).split(path.sep).join('/')) + '/';
-          res.push(webPath);
-        }
-      }
+  try {
+    const vendors = await fs.readdir(base, { withFileTypes: true });
+    for (const v of vendors) {
+      if (!v.isDirectory()) continue;
+      const p = path.join(base, v.name, 'timeline.html');
+      if (await fileExists(p)) res.push(`/evidence/${v.name}/timeline.html`);
     }
-  }
-  await walk(base);
+  } catch { /* ignore */ }
   return res;
 }
 
 async function main(){
-  const ev = await listEvidenceDirs();
-  const urls = Array.from(new Set([...BASE_URLS, ...ev]));
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
-    .map(u => `  <url><loc>${SITE}${u}</loc></url>`).join('\n')}\n</urlset>\n`;
+  const urls = new Set(BASE_URLS);
+  // Prefer canonical /vendors/ index if present
+  if (await fileExists(path.join(PUBLISH_DIR, 'vendors', 'index.html'))) {
+    urls.add('/vendors/');
+  }
+  // Evidence timelines
+  for (const u of await listEvidenceDirs()){
+    urls.add(u);
+  }
+  // Reports and RSS if present
+  if (await fileExists(path.join(PUBLISH_DIR, 'reports', 'index.html'))) urls.add('/reports/');
+  if (await fileExists(path.join(PUBLISH_DIR, 'rss', 'index.html'))) urls.add('/rss/');
+  // Root-level pages (index-only)
+  for (const page of ['about','intake','who-uses','deal-desk','dashboard']) {
+    const p = path.join(PUBLISH_DIR, page, 'index.html');
+    if (await fileExists(p)) urls.add(`/${page}/`);
+  }
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${[...urls].sort().map(u => `  <url><loc>${SITE}${u}</loc></url>`).join('\n')}
+</urlset>
+`;
+
   const out = path.join(PUBLISH_DIR, 'sitemap.xml');
   await fs.writeFile(out, xml);
-  console.log(`Wrote sitemap: ${out} (${urls.length} urls)`);
+  console.log(`Wrote sitemap: ${out} (${urls.size} urls)`);
 }
 main().catch(e=>{ console.error(e); process.exit(1); });
