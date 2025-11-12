@@ -1,50 +1,23 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>RSS</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;margin:24px;color:#111}
-    h1{margin-bottom:8px}
-    .item{border-bottom:1px solid #eee;padding:10px 0}
-    .meta{font-size:12px;color:#555}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preload" href="/assets/home-v3c.css" as="style">
+<link rel="stylesheet" href="/assets/home-v3c.css">
+<link rel="stylesheet" href="/assets/home-overrides.css">
+<title>CG Alert — Reports</title>
+
+<title>CG Alert — Reports RSS</title>
 </head>
-<body>
-  <h1>Latest Feed Items</h1>
-  <div id="feed">Loading…</div>
-<script>
-(async function(){
-  const mount = document.getElementById('feed');
-  function toISO(s){ const d=new Date(s); return isNaN(d.getTime())?null:d.toISOString(); }
-  try{
-    const r = await fetch('/rss.xml',{cache:'no-store'});
-    if(!r.ok){ mount.textContent='Failed to load RSS'; return; }
-    const xml = new DOMParser().parseFromString(await r.text(), 'application/xml');
-    const items = Array.from(xml.querySelectorAll('item')).map(x=>({
-      title: (x.querySelector('title')||{}).textContent || '(no title)',
-      link: (x.querySelector('link')||{}).textContent || '',
-      date: (x.querySelector('pubDate')||{}).textContent || '',
-      desc: (x.querySelector('description')||{}).textContent || ''
-    }));
-    items.sort((a,b)=> (toISO(b.date)||'').localeCompare(toISO(a.date)||''));
-    const show = items.slice(0, 50);
-    mount.innerHTML='';
-    show.forEach(it=>{
-      const el = document.createElement('div');
-      el.className='item';
-      el.innerHTML = `
-        <div><a href="${it.link}" rel="noopener">${it.title}</a></div>
-        <div class="meta">${(it.date||'').replace(' +0000',' UTC')}</div>
-        <div>${it.desc}</div>
-      `;
-      mount.appendChild(el);
-    });
-  }catch(e){
-    mount.textContent='RSS parse error';
-  }
-})();
-</script>
+<body class="cg-body">
+  <div id="site-header"></div>
+  <main class="cg-container">
+    <h1 class="cg-h1">Reports (RSS View)</h1>
+    <div id="rss-list" class="cg-content"></div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="/assets/layout-inject.js" defer></script>
+  <script src="/assets/rss-page.js" defer></script>
 </body>
 </html>

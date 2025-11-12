@@ -1,111 +1,23 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Reports</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="canonical" href="/reports/">
-  <style>
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;margin:24px;color:#111}
-    h1{margin-bottom:6px}
-    .muted{color:#555}
-    #q{width:100%;max-width:420px;padding:8px;border:1px solid #ddd;border-radius:8px}
-    table{border-collapse:collapse;width:100%;margin-top:12px}
-    th,td{border-bottom:1px solid #eee;padding:8px;text-align:left;vertical-align:top}
-    th{position:sticky;top:0;background:#fff}
-    .tag{padding:2px 8px;border-radius:999px;background:#f5f5f5;font-size:12px;margin-right:6px;display:inline-block}
-    .wrap{white-space:normal;word-break:break-word}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preload" href="/assets/home-v3c.css" as="style">
+<link rel="stylesheet" href="/assets/home-v3c.css">
+<link rel="stylesheet" href="/assets/home-overrides.css">
+<title>CG Alert — Reports</title>
+
 </head>
-<body>
-  <h1>Reports</h1>
-  <div class="muted">Sorted by date (new → old). Use the search box to filter.</div>
-  <input id="q" type="search" placeholder="Filter by text or vendor…">
-
-  <table id="t">
-    <thead>
-      <tr><th style="width:16ch">Date</th><th>Title</th><th>Vendor</th><th>Link</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-<script>
-(async function(){
-  const q = document.getElementById('q');
-  const tb = document.querySelector('#t tbody');
-
-  function parseCSV(text){
-    const lines = text.split(/\\r?\\n/).filter(Boolean);
-    if (lines.length === 0) return {head:[],rows:[]};
-    const head = lines[0].split(',').map(s=>s.trim());
-    const rows = lines.slice(1).map(line=>{
-      const cols = line.split(',').map(s=>s.trim());
-      const o = {};
-      head.forEach((k,i)=>o[k]=cols[i]||'');
-      return o;
-    });
-    return {head, rows};
-  }
-
-  function isoOrNull(s){
-    const d = new Date(s);
-    return isNaN(d.getTime()) ? null : d.toISOString();
-  }
-
-  function render(rows){
-    tb.innerHTML = '';
-    rows.forEach(r=>{
-      const tr = document.createElement('tr');
-      const link = r.url || r.link || '';
-      const title = r.title || r.name || '(untitled)';
-      const vendor = r.vendor || r.vendors || '';
-      const date = r.date || r.ts || '';
-      tr.innerHTML = `
-        <td>${(date||'').slice(0,10)}</td>
-        <td class="wrap">${title}</td>
-        <td class="wrap">${vendor}</td>
-        <td>${link ? `<a href="${link}" rel="noopener">Open</a>` : ''}</td>`;
-      tb.appendChild(tr);
-    });
-  }
-
-  // Load canonical CSV source produced by your pipeline
-  // Fallback aggressively so the page never "breaks"
-  let csv = '';
-  try{
-    const r = await fetch('/reports/index.csv',{cache:'no-store'});
-    if (r.ok) csv = await r.text();
-  }catch(e){}
-  if (!csv) {
-    // fallback: derive from sitemap (best-effort)
-    try{
-      const sx = await (await fetch('/sitemap.xml',{cache:'no-store'})).text();
-      const urls = Array.from(sx.matchAll(/<loc>([^<]+)<\\/loc>/g)).map(m=>m[1]);
-      const rows = urls.filter(u=>/\\/reports\\/\\d{4}-\\d{2}-\\d{2}/.test(u)).map(u=>({
-        date: (u.match(/(\\d{4}-\\d{2}-\\d{2})/)||['',''])[1],
-        title: u.split('/').slice(-1)[0].replace(/[-_]/g,' '),
-        vendor: '',
-        url: u
-      }));
-      rows.sort((a,b)=> (isoOrNull(b.date)||'').localeCompare(isoOrNull(a.date)||''));
-      render(rows);
-      return;
-    }catch(e){}
-  }
-
-  const {rows} = parseCSV(csv);
-  rows.sort((a,b)=> (isoOrNull(b.date||b.ts)||'').localeCompare(isoOrNull(a.date||a.ts)||''));
-  render(rows);
-
-  q.addEventListener('input',()=>{
-    const kw = q.value.trim().toLowerCase();
-    const filtered = rows.filter(r=>{
-      const s = JSON.stringify(r).toLowerCase();
-      return s.includes(kw);
-    });
-    render(filtered);
-  });
-})();
-</script>
+<body class="cg-body">
+  <div id="site-header"></div>
+  <main class="cg-container">
+    <h1 class="cg-h1">Reports</h1>
+    <p class="cg-muted">Auto-generated from CSV when available; falls back to RSS.</p>
+    <div id="reports-list" class="cg-content"></div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="/assets/layout-inject.js" defer></script>
+  <script src="/assets/reports-page.js" defer></script>
 </body>
 </html>
