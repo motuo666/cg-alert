@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://www.cg-alert.com/</loc></url>
-  <url><loc>https://www.cg-alert.com/who-uses/</loc></url>
-  <url><loc>https://www.cg-alert.com/intake/</loc></url>
-  <url><loc>https://www.cg-alert.com/reports/</loc></url>
-  <url><loc>https://www.cg-alert.com/rss/index.xml</loc></url>
+  <url><loc>/</loc></url>
+  <url><loc>/who-uses/</loc></url>
+  <url><loc>/intake/</loc></url>
+  <url><loc>/reports/</loc></url>
+  <url><loc>/rss/</loc></url>
+  <url><loc>https://www.okta.com/pricing</loc></url>
 </urlset>
