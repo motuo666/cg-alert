@@ -1,3 +1,4 @@
+# .github/workflows/final-acceptance.yml
 name: Final Acceptance
 
 on:
@@ -7,19 +8,29 @@ on:
 
 jobs:
   final-acceptance:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Guard: no truncation markers
+      - name: Guard — reject truncation markers
         shell: bash
         run: |
           set -euo pipefail
-          # Only block the exact marker that indicates a truncated paste.
           if grep -RIn --exclude-dir=.git -F 'conversation too long; truncated' . ; then
-            echo "::error::Truncation marker found in repo"
+            echo "::error::Truncation/ellipsis markers found in repo"
             exit 1
           fi
           echo "OK: no truncation markers"
+
+      - name: Guard — no stray workflow at repo root
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f "./final-acceptance.yml" ]; then
+            echo "::error::Found stray './final-acceptance.yml' at repo root. Remove it (only keep files under .github/workflows/)."
+            exit 1
+          fi
+          echo "OK: no stray root workflow"
