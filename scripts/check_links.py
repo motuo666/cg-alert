@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 import os, re, sys, argparse, pathlib
 
-# 抓取 href 的简单正则（保持与你现有逻辑一致）
 HREF_RE = re.compile(r'href=["\']([^"\']+)["\']', re.I)
-
-# 认为是“运行时模板占位符”的标记；命中任意一个就跳过校验
-TEMPLATE_MARKERS = ("${", "{{", "}}")
+# Ignore common template placeholders & non-actionable hrefs
+IGNORE_PATTERNS = (
+    re.compile(r"^\s*(#|javascript:void\(0\)|javascript:;?)\s*$", re.I),
+    re.compile(r"^\s*\$\{[^}]+\}\s*$"),     # ${placeholder}
+    re.compile(r"^\s*\{\{[^}]+\}\}\s*$"),   # {{template}}
+)
 
 def iter_html(root):
     for p in pathlib.Path(root).rglob("*.html"):
@@ -23,12 +24,12 @@ def split_href(href: str):
         path, _ = path.split("?", 1)
     return path, anchor
 
-def is_external(href: str) -> bool:
-    return href.startswith(("http://","https://","mailto:","tel:","javascript:","data:"))
-
 def resolve_path(root: pathlib.Path, current_dir: pathlib.Path, href: str):
-    if is_external(href):
+    if href.startswith(("http://","https://","mailto:","tel:","javascript:","data:")):
         return None, None
+    for pat in IGNORE_PATTERNS:
+        if pat.match(href or ""):
+            return None, None
     href_path, anchor = split_href(href)
     if href_path.startswith("/"):
         target = root / href_path.lstrip("/")
@@ -51,8 +52,9 @@ def has_anchor(file_path: pathlib.Path, anchor: str | None):
         txt = file_path.read_text(encoding="utf-8", errors="ignore")
     except Exception:
         return False
-    return (re.search(r'id=["\']%s["\']' % re.escape(anchor), txt) or
-            re.search(r'name=["\']%s["\']' % re.escape(anchor), txt)) is not None
+    # id/name anchors, tolerate leading/trailing spaces
+    return (re.search(r'id=["\']\s*%s\s*["\']' % re.escape(anchor), txt) or
+            re.search(r'name=["\']\s*%s\s*["\']' % re.escape(anchor), txt)) is not None
 
 def main():
     ap = argparse.ArgumentParser()
@@ -67,28 +69,18 @@ def main():
             text = html.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             continue
-
         for href in HREF_RE.findall(text):
-            # 1) 跳过包含模板占位符的 href（运行时由 JS/模板引擎替换，静态扫描无法验证）
-            if any(marker in href for marker in TEMPLATE_MARKERS):
-                if args.verbose:
-                    print(f"[SKIP-TEMPLATE] {html} -> {href}")
-                continue
-
-            # 2) 常规静态内部链接校验
             target, anchor = resolve_path(root, html.parent, href)
-            if target is None:  # 外链、mailto、tel、javascript、data
+            if target is None:
                 continue
-
             if not target.exists():
                 misses.append((str(html.relative_to(root)), href, str(target)))
                 if args.verbose:
                     print(f"[MISS] {html} -> {href} (tried {target})")
                 continue
-
             if not has_anchor(target, anchor):
                 show = target / "index.html" if target.is_dir() and (target / "index.html").exists() else target
-                misses.append((str(html.relative_to(root)), href + " (anchor)", f"{show}#{anchor}"))
+                misses.append((str(html.relative_to(root)), href+" (anchor)", f"{show}#{anchor}"))
                 if args.verbose:
                     print(f"[MISS] {html} -> {href} (missing anchor {anchor})")
 
