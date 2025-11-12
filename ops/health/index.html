@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Ops Health</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
+         margin:24px; color:#111}
+    header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .pill{padding:4px 10px;border-radius:999px;background:#eee;display:inline-block;font-size:12px}
+    .ok{background:#d1fae5}
+    .bad{background:#fee2e2}
+    table{border-collapse:collapse;width:100%;margin-top:12px}
+    th,td{border-bottom:1px solid #eee;padding:8px;text-align:left}
+    .muted{color:#555;font-size:12px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media (max-width:800px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Operational Health</h1>
+  <span id="stamp" class="pill">loading…</span>
+</header>
+
+<div class="grid">
+  <section>
+    <h2>7‑day Messaging KPIs</h2>
+    <div id="kpi" class="muted">loading…</div>
+    <table id="kpiTable" hidden>
+      <thead>
+        <tr><th>Metric</th><th>Value</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+  <section>
+    <h2>Alerts</h2>
+    <div id="alerts" class="muted">No alerts</div>
+    <ul id="alertList"></ul>
+  </section>
+</div>
+
+<script>
+(async function(){
+  const stampEl = document.getElementById('stamp');
+  const kpiPanel = document.getElementById('kpi');
+  const kpiTable = document.getElementById('kpiTable');
+  const tb = kpiTable.querySelector('tbody');
+  const alertList = document.getElementById('alertList');
+  const alertsDiv = document.getElementById('alerts');
+
+  function pill(text, ok){
+    stampEl.textContent = text;
+    stampEl.className = 'pill ' + (ok ? 'ok' : 'bad');
+  }
+
+  async function loadJSON(url){
+    try{
+      const r = await fetch(url, {cache:'no-store'});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return await r.json();
+    }catch(e){
+      return null;
+    }
+  }
+
+  const kpi = await loadJSON('/ops/kpi/latest.json');
+  if (kpi){
+    kpiPanel.textContent = '';
+    kpiTable.hidden = false;
+    const rows = Object.entries({
+      'Sent (7d)': kpi.sent7,
+      'Unsub % (7d)': kpi.unsub7_pct + '%',
+      'Bounce % (7d)': kpi.bounce7_pct + '%',
+      'Complaint % (7d)': kpi.complaint7_pct + '%',
+      'Generated at': kpi.generated_at
+    });
+    rows.forEach(([k,v])=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${k}</td><td>${String(v)}</td>`;
+      tb.appendChild(tr);
+    });
+    pill(kpi.ok ? 'OK' : 'ATTN', kpi.ok);
+  }else{
+    kpiPanel.textContent = 'No KPI snapshot (ops/kpi/latest.json)';
+    pill('No KPI', false);
+  }
+
+  // Alerts list (load all json files under ops/alerts if directory listing available; fallback tries latest.json)
+  const guess = await loadJSON('/ops/alerts/latest.json');
+  if (guess){
+    alertsDiv.textContent = '';
+    (Array.isArray(guess)?guess:[guess]).forEach(a=>{
+      const li = document.createElement('li');
+      li.textContent = `[${a.level||'info'}] ${a.message||a.reason||'alert'} (${a.generated_at||''})`;
+      alertList.appendChild(li);
+    });
+  }
+})();
+</script>
+</body>
+</html>

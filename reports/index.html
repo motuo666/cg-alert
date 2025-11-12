@@ -1,38 +1,111 @@
-<!doctype html><html lang="en"><head>
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Reports — CG Alert</title>
-<link rel="canonical" href="https://www.cg-alert.com/reports/">
-<link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/assets/home-v3c.css">
-<meta name="description" content="Evidence-backed vendor change reports.">
-</head><body>
-<header class="cg-topbar">
-  <div class="cg-wrap cg-nav">
-    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
-    <nav class="cg-links" id="topnav">
-      <a href="/#pricing">Pricing</a><a href="/#how">How it works</a><a href="/#evidence">Evidence</a><a href="/#compare">Compare</a><a href="/#faq">FAQ</a><a href="/who-uses/">Who uses</a>
-    </nav>
-  </div>
-</header>
-<section class="cg-wrap">
-  <h1>Latest vendor changes</h1>
-  <p class="muted">Auto-generated from <code>data/events.csv</code>.</p>
-  <table class="cg-table"><thead><tr><th>date</th><th>vendor</th><th>url</th><th>change</th><th>impact</th><th>tier</th></tr></thead><tbody><!--inject--></tbody></table>
-<script>fetch('/reports/data.html').then(r=>r.text()).then(html=>{document.querySelector('tbody').innerHTML=html;});</script></section>
-<footer class="cg-footer">
-  <div class="cg-wrap cg-footlinks">
-    <a href="/who-uses/">Who uses</a><a href="/about/">About</a><a href="/reports/">Reports</a><a href="/rss/index.xml">RSS</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a>
-    <span>© CG Alert — evidence-backed vendor change alerts.</span>
-  </div>
-</footer>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Reports</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="canonical" href="/reports/">
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;margin:24px;color:#111}
+    h1{margin-bottom:6px}
+    .muted{color:#555}
+    #q{width:100%;max-width:420px;padding:8px;border:1px solid #ddd;border-radius:8px}
+    table{border-collapse:collapse;width:100%;margin-top:12px}
+    th,td{border-bottom:1px solid #eee;padding:8px;text-align:left;vertical-align:top}
+    th{position:sticky;top:0;background:#fff}
+    .tag{padding:2px 8px;border-radius:999px;background:#f5f5f5;font-size:12px;margin-right:6px;display:inline-block}
+    .wrap{white-space:normal;word-break:break-word}
+  </style>
+</head>
+<body>
+  <h1>Reports</h1>
+  <div class="muted">Sorted by date (new → old). Use the search box to filter.</div>
+  <input id="q" type="search" placeholder="Filter by text or vendor…">
+
+  <table id="t">
+    <thead>
+      <tr><th style="width:16ch">Date</th><th>Title</th><th>Vendor</th><th>Link</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
 <script>
-fetch('/data/events.csv').then(r=>r.text()).then(t=>{
-  const rows=t.trim().split(/\r?\n/).map(l=>l.split(','));
-  const [head,...body]=rows;
-  const th=head.map(h=>`<th>${h}</th>`).join('');
-  const trs=body.map(r=>`<tr>${r.map((c,i)=> i==2? `<td><a data-data-url="${c}" target="_blank" rel="noopener">${c}</a></td>`:`<td>${c}</td>`).join('')}</tr>`).join('');
-  document.getElementById('table').innerHTML=`<table class="cg-table"><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table>`;
-}).catch(e=>{document.getElementById('table').innerHTML='<p>Failed to load data.</p>'});
+(async function(){
+  const q = document.getElementById('q');
+  const tb = document.querySelector('#t tbody');
+
+  function parseCSV(text){
+    const lines = text.split(/\\r?\\n/).filter(Boolean);
+    if (lines.length === 0) return {head:[],rows:[]};
+    const head = lines[0].split(',').map(s=>s.trim());
+    const rows = lines.slice(1).map(line=>{
+      const cols = line.split(',').map(s=>s.trim());
+      const o = {};
+      head.forEach((k,i)=>o[k]=cols[i]||'');
+      return o;
+    });
+    return {head, rows};
+  }
+
+  function isoOrNull(s){
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  }
+
+  function render(rows){
+    tb.innerHTML = '';
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      const link = r.url || r.link || '';
+      const title = r.title || r.name || '(untitled)';
+      const vendor = r.vendor || r.vendors || '';
+      const date = r.date || r.ts || '';
+      tr.innerHTML = `
+        <td>${(date||'').slice(0,10)}</td>
+        <td class="wrap">${title}</td>
+        <td class="wrap">${vendor}</td>
+        <td>${link ? `<a href="${link}" rel="noopener">Open</a>` : ''}</td>`;
+      tb.appendChild(tr);
+    });
+  }
+
+  // Load canonical CSV source produced by your pipeline
+  // Fallback aggressively so the page never "breaks"
+  let csv = '';
+  try{
+    const r = await fetch('/reports/index.csv',{cache:'no-store'});
+    if (r.ok) csv = await r.text();
+  }catch(e){}
+  if (!csv) {
+    // fallback: derive from sitemap (best-effort)
+    try{
+      const sx = await (await fetch('/sitemap.xml',{cache:'no-store'})).text();
+      const urls = Array.from(sx.matchAll(/<loc>([^<]+)<\\/loc>/g)).map(m=>m[1]);
+      const rows = urls.filter(u=>/\\/reports\\/\\d{4}-\\d{2}-\\d{2}/.test(u)).map(u=>({
+        date: (u.match(/(\\d{4}-\\d{2}-\\d{2})/)||['',''])[1],
+        title: u.split('/').slice(-1)[0].replace(/[-_]/g,' '),
+        vendor: '',
+        url: u
+      }));
+      rows.sort((a,b)=> (isoOrNull(b.date)||'').localeCompare(isoOrNull(a.date)||''));
+      render(rows);
+      return;
+    }catch(e){}
+  }
+
+  const {rows} = parseCSV(csv);
+  rows.sort((a,b)=> (isoOrNull(b.date||b.ts)||'').localeCompare(isoOrNull(a.date||a.ts)||''));
+  render(rows);
+
+  q.addEventListener('input',()=>{
+    const kw = q.value.trim().toLowerCase();
+    const filtered = rows.filter(r=>{
+      const s = JSON.stringify(r).toLowerCase();
+      return s.includes(kw);
+    });
+    render(filtered);
+  });
+})();
 </script>
-</body></html>
+</body>
+</html>
