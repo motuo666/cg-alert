@@ -1,2 +1,2 @@
 Contact: mailto:security@cg-alert.com
-Policy: https://www.cg-alert.com/security/
+Policy: https://www.cg-alert.com/terms/
