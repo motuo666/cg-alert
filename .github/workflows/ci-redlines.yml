@@ -1,0 +1,30 @@
+name: CI Red-Lines
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  linkcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Link Check
+        run: |
+          python3 scripts/check_links.py --root . --verbose
+
+  pricing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pricing & CTA Guard
+        run: |
+          python3 scripts/check_pricing_integrity.py --root .
+
+  dataschema:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Data Schema Check
+        run: |
+          python3 scripts/check_data_schema.py --root .
