@@ -1,37 +1,52 @@
 #!/usr/bin/env python3
 import os, re, sys, argparse, pathlib
 
+HREF_RE = re.compile(r'href=[\"\']([^\"\']+)[\"\']', re.I)
+
 def iter_html(root):
     for p in pathlib.Path(root).rglob("*.html"):
         if any(seg in {".git","node_modules"} for seg in p.parts):
             continue
         yield p
 
-_href_re = re.compile(r'href=[\"\']([^\"\']+)[\"\']', re.I)
-
-def resolve(root, current_dir, href):
-    if href.startswith(("http://", "https://", "mailto:", "tel:", "javascript:", "data:")):
-        return None
-    if href.startswith("/"):
-        path = pathlib.Path(root) / href.lstrip("/")
-    else:
-        path = pathlib.Path(current_dir) / href
-
-    path_str = str(path)
+def split_href(href: str):
+    # 先剥离 query & fragment，再返回 (path, anchor)
+    path = href
     anchor = None
-    if "#" in path_str:
-        path_str, anchor = path_str.split("#", 1)
-    if "?" in path_str:
-        path_str, _ = path_str.split("?", 1)
-    return pathlib.Path(path_str), anchor
+    if "#" in path:
+        path, anchor = path.split("#", 1)
+    if "?" in path:
+        path, _ = path.split("?", 1)
+    return path, anchor
 
-def has_anchor(file_path, anchor):
-    try:
-        txt = pathlib.Path(file_path).read_text(encoding="utf-8", errors="ignore")
-    except Exception:
-        return False
+def resolve_path(root: pathlib.Path, current_dir: pathlib.Path, href: str):
+    # 外链直接忽略
+    if href.startswith(("http://","https://","mailto:","tel:","javascript:","data:")):
+        return None, None
+    href_path, anchor = split_href(href)
+    # 绝对路径 vs 相对路径
+    if href_path.startswith("/"):
+        target = root / href_path.lstrip("/")
+    elif href_path in ("", ".", "./"):  # 纯锚或空链接 → 当前页
+        target = current_dir / "index.html" if (current_dir / "index.html").exists() else current_dir
+    else:
+        target = (current_dir / href_path)
+    # 如果是目录，默认看 index.html
+    if target.exists() and target.is_dir():
+        idx = target / "index.html"
+        target = idx if idx.exists() else target
+    return target, anchor
+
+def has_anchor(file_path: pathlib.Path, anchor: str | None):
     if not anchor:
         return True
+    try:
+        if file_path.is_dir():
+            # 目录不检查锚（锚应落在 index.html），已在 resolve 做过折叠
+            return True
+        txt = file_path.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return False
     return (re.search(r'id=[\"\']%s[\"\']' % re.escape(anchor), txt) or
             re.search(r'name=[\"\']%s[\"\']' % re.escape(anchor), txt)) is not None
 
@@ -40,33 +55,36 @@ def main():
     ap.add_argument("--root", required=True, help="Site root")
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
+    root = pathlib.Path(args.root)
 
-    missing = []
-    for html in iter_html(args.root):
+    misses = []
+    for html in iter_html(root):
         try:
             text = html.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             continue
-        for href in _href_re.findall(text):
-            resolved = resolve(args.root, html.parent, href)
-            if resolved is None:
+        for href in HREF_RE.findall(text):
+            target, anchor = resolve_path(root, html.parent, href)
+            if target is None:
                 continue
-            file_path, anchor = resolved
-            if not file_path.exists():
-                missing.append((str(html), href, str(file_path)))
+            if not target.exists():
+                misses.append((str(html.relative_to(root)), href, str(target.relative_to(root)) ))
                 if args.verbose:
-                    print(f"[MISS] {html} -> {href} (tried {file_path})")
+                    print(f"[MISS] {html} -> {href} (tried {target})")
                 continue
-            if not has_anchor(file_path, anchor):
-                missing.append((str(html), href + " (anchor)", f"{file_path}#{anchor}"))
+            if not has_anchor(target, anchor):
+                # 统一把“尝试文件”打印为文件而不是目录
+                show_target = target
+                if target.is_dir() and (target / "index.html").exists():
+                    show_target = target / "index.html"
+                misses.append((str(html.relative_to(root)), href+" (anchor)", f"{str(show_target.relative_to(root))}#{anchor}"))
                 if args.verbose:
                     print(f"[MISS] {html} -> {href} (missing anchor {anchor})")
 
-    if missing:
-        print(f"Broken internal links: {len(missing)}")
-        for src, href, tried in missing[:500]:
+    if misses:
+        print(f"Broken internal links: {len(misses)}")
+        for src, href, tried in misses[:500]:
             print(f"- {src} : '{href}' -> missing '{tried}'")
-        print("FAIL: link check")
         sys.exit(2)
 
     print("OK: link check passed")
