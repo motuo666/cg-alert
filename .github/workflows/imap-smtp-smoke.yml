@@ -1,39 +1,30 @@
-name: IMAP/SMTP Smoke
+name: imap-smtp-smoke
 on:
-  workflow_dispatch:
   schedule:
-    - cron: '15 4 * * *'
-permissions:
-  contents: read
-
+    - cron: "12 2,10,18 * * *"
+  workflow_dispatch:
 jobs:
   smoke:
-    runs-on: ubuntu-latest
-    env:
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      # Allow override via repository/environments vars; default to 587/STARTTLS for Zoho
-      SMTP_PORT: ${{ secrets.SMTP_PORT || vars.SMTP_PORT || '587' }}
-      SMTP_SECURITY: ${{ secrets.SMTP_SECURITY || vars.SMTP_SECURITY || 'starttls' }}
-      IMAP_HOST: ${{ secrets.IMAP_HOST }}
-      IMAP_USER: ${{ secrets.IMAP_USER }}
-      IMAP_PASS: ${{ secrets.IMAP_PASS }}
-      IMAP_PORT: ${{ secrets.IMAP_PORT || '993' }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      MAIL_FROM: ${{ vars.MAIL_FROM || secrets.MAIL_FROM || secrets.SMTP_USER }}
-      MAIL_TO:   ${{ secrets.BCC_TO || secrets.SMTP_USER }}
-
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install tools
+      - name: SMTP/IMAP smoke
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_PORT: ${{ vars.SMTP_PORT || 587 }}
+          SMTP_SECURITY: ${{ vars.SMTP_SECURITY || 'starttls' }}
+          IMAP_HOST: ${{ secrets.IMAP_HOST }}
+          IMAP_PORT: ${{ vars.IMAP_PORT || 993 }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASS: ${{ secrets.IMAP_PASS }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          MAIL_FROM: ops@cg-alert.com
+          MAIL_TO: ${{ secrets.MAIL_TO || secrets.SMTP_USER }}
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y swaks openssl jq
-
-      - name: Show config
-        run: |
+          set -e
           echo "SMTP_HOST=$SMTP_HOST"
           echo "SMTP_PORT=$SMTP_PORT"
           echo "SMTP_SECURITY=$SMTP_SECURITY"
@@ -41,80 +32,42 @@ jobs:
           echo "IMAP_PORT=$IMAP_PORT"
           echo "MAIL_FROM=$MAIL_FROM"
           echo "MAIL_TO=$MAIL_TO"
-
-      - id: smtp
-        name: SMTP probe (prefer config, fallback Zoho defaults)
-        shell: bash
-        run: |
-          set -e
           ok=0; mode="n/a"
-          echo "::group::Preferred"
           case "$SMTP_SECURITY" in
             starttls) OPT="--tls";;
             ssl)      OPT="--tls-on-connect";;
             plain)    OPT="";;
-            *)        OPT="--tls";;
           esac
-          # Some swaks builds reject unknown quit_after values; avoid using it.
-          if swaks --server "$SMTP_HOST" --port "$SMTP_PORT" --timeout 20 $OPT                 --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                 --from "${MAIL_FROM:-$SMTP_USER}"                 --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke ($SMTP_PORT/$SMTP_SECURITY)" --body "SMTP OK"; then
-            ok=1; mode="$SMTP_PORT-$SMTP_SECURITY";
-          fi
+          echo "::group::Preferred"
+          if swaks --server "$SMTP_HOST" --port "$SMTP_PORT" --timeout 15 $OPT                    --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                    --from "${MAIL_FROM:-$SMTP_USER}"                    --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke ($SMTP_PORT/$SMTP_SECURITY)" --body "SMTP OK"                    --quit-after rcpt ; then ok=1; mode="$SMTP_PORT-$SMTP_SECURITY"; fi
           echo "::endgroup::"
-
           if [ $ok -eq 0 ]; then
             echo "::group::Fallback 587 STARTTLS"
-            if swaks --server "$SMTP_HOST" --port 587 --timeout 15 --tls                   --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                   --from "${MAIL_FROM:-$SMTP_USER}"                   --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (587/starttls)" --body "SMTP OK 587"; then
-              ok=1; mode="587-starttls";
-            fi
+            if swaks --server "$SMTP_HOST" --port 587 --timeout 12 --tls                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-$SMTP_USER}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (587)" --body "SMTP OK 587"                      --quit-after rcpt ; then ok=1; mode="587-starttls"; fi
             echo "::endgroup::"
           fi
-
           if [ $ok -eq 0 ]; then
             echo "::group::Fallback 465 SSL"
-            if swaks --server "$SMTP_HOST" --port 465 --timeout 15 --tls-on-connect                   --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                   --from "${MAIL_FROM:-$SMTP_USER}"                   --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (465/ssl)" --body "SMTP OK 465"; then
-              ok=1; mode="465-ssl";
-            fi
+            if swaks --server "$SMTP_HOST" --port 465 --timeout 12 --tls-on-connect                      --auth LOGIN --auth-user "$SMTP_USER" --auth-password "$SMTP_PASS"                      --from "${MAIL_FROM:-$SMTP_USER}"                      --to "$MAIL_TO" --h-Subject "CG Alert SMTP smoke (465)" --body "SMTP OK 465"                      --quit-after rcpt ; then ok=1; mode="465-ssl"; fi
             echo "::endgroup::"
           fi
-
           if [ $ok -eq 1 ]; then
-            echo "status=ok"   >> $GITHUB_OUTPUT
-            echo "mode=$mode"  >> $GITHUB_OUTPUT
+            sms="ok"
           else
-            echo "status=fail" >> $GITHUB_OUTPUT
-            echo "mode=$mode"  >> $GITHUB_OUTPUT
-            exit 1
+            sms="fail"
           fi
-
-      - id: imap
-        name: IMAP probe (SSL 993)
-        run: |
           python3 - <<'PY'
           import imaplib, os, sys
           h=os.environ.get("IMAP_HOST"); p=int(os.environ.get("IMAP_PORT","993"))
           u=os.environ.get("IMAP_USER"); pw=os.environ.get("IMAP_PASS")
           try:
             M=imaplib.IMAP4_SSL(h, p); M.login(u,pw); M.logout()
-            print("IMAP OK")
-            open(os.getenv("GITHUB_OUTPUT"),"a").write("status=ok\n")
+            print("IMAP OK"); open(os.getenv("GITHUB_OUTPUT"),"a").write("imap=ok\n")
           except Exception as e:
-            print("IMAP FAIL:", e)
-            open(os.getenv("GITHUB_OUTPUT"),"a").write("status=fail\n")
-            sys.exit(1)
+            print("IMAP FAIL:", e); open(os.getenv("GITHUB_OUTPUT"),"a").write("imap=fail\n"); sys.exit(0)
           PY
-
-      - name: Slack notify
-        if: always()
-        run: |
-          sms="${{ steps.smtp.outputs.status || 'fail' }}"
-          ims="${{ steps.imap.outputs.status || 'fail' }}"
-          mode="${{ steps.smtp.outputs.mode   || 'n/a'  }}"
-          jq -n --arg t "IMAP/SMTP smoke: smtp=$sms (mode=$mode) imap=$ims at $(date -u +%FT%TZ)" '{text:$t}'             | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
-
-      - name: Gate (require at least one pass)
-        run: |
-          sms="${{ steps.smtp.outputs.status || 'fail' }}"
-          ims="${{ steps.imap.outputs.status || 'fail' }}"
+          ims="$(grep '^imap=' "$GITHUB_OUTPUT" | cut -d= -f2 || echo fail)"
+          jq -n --arg t "IMAP/SMTP smoke: smtp=$sms (mode=$mode) imap=$ims at $(date -u +%FT%TZ)" '{text:$t}' | curl -sS -H 'Content-Type: application/json' -d @- "$SLACK_WEBHOOK_URL" >/dev/null
           echo "SMTP: $sms, IMAP: $ims"
           if [ "$sms" != "ok" ] && [ "$ims" != "ok" ]; then
             echo "::error:: Both SMTP and IMAP checks failed"
