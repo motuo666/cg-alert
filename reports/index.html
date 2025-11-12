@@ -31,7 +31,7 @@ fetch('/data/events.csv').then(r=>r.text()).then(t=>{
   const rows=t.trim().split(/\r?\n/).map(l=>l.split(','));
   const [head,...body]=rows;
   const th=head.map(h=>`<th>${h}</th>`).join('');
-  const trs=body.map(r=>`<tr>${r.map((c,i)=> i==2? `<td><a href="${c}" target="_blank" rel="noopener">${c}</a></td>`:`<td>${c}</td>`).join('')}</tr>`).join('');
+  const trs=body.map(r=>`<tr>${r.map((c,i)=> i==2? `<td><a data-data-url="${c}" target="_blank" rel="noopener">${c}</a></td>`:`<td>${c}</td>`).join('')}</tr>`).join('');
   document.getElementById('table').innerHTML=`<table class="cg-table"><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table>`;
 }).catch(e=>{document.getElementById('table').innerHTML='<p>Failed to load data.</p>'});
 </script>
