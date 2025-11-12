@@ -1,0 +1,15 @@
+# Example unified CSP for static hosts (copy to your deploy root as _headers or to Cloudflare rules)
+# Adjust 'cg-alert.com' to your real domain(s). This is conservative and allows Stripe + Zoho only.
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), usb=(), payment=()
+  Content-Security-Policy: default-src 'self';
+    script-src 'self' https://js.stripe.com;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data: https:;
+    connect-src 'self' https://api.stripe.com;
+    frame-src https://js.stripe.com https://hooks.stripe.com;
+    font-src 'self' data:;
+    object-src 'none';

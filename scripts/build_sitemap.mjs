@@ -25,18 +25,14 @@ async function listEvidenceDirs(){
 
 async function main(){
   const urls = new Set(BASE_URLS);
-  // Prefer canonical /vendors/ index if present
   if (await fileExists(path.join(PUBLISH_DIR, 'vendors', 'index.html'))) {
     urls.add('/vendors/');
   }
-  // Evidence timelines
   for (const u of await listEvidenceDirs()){
     urls.add(u);
   }
-  // Reports and RSS if present
   if (await fileExists(path.join(PUBLISH_DIR, 'reports', 'index.html'))) urls.add('/reports/');
   if (await fileExists(path.join(PUBLISH_DIR, 'rss', 'index.html'))) urls.add('/rss/');
-  // Root-level pages (index-only)
   for (const page of ['about','intake','who-uses','deal-desk','dashboard']) {
     const p = path.join(PUBLISH_DIR, page, 'index.html');
     if (await fileExists(p)) urls.add(`/${page}/`);

@@ -3,29 +3,26 @@ import os, re, sys, argparse, pathlib
 
 def iter_html(root):
     for p in pathlib.Path(root).rglob("*.html"):
+        if any(seg in {".git","node_modules"} for seg in p.parts):
+            continue
         yield p
 
-# BUGFIX: missing opening quote in original regex; also anchor capture
 _href_re = re.compile(r'href=[\"\']([^\"\']+)[\"\']', re.I)
 
 def resolve(root, current_dir, href):
-    # ignore external and anchors/mail/tel/js
-    if href.startswith(("http://", "https://", "mailto:", "tel:", "javascript:")):
+    if href.startswith(("http://", "https://", "mailto:", "tel:", "javascript:", "data:")):
         return None
-    # site-absolute
     if href.startswith("/"):
         path = pathlib.Path(root) / href.lstrip("/")
     else:
         path = pathlib.Path(current_dir) / href
 
-    # strip anchors and query for file path resolution
     path_str = str(path)
     anchor = None
-    query = None
     if "#" in path_str:
         path_str, anchor = path_str.split("#", 1)
     if "?" in path_str:
-        path_str, query = path_str.split("?", 1)
+        path_str, _ = path_str.split("?", 1)
     return pathlib.Path(path_str), anchor
 
 def has_anchor(file_path, anchor):
@@ -35,7 +32,6 @@ def has_anchor(file_path, anchor):
         return False
     if not anchor:
         return True
-    # support id="anchor" or name="anchor"
     return (re.search(r'id=[\"\']%s[\"\']' % re.escape(anchor), txt) or
             re.search(r'name=[\"\']%s[\"\']' % re.escape(anchor), txt)) is not None
 
