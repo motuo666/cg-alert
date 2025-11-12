@@ -1,0 +1,32 @@
+{
+  "required_fields": [
+    "id",
+    "url",
+    "title",
+    "captured_at",
+    "fingerprint"
+  ],
+  "field_types": {
+    "id": "str_nonempty",
+    "url": "url",
+    "title": "str_nonempty",
+    "captured_at": "datetime",
+    "fingerprint": "str_nonempty"
+  },
+  "unique_fields": [
+    "id",
+    "fingerprint"
+  ],
+  "append_only_hint": true,
+  "allow_categories": [
+    "policy",
+    "pricing",
+    "security",
+    "subprocessors",
+    "sla",
+    "tos",
+    "privacy",
+    "incident",
+    "release"
+  ]
+}

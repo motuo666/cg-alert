@@ -1,0 +1,14 @@
+{
+  "prices": {
+    "portfolio": 2988,
+    "business": 6000,
+    "enterprise_min": 18000
+  },
+  "enterprise_cta_must_include": [
+    "/intake/",
+    "/contact",
+    "/form"
+  ],
+  "stripe_link_must_not_appear_for_enterprise": true,
+  "pricing_page": "pricing/index.html"
+}

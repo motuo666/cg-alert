@@ -1,0 +1,17 @@
+{
+  "defaults": {
+    "max_requests_per_minute": 6,
+    "max_concurrent": 2,
+    "burst": 10,
+    "cooldown_seconds": 120
+  },
+  "per_domain_overrides": {},
+  "respect_robots_txt": true,
+  "user_agent": "CG-Alert/1.0 (+contact)",
+  "retry_backoff_seconds": [
+    5,
+    15,
+    60,
+    180
+  ]
+}
