@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os, re, sys, argparse, pathlib
 
-HREF_RE = re.compile(r'href=[\"\']([^\"\']+)[\"\']', re.I)
+HREF_RE = re.compile(r'href=["\']([^"\']+)["\']', re.I)
 
 def iter_html(root):
     for p in pathlib.Path(root).rglob("*.html"):
@@ -10,7 +10,6 @@ def iter_html(root):
         yield p
 
 def split_href(href: str):
-    # 先剥离 query & fragment，再返回 (path, anchor)
     path = href
     anchor = None
     if "#" in path:
@@ -20,18 +19,16 @@ def split_href(href: str):
     return path, anchor
 
 def resolve_path(root: pathlib.Path, current_dir: pathlib.Path, href: str):
-    # 外链直接忽略
     if href.startswith(("http://","https://","mailto:","tel:","javascript:","data:")):
         return None, None
     href_path, anchor = split_href(href)
-    # 绝对路径 vs 相对路径
     if href_path.startswith("/"):
         target = root / href_path.lstrip("/")
-    elif href_path in ("", ".", "./"):  # 纯锚或空链接 → 当前页
-        target = current_dir / "index.html" if (current_dir / "index.html").exists() else current_dir
+    elif href_path in ("", ".", "./"):
+        idx = current_dir / "index.html"
+        target = idx if idx.exists() else current_dir
     else:
-        target = (current_dir / href_path)
-    # 如果是目录，默认看 index.html
+        target = current_dir / href_path
     if target.exists() and target.is_dir():
         idx = target / "index.html"
         target = idx if idx.exists() else target
@@ -42,13 +39,12 @@ def has_anchor(file_path: pathlib.Path, anchor: str | None):
         return True
     try:
         if file_path.is_dir():
-            # 目录不检查锚（锚应落在 index.html），已在 resolve 做过折叠
             return True
         txt = file_path.read_text(encoding="utf-8", errors="ignore")
     except Exception:
         return False
-    return (re.search(r'id=[\"\']%s[\"\']' % re.escape(anchor), txt) or
-            re.search(r'name=[\"\']%s[\"\']' % re.escape(anchor), txt)) is not None
+    return (re.search(r'id=["\']%s["\']' % re.escape(anchor), txt) or
+            re.search(r'name=["\']%s["\']' % re.escape(anchor), txt)) is not None
 
 def main():
     ap = argparse.ArgumentParser()
@@ -68,16 +64,13 @@ def main():
             if target is None:
                 continue
             if not target.exists():
-                misses.append((str(html.relative_to(root)), href, str(target.relative_to(root)) ))
+                misses.append((str(html.relative_to(root)), href, str(target)))
                 if args.verbose:
                     print(f"[MISS] {html} -> {href} (tried {target})")
                 continue
             if not has_anchor(target, anchor):
-                # 统一把“尝试文件”打印为文件而不是目录
-                show_target = target
-                if target.is_dir() and (target / "index.html").exists():
-                    show_target = target / "index.html"
-                misses.append((str(html.relative_to(root)), href+" (anchor)", f"{str(show_target.relative_to(root))}#{anchor}"))
+                show = target / "index.html" if target.is_dir() and (target / "index.html").exists() else target
+                misses.append((str(html.relative_to(root)), href+" (anchor)", f"{show}#{anchor}"))
                 if args.verbose:
                     print(f"[MISS] {html} -> {href} (missing anchor {anchor})")
 
