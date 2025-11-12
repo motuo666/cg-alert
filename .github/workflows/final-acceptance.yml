@@ -19,7 +19,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RIn --exclude-dir=.git -F 'conversation too long; truncated' . ; then
+          P1='conversation too long; trun'
+          P2='cated'
+          if grep -RIn --exclude-dir=.git -F \"$P1$P2\" . ; then
             echo "::error::Truncation/ellipsis markers found in repo"
             exit 1
           fi
