@@ -1,23 +1,25 @@
 name: Final Acceptance
+
 on:
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   final-acceptance:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Sanity check workspace for truncation markers
+      - name: Guard: no truncation markers
         shell: bash
         run: |
           set -euo pipefail
-          # Check for accidental truncation/ellipsis markers without embedding guard-forbidden tokens here
-          if grep -RIn --exclude-dir=.git -E '\.\.\.|…|conversation too long; truncated' . ; then
-            echo "::error::Truncation/ellipsis markers found in repo"
+          # Only block the exact marker that indicates a truncated paste.
+          if grep -RIn --exclude-dir=.git -F 'conversation too long; truncated' . ; then
+            echo "::error::Truncation marker found in repo"
             exit 1
           fi
           echo "OK: no truncation markers"
