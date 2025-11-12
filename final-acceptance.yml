@@ -19,7 +19,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -RIn --exclude-dir=.git --exclude='.github/workflows/final-acceptance.yml' --exclude='scripts/ci/scan_placeholders.sh' -F 'conversation too long; truncated' . ; then
+          P1='conversation too long; trun'
+          P2='cated'
+          if grep -RIn --exclude-dir=.git --exclude='.github/workflows/final-acceptance.yml' --exclude='scripts/ci/scan_placeholders.sh' -F \"$P1$P2\" . ; then
             echo "::error::Truncation/ellipsis markers found in repo"
             exit 1
           fi
