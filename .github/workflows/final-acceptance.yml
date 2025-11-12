@@ -1,106 +1,98 @@
 name: Final Acceptance
+
 on:
-  workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
-  metadata: read
+
+# 从仓库 Variables 读取（Settings → Secrets and variables → Actions → Variables）
+env:
+  SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+  STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
+  STRIPE_LINK_BUSINESS:  ${{ vars.STRIPE_LINK_BUSINESS }}
+  INTAKE_FORM_URL:       ${{ vars.INTAKE_FORM_URL }}
 
 jobs:
   final-acceptance:
     runs-on: ubuntu-24.04
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate required variables (masked echo)
+      - name: Validate required variables
         shell: bash
-        env:
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
-          STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO }}
-          STRIPE_LINK_BUSINESS: ${{ vars.STRIPE_LINK_BUSINESS }}
-          INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL }}
         run: |
           set -euo pipefail
-          missing=()
-          for k in SITE_ORIGIN STRIPE_LINK_PORTFOLIO STRIPE_LINK_BUSINESS INTAKE_FORM_URL; do
+          req=(SITE_ORIGIN STRIPE_LINK_PORTFOLIO STRIPE_LINK_BUSINESS INTAKE_FORM_URL)
+          miss=()
+          for k in "${req[@]}"; do
             v="${!k:-}"
-            if [[ -z "$v" ]]; then
-              missing+=("$k")
-            fi
+            if [[ -z "$v" ]]; then miss+=("$k"); fi
           done
-          if (( ${#missing[@]} > 0 )); then
-            echo "::error::Missing required variables: ${missing[*]}"
+          if (( ${#miss[@]} )); then
+            echo "::error::Missing repository Variables: ${miss[*]}"
             exit 1
           fi
+          printf 'OK: variables present\nSITE_ORIGIN=%s\n' "${SITE_ORIGIN}"
 
-          mask() {
-            local s="$1"
-            local n="${#s}"
-            if (( n <= 8 )); then
-              printf '%s\n' "********"
-            else
-              printf '%s\n' "${s:0:4}****${s: -4}"
-            fi
-          }
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-          echo "Env overview:"
-          echo "  SITE_ORIGIN           = $(mask "$SITE_ORIGIN")"
-          echo "  STRIPE_LINK_PORTFOLIO = $(mask "$STRIPE_LINK_PORTFOLIO")"
-          echo "  STRIPE_LINK_BUSINESS  = $(mask "$STRIPE_LINK_BUSINESS")"
-          echo "  INTAKE_FORM_URL       = $(mask "$INTAKE_FORM_URL")"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-          # Domain whitelist check for SITE_ORIGIN
-          allow_domains_regex='^(https://(www\.)?cg-alert\.com)$'
-          if ! [[ "$SITE_ORIGIN" =~ $allow_domains_regex ]]; then
-            echo "::warning::SITE_ORIGIN '$SITE_ORIGIN' not in whitelist; allowed: https://www.cg-alert.com"
-          fi
-
-      - name: Scan for truncation/ellipsis markers (allowlist-aware)
+      # 避免自检误报：排除 .git/.github/scripts/evidence 以及 yml 自身
+      - name: Scan for truncation/ellipsis markers
         shell: bash
         run: |
           set -euo pipefail
-          # Only fail if markers exist OUTSIDE the allowlisted files
-          if grep -RIn --exclude-dir=.git \
-                        --exclude-dir=.github \
-                        --exclude-dir=node_modules \
-                        --exclude-dir=scripts \
-                        --exclude-dir=evidence \
-                        -F 'conversation too long; truncated' . ; then
-            echo "::error::Truncation/ellipsis markers found in repo (outside allowlist)"
+          if grep -RIn \
+               --exclude-dir=.git \
+               --exclude-dir=.github \
+               --exclude-dir=scripts \
+               --exclude-dir=evidence \
+               --exclude='*.yml' \
+               -F 'conversation too long; truncated' . ; then
+            echo "::error::Truncation/ellipsis markers found in repo"
             exit 1
           fi
           echo "OK: no truncation markers"
 
-      - name: Node & Python
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Build artifacts (sitemap/rss/hardening)
+      - name: Normalize & build site
         shell: bash
         env:
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+          SITE_ORIGIN: ${{ env.SITE_ORIGIN }}
         run: |
           set -euo pipefail
-          python3 scripts/normalize_events.py --root . || true
-          python3 scripts/auto_fix_links.py --root . || true
-          python3 scripts/normalize_canonical.py --root . --site-origin "${SITE_ORIGIN}" || true
-          node scripts/build_sitemap.mjs || node scripts/build_sitemap.js || true
-          python3 scripts/harden_html.py . || true
-          echo "Build steps completed"
+          python3 scripts/normalize_events.py --root .
+          python3 scripts/auto_fix_links.py --root .
+          python3 scripts/normalize_canonical.py --root . --site-origin "${SITE_ORIGIN}"
+          node scripts/build_sitemap.mjs
+          python3 scripts/harden_html.py .
 
-      - name: Link check (internal only)
+      - name: Link check
         shell: bash
         run: |
           set -euo pipefail
           python3 scripts/check_links.py --root .
 
-      - name: Done
+      - name: Compute rolling KPIs (non-fatal)
         shell: bash
-        run: echo "Final Acceptance ✅"
+        run: |
+          set -euo pipefail
+          if [ -f ops/compute_rolling_kpis.js ]; then
+            node ops/compute_rolling_kpis.js || true
+          fi
+
+      - name: Summary
+        shell: bash
+        run: |
+          echo "Final Acceptance passed core checks."
