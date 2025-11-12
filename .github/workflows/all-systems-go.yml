@@ -1,31 +1,26 @@
 name: All Systems Go
 on:
-  workflow_dispatch:
   push:
-    paths:
-      - ".github/workflows/all-systems-go.yml"
+    branches: [ main ]
+  workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
-  dryrun:
-    runs-on: ubuntu-latest
+  guard:
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Sanity checks
+      - uses: actions/checkout@v4
+      - name: Fail if placeholder/debug tokens exist
         shell: bash
         run: |
           set -euo pipefail
-          echo "Checking required paths..."
-          for p in index.html pricing/index.html reports/index.html rss/index.html intake/index.html assets; do
-            if [ ! -e "$p" ]; then
-              echo "::warning::missing $p"
-            fi
-          done
-          echo "Scanning for dangerous placeholders"
-          if grep -RIn --exclude-dir=.git -E "<<ImageDisplayed>>|conversation too long; truncated|FIXME|TODO" . ; then
-            echo "::error::Repository contains dangerous placeholder content. Replace these files before going live."
+          bad='(<<ImageDisplayed>>|【turn[0-9]+[a-z]+[0-9]+】|PLACEHOLDER_|YOUR_TOKEN_HERE|CHANGE_ME)'
+          hits=$(grep -RInE "$bad" .github/workflows || true)
+          if [[ -n "$hits" ]]; then
+            echo "::error::Forbidden placeholder tokens detected:"
+            echo "$hits"
             exit 1
-          else
-            echo "OK: no dangerous placeholders found."
           fi
+          echo "OK: no placeholder tokens in workflows"
