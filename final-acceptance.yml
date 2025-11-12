@@ -1,0 +1,22 @@
+name: Final Acceptance
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+
+jobs:
+  final-acceptance:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Repository truncation guard (strict phrase only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Check only for the exact truncation phrase that should never exist in repo content.
+          if grep -RIn --exclude-dir=.git -F 'conversation too long; truncated' . ; then
+            echo "::error::Truncation markers found in repo"
+            exit 1
+          fi
+          echo "OK: no truncation markers"
