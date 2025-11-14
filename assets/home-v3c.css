@@ -1,3 +1,3 @@
 /* theme shim */
-@import url('../enterprise.css');
-@import url('./home-overrides.css');
+@import url('/enterprise.css');
+@import url('/assets/home-overrides.css');
