@@ -1,5 +1,7 @@
-/* Shim to restore UI theme after 643 patch removed enterprise.css.
- * Purpose: keep legacy @import targets working for pages and asset CSS.
- * It simply re-exports root styles.css (which composes tokens, gradients, layout).
- */
-@import url("./styles.css");
+/* Placeholder enterprise tokens to avoid 404; keep site look intact */
+:root{
+  --brand: #111827;
+  --brand-acc: #4F46E5;
+}
+
+/* patched-b99ddec1 */
