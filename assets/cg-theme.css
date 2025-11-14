@@ -1,8 +1,6 @@
 /* Thin theme proxy for reports; delegates to main stylesheet */
-@import url("../styles.css");
+@import url('/styles.css');
 
 
 /* no-underline-global */
 a, a:visited, a:hover, a:focus { text-decoration: none !important; }
-
-/* patched-416915a0 */
