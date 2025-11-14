@@ -1,2 +1,12 @@
-/* home-overrides.css — hero gradient & misc overrides */
-.cg-hero .cg-pills{margin-top:40px}
+/* Safe overrides to prevent overflow/overlap without changing look & feel */
+:root{
+  --cg-maxw: 1100px;
+}
+.cg-wrap{max-width:var(--cg-maxw); margin-inline:auto; padding-inline:16px;}
+img{max-width:100%; height:auto;}
+.cg-grid3{align-items:stretch}
+.cg-card{overflow:hidden}
+/* Avoid form field overlap on small screens */
+@media (max-width: 480px){
+  input, textarea, select{min-width:0}
+}
