@@ -1,0 +1,19 @@
+/* assets/critical.css - minimal baseline to avoid "unstyled" pages */
+:root{--mx:1160px}
+*{box-sizing:border-box}
+html{font-size:16px;line-height:1.5}
+body{margin:0;color:#111;background:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,"Helvetica Neue",Arial,"Noto Sans",sans-serif}
+a{color:#0b5fff;text-decoration:none}a:hover{text-decoration:underline}
+h1,h2,h3{line-height:1.25;margin:1.25rem 0 .75rem}
+h1{font-size:2.25rem;font-weight:800}h2{font-size:1.5rem;font-weight:700}h3{font-size:1.125rem;font-weight:600}
+p,ul,ol{margin:.75rem 0}
+ul{padding-left:1.25rem}
+.container{max-width:var(--mx);margin:0 auto;padding:1rem}
+.header{position:sticky;top:0;background:#fff;border-bottom:1px solid #eee;z-index:10}
+.nav{display:flex;gap:1rem;align-items:center;padding:.75rem 1rem}
+.nav a{font-weight:600;color:#111}
+.btn{display:inline-block;padding:.5rem .9rem;border:1px solid #111;border-radius:.5rem}
+.grid{display:grid;gap:1rem}
+.card{border:1px solid #eee;border-radius:.75rem;padding:1rem}
+footer{border-top:1px solid #eee;margin-top:2rem;padding:1.5rem 1rem;color:#666}
+/* allow page-specific CSS to override */
