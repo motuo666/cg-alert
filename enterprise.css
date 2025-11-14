@@ -1,5 +1,71 @@
-/* Placeholder enterprise tokens to avoid 404; keep site look intact */
+/* Restored enterprise.css — shared design system for CG Alert */
 :root{
-  --brand: #111827;
-  --brand-acc: #4F46E5;
+  --bg: #ffffff; --fg:#0a0a0a; --muted:#5b6b8b; --brand:#2563eb; --brand-2:#1d4ed8;
+  --surface:#f8fafc; --card:#ffffff; --border:#e5e7eb; --shadow: 0 10px 25px rgba(2,6,23,.08);
+  --radius: 18px;
 }
+*{box-sizing:border-box}
+html,body{height:100%}
+body.cg-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+img{display:inline-block;vertical-align:middle}
+
+/* layout */
+.cg-wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+.cg-container{max-width:1160px;margin:0 auto;padding:40px 24px}
+
+/* top nav */
+.cg-topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--border)}
+.cg-nav{display:flex;align-items:center;gap:24px;min-height:64px}
+.cg-brand{display:flex;align-items:center;gap:10px;font-weight:700;color:#111;font-size:18px}
+.cg-brand img{border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.cg-links{margin-left:auto;display:flex;gap:28px}
+.cg-links a{color:#1f2937;font-weight:500}
+.cg-links a:hover{color:var(--brand)}
+
+/* hero */
+.cg-hero{padding:80px 0;background: radial-gradient(1200px 500px at 20% -10%, #eaf1ff 0, rgba(255,255,255,0) 60%), radial-gradient(1200px 500px at 100% 0%, #ecfdf5 0, rgba(255,255,255,0) 55%)}
+.cg-hero h1{font-size:56px;line-height:1.05;letter-spacing:-.02em;margin:0 0 18px;font-weight:800}
+.cg-hero p{color:var(--muted);font-size:20px;margin:0 0 28px}
+.cg-actions{display:flex;gap:18px;flex-wrap:wrap}
+
+/* buttons */
+.cg-btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;border-radius:14px;border:1px solid var(--border);font-weight:600;line-height:1;cursor:pointer;transition:all .18s ease}
+.cg-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.cg-btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.cg-btn-primary:hover{background:var(--brand-2);border-color:var(--brand-2)}
+.cg-btn-ghost{background:#fff;color:#111}
+
+/* pills */
+.cg-pills{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:22px;padding:40px 0}
+.cg-pill{border:1px dashed #e2e8f0;background:#fff;border-radius:16px;padding:20px;text-align:center;color:#334155;font-weight:600;box-shadow:0 2px 8px rgba(2,6,23,.03)}
+@media (max-width:1024px){.cg-pills{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:640px){.cg-pills{grid-template-columns:repeat(2,1fr)}}
+
+/* cards (who-uses) */
+.cg-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px}
+.cg-card{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:28px;box-shadow:var(--shadow)}
+.cg-card h3{margin:0 0 8px;font-size:22px}
+.cg-card p{margin:0;color:#475569}
+@media (max-width:1024px){.cg-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.cg-grid{grid-template-columns:1fr}}
+
+/* table/list (reports) */
+.cg-table{width:100%;border-collapse:collapse;border-radius:14px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow)}
+.cg-table th,.cg-table td{padding:14px 16px;border-bottom:1px solid var(--border);text-align:left}
+.cg-table th{background:#f8fafc;font-weight:700}
+.cg-table tr:hover td{background:#f9fbff}
+.cg-badge{display:inline-block;padding:2px 10px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:600;font-size:12px}
+
+/* footer */
+.cg-footer{border-top:1px solid var(--border);margin-top:60px}
+.cg-foot{display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:center;color:#6b7280;padding:18px 0}
+.cg-foot a{color:#6b7280}
+.cg-foot a:hover{color:var(--brand)}
+
+/* utility */
+.mt-1{margin-top:4px}.mt-2{margin-top:8px}.mt-3{margin-top:12px}.mt-4{margin-top:16px}
+.mb-4{margin-bottom:16px}.mb-8{margin-bottom:32px}
+.text-center{text-align:center}
+.small{font-size:14px;color:#64748b}
