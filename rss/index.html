@@ -1,18 +1,105 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <title>CG Alert — RSS Overview</title>
-  <meta name="description" content="CG Alert RSS feeds and how to use them."/>
-  <link rel="canonical" href="https://www.cg-alert.com/rss/"/>
-</head>
-<body>
-  <main>
-    <h1>CG Alert — RSS</h1>
-    <section id="how"><h2>How</h2><p>How to subscribe and integrate.</p></section>
-    <section id="evidence"><h2>Evidence</h2><p>Publicly verifiable proof points.</p></section>
-    <section id="compare"><h2>Compare</h2><p>How CG Alert differs.</p></section>
-    <section id="faq"><h2>FAQ</h2><p>Frequently asked questions.</p></section>
-  </main>
-</body>
-</html>
+<!doctype html><html lang="en"><head>
+<meta name="worker-url" content="https://api.cg-alert.com">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RSS — CG Alert</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="canonical" href="https://www.cg-alert.com/rss/"/>
+<link rel="stylesheet" href="/assets/home-v3c.css">
+<style>
+  .rss-wrap{max-width:960px;margin:0 auto;padding:32px 16px;}
+  .rss-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
+  .rss-head h1{margin:0;}
+  .rss-actions a{margin-left:8px}
+  .rss-card{border:1px solid #e6e6e6;border-radius:16px;padding:16px;margin:12px 0}
+  .rss-card h3{margin:4px 0 8px 0}
+  .rss-meta{font-size:12px;opacity:.7;margin-bottom:6px}
+  .rss-empty{opacity:.7;margin-top:20px}
+</style>
+
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
+<meta name="description" content="Evidence-backed vendor change alerts."></head><body>
+<header class="cg-topbar">
+  <div class="cg-wrap cg-nav">
+    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
+    <nav class="cg-links" id="topnav">
+      <a href="/#pricing">Pricing</a>
+      <a href="#how">How it works</a>
+      <a href="#evidence">Evidence</a>
+      <a href="#compare">Compare</a>
+      <a href="#faq">FAQ</a>
+      
+    </nav>
+  </div>
+</header>
+
+<section class="rss-wrap">
+  <div class="rss-head">
+    <h1>Reports RSS</h1>
+    <div class="rss-actions">
+      <a class="cg-btn" href="/rss/index.xml" target="_blank" rel="noopener">Subscribe (XML)</a>
+      <a class="cg-btn ghost" href="/reports/">Open Reports</a>
+    </div>
+  </div>
+  <div id="rss-list"></div>
+  <div id="rss-empty" class="rss-empty" style="display:none;">No items yet. Once evidence is generated, items will appear here.</div>
+</section>
+
+<footer class="cg-footer">
+  <div class="cg-wrap cg-footlinks">
+    <a href="/who-uses/">Who uses</a>
+    <a href="/about/">About</a>
+    <a href="/reports/">Reports</a>
+    <a href="/rss/index.xml">RSS</a>
+    <a href="/terms/">Terms</a>
+    <a href="/privacy/">Privacy</a>
+    <span>© CG Alert — evidence-backed vendor change alerts.</span>
+  </div>
+</footer>
+
+<script>
+(async function(){
+  const list = document.getElementById('rss-list');
+  const empty = document.getElementById('rss-empty');
+  function render(items){
+    if(!items || !items.length){ empty.style.display='block'; return; }
+    list.innerHTML = '';
+    for(const it of items){
+      const url = it.url || it.link || '#';
+      const div = document.createElement('div');
+      div.className = 'rss-card';
+      const date = it.date || it.pubDate || it.published || '';
+      const vendor = it.vendor || it.title || 'Update';
+      const excerpt = it.summary || it.description || '';
+      div.innerHTML = `<div class="rss-meta">${(date||'').toString()}</div>
+        <h3><a href="${url}">${vendor}</a></h3>
+        <p>${excerpt}</p>`;
+      list.appendChild(div);
+    }
+  }
+  try {
+    const res = await fetch('/reports/feed.json', {cache:'no-store'});
+    if (res.ok) {
+      const data = await res.json();
+      return render(data.items || data || []);
+    }
+    throw new Error('feed.json not found');
+  } catch(e) {
+    try {
+      const x = await fetch('/rss/index.xml', {cache:'no-store'});
+      if (!x.ok) throw new Error('rss xml not found');
+      const txt = await x.text();
+      const dom = new DOMParser().parseFromString(txt, 'application/xml');
+      const items = Array.from(dom.querySelectorAll('item')).map(n => ({
+        title: (n.querySelector('title')||{}).textContent || '',
+        link: (n.querySelector('link')||{}).textContent || '#',
+        date: (n.querySelector('pubDate')||{}).textContent || '',
+        description: (n.querySelector('description')||{}).textContent || ''
+      }));
+      render(items);
+    } catch(e2){
+      empty.style.display='block';
+    }
+  }
+})();
+</script>
+</body></html>
