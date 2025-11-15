@@ -23,3 +23,7 @@ https://cg-alert.com/*    https://www.cg-alert.com/:splat   301!
 /enterprise       /intake/                              302
 
 # Default: keep other paths
+
+# Short checkout URLs
+/buy/portfolio  https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801  302
+/buy/business   https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800  302

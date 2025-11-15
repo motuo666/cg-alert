@@ -14,7 +14,7 @@ const REQUIRED = [
   "outreach-triggered.yml",
   "bounce-sweep.yml",
   "suppression-sync.yml",
-  "evidence-harvest.yml",
+  "vendors-build.yml",
   "lead-enrich.yml",
   "weekly-health-check.yml",
   "workflows-doctor.yml",

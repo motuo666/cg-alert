@@ -1,0 +1,4 @@
+/* cg.css — brand shim for legacy references.
+   Keep ultra-thin: just forward to cg-theme + home-v3c.
+*/
+@import url("/assets/cg-theme.css");
