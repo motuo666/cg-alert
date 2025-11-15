@@ -56,7 +56,7 @@ async function loadEvidence(){
       (items.length? items.map(i=>`<div class="item">
       <div><strong>${esc(i.ts||'')}</strong> · <a href="${esc(i.src)}" rel="nofollow">source</a> · <a href="${esc(i.url)}">evidence</a></div>
       <div>${esc(i.snippet)}</div></div>`).join('') : '<p>No events yet.</p>') +
-      `<p><a href="/vendors/">← All vendors</a> · <a href="/evidence/">All evidence</a> · <a href="/pricing/">Pricing</a> · <a href="/compare-builtwith.html">Compare</a></p>`;
+      `<p><a href="/vendors/">← All vendors</a> · <a href="/evidence/">All evidence</a> · <a href="/pricing/">Pricing</a> · <a href="/#compare">Compare</a></p>`;
     await fs.writeFile(path.join(dir,'timeline.html'), html(`${vs} — Timeline`, body), 'utf8');
     const idx = path.join(dir,'index.html');
     try{ await fs.access(idx); }catch{
