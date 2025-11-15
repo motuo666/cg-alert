@@ -1,23 +1,38 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="preload" href="/assets/home-v3c.css" as="style">
+<!doctype html><html lang="en"><head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reports — CG Alert</title>
+<link rel="canonical" href="https://www.cg-alert.com/reports/">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/home-v3c.css">
-<link rel="stylesheet" href="/assets/home-overrides.css">
-<title>CG Alert — Reports</title>
-
-</head>
-<body class="cg-body">
-  <div id="site-header"></div>
-  <main class="cg-container">
-    <h1 class="cg-h1">Reports</h1>
-    <p class="cg-muted"></p>
-    <div id="reports-list" class="cg-content"></div>
-  </main>
-  <div id="site-footer"></div>
-  <script src="/assets/layout-inject.js" defer></script>
-  <script src="/assets/reports-page.js" defer></script>
-</body>
-</html>
+<meta name="description" content="Evidence-backed vendor change reports.">
+</head><body>
+<header class="cg-topbar">
+  <div class="cg-wrap cg-nav">
+    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
+    <nav class="cg-links" id="topnav">
+      <a href="/#pricing">Pricing</a><a href="/#how">How it works</a><a href="/#evidence">Evidence</a><a href="/#compare">Compare</a><a href="/#faq">FAQ</a><a href="/who-uses/">Who uses</a>
+    </nav>
+  </div>
+</header>
+<section class="cg-wrap">
+  <h1>Latest vendor changes</h1>
+  <p class="muted">Auto-generated from <code>data/events.csv</code>.</p>
+  <table class="cg-table"><thead><tr><th>date</th><th>vendor</th><th>url</th><th>change</th><th>impact</th><th>tier</th></tr></thead><tbody><!--inject--></tbody></table>
+<script>fetch('/reports/data.html').then(r=>r.text()).then(html=>{document.querySelector('tbody').innerHTML=html;});</script></section>
+<footer class="cg-footer">
+  <div class="cg-wrap cg-footlinks">
+    <a href="/who-uses/">Who uses</a><a href="/about/">About</a><a href="/reports/">Reports</a><a href="/rss/index.xml">RSS</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a>
+    <span>© CG Alert — evidence-backed vendor change alerts.</span>
+  </div>
+</footer>
+<script>
+fetch('/data/events.csv').then(r=>r.text()).then(t=>{
+  const rows=t.trim().split(/\r?\n/).map(l=>l.split(','));
+  const [head,...body]=rows;
+  const th=head.map(h=>`<th>${h}</th>`).join('');
+  const trs=body.map(r=>`<tr>${r.map((c,i)=> i==2? `<td><a href="${c}" target="_blank" rel="noopener">${c}</a></td>`:`<td>${c}</td>`).join('')}</tr>`).join('');
+  document.getElementById('table').innerHTML=`<table class="cg-table"><thead><tr>${th}</tr></thead><tbody>${trs}</tbody></table>`;
+}).catch(e=>{document.getElementById('table').innerHTML='<p>Failed to load data.</p>'});
+</script>
+</body></html>
