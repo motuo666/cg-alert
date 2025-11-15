@@ -30,8 +30,22 @@
       #intake-app .grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
-</head>
+
+<link href="/assets/home-v3c.css?v=cb1" rel="stylesheet">
+<link href="assets/home-v3c.css?v=cb1" rel="stylesheet"></head>
 <body>
+<header class="cg-topbar">
+<div class="cg-wrap cg-nav">
+<a class="cg-brand" href="/"><img alt="CG Alert" height="40" src="/icon.svg" width="40"/><span>CG Alert</span></a>
+<nav class="cg-links" id="topnav">
+<a href="/#pricing">Pricing</a>
+<a href="#how">How it works</a>
+<a href="#evidence">Evidence</a>
+<a href="#compare">Compare</a>
+<a href="#faq">FAQ</a>
+</nav>
+</div>
+</header>
   <main id="intake-app" aria-labelledby="req-title">
     <div id="flash-ok" class="flash ok" role="status">Success — we will get back to you shortly.</div>
     <div id="flash-err" class="flash err" role="alert">Submission failed — please try again.</div>
@@ -184,5 +198,11 @@
     });
   })();
   </script>
+<footer class="site-footer" style="margin-top:48px;padding:24px 0;border-top:1px solid rgba(0,0,0,.06);text-align:center">
+  <nav class="footer-nav" style="display:inline-flex;gap:16px;flex-wrap:wrap;font-size:14px">
+    <a href="/who-uses/">Who uses</a><span>·</span><a href="/about/">About</a><span>·</span><a href="/rss/index.xml">RSS</a><span>·</span><a href="/terms/">Terms</a><span>·</span><a href="/privacy/">Privacy</a>
+  </nav>
+</footer>
+
 </body>
 </html>
