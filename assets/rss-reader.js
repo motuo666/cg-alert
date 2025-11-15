@@ -1,29 +1,30 @@
-
+// assets/rss-reader.js
+// Robust RSS loader with deterministic order and graceful degradation
 (async function(){
-  const feedEl = document.getElementById('feed');
+  const mount = document.getElementById('rss-mount') || document.body;
+  function toISO(s){ const d=new Date(s); return isNaN(d.getTime())?null:d.toISOString(); }
   try{
-    const res = await fetch('/rss/index.xml', {cache:'no-store'});
-    if(!res.ok) throw new Error('RSS not found');
-    const txt = await res.text();
-    const xml = new window.DOMParser().parseFromString(txt, 'text/xml');
-    const items = [...xml.querySelectorAll('item')].slice(0, 24);
-    if(items.length===0){ feedEl.innerHTML = '<div class="cg-card">No items yet.</div>'; return; }
-    const frag = document.createDocumentFragment();
-    items.forEach(it=>{
-      const title = it.querySelector('title')?.textContent || 'Evidence';
-      const link = it.querySelector('link')?.textContent || '#';
-      const date = it.querySelector('pubDate')?.textContent || '';
-      const desc = it.querySelector('description')?.textContent || '';
-      const card = document.createElement('a');
-      card.href = link; card.className='cg-card hover'; card.style='text-decoration:none; color:inherit';
-      card.innerHTML = `<h3 style="margin:0 0 6px">${title}</h3>
-                        <div class="cg-caption">${date}</div>
-                        <p style="margin:8px 0 0">${desc}</p>`;
-      frag.appendChild(card);
-    });
-    feedEl.appendChild(frag);
+    const r = await fetch('/rss.xml',{cache:'no-store'});
+    if(!r.ok){ if(mount) mount.textContent='Failed to load RSS'; return; }
+    const xml = new DOMParser().parseFromString(await r.text(), 'application/xml');
+    const items = Array.from(xml.querySelectorAll('item')).map(x=>({
+      title: (x.querySelector('title')||{}).textContent || '(no title)',
+      link: (x.querySelector('link')||{}).textContent || '',
+      date: (x.querySelector('pubDate')||{}).textContent || '',
+      desc: (x.querySelector('description')||{}).textContent || ''
+    }));
+    items.sort((a,b)=> (toISO(b.date)||'').localeCompare(toISO(a.date)||''));
+    const show = items.slice(0, 50);
+    if (mount){
+      mount.innerHTML = show.map(it => (
+        `<div class="item">
+           <div><a href="${it.link}" rel="noopener">${it.title}</a></div>
+           <div class="meta">${(it.date||'').replace(' +0000',' UTC')}</div>
+           <div>${it.desc}</div>
+         </div>`
+      )).join('');
+    }
   }catch(e){
-    console.warn(e);
-    feedEl.innerHTML = '<div class="cg-card">RSS unavailable.</div>';
+    if (mount) mount.textContent='RSS parse error';
   }
 })();
