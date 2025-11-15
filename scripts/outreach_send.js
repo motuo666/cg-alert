@@ -8,10 +8,13 @@ const { tplOPS, tplLEGAL, tplREVOPS } = require('../templates/email_personas.js'
 const SMTP_HOST = process.env.SMTP_HOST;
 const SMTP_USER = process.env.SMTP_USER;
 const SMTP_PASS = process.env.SMTP_PASS;
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587', 10);
 const MAIL_FROM = process.env.MAIL_FROM || SMTP_USER;
 const UNSUB_ORIGIN = process.env.UNSUB_ORIGIN || 'https://www.cg-alert.com';
 const UNSUB_HMAC_SECRET = process.env.UNSUB_HMAC_SECRET || 'change-me';
-const SEND_LIMIT = parseInt(process.env.SEND_LIMIT || '12', 10);
+const DRY_RUN = (process.env.DRY || '').toLowerCase() === 'true';
+const SEND_LIMIT = parseInt(process.env.SEND_LIMIT || process.env.LIMIT || '12', 10);
+
 
 if(!SMTP_HOST || !SMTP_USER || !SMTP_PASS){
   console.error('Missing SMTP_* env'); process.exit(1);
@@ -74,7 +77,12 @@ function renderMail(persona, ctx){
 
   const rules = await loadJSON(personaRulesPath, {});
   const region = await loadJSON(regionFilterPath, {});
-  const transporter = nodemailer.createTransport({ host: SMTP_HOST, port: 587, secure: false, auth: { user: SMTP_USER, pass: SMTP_PASS } });
+  const transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: { user: SMTP_USER, pass: SMTP_PASS }
+  });
 
   let sent = 0, idx = 0;
   for(const lead of leads){
@@ -93,9 +101,13 @@ function renderMail(persona, ctx){
     };
     const { subject, body } = renderMail(persona, ctx);
     try{
-      await transporter.sendMail({ from: MAIL_FROM, to: email, subject, text: body });
-      sent++;
-      console.log('sent', email, 'persona', persona);
+      if(DRY_RUN){
+        console.log('dry_run', email, 'persona', persona);
+      }else{
+        await transporter.sendMail({ from: MAIL_FROM, to: email, subject, text: body });
+        sent++;
+        console.log('sent', email, 'persona', persona);
+      }
     }catch(e){
       console.log('fail', email, e.message);
     }
