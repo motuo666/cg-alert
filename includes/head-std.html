@@ -1,17 +1,8 @@
-<!-- paste into <head>
-<meta name="worker-url" content="https://api.cg-alert.com"> -->
-<link rel="stylesheet" href="/assets/home-v3c.css">
-<!-- paste this header into <body> after opening tag -->
-<header class="cg-topbar">
-  <div class="cg-wrap cg-nav">
-    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert"><span>CG&nbsp;Alert</span></a>
-    <nav class="cg-links" id="topnav">
-      <a href="/#pricing">Pricing</a>
-      <a href="/#how">How it works</a>
-      <a href="/#evidence">Evidence</a>
-      <a href="/#compare">Compare</a>
-      <a href="/#faq">FAQ</a>
-      <a class="cg-btn ghost" href="/intake/">Request Enterprise →</a>
-    </nav>
-  </div>
-</header>
+<!-- includes/head-std.html -->
+<title>{{PAGE_TITLE}}</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="description" content="{{PAGE_DESCRIPTION}}"/>
+<link rel="canonical" href="" data-canonical="{{PAGE_CANONICAL}}"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; script-src 'self' {{ALLOW_SCRIPTS}}; style-src 'self' 'unsafe-inline'; connect-src 'self' {{ALLOW_CONNECT}}; frame-src https://js.stripe.com https://hooks.zapier.com; frame-ancestors 'none'; base-uri 'self'">
+<!-- Minimal, strict CSP: allow Stripe & form endpoints via ALLOW_* placeholders -->
