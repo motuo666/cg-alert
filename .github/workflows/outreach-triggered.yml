@@ -52,8 +52,6 @@ env:
   REQUIRE_CHANGED_VENDORS: "${{ vars.REQUIRE_CHANGED_VENDORS }}"
 
 on:
-  schedule:
-    - cron: '0 19 * * *'   # 04:00 JST
   workflow_dispatch:
     inputs:
       dry:
