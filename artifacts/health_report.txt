@@ -1,0 +1,3 @@
+OK: index.html present
+OK: _redirects has /buy/portfolio
+OK: _redirects has /intake
