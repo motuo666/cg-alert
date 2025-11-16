@@ -1,20 +1,39 @@
+name: Autopilot Step
+
+on:
+  schedule:
+    - cron: "12 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  autopilot:
+    runs-on: ubuntu-latest
+    env:
+      # 默认不开；要启用就到 Repo → Settings → Variables 里把 ENABLE_AUTOPILOT 设为 "true"
+      ENABLE_AUTOPILOT: ${{ vars.ENABLE_AUTOPILOT || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+
       - name: Guard & run
         shell: bash
         run: |
           set -e
           echo "ENABLE_AUTOPILOT=${ENABLE_AUTOPILOT}"
 
-          # 开关：默认关，只有显式开启才跑
+          # 统一总开关：不是 "true" 就直接退出（成功退出，不算失败）
           if [ "${ENABLE_AUTOPILOT}" != "true" ]; then
             echo "Autopilot disabled. Exit 0."
             exit 0
           fi
 
-          # 必须存在脚本，否则直接退出（但不算失败）
+          # 脚本不存在就跳过
           if [ ! -f scripts/ops/autopilot_step.js ]; then
             echo "scripts/ops/autopilot_step.js missing; skipping"
             exit 0
           fi
 
-          # 真正执行
+          # 真正执行一步 Autopilot
           node scripts/ops/autopilot_step.js
