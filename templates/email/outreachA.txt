@@ -1,11 +1,20 @@
-Subject: We caught a change on {vendor} — with evidence
+Subject: Vendor change intelligence for your SaaS stack
 
 Hi {first_name},
 
-We monitor vendors' public pages (Pricing / ToS / DPA / Subprocessors / Status).
-Yesterday we captured a change on {vendor}. Your team can use our evidence card (URL+timestamp+hash) to push back at renewal.
+CG Alert tracks when SaaS vendors change pricing and terms and turns those changes into evidence you can use in renewals.
 
-If you'd like, we can watch your top {n_vendors} vendors and email/Slack you only when a material change passes our two-step filter.
+Most teams start with a small set of critical tools, then expand coverage once they see how often vendors move the goalposts.
 
-— CG Alert
-Evidence-backed vendor change alerts
+If you want this in place without calls or contracts, you can use the self-serve plans:
+
+- Pro – $499/year for up to 5 vendors
+- Business – $1,499/year for up to 15 vendors
+- Audit – $2,988/year for up to 25 vendors and 3-year audit trails
+
+Details and checkout are on the pricing page:
+
+https://www.cg-alert.com/pricing/
+
+Best regards,
+CG Alert

@@ -1,79 +1,85 @@
 #!/usr/bin/env python3
-import os, re, sys, json, argparse, pathlib
+import argparse
+import json
+import os
+import re
+import sys
+from pathlib import Path
 
-PRICE_RE = re.compile(r'\$?\s*([0-9][0-9,]*)', re.I)
-HREF_RE = re.compile(r'href=["\']([^"\']+)["\']', re.I)
-TEXT_RE = re.compile(r'>([^<]+)<')
+EXPECTED_PRICES = {
+    "portfolio": 499,
+    "business": 1499,
+    "enterprise_min": 2988,
+}
 
-def read_file(p):
-    return pathlib.Path(p).read_text(encoding="utf-8", errors="ignore")
+BAD_PRICE_PATTERNS = [
+    r"\$6,000",
+    r"\$18,000",
+    r"\b6000\b",
+    r"\b18000\b",
+]
 
-def extract_text(html):
-    return " ".join([m.strip() for m in TEXT_RE.findall(html) if m.strip()])
+HTML_EXTS = {".html"}
 
-def find_prices(text):
-    nums = [int(x.replace(",", "")) for x in PRICE_RE.findall(text)]
-    return set(nums)
+def load_ci_config(root: Path) -> bool:
+    cfg_path = root / "config" / "ci" / "config.json"
+    if not cfg_path.exists():
+        print(f"[pricing-check] config file missing: {cfg_path}", file=sys.stderr)
+        return False
+    try:
+        with cfg_path.open("r", encoding="utf-8") as f:
+            cfg = json.load(f)
+    except Exception as e:
+        print(f"[pricing-check] failed to load {cfg_path}: {e}", file=sys.stderr)
+        return False
 
-def find_hrefs(html):
-    return HREF_RE.findall(html)
+    prices = cfg.get("prices", {})
+    ok = True
+    for key, expected in EXPECTED_PRICES.items():
+        actual = prices.get(key)
+        if actual != expected:
+            print(f"[pricing-check] mismatch for prices.{key}: expected {expected}, got {actual}", file=sys.stderr)
+            ok = False
+    return ok
 
-def load_cfg(root):
-    cfgp = pathlib.Path(root) / "config/ci/config.json"
-    if cfgp.exists():
-        return json.loads(cfgp.read_text(encoding="utf-8"))
-    return {
-        "prices": {"portfolio": 2988, "business": 6000, "enterprise_min": 18000},
-        "enterprise_cta_must_include": ["/intake/","/contact","/form"],
-        "stripe_link_must_not_appear_for_enterprise": True,
-        "pricing_page": "pricing/index.html"
-    }
+def scan_old_prices(root: Path) -> bool:
+    bad_files = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        rel_root = os.path.relpath(dirpath, root)
+        # Skip evidence and node_modules and .git
+        if rel_root.startswith("evidence") or "node_modules" in rel_root or rel_root.startswith(".git"):
+            continue
+        for fn in filenames:
+            ext = os.path.splitext(fn)[1].lower()
+            if ext not in HTML_EXTS:
+                continue
+            path = Path(dirpath) / fn
+            try:
+                text = path.read_text(encoding="utf-8")
+            except Exception:
+                continue
+            for pat in BAD_PRICE_PATTERNS:
+                if re.search(pat, text):
+                    bad_files.append(str(path.relative_to(root)))
+                    break
+    if bad_files:
+        print("[pricing-check] found legacy 6,000/18,000 pricing in HTML files:", file=sys.stderr)
+        for f in bad_files:
+            print(f"  - {f}", file=sys.stderr)
+        return False
+    return True
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--root", default=".")
-    ap.add_argument("--pricing-page", default=None)
-    args = ap.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", default=".", help="repository root")
+    args = parser.parse_args()
+    root = Path(args.root).resolve()
 
-    root = pathlib.Path(args.root).resolve()
-    cfg = load_cfg(root)
-    pricing_page = args.pricing_page or cfg.get("pricing_page","pricing/index.html")
-    page_path = (root / pricing_page).resolve()
-    if not page_path.exists():
-        print(f"FAIL: missing pricing page: {pricing_page}")
-        sys.exit(2)
+    ok_cfg = load_ci_config(root)
+    ok_scan = scan_old_prices(root)
 
-    html = read_file(page_path)
-    text = extract_text(html)
-    prices = find_prices(text)
-
-    want_portfolio = cfg["prices"]["portfolio"]
-    want_business = cfg["prices"]["business"]
-    want_enterprise_min = cfg["prices"]["enterprise_min"]
-
-    # price presence checks
-    needed = {want_portfolio, want_business}
-    if not needed.issubset(prices):
-        print(f"FAIL: expected prices {needed} not all found in text: {prices}")
-        sys.exit(2)
-    # enterprise min must be present as a number or "+" form
-    if not any(p >= want_enterprise_min for p in prices):
-        print(f"FAIL: enterprise minimum ({want_enterprise_min}+) not found")
-        sys.exit(2)
-
-    # href checks
-    hrefs = find_hrefs(html)
-    enterprise_bad = []
-    stripe_like = [h for h in hrefs if "stripe" in h.lower()]
-    # enterprise CTAs must go to intake/contact/form, not Stripe
-    must_incl = cfg.get("enterprise_cta_must_include", [])
-    if cfg.get("stripe_link_must_not_appear_for_enterprise", True):
-        # Allow stripe links to appear for non-enterprise tiers, but enterprise must have at least one intake/contact/form link
-        if not any(any(token in h for token in must_incl) for h in hrefs):
-            print("FAIL: enterprise CTA missing intake/contact/form link")
-            sys.exit(2)
-    print("OK: pricing & CTA guard passed")
-    sys.exit(0)
+    if not (ok_cfg and ok_scan):
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

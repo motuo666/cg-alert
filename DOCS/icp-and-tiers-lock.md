@@ -22,5 +22,6 @@ Before changing plans or positioning, update this file first and then sync the f
 - config/ci/config.json
 - config/templates/outreach_*.html
 - /public/pricing.html
+- /pricing/index.html
 - /index.html (hero & meta copy if needed)
 - /terms/index.html (Subscription & automation clauses)

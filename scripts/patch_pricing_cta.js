@@ -11,7 +11,7 @@ const OUT = path.join(PUB_DIR,'pricing','index.html');
 const SNIPPET = (variant)=>`<!-- CTA-PATCH VARIANT:${variant} -->
 <section id="cta-${variant}" style="max-width:960px;margin:32px auto;padding:16px;border:1px solid #e5e7eb;border-radius:16px">
   <h2 style="margin:0 0 8px">Start with verifiable vendor-change evidence</h2>
-  <p style="margin:0 0 12px;color:#475569">Portfolio $2,988/yr · Business $6,000/yr · Enterprise $18,000+/yr</p>
+  <p style="margin:0 0 12px;color:#475569">Pro $499/yr · Business $1,499/yr · Audit $2,988/yr</p>
   <div style="display:flex;gap:12px;flex-wrap:wrap">
     <a href="${PL_PORT}" style="padding:12px 16px;border-radius:12px;border:1px solid #0b62f2;text-decoration:none">Buy Portfolio</a>
     <a href="${PL_BUS}"  style="padding:12px 16px;border-radius:12px;border:1px solid #0b62f2;text-decoration:none">Buy Business</a>
