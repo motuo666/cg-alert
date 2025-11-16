@@ -1,4 +1,4 @@
 # Privacy
-- Collect only necessary data (email, company, role).
-- Provide clear consent and an unsubscribe mechanism.
-- Delete or anonymize data after retention limits.
+- 仅收集完成服务所必需的数据（邮箱、公司名称、角色等）。
+- 提供清晰的退订与删除通道。
+- 按约定的保留期定期删除或匿名化数据。

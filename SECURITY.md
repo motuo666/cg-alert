@@ -1,5 +1,5 @@
 # Security Policy
-- No plaintext secrets in repo or logs.
-- Use environment variables or secret managers.
-- Rotate all API keys quarterly.
-- Email outreach must honor Unsubscribe, bounces, and applicable laws (e.g., CAN-SPAM, GDPR).
+- 不在代码库中存储明文秘钥。
+- 所有秘钥通过环境变量或密钥管理（GitHub Secrets, Cloudflare Secrets）。
+- 邮件发送必须遵守 SPF / DKIM / DMARC 策略。
+- 对 Stripe / 邮件 / Worker 日志进行最小化记录，避免敏感数据泄露。
