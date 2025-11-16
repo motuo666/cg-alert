@@ -24,6 +24,43 @@ def mk_fingerprint(url, captured_at, title):
     basis = (url or "") + "|" + (captured_at or "") + "|" + (title or "")
     return hashlib.sha256(basis.encode("utf-8")).hexdigest()
 
+def compute_severity(r):
+    text = " ".join([
+        str(r.get("title") or ""),
+        str(r.get("notes") or ""),
+        str(r.get("section") or ""),
+        str(r.get("url") or ""),
+        str(r.get("path") or ""),
+    ]).lower()
+    high_kw = [
+        "security breach","breach","security incident",
+        "personal data","personal information","pii",
+        "data processing","data protection","dpa",
+        "sub-processor","subprocessor","sub processor",
+        "liability","indemn","warranty","limitation of liability",
+        "suspend","suspension","terminate","termination",
+        "credit card","payment card","authentication","encryption",
+        "availability","uptime","sla","service level"
+    ]
+    med_kw = [
+        "price","pricing","fee","fees","charge","billing",
+        "renew","renewal","term","commitment",
+        "data","processor","controller","controller-processor",
+        "cookie","tracking","analytics"
+    ]
+    low_kw = [
+        "typo","spelling","copy","cosmetic",
+        "example","demo"
+    ]
+    if any(k in text for k in high_kw):
+        return "high"
+    if any(k in text for k in med_kw):
+        return "medium"
+    if any(k in text for k in low_kw):
+        return "low"
+    # default: medium so most events are treated as worth a look
+    return "medium"
+
 def normalize_rows(rows):
     out = []
     for r in rows:
@@ -34,6 +71,9 @@ def normalize_rows(rows):
         fp = r.get("fingerprint") or mk_fingerprint(url, captured_at, title)
         nr = dict(r)
         nr.update({"id": rid, "title": title, "captured_at": captured_at, "fingerprint": fp})
+        # attach a simple severity classification if not already provided
+        if not nr.get("severity"):
+            nr["severity"] = compute_severity(nr)
         out.append(nr)
     return out
 

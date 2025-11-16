@@ -1450,6 +1450,16 @@
     "missing_alt": 0
   },
   {
+    "file": "reports/contoso-crm/2025-11-16/demo-hash-2.html",
+    "title_ok": true,
+    "h1_ok": true,
+    "desc_ok": false,
+    "empty_links": 0,
+    "missing_rel": 0,
+    "broken_imgs": 0,
+    "missing_alt": 0
+  },
+  {
     "file": "reports/evidence/_last_poll.html",
     "title_ok": true,
     "h1_ok": true,
@@ -1580,6 +1590,16 @@
     "missing_alt": 0
   },
   {
+    "file": "reports/example-saas/2025-11-16/demo-hash-1.html",
+    "title_ok": true,
+    "h1_ok": true,
+    "desc_ok": false,
+    "empty_links": 0,
+    "missing_rel": 0,
+    "broken_imgs": 0,
+    "missing_alt": 0
+  },
+  {
     "file": "reports/fabrikam-analytics/2025-11-07/demo-hash-3.html",
     "title_ok": true,
     "h1_ok": true,
@@ -1661,6 +1681,16 @@
   },
   {
     "file": "reports/fabrikam-analytics/2025-11-15/demo-hash-3.html",
+    "title_ok": true,
+    "h1_ok": true,
+    "desc_ok": false,
+    "empty_links": 0,
+    "missing_rel": 0,
+    "broken_imgs": 0,
+    "missing_alt": 0
+  },
+  {
+    "file": "reports/fabrikam-analytics/2025-11-16/demo-hash-3.html",
     "title_ok": true,
     "h1_ok": true,
     "desc_ok": false,
@@ -1761,6 +1791,16 @@
   },
   {
     "file": "reports/vendor/2025-11-15/_last_poll.html",
+    "title_ok": true,
+    "h1_ok": true,
+    "desc_ok": false,
+    "empty_links": 0,
+    "missing_rel": 0,
+    "broken_imgs": 0,
+    "missing_alt": 0
+  },
+  {
+    "file": "reports/vendor/2025-11-16/_last_poll.html",
     "title_ok": true,
     "h1_ok": true,
     "desc_ok": false,

@@ -1,49 +1,65 @@
-<!doctype html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta name="worker-url" content="https://api.cg-alert.com">
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Deal Desk — CG Alert</title>
-  <link rel="canonical" href="https://www.cg-alert.com/deal-desk/"/>
-  <link rel="icon" href="/icon.svg" type="image/svg+xml">
-  <meta name="description" content="Deal Desk — CG Alert">
-  <link rel="stylesheet" href="/assets/home-v3c.css?v=cb1">
-<link href="../assets/home-v3c.css?v=cb1" rel="stylesheet">
-
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;"></head>
+<meta content="https://api.cg-alert.com" name="worker-url"/>
+<meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>Deal Desk — CG Alert</title>
+<link href="https://www.cg-alert.com/deal-desk/" rel="canonical"/>
+<link href="/icon.svg" rel="icon" type="image/svg+xml"/>
+<meta content="Deal Desk — CG Alert" name="description"/>
+<link href="/assets/home-v3c.css?v=cb1" rel="stylesheet"/>
+<link href="../assets/home-v3c.css?v=cb1" rel="stylesheet"/>
+<meta content="default-src 'self'; img-src 'self' data:; connect-src 'self' https://buy.stripe.com https://api.cg-alert.com; frame-src https://buy.stripe.com; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;" http-equiv="Content-Security-Policy"/><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [{
+    "@type": "Question",
+    "name": "How does CG Alert help with vendor renewals and deal desks?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "CG Alert turns ongoing vendor contract and policy changes into timestamped evidence cards that deal teams can paste directly into renewal conversations."
+    }
+  },{
+    "@type": "Question",
+    "name": "What kind of evidence do we get?",
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "You get human-readable cards with links back to the underlying terms, data processing agreements, and status pages, annotated with dates and SHA-256 fingerprints."
+    }
+  }]
+}</script></head>
 <body>
 <header class="cg-topbar"><div class="cg-wrap cg-nav">
-  <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert"><span>CG&nbsp;Alert</span></a>
-  <nav class="cg-links">
-    <a href="/#pricing">Pricing</a><a href="/#how">How it works</a><a href="/#evidence">Evidence</a><a href="/#compare">Compare</a><a href="/#faq">FAQ</a>
-    <a class="cg-btn ghost" href="/intake/">Request Enterprise →</a>
-  </nav>
+<a class="cg-brand" href="/"><img alt="CG Alert" src="/icon.svg"/><span>CG Alert</span></a>
+<nav class="cg-links">
+<a href="/#pricing">Pricing</a><a href="/#how">How it works</a><a href="/#evidence">Evidence</a><a href="/#compare">Compare</a><a href="/#faq">FAQ</a>
+<a class="cg-btn ghost" href="/intake/">Request Enterprise →</a>
+</nav>
 </div></header>
 <main class="cg-wrap" style="padding-top:28px">
-  <h1 style="font-weight:900;margin:0 0 10px">Deal Desk</h1>
-  
+<h1 style="font-weight:900;margin:0 0 10px">Deal Desk</h1>
 <p>Use these ready-to-paste templates with your timestamped evidence.</p>
 <div class="cg-grid3">
-  <div class="cg-card hover">
-    <h3>Legacy pricing / credits</h3>
-    <textarea id="tmpl1" rows="8">Per our records, your pricing/terms changed on {{DATE}}. Please extend legacy pricing or provide equivalent credits. Evidence: {{URL}} (captured {{DATE}}).</textarea>
-    <button class="cg-btn" data-copy="#tmpl1">Copy</button>
-  </div>
-  <div class="cg-card hover">
-    <h3>Liability language</h3>
-    <textarea id="tmpl2" rows="8">We noted changes to liability/DPA on {{DATE}}. For this renewal, we require prior liability caps and indemnities. Evidence: {{URL}} (timestamped).</textarea>
-    <button class="cg-btn" data-copy="#tmpl2">Copy</button>
-  </div>
-  <div class="cg-card hover">
-    <h3>SLA credits</h3>
-    <textarea id="tmpl3" rows="8">Recent SLA policy updates reduced credits. Please restore prior credit schedule or apply equivalent discount. Evidence: {{URL}} (captured {{DATE}}).</textarea>
-    <button class="cg-btn" data-copy="#tmpl3">Copy</button>
-  </div>
+<div class="cg-card hover">
+<h3>Legacy pricing / credits</h3>
+<textarea id="tmpl1" rows="8">Per our records, your pricing/terms changed on {{DATE}}. Please extend legacy pricing or provide equivalent credits. Evidence: {{URL}} (captured {{DATE}}).</textarea>
+<button class="cg-btn" data-copy="#tmpl1">Copy</button>
+</div>
+<div class="cg-card hover">
+<h3>Liability language</h3>
+<textarea id="tmpl2" rows="8">We noted changes to liability/DPA on {{DATE}}. For this renewal, we require prior liability caps and indemnities. Evidence: {{URL}} (timestamped).</textarea>
+<button class="cg-btn" data-copy="#tmpl2">Copy</button>
+</div>
+<div class="cg-card hover">
+<h3>SLA credits</h3>
+<textarea id="tmpl3" rows="8">Recent SLA policy updates reduced credits. Please restore prior credit schedule or apply equivalent discount. Evidence: {{URL}} (captured {{DATE}}).</textarea>
+<button class="cg-btn" data-copy="#tmpl3">Copy</button>
+</div>
 </div>
 <script src="/assets/deal-desk.js"></script>
-
 </main>
 <footer class="cg-footer"><div class="cg-wrap cg-footlinks">
-  <a href="/who-uses/">Who uses</a><a href="/about/">About</a><a href="/reports/">Reports</a><a href="/rss/">RSS</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a>
-  <span>© CG Alert — evidence-backed vendor change alerts.</span>
+<a href="/who-uses/">Who uses</a><a href="/about/">About</a><a href="/reports/">Reports</a><a href="/rss/">RSS</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a>
+<span>© CG Alert — evidence-backed vendor change alerts.</span>
 </div></footer>
 </body></html>

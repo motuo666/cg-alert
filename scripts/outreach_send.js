@@ -106,6 +106,9 @@ function renderMail(persona, ctx){
       }else{
         await transporter.sendMail({ from: MAIL_FROM, to: email, subject, text: body });
         sent++;
+        const mdir = path.join('data','metrics');
+        await fs.mkdir(mdir,{recursive:true});
+        await fs.appendFile(path.join(mdir,'outreach.log'), `${new Date().toISOString()},outreach_send,email=${email},persona=${persona}\n`);
         console.log('sent', email, 'persona', persona);
       }
     }catch(e){
