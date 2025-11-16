@@ -1,3 +1,0 @@
-OK: index.html present
-WARN: _redirects missing /buy/portfolio
-OK: _redirects has /intake
