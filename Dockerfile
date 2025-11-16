@@ -1,6 +1,7 @@
 FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --omit=dev || true
+RUN npm ci || true
 COPY . .
-CMD ["npm","run","health"]
+EXPOSE 3000
+CMD ["npm","start"]
