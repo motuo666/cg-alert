@@ -3,39 +3,47 @@
   "tiers": [
     {
       "id": "portfolio",
-      "title": "Portfolio",
-      "price_year": 2988,
-      "vendors_max": 25,
+      "title": "Pro",
+      "price_year": 499,
+      "vendors_max": 5,
       "buy_link": "https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801",
       "purchase": "stripe",
       "includes": [
-        "Email alerts",
-        "Slack alerts",
-        "Evidence cards"
+        "Monitor up to 5 vendors",
+        "Weekly email alerts",
+        "Web dashboards & timelines"
       ],
       "refund": "30-day money-back if no material alert"
     },
     {
       "id": "business",
       "title": "Business",
-      "price_year": 6000,
-      "vendors_max": 50,
+      "price_year": 1499,
+      "vendors_max": 15,
       "buy_link": "https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800",
       "purchase": "stripe",
       "includes": [
-        "Email alerts",
-        "Slack alerts",
-        "Evidence cards"
+        "Monitor up to 15 vendors",
+        "Daily or weekly alerts",
+        "Email summaries",
+        "Dashboards and export"
       ]
     },
     {
       "id": "enterprise",
-      "title": "Enterprise",
-      "price_year": 18000,
-      "vendors_max": 200,
+      "title": "Audit",
+      "price_year": 2988,
+      "vendors_max": 25,
       "buy_link": null,
       "purchase": "form",
-      "contact_url": "https://www.cg-alert.com/intake/"
+      "contact_url": "https://www.cg-alert.com/intake/",
+      "includes": [
+        "Monitor up to 25 vendors",
+        "Daily alerts",
+        "PDF reports",
+        "Multi-user access",
+        "3-year data retention"
+      ]
     }
   ],
   "updated_at": "2025-11-07T07:40:06.948Z"

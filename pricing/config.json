@@ -2,27 +2,28 @@
   "plans": [
     {
       "id": "portfolio",
-      "name": "Portfolio",
-      "price_usd_year": 2988,
-      "price_label": "$2,988 / yr",
-      "tagline": "Up to 25 vendors. Weekly. Delivery: Email.",
+      "name": "Pro",
+      "price_usd_year": 499,
+      "price_label": "$499 / yr",
+      "tagline": "Up to 5 vendors. Weekly SaaS vendor change intelligence for individuals and very small teams.",
       "checkout_redirect": "${STRIPE_LINK_PORTFOLIO}"
     },
     {
       "id": "business",
       "name": "Business",
-      "price_usd_year": 6000,
-      "price_label": "$6,000 / yr",
-      "tagline": "Up to 50 vendors. Daily/Weekly. Delivery: Email.",
+      "price_usd_year": 1499,
+      "price_label": "$1,499 / yr",
+      "tagline": "Up to 15 vendors. Daily/weekly alerts, email summaries, dashboards, and export for collaborating teams.",
       "checkout_redirect": "${STRIPE_LINK_BUSINESS}"
     },
     {
       "id": "enterprise",
-      "name": "Enterprise",
-      "price_usd_year": 18000,
-      "price_label": "Starts $18,000+ / yr",
-      "tagline": "Up to 200 vendors. Custom cadence. Delivery: Email.",
-      "contact_redirect": "/intake/"
+      "name": "Audit",
+      "price_usd_year": 2988,
+      "price_label": "$2,988 / yr",
+      "tagline": "Up to 25 vendors. Automated audit trails, PDF reports, multi-user access, and 3-year retention.",
+      "contact_redirect": "/intake/",
+      "checkout_redirect": "${STRIPE_LINK_ENTERPRISE}"
     }
   ]
 }

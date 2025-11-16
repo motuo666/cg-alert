@@ -2,22 +2,22 @@
   "updated_at": "2025-11-07T05:53:52.530Z",
   "plans": {
     "portfolio": {
-      "price": 2988,
+      "price": 499,
       "billing": "year",
-      "link": "https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801",
+      "link": "https://buy.stripe.com/dRmbJ35Fs3ok7EmeuKcs803",
       "type": "stripe"
     },
     "business": {
-      "price": 6000,
+      "price": 1499,
       "billing": "year",
-      "link": "https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800",
+      "link": "https://buy.stripe.com/00w9AV9VIbUQbUC5Yecs804",
       "type": "stripe"
     },
     "enterprise": {
-      "price": 18000,
-      "billing": "year+",
-      "link": "https://www.cg-alert.com/intake/",
-      "type": "form"
+      "price": 2988,
+      "billing": "year",
+      "link": "https://buy.stripe.com/eVq28t5Fs2kgbUCgCScs805",
+      "type": "stripe"
     }
   },
   "optional": {

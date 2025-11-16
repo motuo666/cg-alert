@@ -1,8 +1,8 @@
 {
   "prices": {
-    "portfolio": 2988,
-    "business": 6000,
-    "enterprise_min": 18000
+    "portfolio": 499,
+    "business": 1499,
+    "enterprise_min": 2988
   },
   "enterprise_cta_must_include": [
     "/intake/",
