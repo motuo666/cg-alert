@@ -1,12 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Request Enterprise — CG Alert</title>
-  <!-- Scoped layout fixes; header/footer styles remain intact -->
-  <meta name="worker-url" content="">
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Request Enterprise — CG Alert</title><meta content="Request an enterprise deployment of CG Alert and share the vendors and policies you care about most." name="description"/>
+<!-- Scoped layout fixes; header/footer styles remain intact -->
+<meta content="" name="worker-url"/>
+<style>
     #intake-app { max-width: 980px; margin: 40px auto; padding: 12px 16px; }
     #intake-app .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
     #intake-app .span-2 { grid-column: 1 / -1; }
@@ -30,8 +31,7 @@
       #intake-app .grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
-
-<link href="/assets/home-v3c.css?v=cb1" rel="stylesheet">
+<link href="/assets/home-v3c.css?v=cb1" rel="stylesheet"/>
 </head>
 <body>
 <header class="cg-topbar">
@@ -46,61 +46,53 @@
 </nav>
 </div>
 </header>
-  <main id="intake-app" aria-labelledby="req-title">
-    <div id="flash-ok" class="flash ok" role="status">Success — we will get back to you shortly.</div>
-    <div id="flash-err" class="flash err" role="alert">Submission failed — please try again.</div>
-
-    <h1 id="req-title" style="font-size:34px; line-height:1.2; margin:6px 0 10px;">Request Enterprise</h1>
-    <p style="color:#64748b; margin-top:0; margin-bottom:18px;">Tell us who you need monitored. We'll reply shortly.</p>
-
-    <form id="intake-form" novalidate>
-      <div class="grid">
-        <div class="field">
-          <label for="email">Email (work preferred)</label>
-          <input id="email" name="email" type="email" autocomplete="email" placeholder="you@company.com" required>
-          <div class="help">We'll contact you at this address.</div>
-          <div class="err" id="err-email">Please enter your email.</div>
-        </div>
-
-        <div class="field">
-          <label for="company">Company name</label>
-          <input id="company" name="company" type="text" placeholder="Acme Corp" required>
-          <div class="err" id="err-company">Please enter your company name.</div>
-        </div>
-
-        <div class="field span-2">
-          <label for="vendors">Vendors to monitor (comma or newline separated)</label>
-          <textarea id="vendors" name="vendors" placeholder="okta.com, slack.com, atlassian.com" required></textarea>
-          <div class="help">Add 3–200 domains. We'll expand to pricing / terms / DPA / subprocessors / status pages automatically.</div>
-          <div class="err" id="err-vendors">Please provide at least one vendor domain.</div>
-        </div>
-
-        <div class="field">
-          <label for="budget">Budget</label>
-          <select id="budget" name="budget" required>
-            <option value="" selected>Choose…</option>
-            <option value="<3k">&lt; $3,000 / yr</option>
-            <option value="3-6k">$3,000 – $6,000 / yr</option>
-            <option value="6-18k">$6,000 – $18,000 / yr</option>
-            <option value="18k+">$18,000+ / yr</option>
-          </select>
-          <div class="err" id="err-budget">Please choose a budget.</div>
-        </div>
-
-        <div class="field">
-          <label for="notes">Notes (optional)</label>
-          <textarea id="notes" name="notes" placeholder="Anything else we should know?"></textarea>
-        </div>
-
-        <div class="span-2" style="margin-top:6px;">
-          <button id="submitBtn" class="btn" type="submit">Submit</button>
-          <span id="submitNote" style="margin-left:10px; color:#64748b;"></span>
-        </div>
-      </div>
-    </form>
-  </main>
-
-  <script>
+<main aria-labelledby="req-title" id="intake-app">
+<div class="flash ok" id="flash-ok" role="status">Success — we will get back to you shortly.</div>
+<div class="flash err" id="flash-err" role="alert">Submission failed — please try again.</div>
+<h1 id="req-title" style="font-size:34px; line-height:1.2; margin:6px 0 10px;">Request Enterprise</h1>
+<p style="color:#64748b; margin-top:0; margin-bottom:18px;">Tell us who you need monitored. We'll reply shortly.</p>
+<form id="intake-form" novalidate="">
+<div class="grid">
+<div class="field">
+<label for="email">Email (work preferred)</label>
+<input autocomplete="email" id="email" name="email" placeholder="you@company.com" required="" type="email"/>
+<div class="help">We'll contact you at this address.</div>
+<div class="err" id="err-email">Please enter your email.</div>
+</div>
+<div class="field">
+<label for="company">Company name</label>
+<input id="company" name="company" placeholder="Acme Corp" required="" type="text"/>
+<div class="err" id="err-company">Please enter your company name.</div>
+</div>
+<div class="field span-2">
+<label for="vendors">Vendors to monitor (comma or newline separated)</label>
+<textarea id="vendors" name="vendors" placeholder="okta.com, slack.com, atlassian.com" required=""></textarea>
+<div class="help">Add 3–200 domains. We'll expand to pricing / terms / DPA / subprocessors / status pages automatically.</div>
+<div class="err" id="err-vendors">Please provide at least one vendor domain.</div>
+</div>
+<div class="field">
+<label for="budget">Budget</label>
+<select id="budget" name="budget" required="">
+<option selected="" value="">Choose…</option>
+<option value="&lt;3k">&lt; $3,000 / yr</option>
+<option value="3-6k">$3,000 – $6,000 / yr</option>
+<option value="6-18k">$6,000 – $18,000 / yr</option>
+<option value="18k+">$18,000+ / yr</option>
+</select>
+<div class="err" id="err-budget">Please choose a budget.</div>
+</div>
+<div class="field">
+<label for="notes">Notes (optional)</label>
+<textarea id="notes" name="notes" placeholder="Anything else we should know?"></textarea>
+</div>
+<div class="span-2" style="margin-top:6px;">
+<button class="btn" id="submitBtn" type="submit">Submit</button>
+<span id="submitNote" style="margin-left:10px; color:#64748b;"></span>
+</div>
+</div>
+</form>
+</main>
+<script>
   (function(){
     const $ = (sel) => document.querySelector(sel);
     const form = $("#intake-form");
@@ -199,10 +191,9 @@
   })();
   </script>
 <footer class="site-footer" style="margin-top:48px;padding:24px 0;border-top:1px solid rgba(0,0,0,.06);text-align:center">
-  <nav class="footer-nav" style="display:inline-flex;gap:16px;flex-wrap:wrap;font-size:14px">
-    <a href="/who-uses/">Who uses</a><span>·</span><a href="/about/">About</a><span>·</span><a href="/rss/index.xml">RSS</a><span>·</span><a href="/terms/">Terms</a><span>·</span><a href="/privacy/">Privacy</a>
-  </nav>
+<nav class="footer-nav" style="display:inline-flex;gap:16px;flex-wrap:wrap;font-size:14px">
+<a href="/who-uses/">Who uses</a><span>·</span><a href="/about/">About</a><span>·</span><a href="/rss/index.xml">RSS</a><span>·</span><a href="/terms/">Terms</a><span>·</span><a href="/privacy/">Privacy</a>
+</nav>
 </footer>
-
 </body>
 </html>

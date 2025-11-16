@@ -1,10 +1,11 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Ops Health</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
+<meta charset="utf-8"/>
+<title>Ops Health</title><meta content="Internal health dashboard for CG Alert operations workflows and alerting." name="description"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<style>
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial;
          margin:24px; color:#111}
     header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
@@ -20,28 +21,26 @@
 </head>
 <body>
 <header>
-  <h1>Operational Health</h1>
-  <span id="stamp" class="pill">loading…</span>
+<h1>Operational Health</h1>
+<span class="pill" id="stamp">loading…</span>
 </header>
-
 <div class="grid">
-  <section>
-    <h2>7‑day Messaging KPIs</h2>
-    <div id="kpi" class="muted">loading…</div>
-    <table id="kpiTable" hidden>
-      <thead>
-        <tr><th>Metric</th><th>Value</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
-  <section>
-    <h2>Alerts</h2>
-    <div id="alerts" class="muted">No alerts</div>
-    <ul id="alertList"></ul>
-  </section>
+<section>
+<h2>7‑day Messaging KPIs</h2>
+<div class="muted" id="kpi">loading…</div>
+<table hidden="" id="kpiTable">
+<thead>
+<tr><th>Metric</th><th>Value</th></tr>
+</thead>
+<tbody></tbody>
+</table>
+</section>
+<section>
+<h2>Alerts</h2>
+<div class="muted" id="alerts">No alerts</div>
+<ul id="alertList"></ul>
+</section>
 </div>
-
 <script>
 (async function(){
   const stampEl = document.getElementById('stamp');
