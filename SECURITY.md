@@ -1,5 +1,31 @@
-# Security Policy
-- 不在代码库中存储明文秘钥。
-- 所有秘钥通过环境变量或密钥管理（GitHub Secrets, Cloudflare Secrets）。
-- 邮件发送必须遵守 SPF / DKIM / DMARC 策略。
-- 对 Stripe / 邮件 / Worker 日志进行最小化记录，避免敏感数据泄露。
+# 安全策略（SECURITY.md）
+
+## 报告漏洞
+- 通过安全邮箱：security@example.com
+- 72 小时内确认，7 天内给出修复计划。
+
+## 支持的版本
+- main：持续支持（安全修复）。
+- 旧分支：仅在企业合同下支持。
+
+## 秘钥与凭据管理
+- 所有密钥存放在托管密钥库（如 GitHub Actions Secrets、GCP Secret Manager）。
+- 仓库禁止明文密钥；通过 *pre-commit + gitleaks* 强制检测。
+- `.env` 从不提交；提供 `.env.example` 作为示例。
+- 密钥轮换：重要密钥每 90 天轮换；事故发生时 24 小时内强制轮换。
+
+## 供应链与依赖
+- 启用 Dependabot / Renovate。
+- 锁定依赖版本，启用 SBOM 生成（`syft`）。
+- 对生产镜像启用镜像签名与来源证明（SLSA / cosign）。
+
+## 数据与隐私
+- 采集数据做到 *最小化*；
+- 对用户数据分类（PII、敏感、匿名），不同级别不同的保护与保留策略；
+- 所有导出都要脱敏；默认 30 天自动删除可识别日志。
+
+## 事件响应
+- PagerDuty/值班轮值；
+- 设一级/二级告警阈值并自动化通知；
+- 发生事故时：**先止血、再回滚、最后复盘**，复盘文档 48 小时内完成。
+
