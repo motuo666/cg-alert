@@ -1,3 +1,8 @@
-Hi {{name}},
-我们把供应商的定价/条款/DPA/分包商/SLA 改动做成证据卡（URL/时间戳/SHA256）。
-要 3 个最新示例吗？回这封就发。
+CG Alert tracks when your SaaS vendors change pricing or legal terms and turns those changes into evidence you can use in renewals.
+
+Most teams start with a small set of critical tools, then expand coverage once they see how often vendors move the goalposts.
+
+If you want this in place without calls or contracts, you can use the self-serve plans on the pricing page.
+
+Best regards,
+CG Alert

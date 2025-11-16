@@ -1,3 +1,8 @@
-Hi {{name}},
-We track vendor Pricing/ToS/DPA/Subprocessors/SLA and ship evidence cards (URL · timestamp · SHA256) you can paste into renewal emails.
-Reply and I'll send a quick sample pack.
+CG Alert tracks when your SaaS vendors change pricing or legal terms and turns those changes into evidence you can use in renewals.
+
+Most teams start with a small set of critical tools, then expand coverage once they see how often vendors move the goalposts.
+
+If you want this in place without calls or contracts, you can use the self-serve plans on the pricing page.
+
+Best regards,
+CG Alert

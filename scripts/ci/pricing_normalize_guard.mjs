@@ -9,9 +9,9 @@ const home = mustRead('index.html');
 const pricing = fs.existsSync('pricing/index.html') ? fs.readFileSync('pricing/index.html','utf8') : '';
 
 const required = [
+  {file:'index.html', text:'$499/yr'},
+  {file:'index.html', text:'$1,499/yr'},
   {file:'index.html', text:'$2,988/yr'},
-  {file:'index.html', text:'$6,000/yr'},
-  {file:'index.html', text:'Request Enterprise'},
 ];
 
 for (const {file, text} of required){

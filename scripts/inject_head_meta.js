@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = process.argv[2] || 'cg-alert-main';
 const originArg = (process.argv[3] || '').replace(/\/+$/,'');
-const defaultDesc = process.argv[4] || 'Evidence-backed vendor change alerts.';
+const defaultDesc = process.argv[4] || 'Evidence-backed SaaS vendor change intelligence.';
 function walk(dir, acc=[]) {
   for (const ent of fs.readdirSync(dir, {withFileTypes:true})) {
     const p = path.join(dir, ent.name);

@@ -1,10 +1,10 @@
 {
-  "sender_name": "Jason",
+  "sender_name": "CG Alert",
   "brand_name": "CG Alert",
-  "opener_A": "我们把你关心的供应商 Pricing/ToS/DPA/Subprocessors/SLA 改动做成证据卡（URL · 时间戳 · SHA256），续约时可直接粘贴到邮件里。",
-  "opener_B": "{{company}} 的续约筹码，不要凭感觉要凭证据。我们检测供应商改动并附上可审计字段（URL/时间戳/SHA256）与可直接粘贴的谈判措辞。",
-  "cta_A": "要不要我发你最近 3 个证据示例？直接回这封即可。",
-  "cta_B": "回这封列 2–3 个你最关心的供应商，我发你定制样例。",
-  "signoff": "— Jason @ CG Alert",
-  "subject": "Evidence-backed vendor change alerts"
+  "opener_A": "CG Alert tracks when your SaaS vendors change pricing or legal terms and turns those changes into evidence you can use in renewals.",
+  "opener_B": "Most teams only discover SaaS price or terms changes at renewal. CG Alert gives you evidence-backed change timelines you can bring into the negotiation.",
+  "cta_A": "You can put CG Alert in place without calls or contracts using the self-serve plans on the pricing page.",
+  "cta_B": "You can start with a small set of critical vendors and expand coverage later, all through self-serve plans.",
+  "signoff": "Best regards,\nCG Alert",
+  "subject": "Evidence-backed SaaS vendor change intelligence"
 }
