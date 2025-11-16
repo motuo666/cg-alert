@@ -6,7 +6,7 @@
       "title": "Pro",
       "price_year": 499,
       "vendors_max": 5,
-      "buy_link": "https://buy.stripe.com/cNi6oJ6JwcYUe2K72ics801",
+      "buy_link": "https://buy.stripe.com/dRmbJ35Fs3ok7EmeuKcs803",
       "purchase": "stripe",
       "includes": [
         "Monitor up to 5 vendors",
@@ -20,7 +20,7 @@
       "title": "Business",
       "price_year": 1499,
       "vendors_max": 15,
-      "buy_link": "https://buy.stripe.com/3cI28t6Jw4soaQy0DUcs800",
+      "buy_link": "https://buy.stripe.com/00w9AV9VIbUQbUC5Yecs804",
       "purchase": "stripe",
       "includes": [
         "Monitor up to 15 vendors",
@@ -34,9 +34,8 @@
       "title": "Audit",
       "price_year": 2988,
       "vendors_max": 25,
-      "buy_link": null,
-      "purchase": "form",
-      "contact_url": "https://www.cg-alert.com/intake/",
+      "buy_link": "https://buy.stripe.com/eVq28t5Fs2kgbUCgCScs805",
+      "purchase": "stripe",
       "includes": [
         "Monitor up to 25 vendors",
         "Daily alerts",
