@@ -8,7 +8,6 @@ const INDEX_HTML = path.join(SITE_ROOT, 'index.html');
 
 const STRIPE_LINK_PORTFOLIO = process.env.STRIPE_LINK_PORTFOLIO || '';
 const STRIPE_LINK_BUSINESS  = process.env.STRIPE_LINK_BUSINESS  || '';
-const INTAKE_FORM_URL = process.env.INTAKE_FORM_URL || (process.env.SITE_ORIGIN ? `${process.env.SITE_ORIGIN.replace(/\/$/, '')}/intake/` : 'https://www.cg-alert.com/intake/');
 
 function updateHrefById(html, id, href) {
   const re = new RegExp(`(<a[^>]*id=["']${id}["'][^>]*href=["'])[^\"']*(["'][^>]*>)`, 'i');
@@ -51,10 +50,7 @@ async function main() {
     let next = updateHrefById(html, 'btn-business', STRIPE_LINK_BUSINESS) || updateHrefByPlanGuess(html, 'Business', STRIPE_LINK_BUSINESS);
     if (next) { html = next; changed = true; } else { console.warn('WARN: Could not locate Business CTA to update.'); }
   } else { console.warn('WARN: STRIPE_LINK_BUSINESS is empty.'); }
-
-  { // Enterprise -> intake
-    let next = updateHrefById(html, 'btn-enterprise', INTAKE_FORM_URL) || updateHrefByPlanGuess(html, 'Enterprise', INTAKE_FORM_URL);
-    if (next) { html = next; changed = true; } else { console.warn('WARN: Could not locate Enterprise CTA to update (set to intake).'); }
+else { console.warn('WARN: Could not locate Enterprise CTA to update (set to intake).'); }
   }
 
   if (changed) { await writeFile(INDEX_HTML, html, 'utf-8'); console.log('Pricing Sync: updated CTAs in index.html'); }

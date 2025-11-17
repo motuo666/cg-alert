@@ -2,7 +2,7 @@
 /**
  * weekly_health_check.js
  *
- * Basic self-check: ensure key pages exist and _redirects has buy/intake.
+ * Basic self-check: ensure key pages exist and _redirects has buy/portfolio.
  * Writes artifacts/health_report.txt with summary.
  */
 
@@ -22,8 +22,6 @@ const path = require("path");
     const body = fs.readFileSync("_redirects","utf8");
     if (/\/buy\/portfolio/.test(body)) ok("_redirects has /buy/portfolio");
     else warn("_redirects missing /buy/portfolio");
-    if (/\/intake/.test(body)) ok("_redirects has /intake");
-    else warn("_redirects missing /intake");
   } else {
     warn("_redirects missing");
   }
