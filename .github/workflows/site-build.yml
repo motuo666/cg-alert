@@ -88,7 +88,7 @@ jobs:
           rep.write_text(table, encoding="utf-8")
 
           # Sitemap
-          urls = ["/", "/who-uses/", "/intake/", "/reports/", "/rss/index.xml"]
+          urls = ["/", "/who-uses/", "/reports/", "/rss/index.xml"]
           sm = root / "sitemap.xml"
           sm.write_text(
               '<?xml version="1.0" encoding="UTF-8"?>\n'
