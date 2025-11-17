@@ -6,6 +6,47 @@ Idempotent; zero external deps; safe for CI.
 import os, csv, json, sys, re, datetime
 from html import escape
 
+def load_feeds_config():
+    """Read public feed filtering rules from config/feeds.json (repo-relative)."""
+    cfg_path = os.path.join(ROOT, "..", "config", "feeds.json")
+    try:
+        with open(cfg_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Safe defaults: no vendors (=empty), 14 days
+        return {"public_vendors": [], "public_min_age_days": 14}
+
+def _parse_date(s):
+    # Accept YYYY-MM-DD or ISO 8601 strings
+    try:
+        if len(s) == 10:
+            return datetime.datetime.strptime(s, "%Y-%m-%d").date()
+        # Fallback: attempt fromisoformat without timezone
+        return datetime.date.fromisoformat(s[:10])
+    except Exception:
+        return None
+
+def filter_public_items(items, cfg):
+    """Keep only items where vendor in public_vendors and date <= today - min_age."""
+    vendors = set((cfg or {}).get("public_vendors", []))
+    min_age = int((cfg or {}).get("public_min_age_days", 14))
+    today = datetime.date.today()
+    out = []
+    for it in items:
+        v = (it.get("vendor") or "").lower().strip()
+        d = _parse_date(it.get("date") or "")
+        if not v or not d:
+            continue
+        age = (today - d).days
+        if (not vendors or v in vendors) and age >= min_age:
+            out.append(it)
+    # Sort by date desc if available
+    try:
+        out.sort(key=lambda x: x.get("date") or "", reverse=True)
+    except Exception:
+        pass
+    return out
+
 ROOT = os.path.dirname(os.path.abspath(os.path.join(__file__, "..")))
 def p(*xs): print(*xs, file=sys.stderr)
 
@@ -139,11 +180,13 @@ def touch_sitemap():
 
 def main():
     items = load_items()
-    rss_out = gen_rss(items)
+    cfg = load_feeds_config()
+    public_items = filter_public_items(items, cfg)
+    rss_out = gen_rss(public_items)
     write(os.path.join(ROOT,"..","rss","index.xml"), rss_out)
-    update_reports(items)
+    update_reports(public_items)
     touch_sitemap()
-    p("Done. Items:", len(items))
+    p("Done. Items (public):", len(public_items))
 
 if __name__ == "__main__":
     main()
