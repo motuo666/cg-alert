@@ -8,6 +8,7 @@ const REPORTS_DIR = 'reports';
 const CARDS_DIR = path.join(REPORTS_DIR, 'cards');
 const FEED_JSON = path.join(REPORTS_DIR, 'feed.json');
 const RSS_XML = path.join('rss', 'index.xml');
+const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 
 function safeSlug(s) { return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
 async function ensureDir(p) { await fs.mkdir(p, { recursive: true }); }
@@ -38,11 +39,21 @@ function esc(s=''){ return s.replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'
 
 async function writeCards(items){
   await ensureDir(CARDS_DIR);
-  const header = `<!doctype html><html lang="en"><head>
+  for (const it of items) {
+    const slug = safeSlug(`${it.vendor}-${it.capturedAt}`) || safeSlug(it.file);
+    const out = path.join(CARDS_DIR, `${slug}.html`);
+    const cardPath = `/reports/cards/${path.basename(out)}`;
+    const title = `${it.vendor} — Change report · CG Alert`;
+    const description = it.summary || 'Evidence-backed vendor change alert.';
+    const header = `<!doctype html><html lang="en"><head>
+<meta name="worker-url" content="https://api.cg-alert.com">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Report — CG Alert</title>
+<title>${esc(title)}</title>
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/assets/home-v3c.css">
+<link rel="canonical" href="${SITE_ORIGIN}${cardPath}"/>
+<link rel="stylesheet" href="/assets/home-v3c.css?v=cb1">
+<meta name="description" content="${esc(description)}"/>
+<meta http-equiv="Content-Security-Policy" content="default-src ...; form-action 'self' https://buy.stripe.com https://forms.gle;">
 </head><body>
 <header class="cg-topbar"><div class="cg-wrap cg-nav">
 <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
@@ -53,14 +64,11 @@ async function writeCards(items){
   <a href="/#compare">Compare</a>
   <a href="/#faq">FAQ</a>
 </nav></div></header>`;
-  const footer = `<footer class="cg-footer"><div class="cg-wrap cg-footlinks">
+    const footer = `<footer class="cg-footer"><div class="cg-wrap cg-footlinks">
 <a href="/who-uses/">Who uses</a><a href="/about/">About</a><a href="/reports/">Reports</a><a href="/rss/index.xml">RSS</a><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a>
 <span>© CG Alert — evidence-backed vendor change alerts.</span></div></footer>
 <script src="/assets/home-v3c.js"></script>
 </body></html>`;
-  for (const it of items) {
-    const slug = safeSlug(`${it.vendor}-${it.capturedAt}`) || safeSlug(it.file);
-    const out = path.join(CARDS_DIR, `${slug}.html`);
     const body = `<section class="cg-wrap">
 <article class="cg-evi-card hover">
   <div class="cg-evi-meta">Source URL: ${esc(it.url)} · Captured: ${esc(it.capturedAt)} · SHA256: ${esc(it.hash)}</div>
@@ -68,32 +76,49 @@ async function writeCards(items){
   <p>${esc(it.summary || 'Change captured.')}</p>
   <pre class="cg-raw">${esc(JSON.stringify(it.raw, null, 2))}</pre>
 </article>
+<div class="cg-note" style="margin-top:1.5rem;">
+  <p>Want alerts like this for your vendors?</p>
+  <a class="cg-btn" href="/pricing/">See pricing</a>
+  <a class="cg-btn ghost" href="/deal-desk/">Talk to Deal Desk</a>
+</div>
 </section>`;
     await fs.writeFile(out, header + body + footer, 'utf-8');
-    it.card = `/reports/cards/${path.basename(out)}`;
+    it.card = cardPath;
   }
 }
 
 async function writeFeed(items){
   await ensureDir(REPORTS_DIR);
-  const data = { generated_at: new Date().toISOString(), items: items.map(it=>({vendor: it.vendor, url: it.card || it.url, date: it.capturedAt, summary: it.summary})) };
+  const data = {
+    generated_at: new Date().toISOString(),
+    items: items.map(it => ({
+      vendor: it.vendor,
+      url: it.card || it.url,
+      date: it.capturedAt,
+      summary: it.summary || ''
+    }))
+  };
   await fs.writeFile(FEED_JSON, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 async function writeRSS(items){
   await ensureDir('rss');
-  const itemsXML = items.map(it=>`
+  const itemsXML = items.map(it=>{
+    const link = it.card || it.url || '';
+    const absLink = link.startsWith('http') ? link : SITE_ORIGIN + link;
+    return `
   <item>
     <title>${esc(it.vendor)}</title>
-    <link>${esc(it.card || it.url)}</link>
+    <link>${esc(absLink)}</link>
     <pubDate>${esc(rfc822(it.capturedAt))}</pubDate>
     <description>${esc(it.summary || '')}</description>
     <guid isPermaLink="false">${esc(it.hash)}</guid>
-  </item>`).join('');
+  </item>`;
+  }).join('');
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"><channel>
 <title>CG Alert Reports</title>
-<link>https://www.cg-alert.com/reports/</link>
+<link>${SITE_ORIGIN}/reports/</link>
 <description>Evidence-backed vendor change alerts</description>
 <lastBuildDate>${rfc822(new Date().toISOString())}</lastBuildDate>
 ${itemsXML}

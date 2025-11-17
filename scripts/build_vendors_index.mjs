@@ -17,7 +17,7 @@ for (const f of files) {
     const raw = await fs.readFile(path.join(evidenceDir, f), 'utf-8');
     const j = JSON.parse(raw);
     const vendor = j.vendor || j.name || (j.url ? new URL(j.url).hostname : 'vendor');
-    const when = j.timestamp || j.date || new Date().toISOString();
+    const when = j.captured_at || j.timestamp || j.date || new Date().toISOString();
     const page = j.page || j.section || 'Change';
     const slug = (j.sha256 || j.hash || f.replace(/\.json$/,''));
     const vendorSlug = vendor.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$|--+/g,'');
@@ -27,7 +27,7 @@ for (const f of files) {
       vendor, page,
       url: j.url || j.link || '',
       timestamp: when,
-      snippet: (j.snippet || j.diff || j.note || '').toString().slice(0,300),
+      snippet: (j.snippet || j.diff || j.note || j.changed || '').toString().slice(0,300),
       local_path: localPath
     });
   } catch { /* ignore bad files */ }

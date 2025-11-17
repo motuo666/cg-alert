@@ -39,30 +39,41 @@
     return item;
   }
 
-  // Prefer JSON index produced by workflow; fallback to RSS
-  fetch('/reports/index.json')
+  // Prefer JSON feed produced by workflow; fallback to RSS
+  fetch('/reports/feed.json')
     .then(r => r.ok ? r.json() : Promise.reject())
     .then(async (json) => {
-      data = (json.items || json || []);
-      // de-duplicate and hide obvious samples
-      data = data.filter(x => !/sample/i.test(x.vendor || x.title || ""));
+      const items = (json.items || json || []).map(it => ({
+        vendor: it.vendor || it.name || "",
+        page: it.page || it.section || "Change",
+        url: it.url || it.link || "",
+        local_path: it.local_path || it.url || it.link || "",
+        timestamp: it.timestamp || it.date || it.capturedAt || "",
+        snippet: it.snippet || it.summary || ""
+      }));
+      // de-duplicate and hide obvious samples / internal markers
+      data = items.filter(x =>
+        !/^_/.test((x.vendor || "")) &&
+        !/sample/i.test(x.vendor || x.title || "")
+      );
       // ensure links exist or fallback
       data = await Promise.all(data.map(ensureLocalOrFallback));
       render(data);
     })
-    .catch(() => fetch('/rss/index.xml')
-      .then(r => r.text())
-      .then(txt => {
-        const doc = new window.DOMParser().parseFromString(txt, "application/xml");
-        const items = Array.from(doc.querySelectorAll('item'));
-        data = items.map(it => ({
-          vendor: (it.querySelector('title')?.textContent || "").split(' — ')[0],
-          page: (it.querySelector('title')?.textContent || "").split(' — ').slice(1).join(' — '),
-          snippet: it.querySelector('description')?.textContent || "",
-          url: it.querySelector('link')?.textContent || "",
-          timestamp: it.querySelector('pubDate')?.textContent || ""
-        }));
-        render(data);
-      })
+    .catch(() =>
+      fetch('/rss/index.xml')
+        .then(r => r.text())
+        .then(txt => {
+          const doc = new window.DOMParser().parseFromString(txt, "application/xml");
+          const items = Array.from(doc.querySelectorAll('item'));
+          data = items.map(it => ({
+            vendor: (it.querySelector('title')?.textContent || "").split(' — ')[0],
+            page: (it.querySelector('title')?.textContent || "").split(' — ').slice(1).join(' — '),
+            snippet: it.querySelector('description')?.textContent || "",
+            url: it.querySelector('link')?.textContent || "",
+            timestamp: it.querySelector('pubDate')?.textContent || ""
+          }));
+          render(data);
+        })
     );
 })();
