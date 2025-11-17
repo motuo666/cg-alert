@@ -4,62 +4,47 @@
     {
       "id": "free",
       "name": "Free evaluation",
-      "price_month": 0,
       "price_year": 0,
       "features": [
         "Public vendor change reports",
         "RSS feed for selected changes",
         "No SLA (evaluation only)"
       ],
-      "automation_delivery": true,
-      "sla_hours": 0
+      "automation_delivery": true
     },
     {
       "id": "pro",
       "name": "Pro",
-      "price_month": 0,
       "price_year": 499,
       "features": [
         "Monitor up to 5 vendors",
         "Automated evidence cards (SHA-256)",
-        "Email-ready renewal summaries",
-        "Slack-ready change digests"
+        "Email-ready renewal summaries"
       ],
-      "automation_delivery": true,
-      "sla_hours": 0
+      "automation_delivery": true
     },
     {
       "id": "business",
       "name": "Business",
-      "price_month": 0,
       "price_year": 1499,
       "features": [
         "Monitor up to 15 vendors",
-        "Shared evidence inbox for teams",
-        "Change digests for multiple stakeholders",
-        "Vendor catalog and deal-desk views"
+        "Team evidence inbox",
+        "Multi-stakeholder change digests"
       ],
-      "automation_delivery": true,
-      "sla_hours": 0
+      "automation_delivery": true
     },
     {
       "id": "audit",
       "name": "Audit",
-      "price_month": 0,
       "price_year": 2988,
       "features": [
         "Monitor up to 25 vendors",
         "Extended audit history and exports",
-        "Multi-year evidence retention",
-        "Bias checks and escalation templates"
+        "Multi-year evidence retention"
       ],
-      "automation_delivery": true,
-      "sla_hours": 0
+      "automation_delivery": true
     }
   ],
-  "one_off": [],
-  "guardrails": {
-    "deny_mismatched_mapping": true,
-    "price_display_source": "config/pricing.json"
-  }
+  "one_off": []
 }
