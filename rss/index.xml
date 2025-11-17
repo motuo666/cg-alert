@@ -1,36 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"><channel>
-<title>CG Alert Reports</title>
-<link>https://www.cg-alert.com/reports/</link>
-<description>Evidence-backed vendor change alerts</description>
-<lastBuildDate>Mon, 17 Nov 2025 03:22:28 GMT</lastBuildDate>
-
-  <item>
-    <title>_last_poll</title>
-    <link>/reports/cards/last-poll-2025-11-17t03-22-28-911z.html</link>
-    <pubDate>Mon, 17 Nov 2025 03:22:28 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">e8aa569b4179a6f9763b84876b3e5e22d106c9c7e9cfef9f67c2f31e095e5bfd</guid>
-  </item>
-  <item>
-    <title>Fabrikam Analytics</title>
-    <link>/reports/cards/fabrikam-analytics-2025-11-07t09-46-06-032638z.html</link>
-    <pubDate>Fri, 07 Nov 2025 09:46:06 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">demo-hash-3</guid>
-  </item>
-  <item>
-    <title>Contoso CRM</title>
-    <link>/reports/cards/contoso-crm-2025-11-07t09-46-06-032636z.html</link>
-    <pubDate>Fri, 07 Nov 2025 09:46:06 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">demo-hash-2</guid>
-  </item>
-  <item>
-    <title>Example SaaS</title>
-    <link>/reports/cards/example-saas-2025-11-07t09-46-06-032625z.html</link>
-    <pubDate>Fri, 07 Nov 2025 09:46:06 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">demo-hash-1</guid>
-  </item>
+<rss version="2.0"><channel><title>CG Alert — Vendor Change Feed</title><link>https://www.cg-alert.com/</link><description>Evidence-backed vendor change alerts.</description><lastBuildDate>Mon, 17 Nov 2025 05:56:07 GMT</lastBuildDate>
+<item><title>okta: Updated pricing tiers</title><link>https://www.okta.com/pricing</link><description>Potential uplift risk</description></item>
 </channel></rss>
