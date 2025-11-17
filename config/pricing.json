@@ -2,14 +2,14 @@
   "currency": "USD",
   "tiers": [
     {
-      "id": "starter",
-      "name": "Starter",
-      "price_month": 99,
-      "price_year": 999,
+      "id": "free",
+      "name": "Free evaluation",
+      "price_month": 0,
+      "price_year": 0,
       "features": [
-        "X",
-        "Y",
-        "Z"
+        "Public vendor change reports",
+        "RSS feed for selected changes",
+        "No SLA (evaluation only)"
       ],
       "automation_delivery": true,
       "sla_hours": 0
@@ -17,39 +17,47 @@
     {
       "id": "pro",
       "name": "Pro",
-      "price_month": 399,
-      "price_year": 3990,
+      "price_month": 0,
+      "price_year": 499,
       "features": [
-        "全部Starter",
-        "更多站点",
-        "深度报告"
+        "Monitor up to 5 vendors",
+        "Automated evidence cards (SHA-256)",
+        "Email-ready renewal summaries",
+        "Slack-ready change digests"
       ],
       "automation_delivery": true,
       "sla_hours": 0
     },
     {
-      "id": "enterprise",
-      "name": "Enterprise",
-      "price_month": 1499,
-      "price_year": 14990,
+      "id": "business",
+      "name": "Business",
+      "price_month": 0,
+      "price_year": 1499,
       "features": [
-        "SSO",
-        "自定义报表",
-        "支持"
+        "Monitor up to 15 vendors",
+        "Shared evidence inbox for teams",
+        "Change digests for multiple stakeholders",
+        "Vendor catalog and deal-desk views"
       ],
       "automation_delivery": true,
-      "sla_hours": 4
-    }
-  ],
-  "one_off": [
+      "sla_hours": 0
+    },
     {
-      "id": "custom_report",
-      "name": "定制行业深度报告",
-      "price_once": 6000,
-      "delivery_auto": false,
-      "notes": "需要人工校对"
+      "id": "audit",
+      "name": "Audit",
+      "price_month": 0,
+      "price_year": 2988,
+      "features": [
+        "Monitor up to 25 vendors",
+        "Extended audit history and exports",
+        "Multi-year evidence retention",
+        "Bias checks and escalation templates"
+      ],
+      "automation_delivery": true,
+      "sla_hours": 0
     }
   ],
+  "one_off": [],
   "guardrails": {
     "deny_mismatched_mapping": true,
     "price_display_source": "config/pricing.json"

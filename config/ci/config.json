@@ -5,10 +5,8 @@
     "enterprise_min": 2988
   },
   "enterprise_cta_must_include": [
-    "/intake/",
-    "/contact",
-    "/form"
+    "/pricing/"
   ],
-  "stripe_link_must_not_appear_for_enterprise": true,
+  "stripe_link_must_not_appear_for_enterprise": false,
   "pricing_page": "pricing/index.html"
 }
