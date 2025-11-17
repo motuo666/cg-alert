@@ -16,7 +16,6 @@ jobs:
       - name: Sync pricing (ESM, no enterprise link)
         env:
           SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-          INTAKE_FORM_URL: ${{ vars.INTAKE_FORM_URL || format('{0}/intake/', vars.SITE_ORIGIN || 'https://www.cg-alert.com') }}
           STRIPE_LINK_PORTFOLIO: ${{ secrets.STRIPE_LINK_PORTFOLIO || vars.STRIPE_LINK_PORTFOLIO }}
           STRIPE_LINK_BUSINESS:  ${{ secrets.STRIPE_LINK_BUSINESS  || vars.STRIPE_LINK_BUSINESS  }}
         run: |
