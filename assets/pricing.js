@@ -19,7 +19,7 @@
     })) : [];
 
     const getHref = (id)=> (tiers.find(x=>x.id===id)||{}).href;
-    const m = { portfolio: 'btn-portfolio', business: 'btn-business' };
+    const m = { portfolio: 'btn-portfolio', business: 'btn-business', audit: 'btn-audit', enterprise: 'btn-audit' };
     for(const [tier, btnId] of Object.entries(m)){
       const href = getHref(tier);
       if(href) document.getElementById(btnId)?.setAttribute('href', href);
