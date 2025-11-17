@@ -1,0 +1,11 @@
+{
+  "public_vendors": [
+    "salesforce",
+    "hubspot",
+    "notion",
+    "slack",
+    "zoom",
+    "stripe"
+  ],
+  "public_min_age_days": 14
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "example-audit",
+    "plan": "audit",
+    "email": "security@example.com",
+    "cc": [
+      "legal@example.com",
+      "procurement@example.com"
+    ],
+    "webhook_url": "https://example.com/cg-alert-webhook",
+    "vendors": [
+      "salesforce",
+      "hubspot"
+    ],
+    "frequency": "weekly"
+  }
+]
