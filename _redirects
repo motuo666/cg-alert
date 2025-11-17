@@ -28,3 +28,5 @@ https://cg-alert.com/*    https://www.cg-alert.com/:splat   301!
 /buy/portfolio  https://buy.stripe.com/dRmbJ35Fs3ok7EmeuKcs803  302
 /buy/business   https://buy.stripe.com/00w9AV9VIbUQbUC5Yecs804  302
 /buy/audit     https://buy.stripe.com/eVq28t5Fs2kgbUCgCScs805  302
+
+/buy/pro         https://buy.stripe.com/dRmbJ35Fs3ok7EmeuKcs803  302
