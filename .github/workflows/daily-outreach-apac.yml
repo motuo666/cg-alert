@@ -1,4 +1,4 @@
-name: Archived (disabled) — daily-outreach.yml
+name: Archived (disabled) — daily-outreach-apac.yml
 on:
   workflow_dispatch: {}
 jobs:

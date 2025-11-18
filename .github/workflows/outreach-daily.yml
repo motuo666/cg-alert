@@ -1,79 +1,8 @@
-name: Outreach Daily (gated)
-
+name: Archived (disabled) — outreach-daily.yml
 on:
-  schedule:
-    - cron: '5 16 * * *'
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
+  workflow_dispatch: {}
 jobs:
-  limit:
+  archived:
     runs-on: ubuntu-latest
-    outputs:
-      SEND_LIMIT: ${{ steps.lim.outputs.SEND_LIMIT }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - name: Compute daily send limit
-        id: lim
-        env:
-          CAMPAIGN_START_DATE: ${{ vars.CAMPAIGN_START_DATE || '2025-10-01' }}
-          SEND_BASE: ${{ vars.SEND_BASE || '1' }}
-          SEND_CAP:  ${{ vars.SEND_CAP  || '100' }}
-          TARGET_SENT: ${{ vars.TARGET_SENT || '0' }}
-        run: node scripts/send_limit_daily.js
-      - name: Install deps
-        run: npm ci
-
-  kpi:
-    runs-on: ubuntu-latest
-    outputs:
-      ok: ${{ steps.chk.outputs.ok }}
-      count: ${{ steps.chk.outputs.count }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - name: KPI guard (evidence >= 10 today)
-        id: chk
-        env:
-          MIN_EVIDENCE_PER_DAY: ${{ vars.MIN_EVIDENCE_PER_DAY || '10' }}
-        run: node scripts/kpi_guard.js
-
-  gate:
-    runs-on: ubuntu-latest
-    outputs:
-      blocked: ${{ steps.mark.outputs.blocked }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Check sending gate marker
-        id: mark
-        shell: bash
-        run: |
-          if [ -f ops/SENDING_BLOCKED.md ]; then
-            echo "blocked=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "blocked=false" >> "$GITHUB_OUTPUT"
-          fi
-
-  send:
-    needs: [limit, kpi, gate]
-    if: ${{ needs.kpi.outputs.ok == 'true' && needs.gate.outputs.blocked != 'true' }}
-    runs-on: ubuntu-latest
-    env:
-      SEND_LIMIT: ${{ needs.limit.outputs.SEND_LIMIT }}
-      SMTP_HOST: ${{ secrets.SMTP_HOST || vars.SMTP_HOST }}
-      SMTP_USER: ${{ secrets.SMTP_USER || vars.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS || vars.SMTP_PASS }}
-      MAIL_FROM: ${{ vars.MAIL_FROM || secrets.MAIL_FROM || vars.SMTP_USER || secrets.SMTP_USER }}
-      UNSUB_ORIGIN: ${{ vars.UNSUB_ORIGIN || 'https://www.cg-alert.com' }}
-      UNSUB_HMAC_SECRET: ${{ secrets.UNSUB_HMAC_SECRET || vars.UNSUB_HMAC_SECRET }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - name: Persona outreach
-        run: node scripts/outreach_send.js
+      - run: echo "Archived in favor of a lean PLG/SEO-only repo. Logic for cold outreach, lead expansion, or email plumbing has been moved out of this repository."

@@ -1,4 +1,4 @@
-name: Archived (disabled) — daily-outreach.yml
+name: Archived (disabled) — imap-smtp-smoke.yml
 on:
   workflow_dispatch: {}
 jobs:
