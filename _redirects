@@ -30,3 +30,7 @@ https://cg-alert.com/*    https://www.cg-alert.com/:splat   301!
 /buy/audit     https://buy.stripe.com/eVq28t5Fs2kgbUCgCScs805  302
 
 /buy/pro         https://buy.stripe.com/dRmbJ35Fs3ok7EmeuKcs803  302
+
+# Stripe checkout redirects
+/thank-you          /thank-you/                             301
+/checkout-cancelled /checkout-cancelled/                    301
