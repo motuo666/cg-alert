@@ -1,0 +1,12 @@
+{
+  "vendor": "notion.so",
+  "url": "https://notion.so/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "f8a486578590b3b7de0f2900f022295237209a9b3c6f17de8300be0268fa2737",
+  "new_hash": "6a305d07a87d9a58b082d0bcc5bb6a7b7c4f8feb722d37318ae549ff4258d0a2",
+  "first_seen_at": "2025-11-19T14:50:16.672Z",
+  "confirmed_at": null,
+  "status_code": 404,
+  "snippet": "Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue."
+}

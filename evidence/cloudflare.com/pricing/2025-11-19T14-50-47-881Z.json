@@ -1,0 +1,13 @@
+{
+  "vendor": "cloudflare.com",
+  "url": "https://cloudflare.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "",
+  "new_hash": "1a04612ddecdb2e66127ae82b4fdf3a6d1b40ae60e55eb74b4bf607f36e1a16a",
+  "first_seen_at": "2025-11-19T14:25:18.013Z",
+  "confirmed_at": "2025-11-19T14:50:47.881Z",
+  "status_code": 200,
+  "snippet": "Our Plans | Pricing | Cloudflare Sign up Languages English English (United Kingdom) Deutsch Español (Latinoamérica) Español (España) Français Italiano 日本語 한국어 Polski Português (Brasil) Русский 繁體中文 简体中文 Platform Connectivity cloud Cloudflar",
+  "r2_key": "cloudflare.com/pricing/2025-11-19T14-50-47-881Z.html"
+}
