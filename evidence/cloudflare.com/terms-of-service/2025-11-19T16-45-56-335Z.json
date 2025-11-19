@@ -1,0 +1,13 @@
+{
+  "vendor": "cloudflare.com",
+  "url": "https://cloudflare.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "13b9529ab42562febc56fbbcb9dcfee44c404b32914c4c3c57ff174796f13be4",
+  "new_hash": "0d867a28aeb580c82499202e37c19de19146be4c57c66a504c47d2e77337d15c",
+  "first_seen_at": "2025-11-19T16:26:47.234Z",
+  "confirmed_at": "2025-11-19T16:45:56.335Z",
+  "status_code": 404,
+  "snippet": "Page not found | Cloudflare Sign up Languages English English (United Kingdom) Deutsch Español (Latinoamérica) Español (España) Français Italiano 日本語 한국어 Polski Português (Brasil) Русский 繁體中文 简体中文 Platform Connectivity cloud Cloudflare’s c",
+  "r2_key": "cloudflare.com/terms-of-service/2025-11-19T16-45-56-335Z.html"
+}

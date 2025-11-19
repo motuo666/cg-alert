@@ -1,0 +1,13 @@
+{
+  "vendor": "zendesk.com",
+  "url": "https://zendesk.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "e7274f7c0359e0070eee197ec10faccae7ba15a0dcf2a5550f6461e7a56f9cdb",
+  "new_hash": "dec8805591464e2a8c73bcba06da4eb30ce4084403e9e2bc855f179fe19f133b",
+  "first_seen_at": "2025-11-19T16:27:47.213Z",
+  "confirmed_at": "2025-11-19T16:46:52.932Z",
+  "status_code": 200,
+  "snippet": "Zendesk Pricing Plans | Starting from $19/month Skip to main content Contact Sales Try for free Zendesk AI Agents Zendesk AI Agents Resolve customer and employee conversations across any channel AI agents Copilot Zendesk AI AI research Trus",
+  "r2_key": "zendesk.com/pricing/2025-11-19T16-46-52-932Z.html"
+}
