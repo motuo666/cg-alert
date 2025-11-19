@@ -1,0 +1,12 @@
+{
+  "vendor": "figma.com",
+  "url": "https://figma.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "2eae2fba9cb10f5b97601c0107122fba514c60402736261ac1e54dba3c5ee42c",
+  "new_hash": "e79d555bad77a387dd020d0a25260f559defabdcd11edff53b05b80635de19f8",
+  "first_seen_at": "2025-11-19T16:28:11.676Z",
+  "confirmed_at": null,
+  "status_code": 404,
+  "snippet": "Error: Page Not Found"
+}
