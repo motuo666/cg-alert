@@ -1,39 +1,24 @@
 name: Autopilot Step
-
 on:
   schedule:
-    - cron: "12 * * * *"
-  workflow_dispatch:
-
+  - cron: 12 * * * *
+  workflow_dispatch: null
 permissions:
   contents: read
-
 jobs:
   autopilot:
     runs-on: ubuntu-latest
     env:
-      # 默认不开；要启用就到 Repo → Settings → Variables 里把 ENABLE_AUTOPILOT 设为 "true"
       ENABLE_AUTOPILOT: ${{ vars.ENABLE_AUTOPILOT || 'false' }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Guard & run
-        shell: bash
-        run: |
-          set -e
-          echo "ENABLE_AUTOPILOT=${ENABLE_AUTOPILOT}"
-
-          # 统一总开关：不是 "true" 就直接退出（成功退出，不算失败）
-          if [ "${ENABLE_AUTOPILOT}" != "true" ]; then
-            echo "Autopilot disabled. Exit 0."
-            exit 0
-          fi
-
-          # 脚本不存在就跳过
-          if [ ! -f scripts/ops/autopilot_step.js ]; then
-            echo "scripts/ops/autopilot_step.js missing; skipping"
-            exit 0
-          fi
-
-          # 真正执行一步 Autopilot
-          node scripts/ops/autopilot_step.js
+    - uses: actions/checkout@v4
+    - name: Guard & run
+      shell: bash
+      run: "set -e\necho \"ENABLE_AUTOPILOT=${ENABLE_AUTOPILOT}\"\n\n# 统一总开关：不是 \"\
+        true\" 就直接退出（成功退出，不算失败）\nif [ \"${ENABLE_AUTOPILOT}\" != \"true\" ]; then\n\
+        \  echo \"Autopilot disabled. Exit 0.\"\n  exit 0\nfi\n\n# 脚本不存在就跳过\nif [\
+        \ ! -f scripts/ops/autopilot_step.js ]; then\n  echo \"scripts/ops/autopilot_step.js\
+        \ missing; skipping\"\n  exit 0\nfi\n\n# 真正执行一步 Autopilot\nnode scripts/ops/autopilot_step.js\n"
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

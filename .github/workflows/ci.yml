@@ -1,114 +1,77 @@
 name: CI
-
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
+    branches:
+    - main
+    - master
+  pull_request: null
   schedule:
-    - cron: "17 5 * * *"  # 每日例行检查
-
+  - cron: 17 5 * * *
 jobs:
   hygiene:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.x
+    - name: Install pre-commit
+      run: 'pip install pre-commit
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.x"
+        pre-commit install-hooks
 
-      - name: Install pre-commit
-        run: |
-          pip install pre-commit
-          pre-commit install-hooks
-
-      - name: Run pre-commit
-        run: pre-commit run --all-files
-
+        '
+    - name: Run pre-commit
+      run: pre-commit run --all-files
   python:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Detect Python project
-        id: detect_python
-        run: |
-          if [ -f requirements.txt ] || [ -f pyproject.toml ]; then
-            echo "has_python=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_python=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Install deps
-        if: steps.detect_python.outputs.has_python == 'true'
-        run: |
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-          if [ -f pyproject.toml ]; then
-            pip install .
-          fi
-
-      - name: Run tests (if exist)
-        if: steps.detect_python.outputs.has_python == 'true'
-        run: |
-          if [ -d tests ]; then
-            pytest -q
-          else
-            echo "no tests directory, skipping"
-          fi
-
-      - name: Skip (no Python project)
-        if: steps.detect_python.outputs.has_python != 'true'
-        run: echo "No requirements.txt or pyproject.toml, skipping python job"
-
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Detect Python project
+      id: detect_python
+      run: "if [ -f requirements.txt ] || [ -f pyproject.toml ]; then\n  echo \"has_python=true\"\
+        \ >> $GITHUB_OUTPUT\nelse\n  echo \"has_python=false\" >> $GITHUB_OUTPUT\n\
+        fi\n"
+    - name: Install deps
+      if: steps.detect_python.outputs.has_python == 'true'
+      run: "if [ -f requirements.txt ]; then\n  pip install -r requirements.txt\n\
+        fi\nif [ -f pyproject.toml ]; then\n  pip install .\nfi\n"
+    - name: Run tests (if exist)
+      if: steps.detect_python.outputs.has_python == 'true'
+      run: "if [ -d tests ]; then\n  pytest -q\nelse\n  echo \"no tests directory,\
+        \ skipping\"\nfi\n"
+    - name: Skip (no Python project)
+      if: steps.detect_python.outputs.has_python != 'true'
+      run: echo "No requirements.txt or pyproject.toml, skipping python job"
   node:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Detect Node project
-        id: detect_node
-        run: |
-          if [ -f package.json ]; then
-            echo "has_node=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_node=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Install deps
-        if: steps.detect_node.outputs.has_node == 'true'
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci || npm install
-          else
-            npm install
-          fi
-
-      - name: Lint & Test (if scripts exist)
-        if: steps.detect_node.outputs.has_node == 'true'
-        run: |
-          if npm run | grep -q "lint"; then
-            npm run lint || true
-          else
-            echo "no lint script"
-          fi
-
-          if npm run | grep -q "test"; then
-            npm test || true
-          else
-            echo "no test script"
-          fi
-
-      - name: Skip (no Node project)
-        if: steps.detect_node.outputs.has_node != 'true'
-        run: echo "No package.json, skipping node job"
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Detect Node project
+      id: detect_node
+      run: "if [ -f package.json ]; then\n  echo \"has_node=true\" >> $GITHUB_OUTPUT\n\
+        else\n  echo \"has_node=false\" >> $GITHUB_OUTPUT\nfi\n"
+    - name: Install deps
+      if: steps.detect_node.outputs.has_node == 'true'
+      run: "if [ -f package-lock.json ]; then\n  npm ci || npm install\nelse\n  npm\
+        \ install\nfi\n"
+    - name: Lint & Test (if scripts exist)
+      if: steps.detect_node.outputs.has_node == 'true'
+      run: "if npm run | grep -q \"lint\"; then\n  npm run lint || true\nelse\n  echo\
+        \ \"no lint script\"\nfi\n\nif npm run | grep -q \"test\"; then\n  npm test\
+        \ || true\nelse\n  echo \"no test script\"\nfi\n"
+    - name: Skip (no Node project)
+      if: steps.detect_node.outputs.has_node != 'true'
+      run: echo "No package.json, skipping node job"
+permissions:
+  contents: write
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

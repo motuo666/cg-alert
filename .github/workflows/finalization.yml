@@ -1,51 +1,48 @@
 name: Finalization Guard
-
 on:
   push:
-    branches: [ main ]
+    branches:
+    - main
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
+    branches:
+    - main
+  workflow_dispatch: null
 jobs:
   finalize-and-verify:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install deps (if any)
+      run: 'echo "No runtime deps"
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        '
+    - name: Apply finalization (P0+P1+P2)
+      env:
+        SITE_ORIGIN: ${{ vars.SITE_ORIGIN || secrets.SITE_ORIGIN }}
+        PUBLISH_DIR: ${{ vars.PUBLISH_DIR || '.' }}
+      run: "if [ -z \"${SITE_ORIGIN}\" ]; then\n  echo \"::error ::SITE_ORIGIN is\
+        \ empty. Set either Repository variables or Secrets.\"\n  exit 1\nfi\npython3\
+        \ scripts/normalize_events.py --root .\npython3 scripts/auto_fix_links.py\
+        \ --root .\npython3 scripts/normalize_canonical.py --root . --site-origin\
+        \ \"${SITE_ORIGIN}\"\nnode scripts/build_sitemap.mjs\n"
+    - name: Verify links
+      run: 'python3 scripts/check_links.py --root .
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+        '
+    - name: Verify data schema
+      run: 'python3 scripts/check_data_schema.py --root .
 
-      - name: Install deps (if any)
-        run: |
-          echo "No runtime deps"
-
-      - name: Apply finalization (P0+P1+P2)
-        env:
-          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || secrets.SITE_ORIGIN }}
-          PUBLISH_DIR: ${{ vars.PUBLISH_DIR || '.' }}
-        run: |
-          if [ -z "${SITE_ORIGIN}" ]; then
-            echo "::error ::SITE_ORIGIN is empty. Set either Repository variables or Secrets."
-            exit 1
-          fi
-          python3 scripts/normalize_events.py --root .
-          python3 scripts/auto_fix_links.py --root .
-          python3 scripts/normalize_canonical.py --root . --site-origin "${SITE_ORIGIN}"
-          node scripts/build_sitemap.mjs
-
-
-      - name: Verify links
-        run: |
-          python3 scripts/check_links.py --root .
-
-      - name: Verify data schema
-        run: |
-          python3 scripts/check_data_schema.py --root .
+        '
+permissions:
+  contents: write
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

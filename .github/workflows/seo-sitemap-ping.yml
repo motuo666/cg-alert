@@ -1,56 +1,45 @@
 name: SEO Sitemap & IndexNow
-
 on:
   schedule:
-    - cron: '20 3 * * *'
-  workflow_dispatch:
-
+  - cron: 20 3 * * *
+  workflow_dispatch: null
 permissions:
   contents: write
-
 jobs:
   seo:
     runs-on: ubuntu-latest
     env:
-      SITE_ORIGIN:  ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
       INDEXNOW_KEY: ${{ vars.INDEXNOW_KEY }}
-      PUBLISH_DIR:  ${{ vars.PUBLISH_DIR || '.' }}
+      PUBLISH_DIR: ${{ vars.PUBLISH_DIR || '.' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Build sitemap
-        run: node scripts/build_sitemap.mjs
-      - name: Commit sitemap
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add "$PUBLISH_DIR/sitemap.xml"
-          if git diff --cached --quiet; then
-            echo "no changes"
-          else
-            git commit -m "seo: update sitemap"
-            git pull --rebase --autostash || true
-            git push
-          fi
-      - name: Ensure IndexNow key file
-        run: |
-          set -e
-          mkdir -p "$PUBLISH_DIR"
-          KEYFILE="$PUBLISH_DIR/indexnow-${INDEXNOW_KEY}.txt"
-          if [ ! -f "$KEYFILE" ]; then
-            echo "${INDEXNOW_KEY}" > "$KEYFILE"
-            git add "$KEYFILE" && git commit -m "seo: add indexnow key" || true
-            git pull --rebase --autostash || true
-            git push || true
-          fi
-      - name: Install deps
-        run: npm ci
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Build sitemap
+      run: node scripts/build_sitemap.mjs
+    - name: Commit sitemap
+      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add \"$PUBLISH_DIR/sitemap.xml\"\nif git diff --cached\
+        \ --quiet; then\n  echo \"no changes\"\nelse\n  git commit -m \"seo: update\
+        \ sitemap\"\n  git pull --rebase --autostash || true\n  git push\nfi\n"
+    - name: Ensure IndexNow key file
+      run: "set -e\nmkdir -p \"$PUBLISH_DIR\"\nKEYFILE=\"$PUBLISH_DIR/indexnow-${INDEXNOW_KEY}.txt\"\
+        \nif [ ! -f \"$KEYFILE\" ]; then\n  echo \"${INDEXNOW_KEY}\" > \"$KEYFILE\"\
+        \n  git add \"$KEYFILE\" && git commit -m \"seo: add indexnow key\" || true\n\
+        \  git pull --rebase --autostash || true\n  git push || true\nfi\n"
+    - name: Install deps
+      run: npm ci
+    - name: Ping IndexNow
+      run: 'set -e
 
-      - name: Ping IndexNow
-        run: |
-          set -e
-          URL="${SITE_ORIGIN}/sitemap.xml"
-          curl -sS "https://api.indexnow.org/IndexNow?url=${URL}&key=${INDEXNOW_KEY}" || true
+        URL="${SITE_ORIGIN}/sitemap.xml"
+
+        curl -sS "https://api.indexnow.org/IndexNow?url=${URL}&key=${INDEXNOW_KEY}"
+        || true
+
+        '
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

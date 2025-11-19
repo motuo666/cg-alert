@@ -1,12 +1,10 @@
 name: KV Filters Sync
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
   schedule:
-    - cron: '41 4 * * *'
-
+  - cron: 41 4 * * *
 permissions:
   contents: read
-
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -15,13 +13,13 @@ jobs:
       CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID || vars.CF_ACCOUNT_ID }}
       CF_NAMESPACE_ID: ${{ secrets.CF_KV_NS || vars.CF_KV_NS }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Sync KV (no-op without creds)
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -z "${CF_API_TOKEN:-}" ] || [ -z "${CF_ACCOUNT_ID:-}" ] || [ -z "${CF_NAMESPACE_ID:-}" ]; then
-            echo "::notice::No Cloudflare creds. Skipping."
-            exit 0
-          fi
-          echo "::notice::Place your wrangler sync step here."
+    - uses: actions/checkout@v4
+    - name: Sync KV (no-op without creds)
+      shell: bash
+      run: "set -euo pipefail\nif [ -z \"${CF_API_TOKEN:-}\" ] || [ -z \"${CF_ACCOUNT_ID:-}\"\
+        \ ] || [ -z \"${CF_NAMESPACE_ID:-}\" ]; then\n  echo \"::notice::No Cloudflare\
+        \ creds. Skipping.\"\n  exit 0\nfi\necho \"::notice::Place your wrangler sync\
+        \ step here.\"\n"
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

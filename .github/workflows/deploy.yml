@@ -1,12 +1,18 @@
 name: Deploy
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches:
+    - main
+  workflow_dispatch: null
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Deploy placeholder
-        run: echo "Add your deployment steps here."
+    - uses: actions/checkout@v4
+    - name: Deploy placeholder
+      run: echo "Add your deployment steps here."
+permissions:
+  contents: write
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

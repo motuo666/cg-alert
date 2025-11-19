@@ -1,22 +1,23 @@
 name: Workflows Lint
 on:
-  pull_request:
+  pull_request: null
   push:
     paths:
-      - ".github/workflows/**/*.yml"
-      - ".github/workflows/**/*.yaml"
-
+    - .github/workflows/**/*.yml
+    - .github/workflows/**/*.yaml
 permissions:
   contents: read
-
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: reviewdog/action-actionlint@v1
-        with:
-          reporter: local            # 直接在日志输出
-          fail_level: error          # 命中 error 即失败
-          filter_mode: nofilter      # 不依赖 diff（修复“diff command is empty”）
-          actionlint_flags: "-color" # 美化输出
+    - uses: actions/checkout@v4
+    - uses: reviewdog/action-actionlint@v1
+      with:
+        reporter: local
+        fail_level: error
+        filter_mode: nofilter
+        actionlint_flags: -color
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

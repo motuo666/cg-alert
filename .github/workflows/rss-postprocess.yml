@@ -1,26 +1,22 @@
 name: RSS Postprocess
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
   schedule:
-    - cron: '7 1 * * *'
-
+  - cron: 7 1 * * *
 permissions:
   contents: write
-
 jobs:
   rss:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Build site RSS/Index
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -f scripts/sitemaps_full.cjs ]; then
-            node scripts/sitemaps_full.cjs
-          else
-            echo "::warning::scripts/sitemaps_full.cjs not found"
-          fi
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Build site RSS/Index
+      shell: bash
+      run: "set -euo pipefail\nif [ -f scripts/sitemaps_full.cjs ]; then\n  node scripts/sitemaps_full.cjs\n\
+        else\n  echo \"::warning::scripts/sitemaps_full.cjs not found\"\nfi\n"
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

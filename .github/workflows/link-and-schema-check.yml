@@ -1,29 +1,36 @@
 name: Link & Schema Guard
-
 on:
   push:
-    branches: [ main ]
+    branches:
+    - main
     paths:
-      - '**/*.html'
-      - 'data/**'
-      - 'scripts/check_links.py'
-      - 'scripts/check_data_schema.py'
+    - '**/*.html'
+    - data/**
+    - scripts/check_links.py
+    - scripts/check_data_schema.py
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
+    branches:
+    - main
+  workflow_dispatch: null
 jobs:
   guard:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Link check
-        run: |
-          python3 scripts/check_links.py --root .
-      - name: Data schema check
-        run: |
-          python3 scripts/check_data_schema.py --root .
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Link check
+      run: 'python3 scripts/check_links.py --root .
+
+        '
+    - name: Data schema check
+      run: 'python3 scripts/check_data_schema.py --root .
+
+        '
+permissions:
+  contents: write
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

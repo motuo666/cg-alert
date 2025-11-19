@@ -1,12 +1,17 @@
 name: Site QA
 on:
-  workflow_dispatch:
-permissions: { contents: read }
+  workflow_dispatch: null
+permissions:
+  contents: read
 jobs:
   qa:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: node -v
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - run: node -v
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

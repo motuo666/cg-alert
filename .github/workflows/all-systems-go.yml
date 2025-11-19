@@ -1,30 +1,30 @@
 name: All Systems Go
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
   push:
-    branches: [ main ]
+    branches:
+    - main
   pull_request:
-    branches: [ main ]
-
+    branches:
+    - main
 jobs:
   guard:
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Guard workflows for forbidden placeholders
-        shell: bash
-        run: |
-          set -euo pipefail
-          bad='(<<ImageDisplayed>>|【turn[0-9]+[a-z]+[0-9]+】|PLACEHOLDER_|YOUR_TOKEN_HERE|CHANGE_ME)'
-          # Exclude this workflow and final-acceptance from scan to avoid self-matching
-          hits=$(grep -RInE "$bad" .github/workflows --exclude='all-systems-go.yml' --exclude='final-acceptance.yml' || true)
-          if [[ -n "$hits" ]]; then
-            echo "::error::Forbidden placeholder tokens detected:"
-            echo "$hits"
-            exit 1
-          fi
-          echo "OK: no placeholder tokens in workflows"
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Guard workflows for forbidden placeholders
+      shell: bash
+      run: "set -euo pipefail\nbad='(<<ImageDisplayed>>|【turn[0-9]+[a-z]+[0-9]+】|PLACEHOLDER_|YOUR_TOKEN_HERE|CHANGE_ME)'\n\
+        # Exclude this workflow and final-acceptance from scan to avoid self-matching\n\
+        hits=$(grep -RInE \"$bad\" .github/workflows --exclude='all-systems-go.yml'\
+        \ --exclude='final-acceptance.yml' || true)\nif [[ -n \"$hits\" ]]; then\n\
+        \  echo \"::error::Forbidden placeholder tokens detected:\"\n  echo \"$hits\"\
+        \n  exit 1\nfi\necho \"OK: no placeholder tokens in workflows\"\n"
+permissions:
+  contents: write
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

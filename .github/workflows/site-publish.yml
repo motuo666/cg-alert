@@ -1,13 +1,14 @@
 name: site-publish
 on:
   push:
-    branches: [ main ]
+    branches:
+    - main
     paths:
-      - "reports/**"
-      - "templates/**"
-      - "scripts/gen_feeds.py"
+    - reports/**
+    - templates/**
+    - scripts/gen_feeds.py
   schedule:
-    - cron: "17 3 * * *"
+  - cron: 17 3 * * *
   workflow_dispatch: {}
 permissions:
   contents: write
@@ -15,21 +16,31 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install deps
-        run: pip install pyyaml
-      - name: Generate feeds & pages
-        env:
-          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
-        run: |
-          python scripts/gen_feeds.py
-      - name: Commit changes
-        run: |
-          git config user.name "cg-alert-bot"
-          git config user.email "bot@cg-alert.com"
-          git add rss/index.xml sitemap.xml reports/index.html || true
-          git diff --cached --quiet || git commit -m "chore: auto-update rss/sitemap/reports index"
-          git push
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install deps
+      run: pip install pyyaml
+    - name: Generate feeds & pages
+      env:
+        SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+      run: 'python scripts/gen_feeds.py
+
+        '
+    - name: Commit changes
+      run: 'git config user.name "cg-alert-bot"
+
+        git config user.email "bot@cg-alert.com"
+
+        git add rss/index.xml sitemap.xml reports/index.html || true
+
+        git diff --cached --quiet || git commit -m "chore: auto-update rss/sitemap/reports
+        index"
+
+        git push
+
+        '
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

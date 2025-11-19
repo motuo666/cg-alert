@@ -1,26 +1,22 @@
 name: SEO Meta Inject
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
   schedule:
-    - cron: '33 0 * * *'
-
+  - cron: 33 0 * * *
 permissions:
   contents: write
-
 jobs:
   seo:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Inject meta tags
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -f scripts/inject_meta.mjs ]; then
-            node scripts/inject_meta.mjs
-          else
-            echo "::warning::scripts/inject_meta.mjs not found"
-          fi
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Inject meta tags
+      shell: bash
+      run: "set -euo pipefail\nif [ -f scripts/inject_meta.mjs ]; then\n  node scripts/inject_meta.mjs\n\
+        else\n  echo \"::warning::scripts/inject_meta.mjs not found\"\nfi\n"
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

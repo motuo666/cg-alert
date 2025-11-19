@@ -1,27 +1,27 @@
 name: digests
 on:
-  workflow_dispatch:
-  # schedule:
-  #   - cron: "15 4 * * 1" # (disabled) Mondays at 04:15 UTC
-
+  workflow_dispatch: null
 permissions:
   contents: read
-
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Generate customer digests (artifacts only)
-        run: |
-          python scripts/gen_customer_digests.py
-      - name: Upload digests
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests
-          path: artifacts/digests/*.txt
-          if-no-files-found: warn
+    - uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Generate customer digests (artifacts only)
+      run: 'python scripts/gen_customer_digests.py
+
+        '
+    - name: Upload digests
+      uses: actions/upload-artifact@v4
+      with:
+        name: digests
+        path: artifacts/digests/*.txt
+        if-no-files-found: warn
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

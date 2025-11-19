@@ -1,19 +1,20 @@
 name: Pricing Patch
-
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
   schedule:
-    - cron: '40 3 * * *'
-
+  - cron: 40 3 * * *
 permissions:
   contents: read
-
 jobs:
   patch:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: No-op sanity
-        run: |
-          echo "Workflow $GITHUB_WORKFLOW is syntactically valid and ready."
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: No-op sanity
+      run: 'echo "Workflow $GITHUB_WORKFLOW is syntactically valid and ready."
+
+        '
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

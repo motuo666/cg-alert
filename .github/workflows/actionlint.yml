@@ -1,25 +1,25 @@
 name: Actionlint
-
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
   push:
     paths:
-      - ".github/workflows/**"
-
+    - .github/workflows/**
 permissions:
   contents: read
-
 jobs:
   actionlint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Run actionlint via reviewdog
-        uses: reviewdog/action-actionlint@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-check
-          level: error
-          fail_level: error
-          filter_mode: file
-          actionlint_flags: -color
+    - uses: actions/checkout@v4
+    - name: Run actionlint via reviewdog
+      uses: reviewdog/action-actionlint@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        reporter: github-check
+        level: error
+        fail_level: error
+        filter_mode: file
+        actionlint_flags: -color
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

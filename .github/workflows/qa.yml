@@ -1,31 +1,40 @@
 name: QA
 on:
-  push:
-  pull_request:
+  push: null
+  pull_request: null
   schedule:
-    - cron: "0 3 * * *"  # 每天 UTC 03:00 自动巡检
+  - cron: 0 3 * * *
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install beautifulsoup4 lxml
-      - name: HTML 链接与无障碍检查
-        run: |
-          python scripts/html_check.py
-      - name: RSS 合法性检查
-        run: |
-          python scripts/rss_validate.py
-      - name: 产出报告
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: qa-reports
-          path: reports/qa/**
+    - uses: actions/checkout@v4
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Install deps
+      run: 'python -m pip install --upgrade pip
+
+        pip install beautifulsoup4 lxml
+
+        '
+    - name: HTML 链接与无障碍检查
+      run: 'python scripts/html_check.py
+
+        '
+    - name: RSS 合法性检查
+      run: 'python scripts/rss_validate.py
+
+        '
+    - name: 产出报告
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: qa-reports
+        path: reports/qa/**
+permissions:
+  contents: write
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

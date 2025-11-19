@@ -7,17 +7,26 @@ jobs:
   seed:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - name: Seed demo evidence
-        run: node scripts/seed_sample_evidence.mjs
-      - name: Commit & push
-        run: |
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A evidence
-          git commit -m "demo: seed sample evidence" || true
-          git push || true
-      - name: Install deps
-        run: npm ci
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - name: Seed demo evidence
+      run: node scripts/seed_sample_evidence.mjs
+    - name: Commit & push
+      run: 'git config user.email "bot@cg-alert.com"
+
+        git config user.name  "cg-alert-bot"
+
+        git add -A evidence
+
+        git commit -m "demo: seed sample evidence" || true
+
+        git push || true
+
+        '
+    - name: Install deps
+      run: npm ci
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

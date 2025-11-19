@@ -1,29 +1,33 @@
 name: Site Polish
-
 on:
   push:
-    branches: [ main, master ]
+    branches:
+    - main
+    - master
   schedule:
-    - cron: '40 2 * * *'  # daily
-  workflow_dispatch:
-
+  - cron: 40 2 * * *
+  workflow_dispatch: null
 permissions:
   contents: write
-
 jobs:
   polish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Use Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Ensure deps
-        run: npm i
-      - name: Polish (safe ops only)
-        run: |
-          set -e
-          echo "No-op polish step (placeholder)."
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Use Node 20
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Ensure deps
+      run: npm i
+    - name: Polish (safe ops only)
+      run: 'set -e
+
+        echo "No-op polish step (placeholder)."
+
+        '
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

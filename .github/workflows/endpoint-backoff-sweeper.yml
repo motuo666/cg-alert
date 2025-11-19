@@ -1,26 +1,24 @@
 name: Endpoint Backoff Sweeper
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
   schedule:
-    - cron: '17 3 * * *'
-
+  - cron: 17 3 * * *
 permissions:
   contents: write
-
 jobs:
   sweep:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Sweep backoff endpoints
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -f scripts/discovery/endpoint_backoff_sweeper.js ]; then
-            node scripts/discovery/endpoint_backoff_sweeper.js
-          else
-            echo "::warning::scripts/discovery/endpoint_backoff_sweeper.js not found"
-          fi
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Sweep backoff endpoints
+      shell: bash
+      run: "set -euo pipefail\nif [ -f scripts/discovery/endpoint_backoff_sweeper.js\
+        \ ]; then\n  node scripts/discovery/endpoint_backoff_sweeper.js\nelse\n  echo\
+        \ \"::warning::scripts/discovery/endpoint_backoff_sweeper.js not found\"\n\
+        fi\n"
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

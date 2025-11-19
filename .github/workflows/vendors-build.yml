@@ -9,24 +9,20 @@ jobs:
     env:
       NODE_OPTIONS: --max-old-space-size=2048
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install deps
-        run: npm ci || npm install
-      - name: Build reports (cards + index.json + RSS)
-        run: node scripts/reports_build.mjs
-      - name: Commit & push
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add -A reports rss
-          if git diff --cached --quiet; then
-            echo "no changes to commit"
-          else
-            git commit -m "Reports build: cards/index.json/rss"
-            git pull --rebase --autostash || true
-            git push
-          fi
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+    - name: Install deps
+      run: npm ci || npm install
+    - name: Build reports (cards + index.json + RSS)
+      run: node scripts/reports_build.mjs
+    - name: Commit & push
+      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add -A reports rss\nif git diff --cached --quiet;\
+        \ then\n  echo \"no changes to commit\"\nelse\n  git commit -m \"Reports build:\
+        \ cards/index.json/rss\"\n  git pull --rebase --autostash || true\n  git push\n\
+        fi"
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

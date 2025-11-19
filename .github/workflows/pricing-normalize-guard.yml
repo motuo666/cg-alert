@@ -1,24 +1,26 @@
 name: Pricing Normalize Guard
-
 on:
-  workflow_dispatch:
+  workflow_dispatch: null
   push:
     paths:
-      - "pricing/**"
-      - "index.html"
-
+    - pricing/**
+    - index.html
 permissions:
   contents: read
-
 jobs:
   guard:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Verify pricing consistency
-        run: |
-          set -euo pipefail
-          node scripts/ci/pricing_normalize_guard.mjs
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Verify pricing consistency
+      run: 'set -euo pipefail
+
+        node scripts/ci/pricing_normalize_guard.mjs
+
+        '
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

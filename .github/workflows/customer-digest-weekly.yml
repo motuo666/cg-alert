@@ -94,3 +94,6 @@ jobs:
       run: node scripts/customer_digest.js
     - name: Install deps
       run: npm ci
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

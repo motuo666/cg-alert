@@ -1,13 +1,10 @@
 name: Build Content
-
 on:
   schedule:
-    - cron: '15 */6 * * *'
-  workflow_dispatch:
-
+  - cron: 15 */6 * * *
+  workflow_dispatch: null
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,45 +14,34 @@ jobs:
       STRIPE_LINK_BUSINESS: ${{ vars.STRIPE_LINK_BUSINESS }}
       PUBLISH_DIR: ${{ vars.PUBLISH_DIR || '.' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - name: Install deps
-        run: npm ci
-
-      - name: Render Evidence pages
-        run: node scripts/render_evidence_pages.mjs
-
-      - name: Build vendor timelines
-        run: node scripts/build_vendors_timeline.js
-
-      - name: Patch Pricing CTA
-        run: node scripts/patch_pricing_cta.js
-
-      - name: Augment JSON-LD
-        run: node scripts/augment_jsonld.js
-
-
-      - name: Generate Cases (auto top2)
-        run: node scripts/gen_cases_auto.js
-
-      - name: Build RSS feed
-        run: node scripts/evidence_to_rss.mjs
-
-      - name: Build sitemap
-        run: node scripts/build_sitemap.mjs
-
-      - name: Commit content
-        run: |
-          set -e
-          git config user.email "bot@cg-alert.com"
-          git config user.name  "cg-alert-bot"
-          git add "$PUBLISH_DIR/evidence" "$PUBLISH_DIR/vendors" "$PUBLISH_DIR/pricing" "$PUBLISH_DIR/cases" "$PUBLISH_DIR/rss/index.xml" "$PUBLISH_DIR/sitemap.xml" "$PUBLISH_DIR/reports" || true
-          if git diff --cached --quiet; then
-            echo "no content changes"
-          else
-            git commit -m "content: evidence+vendors+pricing+jsonld+compare+cases+rss+sitemap"
-            git pull --rebase --autostash || true
-            git push
-          fi
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - name: Install deps
+      run: npm ci
+    - name: Render Evidence pages
+      run: node scripts/render_evidence_pages.mjs
+    - name: Build vendor timelines
+      run: node scripts/build_vendors_timeline.js
+    - name: Patch Pricing CTA
+      run: node scripts/patch_pricing_cta.js
+    - name: Augment JSON-LD
+      run: node scripts/augment_jsonld.js
+    - name: Generate Cases (auto top2)
+      run: node scripts/gen_cases_auto.js
+    - name: Build RSS feed
+      run: node scripts/evidence_to_rss.mjs
+    - name: Build sitemap
+      run: node scripts/build_sitemap.mjs
+    - name: Commit content
+      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \  \"cg-alert-bot\"\ngit add \"$PUBLISH_DIR/evidence\" \"$PUBLISH_DIR/vendors\"\
+        \ \"$PUBLISH_DIR/pricing\" \"$PUBLISH_DIR/cases\" \"$PUBLISH_DIR/rss/index.xml\"\
+        \ \"$PUBLISH_DIR/sitemap.xml\" \"$PUBLISH_DIR/reports\" || true\nif git diff\
+        \ --cached --quiet; then\n  echo \"no content changes\"\nelse\n  git commit\
+        \ -m \"content: evidence+vendors+pricing+jsonld+compare+cases+rss+sitemap\"\
+        \n  git pull --rebase --autostash || true\n  git push\nfi\n"
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false
