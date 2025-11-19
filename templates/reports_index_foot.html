@@ -1,3 +1,9 @@
+
+<meta property="og:type" content="article" />
+<meta property="og:title" content="{{og_title}}" />
+<meta property="og:description" content="{{og_description}}" />
+<meta property="og:url" content="{{og_url}}" />
+<meta property="og:site_name" content="CG Alert" />
 </section>
 <footer class="cg-footer">
   <div class="cg-wrap cg-footlinks">
@@ -15,5 +21,14 @@
 <section class="evidence-diff-block">
 <h3>Change snippet</h3>
 <div class="diff-wrap">{{diff_snippet_html}}</div>
+</section>
+
+<section class="evidence-related">
+  <h3>Related changes</h3>
+  <ul>
+    {{#related.same_vendor}}
+    <li><a href="{{url}}">{{observed_at}} · {{title}}</a></li>
+    {{/related.same_vendor}}
+  </ul>
 </section>
 </body></html>

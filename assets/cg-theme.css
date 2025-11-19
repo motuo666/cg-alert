@@ -13,3 +13,10 @@ a, a:visited, a:hover, a:focus { text-decoration: none !important; }
 .diff-snippet .ctx { display: block; color: #666; }
 .diff-divider { display: block; text-align: center; color: #999; margin: 6px 0; }
 .evidence-diff-block h3 { margin: 10px 0 6px; font-size: 1.05rem; }
+
+
+/* === injected related block styles === */
+.evidence-related{border-top:1px solid #eee;margin-top:16px;padding-top:12px}
+.evidence-related h3{font-size:1.05rem;margin:0 0 8px}
+.evidence-related ul{list-style:none;padding:0;margin:0;display:grid;gap:6px}
+.evidence-related li a{text-decoration:none}

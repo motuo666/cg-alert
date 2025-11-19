@@ -149,3 +149,34 @@ function __attachDiffSnippet(item){
   }catch(e){}
   return item;
 }
+
+
+// === injected: related changes computation ===
+function __groupByVendor(items){
+  const g = new Map();
+  for (const it of items) {
+    const v = (it.vendor || '').toLowerCase();
+    if (!g.has(v)) g.set(v, []);
+    g.get(v).push(it);
+  }
+  for (const [v, arr] of g.entries()){
+    arr.sort((a,b)=>String(b.observed_at || b.date || '').localeCompare(String(a.observed_at || a.date || '')));
+  }
+  return g;
+}
+function __attachRelated(items, N=3){
+  const gv = __groupByVendor(items);
+  for (const arr of gv.values()){
+    for (let i=0;i<arr.length;i++){
+      const me = arr[i];
+      const rel = [];
+      for (let j=0;j<arr.length && rel.length<N;j++){
+        if (i===j) continue;
+        const it = arr[j];
+        rel.push({ title: it.title || it.summary || '', url: it.url || it.permalink || '', observed_at: it.observed_at || it.date || '' });
+      }
+      me.related = { same_vendor: rel };
+    }
+  }
+  return items;
+}

@@ -1,3 +1,50 @@
+
+// === injected: events-based digest cursor logic ===
+import fs from 'node:fs';
+import path from 'node:path';
+
+function readJSON(p, def=null){ try { return JSON.parse(fs.readFileSync(p,'utf8')); } catch { return def; } }
+function writeJSON(p, obj){ fs.mkdirSync(path.dirname(p), {recursive:true}); fs.writeFileSync(p, JSON.stringify(obj,null,2)); }
+
+function loadEvents(){
+  const p = path.join(process.cwd(), 'data', 'events.json');
+  const data = readJSON(p, null);
+  if (data && Array.isArray(data.items)) return data.items;
+  return null;
+}
+function loadState(){
+  const p = path.join(process.cwd(), 'data', 'digest_state.json');
+  return [p, readJSON(p, {"daily":{"last_observed_at":""},"weekly":{"last_observed_at":""}})];
+}
+function saveState(p, state){
+  try { writeJSON(p, state); } catch {}
+}
+function iso(a){ return new Date(a || 0).toISOString(); }
+function maxIso(a,b){ return (a && a > b) ? a : b; }
+
+export async function selectDigestItems(mode){
+  const ev = loadEvents();
+  if (!ev) return null; // fall back to legacy RSS flow in existing code
+  const [statePath, state] = loadState();
+  const last = (state[mode] && state[mode].last_observed_at) ? state[mode].last_observed_at : "";
+  const now = new Date();
+  // compute window
+  const start = new Date(now);
+  if (mode === 'daily') { start.setUTCDate(now.getUTCDate()-1); }
+  else if (mode === 'weekly') { 
+    // last Monday 00:00 UTC
+    const day = now.getUTCDay(); // 0..6 (Sun..Sat)
+    const diff = (day === 0 ? 6 : day-1); // days since Monday
+    start.setUTCDate(now.getUTCDate()-diff-7);
+    start.setUTCHours(0,0,0,0);
+  }
+  const startIso = start.toISOString();
+  const items = ev.filter(x => x.observed_at && x.observed_at > (last || startIso))
+                  .sort((a,b)=>String(a.observed_at).localeCompare(String(b.observed_at)));
+  const newLast = items.reduce((acc,x)=>maxIso(x.observed_at, acc), last);
+  return { items, statePath, state, newLast };
+}
+
 // scripts/customer_digest.js (brand tone + x个证据 summary)
 const fs = require('fs'); const path = require('path');
 const { XMLParser } = require('fast-xml-parser');
