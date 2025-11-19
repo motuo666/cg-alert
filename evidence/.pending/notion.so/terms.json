@@ -4,8 +4,8 @@
   "page": "/terms",
   "key": "terms",
   "old_hash": "a058269de4f7dbac359f42a454c47ddbd6ade9218b6420724f1a6807b1b6d782",
-  "new_hash": "eb55fc2fb265eb6294b13805508fd4ed0a0292f3a51513273b90697661f59fde",
-  "first_seen_at": "2025-11-19T06:55:12.417Z",
+  "new_hash": "f8a486578590b3b7de0f2900f022295237209a9b3c6f17de8300be0268fa2737",
+  "first_seen_at": "2025-11-19T13:55:05.956Z",
   "confirmed_at": null,
   "status_code": 200,
   "snippet": "Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue."

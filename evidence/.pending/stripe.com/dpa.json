@@ -1,0 +1,12 @@
+{
+  "vendor": "stripe.com",
+  "url": "https://stripe.com/dpa",
+  "page": "/dpa",
+  "key": "dpa",
+  "old_hash": "65c338a3415c89c0655b4629128b1e922c014875a57817792f27f661f7aa5785",
+  "new_hash": "d99bd4cbbed2887a938602220b899f8b83c1af2d6de4d4fdb1fe6f4effe312d8",
+  "first_seen_at": "2025-11-19T13:54:52.236Z",
+  "confirmed_at": null,
+  "status_code": 404,
+  "snippet": "Chat with Stripe sales Page not found! Stripe logo Products Solutions Developers Resources Pricing Dashboard&nbsp; Sign in&nbsp; Sign in&nbsp; Contact sales&nbsp; Open mobile navigation Stripe logo Back Close mobile navigation Products Solu"
+}
