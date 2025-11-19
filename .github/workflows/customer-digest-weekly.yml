@@ -50,6 +50,7 @@ env:
   COMPLAINT_7D_MAX: "${{ vars.COMPLAINT_7D_MAX }}"
   BOUNCE_7D_MAX: "${{ vars.BOUNCE_7D_MAX }}"
   REQUIRE_CHANGED_VENDORS: "${{ vars.REQUIRE_CHANGED_VENDORS }}"
+  DIGEST_MODE: "weekly"
 
 on:
   schedule:

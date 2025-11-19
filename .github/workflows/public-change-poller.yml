@@ -28,6 +28,8 @@ jobs:
       - name: Poll vendors (two-stage confirmation)
         env:
           SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+          R2_EVIDENCE_WRITE_URL: ${{ vars.R2_EVIDENCE_WRITE_URL || '' }}
+          R2_EVIDENCE_API_KEY: ${{ secrets.R2_EVIDENCE_API_KEY || '' }}
         run: node scripts/poller.mjs
 
       - name: Render evidence pages
