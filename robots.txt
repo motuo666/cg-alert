@@ -1,3 +1,15 @@
 User-agent: *
 Allow: /
+
+# 不给搜索引擎爬纯技术/数据目录（不影响正常访问，只是减少暴露）
+Disallow: /api/
+Disallow: /cf/
+Disallow: /data/
+Disallow: /deploy/
+Disallow: /scripts/
+Disallow: /artifacts/
+
+# 主站固定页面
 Sitemap: https://www.cg-alert.com/sitemap.xml
+# Vendors / Reports 等长尾内容的索引
+Sitemap: https://www.cg-alert.com/sitemap-index.xml
