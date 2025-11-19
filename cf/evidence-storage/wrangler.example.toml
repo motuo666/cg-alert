@@ -1,0 +1,22 @@
+# cf/evidence-storage/wrangler.example.toml
+name = "evidence-storage"
+main = "src/index.js"
+account_id = "YOUR_CF_ACCOUNT_ID"
+compatibility_date = "2025-01-15"
+
+routes = [
+  # Replace with your production hostname / subdomain
+  { pattern = "evidence-api.cg-alert.com/*", zone_name = "cg-alert.com" }
+]
+
+[[r2_buckets]]
+binding = "EVIDENCE_BUCKET"
+bucket_name = "cg-alert-evidence"
+
+# Optional runtime configuration:
+#   wrangler secret put R2_API_KEY
+#   wrangler secret put PUBLIC_BASE_URL
+#
+# Then in GitHub, set:
+#   vars.R2_EVIDENCE_WRITE_URL = "https://evidence-api.cg-alert.com/evidence"
+#   secrets.R2_EVIDENCE_API_KEY = same value as R2_API_KEY

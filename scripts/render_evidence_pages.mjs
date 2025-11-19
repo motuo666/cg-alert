@@ -59,10 +59,12 @@ for (const f of files) {
     const title = `${vendor} — ${page}`;
     const snippet = (j.snippet || j.diff || j.note || '').toString();
     const url = j.url || j.link || '#';
+    const rawUrl = (j.r2_url || '').toString();
+    const rawLink = rawUrl ? `<a href="${rawUrl}" rel="nofollow">View captured evidence</a> · ` : '';
     const html = `${head}
 <section class="cg-wrap">
   <h1>${title}</h1>
-  <p class="muted"><a href="${url}">Source</a> · <code>${when}</code> · <code>${slug}</code></p>
+  <p class="muted">${rawLink}<a href="${url}">Source</a> · <code>${when}</code> · <code>${slug}</code></p>
   <div class="cg-card"><pre style="white-space:pre-wrap">${snippet.replace(/[&<>]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[s]))}</pre></div>
 </section>
 ${foot}`;

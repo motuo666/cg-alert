@@ -10,6 +10,7 @@ const SMTP_PASS = process.env.SMTP_PASS;
 const FROM = process.env.MAIL_FROM || 'CG Alert <ops@cg-alert.com>';
 const REPLY_TO = process.env.REPLY_TO || 'Jason <ops@cg-alert.com>';
 const LIMIT = parseInt(process.env.DIGEST_LIMIT || '10', 10);
+const DIGEST_MODE = (process.env.DIGEST_MODE || 'daily').toLowerCase();
 
 // ---- ENTITLEMENT RULES (auto-injected) ----
 const RULE = {
@@ -125,16 +126,59 @@ function htmlFor(company, list){
   const items = rssItems();
   const transport = nodemailer.createTransport({ host: SMTP_HOST, port: SMTP_PORT, secure: SMTP_PORT===465, auth: {user: SMTP_USER, pass: SMTP_PASS} });
   let sent=0;
-  for(const c of cust){
-    const E = normalizeEntitlement(c); const cadence = E.cadence;
-    if(cadence==='weekly' && new Date().getDay()!==1) continue; // Monday
-    // daily: always due
+  const today = new Date();
+  const dow = today.getDay(); // 1 = Monday
+  for (const c of cust){
+    const E = normalizeEntitlement(c);
+    const cadence = E.cadence;
     const vendors = E.vendors;
-    const list = filterByVendors(items, vendors);
-    if(list.length===0) continue;
-    const html = htmlFor(c.company||'Your account', list);
+    const listAll = filterByVendors(items, vendors);
+    if (listAll.length === 0) continue;
+    const hasHigh = listAll.some(it => it._severity === 'high');
+
+    let shouldSend = false;
+    let effectiveList = listAll;
+    let isPriorityOverride = false;
+
+    if (DIGEST_MODE === 'weekly') {
+      // Weekly digest: only weekly cadence, only on Monday
+      if (cadence !== 'weekly') continue;
+      if (dow !== 1) continue;
+      shouldSend = true;
+    } else {
+      // Daily mode: daily plans always, weekly plans only when there is high-severity change (except Monday)
+      if (cadence === 'daily') {
+        shouldSend = true;
+      } else if (cadence === 'weekly') {
+        if (hasHigh && dow !== 1) {
+          effectiveList = listAll.filter(it => it._severity === 'high');
+          shouldSend = true;
+          isPriorityOverride = true;
+        } else {
+          // no high-severity today; weekly customer waits for weekly digest
+          continue;
+        }
+      } else {
+        // Fallback: treat unknown cadence as weekly with priority override
+        if (hasHigh && dow !== 1) {
+          effectiveList = listAll.filter(it => it._severity === 'high');
+          shouldSend = true;
+          isPriorityOverride = true;
+        } else if (dow === 1) {
+          shouldSend = true;
+        } else {
+          continue;
+        }
+      }
+    }
+
+    if (!shouldSend || effectiveList.length === 0) continue;
+
+    const html = htmlFor(c.company||'Your account', effectiveList);
     const planLabel = E.plan === 'enterprise' ? 'Enterprise' : (E.plan === 'business' ? 'Business' : 'Portfolio');
-    const subject = `CG Alert — ${planLabel} · 你有 ${list.length} 个新证据`;
+    const subject = isPriorityOverride
+      ? `CG Alert — ${planLabel} · 高优先级变更（${effectiveList.length} 条）`
+      : `CG Alert — ${planLabel} · 你有 ${effectiveList.length} 个新证据`;
     await transport.sendMail({ from: FROM, to: c.email, subject, html, replyTo: REPLY_TO });
     sent++;
   }
