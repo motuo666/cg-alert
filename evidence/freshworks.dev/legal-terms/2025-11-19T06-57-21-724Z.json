@@ -1,0 +1,13 @@
+{
+  "vendor": "freshworks.dev",
+  "url": "https://freshworks.dev/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "2817943d8344d7f51744333988a5f278f01ac088e66e813a8de988833f3a8cbb",
+  "new_hash": "8543a442daf4830bf4f1b474ed003a4aee1419cfdf6cd3108fa2397018bc2773",
+  "first_seen_at": "2025-11-19T05:23:48.693Z",
+  "confirmed_at": "2025-11-19T06:57:21.724Z",
+  "status_code": 404,
+  "snippet": "404: This page could not be found 404 This page could not be found .",
+  "r2_key": "freshworks.dev/legal-terms/2025-11-19T06-57-21-724Z.html"
+}

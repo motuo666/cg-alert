@@ -1,0 +1,13 @@
+{
+  "vendor": "newrelic.com",
+  "url": "https://newrelic.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "f8579afa73536a1b7249dea2e139d9ee4e1d296eb3ab04766fcacf450ffb686c",
+  "new_hash": "f1ec182242545f6b7447063fb8cf24d9059437306571f16b6b47204740265e14",
+  "first_seen_at": "2025-11-19T05:22:17.730Z",
+  "confirmed_at": "2025-11-19T06:56:00.755Z",
+  "status_code": 404,
+  "snippet": "New Relic | Page not found Skip to main content Search toggle Main navigation menu, 6 items Search Submit Platform Intelligent Observability Platform View Platform APM APM 360 Business Observability eAPM SAP Monitoring Serverless Transactio",
+  "r2_key": "newrelic.com/terms-of-service/2025-11-19T06-56-00-755Z.html"
+}

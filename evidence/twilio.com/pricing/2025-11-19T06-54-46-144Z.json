@@ -1,0 +1,13 @@
+{
+  "vendor": "twilio.com",
+  "url": "https://twilio.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "80dc044a827d9a46abab63e727b2bb8879753e10c9d4d7e6db349d4fff67f515",
+  "new_hash": "622c05641bcaebed5f7f703e0ed42cdafad44ebcc433559fdd264763ab81eb0d",
+  "first_seen_at": "2025-11-19T05:20:59.673Z",
+  "confirmed_at": "2025-11-19T06:54:46.144Z",
+  "status_code": 200,
+  "snippet": "Twilio Pricing | Twilio English English An icon of a checkmark French German Japanese Portuguese Spanish Support Help Center Support Plans Partner Solutions Login Log in to: Twilio logo Messaging, Voice, Verify, Video, and more Twilio Or lo",
+  "r2_key": "twilio.com/pricing/2025-11-19T06-54-46-144Z.html"
+}

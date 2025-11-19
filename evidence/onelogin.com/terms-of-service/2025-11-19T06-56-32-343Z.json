@@ -1,0 +1,13 @@
+{
+  "vendor": "onelogin.com",
+  "url": "https://onelogin.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "adb1a4b9dfc7e045f13d9397ffb51ab2d6e8b2aa5fdde725df727cc0c3a935eb",
+  "new_hash": "1c71e263ca7ef0e0de37e252bac2f8fdf1af74a70d9fb9b4a650baa355601991",
+  "first_seen_at": "2025-11-19T05:22:51.193Z",
+  "confirmed_at": "2025-11-19T06:56:32.343Z",
+  "status_code": 404,
+  "snippet": "--> Page Not Found --> For the best web experience, please use IE11+, Chrome, Firefox, or Safari Contact Sales: +1 (415) 645-6830 Login United States (English) France (Français) Germany (Deutsch) Japan (日本語) Products Main Menu Products Prod",
+  "r2_key": "onelogin.com/terms-of-service/2025-11-19T06-56-32-343Z.html"
+}

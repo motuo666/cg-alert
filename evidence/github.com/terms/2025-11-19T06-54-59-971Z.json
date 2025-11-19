@@ -1,0 +1,13 @@
+{
+  "vendor": "github.com",
+  "url": "https://github.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "a30d17a2ac86cc974b0892a4a221cae3cd41decdb9ceb86e4d57b13d19ec1dee",
+  "new_hash": "7c9a91dc734d29882620a5d21092bb3c4b21a5bd732d41856d6b2b7c73c6caf2",
+  "first_seen_at": "2025-11-19T05:21:14.097Z",
+  "confirmed_at": "2025-11-19T06:54:59.971Z",
+  "status_code": 200,
+  "snippet": "GitHub Terms of Service - GitHub Docs Skip to main content GitHub Docs Version: Free, Pro, &amp; Team Search or ask Copilot Search or ask Copilot Select language: current language is English Search or ask Copilot Search or ask Copilot Open ",
+  "r2_key": "github.com/terms/2025-11-19T06-54-59-971Z.html"
+}

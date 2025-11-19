@@ -1,0 +1,13 @@
+{
+  "vendor": "pagerduty.com",
+  "url": "https://pagerduty.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "aa7bc0863ce0008eb4ae4b30cb12d519d45f6fb34d3801969b95c2481807aa2a",
+  "new_hash": "b66207bc12c0331ea092aa5565b07a9a50a184f5b8be213cd162d4dcc61c1a9d",
+  "first_seen_at": "2025-11-19T05:22:24.348Z",
+  "confirmed_at": "2025-11-19T06:56:06.731Z",
+  "status_code": 200,
+  "snippet": "Terms of Service | PagerDuty Meet us at AWS re:Invent. Book 1:1 time with a PagerDuty Expert Learn more Connect, Learn, Innovate. Join us for PagerDuty on Tour. Register now Meet us at AWS re:Invent. Book 1:1 time with a PagerDuty Expert Le",
+  "r2_key": "pagerduty.com/terms-of-service/2025-11-19T06-56-06-731Z.html"
+}

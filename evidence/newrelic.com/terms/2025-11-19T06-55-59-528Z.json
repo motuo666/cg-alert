@@ -1,0 +1,13 @@
+{
+  "vendor": "newrelic.com",
+  "url": "https://newrelic.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "b38de381b6d44760f646780672c2685d9d13beb42da56e34e327c93f8c02b936",
+  "new_hash": "c5476c9dafeec5a58c285c700b184d36cdfa13bed5b94b142641a6c6462371b2",
+  "first_seen_at": "2025-11-19T05:22:16.541Z",
+  "confirmed_at": "2025-11-19T06:55:59.528Z",
+  "status_code": 200,
+  "snippet": "Terms of Service Agreement | New Relic Skip to main content New Relic Inc. Terms of Service Paid Accounts Customers that access New Relic’s platform through a paid subscription are governed by the Terms of Service set forth immediately abov",
+  "r2_key": "newrelic.com/terms/2025-11-19T06-55-59-528Z.html"
+}

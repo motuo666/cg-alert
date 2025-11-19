@@ -1,0 +1,13 @@
+{
+  "vendor": "figma.com",
+  "url": "https://figma.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "ff88d415d20083effe9dd6be6fa84001084e8c587a3addb53998ee8f3d72e2c4",
+  "new_hash": "2eae2fba9cb10f5b97601c0107122fba514c60402736261ac1e54dba3c5ee42c",
+  "first_seen_at": "2025-11-19T05:23:41.879Z",
+  "confirmed_at": "2025-11-19T06:57:15.673Z",
+  "status_code": 404,
+  "snippet": "Error: Page Not Found",
+  "r2_key": "figma.com/terms-of-service/2025-11-19T06-57-15-673Z.html"
+}

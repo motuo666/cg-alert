@@ -1,0 +1,13 @@
+{
+  "vendor": "onelogin.com",
+  "url": "https://onelogin.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "12ee94c5cc44d087b5100d772a09673a486931c88ff9947d966a0ab7d0d90e16",
+  "new_hash": "fc00d736785898ebeee2e1cd6e47ef73081914c6c125e5284853f1fe2c6982b7",
+  "first_seen_at": "2025-11-19T05:22:48.289Z",
+  "confirmed_at": "2025-11-19T06:56:29.684Z",
+  "status_code": 200,
+  "snippet": "--> Pricing &amp; Plans | OneLogin --> For the best web experience, please use IE11+, Chrome, Firefox, or Safari Contact Sales: +1 (415) 645-6830 Login United States (English) France (Français) Germany (Deutsch) Japan (日本語) Products Main Me",
+  "r2_key": "onelogin.com/pricing/2025-11-19T06-56-29-684Z.html"
+}

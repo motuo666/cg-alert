@@ -1,0 +1,13 @@
+{
+  "vendor": "onelogin.com",
+  "url": "https://onelogin.com/dpa",
+  "page": "/dpa",
+  "key": "dpa",
+  "old_hash": "a4ed3cf4d2d66947f6a676c4f841166dc27c07cad5a4e5746299b717aa01a273",
+  "new_hash": "4d181b20dfaa83ece56db12161ffbab921e7324c387090a91646ae00f9c019ab",
+  "first_seen_at": "2025-11-19T05:22:53.940Z",
+  "confirmed_at": "2025-11-19T06:56:35.045Z",
+  "status_code": 404,
+  "snippet": "--> Page Not Found --> For the best web experience, please use IE11+, Chrome, Firefox, or Safari Contact Sales: +1 (415) 645-6830 Login United States (English) France (Français) Germany (Deutsch) Japan (日本語) Products Main Menu Products Prod",
+  "r2_key": "onelogin.com/dpa/2025-11-19T06-56-35-045Z.html"
+}

@@ -1,0 +1,13 @@
+{
+  "vendor": "box.com",
+  "url": "https://box.com/dpa",
+  "page": "/dpa",
+  "key": "dpa",
+  "old_hash": "",
+  "new_hash": "f9019a1f5971ac99dea0efc4b91bd06d1c69675ea8debe2cf1c8ecf27ec63cfe",
+  "first_seen_at": "2025-11-19T05:22:00.471Z",
+  "confirmed_at": "2025-11-19T06:55:45.788Z",
+  "status_code": 403,
+  "snippet": "Just a moment... Enable JavaScript and cookies to continue",
+  "r2_key": "box.com/dpa/2025-11-19T06-55-45-788Z.html"
+}

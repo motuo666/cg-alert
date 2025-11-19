@@ -1,0 +1,13 @@
+{
+  "vendor": "box.com",
+  "url": "https://box.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "",
+  "new_hash": "f9019a1f5971ac99dea0efc4b91bd06d1c69675ea8debe2cf1c8ecf27ec63cfe",
+  "first_seen_at": "2025-11-19T05:21:59.511Z",
+  "confirmed_at": "2025-11-19T06:55:44.821Z",
+  "status_code": 403,
+  "snippet": "Just a moment... Enable JavaScript and cookies to continue",
+  "r2_key": "box.com/legal-terms/2025-11-19T06-55-44-821Z.html"
+}

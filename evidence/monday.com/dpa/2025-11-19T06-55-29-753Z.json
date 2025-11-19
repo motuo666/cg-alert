@@ -1,0 +1,13 @@
+{
+  "vendor": "monday.com",
+  "url": "https://monday.com/dpa",
+  "page": "/dpa",
+  "key": "dpa",
+  "old_hash": "",
+  "new_hash": "0f916f9f48b2166f6a55d31da602245dd0dd38e58cb901c84233120f8fd65518",
+  "first_seen_at": "2025-11-19T05:21:43.560Z",
+  "confirmed_at": "2025-11-19T06:55:29.753Z",
+  "status_code": 404,
+  "snippet": "404: page not found | monday.com Skip to main content Products Solutions Resources Enterprise Pricing Log in Request a demo Get Started Products Tailored to your teams&#x27; needs monday work management monday CRM monday dev monday service ",
+  "r2_key": "monday.com/dpa/2025-11-19T06-55-29-753Z.html"
+}

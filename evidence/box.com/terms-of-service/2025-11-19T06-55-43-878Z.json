@@ -1,0 +1,13 @@
+{
+  "vendor": "box.com",
+  "url": "https://box.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "",
+  "new_hash": "f9019a1f5971ac99dea0efc4b91bd06d1c69675ea8debe2cf1c8ecf27ec63cfe",
+  "first_seen_at": "2025-11-19T05:21:58.559Z",
+  "confirmed_at": "2025-11-19T06:55:43.878Z",
+  "status_code": 403,
+  "snippet": "Just a moment... Enable JavaScript and cookies to continue",
+  "r2_key": "box.com/terms-of-service/2025-11-19T06-55-43-878Z.html"
+}

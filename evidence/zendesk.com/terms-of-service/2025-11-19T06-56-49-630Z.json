@@ -1,0 +1,13 @@
+{
+  "vendor": "zendesk.com",
+  "url": "https://zendesk.com/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "b12186ecdf7c068fb8adccbf0ac82aebfb4ac831235b683c9fe70888b254dcf8",
+  "new_hash": "d7479260963cf3ea4bc7609e994b1b8ea741f025fabdb300417bacdc8459a40d",
+  "first_seen_at": "2025-11-19T05:23:09.870Z",
+  "confirmed_at": "2025-11-19T06:56:49.630Z",
+  "status_code": 404,
+  "snippet": "Page not found | Zendesk Sign in Product Support Company About us Newsroom Investors Events Careers Diversity & Inclusion Social Impact Zendesk Foundation Legal Contact us English Zendesk. Be the company your customers want you to be. Conta",
+  "r2_key": "zendesk.com/terms-of-service/2025-11-19T06-56-49-630Z.html"
+}

@@ -1,0 +1,13 @@
+{
+  "vendor": "slack.com",
+  "url": "https://slack.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "",
+  "new_hash": "beb2a1e60b42a2d8c8bbf95b1cafaf85dfc5886d03d8d3f7e2dac56115e3c2a2",
+  "first_seen_at": "2025-11-19T05:20:50.634Z",
+  "confirmed_at": "2025-11-19T06:54:35.795Z",
+  "status_code": 404,
+  "snippet": "There's been a glitch… | Slack Product Pricing Support Download Slack Create a new workspace Find your workspace Sign in Menu Product Pricing Support Download the Slack app Sign in Create a new workspace There’s been a glitch… We’re not qui",
+  "r2_key": "slack.com/legal-terms/2025-11-19T06-54-35-795Z.html"
+}

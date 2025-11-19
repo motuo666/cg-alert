@@ -1,0 +1,13 @@
+{
+  "vendor": "auth0.com",
+  "url": "https://auth0.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "0afe6e26c561fc257d5e50ca5175a5bfaaab68e603209041a43566183da786db",
+  "new_hash": "0dfbe08d86b549be68919500c55755adfc7dbbce145affcd28933565ea13cdd7",
+  "first_seen_at": "2025-11-19T05:22:45.524Z",
+  "confirmed_at": "2025-11-19T06:56:27.206Z",
+  "status_code": 404,
+  "snippet": "Not found - Auth0 Login Deutsch English Français Español Português 日本語 Developers Developers Developer Center Code Samples Guides Identity Unlocked - Podcasts Zero Index Newsletter Developer Tools OIDC Connect Playground SAML Tool JWT.io We",
+  "r2_key": "auth0.com/legal-terms/2025-11-19T06-56-27-206Z.html"
+}

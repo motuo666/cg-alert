@@ -1,0 +1,13 @@
+{
+  "vendor": "salesforce.com",
+  "url": "https://salesforce.com/dpa",
+  "page": "/dpa",
+  "key": "dpa",
+  "old_hash": "823fd112d75d0b72f38caed12056c7c78821b6194cc69ff6b31560d15578f267",
+  "new_hash": "5ea08c98695f21228ce0586a686720d8033c881ab78a62a064209d8afdcb0061",
+  "first_seen_at": "2025-11-19T05:20:45.778Z",
+  "confirmed_at": "2025-11-19T06:54:30.989Z",
+  "status_code": 404,
+  "snippet": "404 - Salesforce.com --> Skip to content &nbsp; Oops, the page you're trying to view isn't here. &nbsp; &nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a ",
+  "r2_key": "salesforce.com/dpa/2025-11-19T06-54-30-989Z.html"
+}
