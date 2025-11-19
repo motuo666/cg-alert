@@ -8,7 +8,7 @@ import crypto from 'node:crypto';
  */
 export function buildStableId({ vendor, path, hash, content }) {
   const v = (vendor || '').trim().toLowerCase();
-  const p = (path || '').strip ? ('' + (path || '')).trim() : ('' + (path || '')).trim();
+  const p = String(path || '').trim();
   if (hash && hash.length >= 6) {
     return `${v}/${p}`.replace(/\/+/g, '/').replace(/^\/|\/$/g, '') + '/' + hash;
   }
