@@ -60,7 +60,12 @@ function scoreSeverity(it){
 }
 
 function rssItems(){
-  const xml = fs.readFileSync('reports/rss/index.xml','utf8');
+  const rssPath = 'reports/rss/index.xml';
+  if (!fs.existsSync(rssPath)) {
+    console.log('[digest] no reports/rss/index.xml yet; skipping digest items');
+    return [];
+  }
+  const xml = fs.readFileSync(rssPath,'utf8');
   const p = new XMLParser({ignoreAttributes:false, attributeNamePrefix:'@_'});
   const doc = p.parse(xml); const items = doc?.rss?.channel?.item || [];
   const arr = Array.isArray(items)?items:[items];
