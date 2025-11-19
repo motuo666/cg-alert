@@ -116,6 +116,26 @@ jobs:
           git diff --cached --quiet || git commit -m "chore: auto-update rss/sitemap/reports index (full pipeline)"
           git push
 
+
+  latest_board:
+    runs-on: ubuntu-24.04
+    needs: feeds_and_sitemap
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Build latest board
+        env:
+          LATEST_N: 12
+        run: node scripts/build_latest_board.mjs
+      - name: Commit latest board
+        run: |
+          git config user.name "cg-alert-bot"
+          git config user.email "bot@cg-alert.com"
+          git add reports/latest.html || true
+          git diff --cached --quiet || git commit -m "chore: add reports/latest.html"
+          git push
+
   pricing_sync:
     runs-on: ubuntu-latest
     needs: vendors_build
