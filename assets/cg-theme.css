@@ -4,3 +4,12 @@
 
 /* no-underline-global */
 a, a:visited, a:hover, a:focus { text-decoration: none !important; }
+
+
+/* === injected diff snippet styles === */
+.diff-snippet { padding: 12px; border: 1px solid #e3e3e3; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; overflow: auto; background: #fafafa; }
+.diff-snippet .ins { display: block; background: #e6ffed; }
+.diff-snippet .del { display: block; background: #ffeef0; text-decoration: none; }
+.diff-snippet .ctx { display: block; color: #666; }
+.diff-divider { display: block; text-align: center; color: #999; margin: 6px 0; }
+.evidence-diff-block h3 { margin: 10px 0 6px; font-size: 1.05rem; }

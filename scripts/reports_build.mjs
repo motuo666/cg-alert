@@ -1,6 +1,9 @@
 
+import { buildStableId, diffSnippet } from './lib/evidence_utils.mjs';
 import { promises as fs } from 'fs';
+import { buildStableId, diffSnippet } from './lib/evidence_utils.mjs';
 import path from 'path';
+import { buildStableId, diffSnippet } from './lib/evidence_utils.mjs';
 import crypto from 'crypto';
 
 const EVIDENCE_DIR = 'evidence';
@@ -134,3 +137,15 @@ async function main(){
   console.log(`reports build complete: ${items.length} items`);
 }
 main().catch(e=>{ console.error(e); process.exit(1); });
+
+
+// === injected: diff snippet usage ===
+function __attachDiffSnippet(item){
+  try{
+    if((item.old || item.previous) && (item.new || item.current)){
+      const a = item.old || item.previous; const b = item.new || item.current;
+      item.diff_snippet_html = diffSnippet(String(a), String(b));
+    }
+  }catch(e){}
+  return item;
+}

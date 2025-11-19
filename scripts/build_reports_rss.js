@@ -1,3 +1,4 @@
+function __buildStableId(item){try{return [String(item.vendor||'').toLowerCase(), String(item.path||'').trim().replace(/^\/|\/$/g,''), String(item.hash||'')].filter(Boolean).join('/');}catch(e){return ''}}
 #!/usr/bin/env node
 const fs = require('fs'); const path = require('path');
 const ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
