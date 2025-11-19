@@ -4,9 +4,9 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "",
-  "new_hash": "33e15dc3ef7d80d0b595117814ad2bf02a354047cc8d9a26472667ff9a11b197",
-  "first_seen_at": "2025-11-08T05:15:14.280Z",
+  "new_hash": "81dec1bc74068e70d024b337c7e1acdfbd83bee0c4b7cc04d9d945fc2891d791",
+  "first_seen_at": "2025-11-19T05:22:07.886Z",
   "confirmed_at": null,
-  "status_code": 404,
-  "snippet": "Page not found | Cloudflare Sign up Languages English English (United Kingdom) Deutsch Español (Latinoamérica) Español (España) Français Italiano 日本語 한국어 Polski Português (Brasil) Русский 繁體中文 简体中文 Platform Connectivity cloud Cloudflare’s c"
+  "status_code": 200,
+  "snippet": "CLOUDFLARE DATA PROCESSING ADDENDUM | Cloudflare Sign up Languages English English (United Kingdom) Deutsch Español (Latinoamérica) Español (España) Français Italiano 日本語 한국어 Polski Português (Brasil) Русский 繁體中文 简体中文 Platform Connectivity"
 }

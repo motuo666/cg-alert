@@ -1,0 +1,12 @@
+{
+  "vendor": "newrelic.com",
+  "url": "https://newrelic.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "6ccf8f35ac83d871dac00f8a5a8ec1f41c711d91b7322fff2cceaf5462dd1dad",
+  "new_hash": "50a68e055efe2ae0a5c57b433b90590686bc1c1ab909bac5e9e3d157efd7bd7b",
+  "first_seen_at": "2025-11-19T05:22:15.571Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "Transparent Pricing - Start for Free | New Relic Skip to main content Simple, transparent pricing. Only pay for what you use. 50+ capabilities in one platform 100 GB of free data ingest/month Unlimited free basic users Get Started Free Requ"
+}
