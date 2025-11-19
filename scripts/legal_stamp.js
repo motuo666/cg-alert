@@ -30,7 +30,7 @@ function buildTermsHtml() {
 <meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;line-height:1.5;color:#111;padding:1rem;max-width:48rem;margin:0 auto;">
 <h1 style="font-size:1rem;font-weight:600;margin:0 0 1rem 0;">Terms of Service</h1>
-<p style="font-size:.8rem;color:#555;">These Terms are a template baseline, not legal advice. You must review with counsel.</p>
+<p style="font-size:.8rem;color:#555;"></p>
 
 <p style="font-size:.9rem;">1. Service. ${COMPANY} provides access to timestamped evidence of vendor changes (pricing, terms, sub-processors, DPAs, SLAs, etc.) for use in renewals, compliance, procurement and commercial negotiations.</p>
 
@@ -49,7 +49,7 @@ function buildTermsHtml() {
 <p style="font-size:.9rem;">8. Governing Law / Venue. By using the service you agree disputes are governed by applicable law of our primary business domicile and exclusive venue there. (Customize with your counsel.)</p>
 
 <p style="font-size:.8rem;color:#555;margin-top:2rem;">Postal address: ${ADDRESS}</p>
-<p style="font-size:.7rem;color:#999;margin-top:1rem;">THIS IS A TEMPLATE. REVIEW WITH COUNSEL BEFORE RELYING ON IT.</p>
+<p style="font-size:.7rem;color:#999;margin-top:1rem;"></p>
 
 </body></html>`;
 }
@@ -76,7 +76,7 @@ function buildPrivacyHtml() {
 <p style="font-size:.9rem;">You may request removal at any time via unsubscribe link or abuse@cg-alert.com. We will keep a minimal suppression record (your email as “do not contact”) so we do not re-add you.</p>
 
 <p style="font-size:.8rem;color:#555;margin-top:2rem;">Postal address: ${ADDRESS}</p>
-<p style="font-size:.7rem;color:#999;margin-top:1rem;">THIS IS A TEMPLATE. REVIEW WITH COUNSEL BEFORE RELYING ON IT.</p>
+<p style="font-size:.7rem;color:#999;margin-top:1rem;"></p>
 
 </body></html>`;
 }
@@ -97,7 +97,7 @@ function buildDpaHtml() {
 <p style="font-size:.9rem;">Where required, we will execute a mutually agreed DPA reflecting controller / processor roles, sub-processors, and international transfer terms. Contact us for a countersigned copy.</p>
 
 <p style="font-size:.8rem;color:#555;margin-top:2rem;">Postal address: ${ADDRESS}</p>
-<p style="font-size:.7rem;color:#999;margin-top:1rem;">THIS IS A TEMPLATE. REVIEW WITH COUNSEL BEFORE RELYING ON IT.</p>
+<p style="font-size:.7rem;color:#999;margin-top:1rem;"></p>
 
 </body></html>`;
 }
@@ -109,7 +109,7 @@ function buildOrderFormHtml() {
 <meta name="viewport" content="width=device-width, initial-scale=1"></head>
 <body style="font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;line-height:1.5;color:#111;padding:1rem;max-width:48rem;margin:0 auto;">
 <h1 style="font-size:1rem;font-weight:600;margin:0 0 1rem 0;">Order Form</h1>
-<p style="font-size:.8rem;color:#555;">Template baseline for enterprise PO / invoice flow.</p>
+<p style="font-size:.8rem;color:#555;"></p>
 
 <p style="font-size:.9rem;">
 Customer agrees to purchase access to ${COMPANY}'s vendor-change evidence service (“Service”) for 12 months. Service includes:
