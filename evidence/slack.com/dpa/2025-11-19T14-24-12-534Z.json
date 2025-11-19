@@ -1,0 +1,13 @@
+{
+  "vendor": "slack.com",
+  "url": "https://slack.com/dpa",
+  "page": "/dpa",
+  "key": "dpa",
+  "old_hash": "12d998d4eea40d0e688b09a345f7870794b23bf23501b78449b947ce7d8b1d2e",
+  "new_hash": "5d078d67fd3c6f2705693664a8f8f0c46845ba089d6b26c3274e1321d7762388",
+  "first_seen_at": "2025-11-19T13:54:30.634Z",
+  "confirmed_at": "2025-11-19T14:24:12.534Z",
+  "status_code": 404,
+  "snippet": "There's been a glitch… | Slack Product Pricing Support Download Slack Create a new workspace Find your workspace Sign in Menu Product Pricing Support Download the Slack app Sign in Create a new workspace There’s been a glitch… We’re not qui",
+  "r2_key": "slack.com/dpa/2025-11-19T14-24-12-534Z.html"
+}

@@ -6,7 +6,8 @@
   "old_hash": "a058269de4f7dbac359f42a454c47ddbd6ade9218b6420724f1a6807b1b6d782",
   "new_hash": "f8a486578590b3b7de0f2900f022295237209a9b3c6f17de8300be0268fa2737",
   "first_seen_at": "2025-11-19T13:55:05.956Z",
-  "confirmed_at": null,
+  "confirmed_at": "2025-11-19T14:24:44.881Z",
   "status_code": 200,
-  "snippet": "Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue."
+  "snippet": "Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue.",
+  "r2_key": "notion.so/terms/2025-11-19T14-24-44-881Z.html"
 }

@@ -1,0 +1,13 @@
+{
+  "vendor": "twilio.com",
+  "url": "https://twilio.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "7968251e27ae90e63253a3fd8b4daf79b17a1d896d98351cc81409988bc49a4b",
+  "new_hash": "fd64f2500dd03dd9e4dc139820c058d40d81f1d1d7140508e5b955dd82975c9e",
+  "first_seen_at": "2025-11-19T13:54:43.439Z",
+  "confirmed_at": "2025-11-19T14:24:23.512Z",
+  "status_code": 404,
+  "snippet": "Page not found | Twilio English English An icon of a checkmark French German Japanese Portuguese Spanish Support Help Center Support Plans Partner Solutions Login Log in to: Twilio logo Messaging, Voice, Verify, Video, and more Twilio Or lo",
+  "r2_key": "twilio.com/legal-terms/2025-11-19T14-24-23-512Z.html"
+}
