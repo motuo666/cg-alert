@@ -57,10 +57,43 @@ on:
     - cron: '20 1 * * 1'     # 10:20 JST Monday
   workflow_dispatch:
 
-permissions: {}
+permissions:
+  contents: write
 
 jobs:
+  vendors_build:
+    runs-on: ubuntu-24.04
+    env:
+      NODE_OPTIONS: --max-old-space-size=2048
+      SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: npm ci || npm install
+      - name: Build vendors + reports + RSS
+        run: |
+          node scripts/vendors_build.mjs
+          node scripts/reports_build.mjs
+          node scripts/build_reports_rss.js
+      - name: Commit & push
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A reports rss
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+          else
+            git commit -m "Reports build: cards/index.json/rss"
+            git pull --rebase --autostash || true
+            git push
+          fi
+
   digest:
+    needs: vendors_build
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
