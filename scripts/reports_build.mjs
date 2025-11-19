@@ -1,10 +1,7 @@
-
-import { buildStableId, diffSnippet } from './lib/evidence_utils.mjs';
 import { promises as fs } from 'fs';
-import { buildStableId, diffSnippet } from './lib/evidence_utils.mjs';
 import path from 'path';
-import { buildStableId, diffSnippet } from './lib/evidence_utils.mjs';
 import crypto from 'crypto';
+import { diffSnippet } from './lib/evidence_utils.mjs';
 
 const EVIDENCE_DIR = 'evidence';
 const REPORTS_DIR = 'reports';
@@ -13,14 +10,22 @@ const FEED_JSON = path.join(REPORTS_DIR, 'feed.json');
 const RSS_XML = path.join('rss', 'index.xml');
 const SITE_ORIGIN = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
 
-function safeSlug(s) { return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
-async function ensureDir(p) { await fs.mkdir(p, { recursive: true }); }
+function safeSlug(s) {
+  return (s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+async function ensureDir(p) {
+  await fs.mkdir(p, { recursive: true });
+}
 
 async function readEvidence() {
   try {
     const files = await fs.readdir(EVIDENCE_DIR);
     const items = [];
-    for (const f of files.filter(f=>f.endsWith('.json'))) {
+    for (const f of files.filter(f => f.endsWith('.json'))) {
       try {
         const raw = await fs.readFile(path.join(EVIDENCE_DIR, f), 'utf-8');
         const j = JSON.parse(raw);
@@ -30,17 +35,36 @@ async function readEvidence() {
         const hash = j.sha256 || j.hash || crypto.createHash('sha256').update(raw).digest('hex');
         const summary = j.summary || j.delta || j.change || '';
         items.push({ vendor, url, capturedAt, hash, summary, file: f, raw: j });
-      } catch {}
+      } catch {
+        // ignore broken evidence file
+      }
     }
-    items.sort((a,b)=> (b.capturedAt||'').localeCompare(a.capturedAt||''));
+    items.sort((a, b) => (b.capturedAt || '').localeCompare(a.capturedAt || ''));
     return items;
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
-function rfc822(d){ try { return new Date(d).toUTCString(); } catch { return new Date().toUTCString(); } }
-function esc(s=''){ return s.replace(/[<>&'"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c])); }
+function rfc822(d) {
+  try {
+    return new Date(d).toUTCString();
+  } catch {
+    return new Date().toUTCString();
+  }
+}
 
-async function writeCards(items){
+function esc(s = '') {
+  return s.replace(/[<>&'"]/g, c => ({
+    '<': '&lt;',
+    '>': '&gt;',
+    '&': '&amp;',
+    "'": '&apos;',
+    '"': '&quot;'
+  }[c]));
+}
+
+async function writeCards(items) {
   await ensureDir(CARDS_DIR);
   for (const it of items) {
     const slug = safeSlug(`${it.vendor}-${it.capturedAt}`) || safeSlug(it.file);
@@ -56,7 +80,7 @@ async function writeCards(items){
 <link rel="canonical" href="${SITE_ORIGIN}${cardPath}"/>
 <link rel="stylesheet" href="/assets/home-v3c.css?v=cb1">
 <meta name="description" content="${esc(description)}"/>
-<meta http-equiv="Content-Security-Policy" content="default-src ...; form-action 'self' https://buy.stripe.com https://forms.gle;">
+<meta http-equiv="Content-Security-Policy" content="default-src ...; form-action 'self' https://buy.stripe.com https://forms.gle.">
 </head><body>
 <header class="cg-topbar"><div class="cg-wrap cg-nav">
 <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40"><span>CG&nbsp;Alert</span></a>
@@ -90,7 +114,7 @@ async function writeCards(items){
   }
 }
 
-async function writeFeed(items){
+async function writeFeed(items) {
   await ensureDir(REPORTS_DIR);
   const data = {
     generated_at: new Date().toISOString(),
@@ -104,9 +128,9 @@ async function writeFeed(items){
   await fs.writeFile(FEED_JSON, JSON.stringify(data, null, 2), 'utf-8');
 }
 
-async function writeRSS(items){
+async function writeRSS(items) {
   await ensureDir('rss');
-  const itemsXML = items.map(it=>{
+  const itemsXML = items.map(it => {
     const link = it.card || it.url || '';
     const absLink = link.startsWith('http') ? link : SITE_ORIGIN + link;
     return `
@@ -129,51 +153,59 @@ ${itemsXML}
   await fs.writeFile(RSS_XML, xml, 'utf-8');
 }
 
-async function main(){
+async function main() {
   const items = await readEvidence();
   await writeCards(items);
   await writeFeed(items);
   await writeRSS(items);
   console.log(`reports build complete: ${items.length} items`);
 }
-main().catch(e=>{ console.error(e); process.exit(1); });
-
+main().catch(e => {
+  console.error(e);
+  process.exit(1);
+});
 
 // === injected: diff snippet usage ===
-function __attachDiffSnippet(item){
-  try{
-    if((item.old || item.previous) && (item.new || item.current)){
-      const a = item.old || item.previous; const b = item.new || item.current;
+function __attachDiffSnippet(item) {
+  try {
+    if ((item.old || item.previous) && (item.new || item.current)) {
+      const a = item.old || item.previous;
+      const b = item.new || item.current;
       item.diff_snippet_html = diffSnippet(String(a), String(b));
     }
-  }catch(e){}
+  } catch (e) {}
   return item;
 }
 
-
 // === injected: related changes computation ===
-function __groupByVendor(items){
+function __groupByVendor(items) {
   const g = new Map();
   for (const it of items) {
     const v = (it.vendor || '').toLowerCase();
     if (!g.has(v)) g.set(v, []);
     g.get(v).push(it);
   }
-  for (const [v, arr] of g.entries()){
-    arr.sort((a,b)=>String(b.observed_at || b.date || '').localeCompare(String(a.observed_at || a.date || '')));
+  for (const [v, arr] of g.entries()) {
+    arr.sort((a, b) =>
+      String(b.observed_at || b.date || '').localeCompare(String(a.observed_at || a.date || ''))
+    );
   }
   return g;
 }
-function __attachRelated(items, N=3){
+function __attachRelated(items, N = 3) {
   const gv = __groupByVendor(items);
-  for (const arr of gv.values()){
-    for (let i=0;i<arr.length;i++){
+  for (const arr of gv.values()) {
+    for (let i = 0; i < arr.length; i++) {
       const me = arr[i];
       const rel = [];
-      for (let j=0;j<arr.length && rel.length<N;j++){
-        if (i===j) continue;
+      for (let j = 0; j < arr.length && rel.length < N; j++) {
+        if (i === j) continue;
         const it = arr[j];
-        rel.push({ title: it.title || it.summary || '', url: it.url || it.permalink || '', observed_at: it.observed_at || it.date || '' });
+        rel.push({
+          title: it.title || it.summary || '',
+          url: it.url || it.permalink || '',
+          observed_at: it.observed_at || it.date || ''
+        });
       }
       me.related = { same_vendor: rel };
     }
