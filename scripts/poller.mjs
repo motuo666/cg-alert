@@ -25,7 +25,13 @@ function sha256(s) {
 }
 
 function normalizeHtml(html) {
-  return html.replace(/\s+/g," ").replace(/<!--.*?-->/g,"").trim();
+  // Strip scripts, styles, comments, and obvious banners before diffing to avoid noise-only alerts
+  let cleaned = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<div[^>]+class="[^"]*(cookie|banner)[^"]*"[^>]*>[\s\S]*?<\/div>/gi, "");
+  return cleaned.replace(/\s+/g," ").trim();
 }
 
 async function readTextIfExists(p) {
