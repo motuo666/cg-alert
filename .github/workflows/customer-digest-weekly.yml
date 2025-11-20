@@ -91,7 +91,7 @@ jobs:
         SMTP_PASS: ${{ secrets.SMTP_PASS }}
         MAIL_FROM: ${{ vars.MAIL_FROM }}
         REPLY_TO: ${{ vars.REPLY_TO }}
-      run: node scripts/customer_digest.js
+      run: node scripts/customer_digest.mjs
     - name: Install deps
       run: npm ci
 concurrency:

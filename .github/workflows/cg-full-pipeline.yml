@@ -240,7 +240,7 @@ jobs:
           MAIL_FROM: ${{ vars.MAIL_FROM }}
           REPLY_TO: ${{ vars.REPLY_TO }}
           DIGEST_MODE: daily
-        run: node scripts/customer_digest.js
+        run: node scripts/customer_digest.mjs
 
   weekly_digest:
     runs-on: ubuntu-24.04
@@ -306,7 +306,7 @@ jobs:
           MAIL_FROM: ${{ vars.MAIL_FROM }}
           REPLY_TO: ${{ vars.REPLY_TO }}
           DIGEST_MODE: weekly
-        run: node scripts/customer_digest.js
+        run: node scripts/customer_digest.mjs
 
   seo_ping:
     runs-on: ubuntu-latest
