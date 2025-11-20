@@ -1,0 +1,12 @@
+{
+  "vendor": "cloudflare.com",
+  "url": "https://cloudflare.com/dpa",
+  "page": "/dpa",
+  "key": "dpa",
+  "old_hash": "20f20f4c0ef65233c9e78a5960fb126183bdf5e90955902b0c6f9f10e1b0e25b",
+  "new_hash": "fffdbeb28bcf2bfd562d018424037810c928f69aef2e5db54707ff2eaed304b0",
+  "first_seen_at": "2025-11-20T02:48:41.218Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "CLOUDFLARE DATA PROCESSING ADDENDUM | Cloudflare Sign up Languages English English (United Kingdom) Deutsch Español (Latinoamérica) Español (España) Français Italiano 日本語 한국어 Polski Português (Brasil) Русский 繁體中文 简体中文 Platform Connectivity"
+}
