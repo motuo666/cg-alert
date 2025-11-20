@@ -1,0 +1,13 @@
+{
+  "vendor": "salesforce.com",
+  "url": "https://salesforce.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "5ea08c98695f21228ce0586a686720d8033c881ab78a62a064209d8afdcb0061",
+  "new_hash": "0a0dcab31a91c90b450f494d143f8b8aed97c188f71742cd4a814b6ee47336a0",
+  "first_seen_at": "2025-11-20T02:47:19.604Z",
+  "confirmed_at": "2025-11-20T04:44:07.930Z",
+  "status_code": 404,
+  "snippet": "404 - Salesforce.com --> Skip to content &nbsp; Oops, the page you're trying to view isn't here. &nbsp; &nbsp; But you’re still on the path to finding, winning, and keeping customers. See how Salesforce, the #1 AI CRM, can help you blaze a ",
+  "r2_key": "salesforce.com/terms/2025-11-20T04-44-07-930Z.html"
+}

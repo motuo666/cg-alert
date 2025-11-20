@@ -1,0 +1,13 @@
+{
+  "vendor": "figma.com",
+  "url": "https://figma.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "bccd594ccd84a419db1fd2a8cbd3da783c8614c8bad75ef802285789c45b9d31",
+  "new_hash": "040d4f540612ac3a49a94eec61287e71340b5a8e2a2ae73c4c471135d06c7d23",
+  "first_seen_at": "2025-11-20T02:50:01.941Z",
+  "confirmed_at": "2025-11-20T04:46:57.448Z",
+  "status_code": 200,
+  "snippet": "Plans &amp; Pricing | Figma Skip to main content Products Solutions Community Resources Pricing Log in Contact sales Get started Get started for free Figma Design Design and prototype in one place Dev Mode Translate designs into code FigJam",
+  "r2_key": "figma.com/pricing/2025-11-20T04-46-57-448Z.html"
+}

@@ -1,0 +1,13 @@
+{
+  "vendor": "twilio.com",
+  "url": "https://twilio.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "fd64f2500dd03dd9e4dc139820c058d40d81f1d1d7140508e5b955dd82975c9e",
+  "new_hash": "3197cb7b90b8cee93131ff3dc5a6abebdd9d290bc45736b0616f1b5fedee761f",
+  "first_seen_at": "2025-11-20T02:47:42.747Z",
+  "confirmed_at": "2025-11-20T04:44:29.812Z",
+  "status_code": 404,
+  "snippet": "Page not found | Twilio",
+  "r2_key": "twilio.com/legal-terms/2025-11-20T04-44-29-812Z.html"
+}
