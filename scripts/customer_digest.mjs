@@ -2,6 +2,8 @@
 // === injected: events-based digest cursor logic ===
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
 
 function readJSON(p, def=null){ try { return JSON.parse(fs.readFileSync(p,'utf8')); } catch { return def; } }
 function writeJSON(p, obj){ fs.mkdirSync(path.dirname(p), {recursive:true}); fs.writeFileSync(p, JSON.stringify(obj,null,2)); }
@@ -46,7 +48,7 @@ export async function selectDigestItems(mode){
 }
 
 // scripts/customer_digest.js (brand tone + x个证据 summary)
-const fs = require('fs'); const path = require('path');
+// const fs = require('fs'); const path = require('path');
 const { XMLParser } = require('fast-xml-parser');
 const nodemailer = require('nodemailer');
 
@@ -235,6 +237,6 @@ function htmlFor(company, list){
     sent++;
   }
   const mdir='data/metrics'; fs.mkdirSync(mdir,{recursive:true});
-  require('fs').appendFileSync(`${mdir}/events.log`, `${new Date().toISOString()},customer_digest,sent=${sent}\n`);
+  fs.appendFileSync(`${mdir}/events.log`, `${new Date().toISOString()},customer_digest,sent=${sent}\n`);
   console.log('customer digest sent:', sent);
 })();
