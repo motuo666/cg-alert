@@ -59,17 +59,12 @@ async function main() {
     const ts = path.basename(f).replace(/\.json$/,"");
     const outDir = path.join(pub, vendor, key);
     await ensureDir(outDir);
-    const hashLine = item.new_hash
-      ? `<p><strong>Content hash (SHA-256):</strong> <code>${item.new_hash}</code></p>`
-      : "";
-    const statusLine = typeof item.status_code === "number"
-      ? `<p><strong>HTTP status:</strong> ${item.status_code}</p>`
-      : "";
     const body = `<h1>${vendor} · ${item.page}</h1>
 <p><strong>URL:</strong> <a href="${item.url}" rel="noopener">${item.url}</a></p>
 <p><strong>Confirmed at:</strong> ${item.confirmed_at || ""}</p>
-${hashLine}${statusLine}
-<p class="evidence-note">Hashes are computed from the raw response body at capture time. Any tampering would change the hash.</p>
+${item.new_hash ? `<p><strong>Content hash (SHA-256):</strong> <code>${item.new_hash}</code></p>` : ""}
+${item.status_code ? `<p><strong>HTTP status:</strong> ${item.status_code}</p>` : ""}
+<p class="evidence-note">Hashes are computed from the raw HTTP response body at capture time. Any tampering would change the hash.</p>
 <pre>${(item.snippet||"").replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</pre>`;
     await fs.writeFile(path.join(outDir,"index.html"), htmlPage(`${vendor} – ${item.page}`, body), "utf-8");
 
