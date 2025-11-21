@@ -1,0 +1,12 @@
+{
+  "vendor": "monday.com",
+  "url": "https://monday.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "9ec3b3f3d841a79c2cc07933db478f187a0bf4ef1c643ee27244fb102940856d",
+  "new_hash": "e6a839f981c428e75b40ed93de5fd1d7ce152422c5651c4dc3edd9fcba085fd9",
+  "first_seen_at": "2025-11-21T07:48:39.641Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "monday.com Legal Portal Skip to main content Skip to footer Products Products by monday.com Work Management CRM Dev Service Beta Learn more For managing any project, task, and workflow Project management Plan, manage, and collaborate on any"
+}
