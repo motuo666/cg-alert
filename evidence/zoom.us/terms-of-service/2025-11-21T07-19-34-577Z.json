@@ -1,0 +1,13 @@
+{
+  "vendor": "zoom.us",
+  "url": "https://zoom.us/terms-of-service",
+  "page": "/terms-of-service",
+  "key": "terms-of-service",
+  "old_hash": "b8474ceb7009e16a51fb6fd0df62b76249be5478bc9497b3b8958fb6eeddced1",
+  "new_hash": "a496fd3d792fe184e86c308294ba86d40a17fb2fccc1058e3c4fd5d6360d01bc",
+  "first_seen_at": "2025-11-21T06:33:06.023Z",
+  "confirmed_at": "2025-11-21T07:19:34.577Z",
+  "status_code": 404,
+  "snippet": "Page Not Found - Zoom Skip to Main Content Accessibility Overview Search Support 1.888.799.9666 Request a Demo Join Host With Video Off With Video On Screen Share Only Sign In Toggle navigation Join Host Toggle navigation Products Empowerin",
+  "r2_key": "zoom.us/terms-of-service/2025-11-21T07-19-34-577Z.html"
+}

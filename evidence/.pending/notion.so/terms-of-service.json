@@ -4,8 +4,8 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "86ce4fd14b499eebe7534c877b76166425edb0734662486d583f320ff256bbea",
-  "new_hash": "89d7a7cd6523f44c0354fe191562e7b9d4b8429d750c568aa663f6ae73c1663b",
-  "first_seen_at": "2025-11-21T06:33:36.349Z",
+  "new_hash": "599cb7b0c9f3ef0bc789702a6e1c131b58098678ca10bb08e35c0fe8f8ccbc86",
+  "first_seen_at": "2025-11-21T07:20:02.523Z",
   "confirmed_at": null,
   "status_code": 401,
   "snippet": "Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue."
