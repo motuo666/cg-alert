@@ -22,11 +22,190 @@
 </div>
 </header><main>
 <div class="cg-wrap">
-<h1>Vendors</h1>
-<p class="cg-note">This page summarizes vendor coverage. For current, public evidence, browse the <a href="/reports/">Reports</a> and <a href="/evidence/">Evidence</a> sections.</p>
-<ul></ul>
+<h1>Vendors (public sample)</h1>
+<p class="cg-note">This page shows a small public sample of vendors and documents that CG Alert monitors. Paid plans let you track your own vendor list privately with alerts and audit-ready evidence.</p>
+
+<form action="/vendors/" method="get" class="cg-preview-form">
+  <label for="vendor-query" class="cg-note">Search by vendor name:</label>
+  <div class="cg-preview-row">
+    <input id="vendor-query" name="q" type="search" placeholder="Type a SaaS vendor (e.g., Figma, Salesforce)" />
+    <button type="submit" class="cg-btn">Search</button>
+  </div>
+</form>
+
+<table class="vendors-table">
+  <thead>
+    <tr>
+      <th>Vendor</th>
+      <th>Sample public pages</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr data-vendor-row data-vendor="airtable.com" data-path="dpa">
+        <td>airtable.com</td>
+        <td><a href="/evidence/airtable.com/dpa/">/dpa</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="asana.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>asana.com</td>
+        <td><a href="/evidence/asana.com/dpa/">/dpa</a>, <a href="/evidence/asana.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="atlassian.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>atlassian.com</td>
+        <td><a href="/evidence/atlassian.com/dpa/">/dpa</a>, <a href="/evidence/atlassian.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="auth0.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>auth0.com</td>
+        <td><a href="/evidence/auth0.com/dpa/">/dpa</a>, <a href="/evidence/auth0.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="box.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>box.com</td>
+        <td><a href="/evidence/box.com/dpa/">/dpa</a>, <a href="/evidence/box.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="clickup.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>clickup.com</td>
+        <td><a href="/evidence/clickup.com/dpa/">/dpa</a>, <a href="/evidence/clickup.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="cloudflare.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>cloudflare.com</td>
+        <td><a href="/evidence/cloudflare.com/dpa/">/dpa</a>, <a href="/evidence/cloudflare.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="contoso-crm" data-path="">
+        <td>contoso-crm</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr data-vendor-row data-vendor="datadoghq.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>datadoghq.com</td>
+        <td><a href="/evidence/datadoghq.com/dpa/">/dpa</a>, <a href="/evidence/datadoghq.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="dropbox.com" data-path="dpa legal-terms terms-of-service">
+        <td>dropbox.com</td>
+        <td><a href="/evidence/dropbox.com/dpa/">/dpa</a>, <a href="/evidence/dropbox.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="example-saas" data-path="">
+        <td>example-saas</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr data-vendor-row data-vendor="fabrikam-analytics" data-path="">
+        <td>fabrikam-analytics</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr data-vendor-row data-vendor="figma.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>figma.com</td>
+        <td><a href="/evidence/figma.com/dpa/">/dpa</a>, <a href="/evidence/figma.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="freshworks.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>freshworks.com</td>
+        <td><a href="/evidence/freshworks.com/dpa/">/dpa</a>, <a href="/evidence/freshworks.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="freshworks.dev" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>freshworks.dev</td>
+        <td><a href="/evidence/freshworks.dev/dpa/">/dpa</a>, <a href="/evidence/freshworks.dev/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="github.com" data-path="terms">
+        <td>github.com</td>
+        <td><a href="/evidence/github.com/terms/">/terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="gitlab.com" data-path="legal-terms pricing terms-of-service">
+        <td>gitlab.com</td>
+        <td><a href="/evidence/gitlab.com/legal-terms/">/legal-terms</a>, <a href="/evidence/gitlab.com/pricing/">/pricing</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="monday.com" data-path="dpa legal-terms terms terms-of-service">
+        <td>monday.com</td>
+        <td><a href="/evidence/monday.com/dpa/">/dpa</a>, <a href="/evidence/monday.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="newrelic.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>newrelic.com</td>
+        <td><a href="/evidence/newrelic.com/dpa/">/dpa</a>, <a href="/evidence/newrelic.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="notion.so" data-path="dpa legal-terms terms terms-of-service">
+        <td>notion.so</td>
+        <td><a href="/evidence/notion.so/dpa/">/dpa</a>, <a href="/evidence/notion.so/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="okta.com" data-path="dpa pricing terms terms-of-service">
+        <td>okta.com</td>
+        <td><a href="/evidence/okta.com/dpa/">/dpa</a>, <a href="/evidence/okta.com/pricing/">/pricing</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="onelogin.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>onelogin.com</td>
+        <td><a href="/evidence/onelogin.com/dpa/">/dpa</a>, <a href="/evidence/onelogin.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="pagerduty.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>pagerduty.com</td>
+        <td><a href="/evidence/pagerduty.com/dpa/">/dpa</a>, <a href="/evidence/pagerduty.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="salesforce.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>salesforce.com</td>
+        <td><a href="/evidence/salesforce.com/dpa/">/dpa</a>, <a href="/evidence/salesforce.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="sentry.io" data-path="legal-terms pricing terms">
+        <td>sentry.io</td>
+        <td><a href="/evidence/sentry.io/legal-terms/">/legal-terms</a>, <a href="/evidence/sentry.io/pricing/">/pricing</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="slack.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>slack.com</td>
+        <td><a href="/evidence/slack.com/dpa/">/dpa</a>, <a href="/evidence/slack.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="stripe.com" data-path="dpa legal-terms terms-of-service">
+        <td>stripe.com</td>
+        <td><a href="/evidence/stripe.com/dpa/">/dpa</a>, <a href="/evidence/stripe.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="twilio.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>twilio.com</td>
+        <td><a href="/evidence/twilio.com/dpa/">/dpa</a>, <a href="/evidence/twilio.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="unknown" data-path="">
+        <td>unknown</td>
+        <td>&mdash;</td>
+      </tr>
+      <tr data-vendor-row data-vendor="workday.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>workday.com</td>
+        <td><a href="/evidence/workday.com/dpa/">/dpa</a>, <a href="/evidence/workday.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="zendesk.com" data-path="dpa legal-terms pricing terms terms-of-service">
+        <td>zendesk.com</td>
+        <td><a href="/evidence/zendesk.com/dpa/">/dpa</a>, <a href="/evidence/zendesk.com/legal-terms/">/legal-terms</a></td>
+      </tr>
+      <tr data-vendor-row data-vendor="zoom.us" data-path="dpa pricing terms-of-service">
+        <td>zoom.us</td>
+        <td><a href="/evidence/zoom.us/dpa/">/dpa</a>, <a href="/evidence/zoom.us/pricing/">/pricing</a></td>
+      </tr>
+  </tbody>
+</table>
+<p id="vendor-empty" class="cg-note" style="display:none;">No public sample matches that name. Paid plans let you monitor your own vendor list privately.</p>
 </div>
-</main><script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Vendors — CG Alert","url":"/vendors/"}</script>
+</main>
+<script>
+(function() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var q = (params.get('q') || '').trim();
+    var input = document.getElementById('vendor-query');
+    if (input && q) {
+      input.value = q;
+    }
+    if (!q) return;
+    var rows = document.querySelectorAll('[data-vendor-row]');
+    var any = false;
+    var qLower = q.toLowerCase();
+    rows.forEach(function(row) {
+      var text = (row.getAttribute('data-vendor') || '') + ' ' + (row.getAttribute('data-path') || '');
+      if (text.toLowerCase().indexOf(qLower) !== -1) {
+        row.style.display = '';
+        any = true;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+    var empty = document.getElementById('vendor-empty');
+    if (empty) {
+      empty.style.display = any ? 'none' : '';
+    }
+  } catch (e) {
+    console.error('vendor search error', e);
+  }
+})();
+</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Vendors — CG Alert","url":"/vendors/"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Vendors — CG Alert","url":"/vendors/"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Vendors — CG Alert","url":"/vendors/"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"CollectionPage","name":"Vendors — CG Alert","url":"/vendors/"}</script>
