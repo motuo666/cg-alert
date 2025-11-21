@@ -21,7 +21,7 @@
       "name": "Audit",
       "price_usd_year": 2988,
       "price_label": "$2,988 / yr",
-      "tagline": "Up to 25 vendors. Automated audit trails, PDF reports, multi-user access, and 3-year retention.",
+      "tagline": "Up to 25 vendors. Automated audit trails, exportable evidence bundles (ZIP/CSV), multi-user access, and 3-year retention.",
       "contact_redirect": "/pricing/",
       "checkout_redirect": "${STRIPE_LINK_ENTERPRISE}"
     }
