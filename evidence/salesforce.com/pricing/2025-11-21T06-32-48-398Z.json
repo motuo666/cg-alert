@@ -1,0 +1,13 @@
+{
+  "vendor": "salesforce.com",
+  "url": "https://salesforce.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "fd8a1d1f98fecf2321e6eb799198bb3226e2981c6d80c3c4b6b9ae27c82a1215",
+  "new_hash": "78688c7dd9e1a3291e408503ce7f4f8d00c0e3cdfbe6616773cd05e40f3b7e4e",
+  "first_seen_at": "2025-11-21T02:47:36.697Z",
+  "confirmed_at": "2025-11-21T06:32:48.398Z",
+  "status_code": 200,
+  "snippet": "Salesforce Pricing: See Pricing Plans for All Salesforce Products | Salesforce Skip to content Products Back Products Agentforce Back Agentforce Humans with Agents drive customer success together. Explore Agentforce How Agentforce works Why",
+  "r2_key": "salesforce.com/pricing/2025-11-21T06-32-48-398Z.html"
+}

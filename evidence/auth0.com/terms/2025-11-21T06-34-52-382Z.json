@@ -1,0 +1,13 @@
+{
+  "vendor": "auth0.com",
+  "url": "https://auth0.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "a14cd17b01b855266bfa5c819036967465303a255ff61b731d67ab1b047f1448",
+  "new_hash": "5ed85c5cfc10adc4d492d17f29ca98ddd1702853e8f09512feb606d3ed0eba52",
+  "first_seen_at": "2025-11-21T02:49:39.184Z",
+  "confirmed_at": "2025-11-21T06:34:52.382Z",
+  "status_code": 200,
+  "snippet": "Terms of Service | Okta Skip to content The ethical AI gap: From recklessness to responsibility. Register now → +1 (800) 425-1267 Search United States Australia Brazil Canada (EN) France Germany Japan Korea Mexico Netherlands Singapore Spai",
+  "r2_key": "auth0.com/terms/2025-11-21T06-34-52-382Z.html"
+}
