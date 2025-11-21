@@ -1,0 +1,13 @@
+{
+  "vendor": "pagerduty.com",
+  "url": "https://pagerduty.com/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "740fdff254cc817d1d50f46d9c6e066006faf39c4354817a1fea4ea90f5152f1",
+  "new_hash": "0a6a896693fa21f4309020a12ed95b2ac4e9d6553c817d2e84ad963d526c285f",
+  "first_seen_at": "2025-11-20T04:45:39.701Z",
+  "confirmed_at": "2025-11-21T02:49:18.191Z",
+  "status_code": 200,
+  "snippet": "Incident Management Pricing | PagerDuty Meet us at AWS re:Invent. Book 1:1 time with a PagerDuty Expert Learn more Connect, Learn, Innovate. Join us for PagerDuty on Tour. Register now Meet us at AWS re:Invent. Book 1:1 time with a PagerDut",
+  "r2_key": "pagerduty.com/pricing/2025-11-21T02-49-18-191Z.html"
+}

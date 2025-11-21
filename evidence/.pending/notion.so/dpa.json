@@ -4,8 +4,8 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "86ce4fd14b499eebe7534c877b76166425edb0734662486d583f320ff256bbea",
-  "new_hash": "5e0a282f8240b37f1bee04632d3f46e754c411846212c86b4ca5f27fa3ee386e",
-  "first_seen_at": "2025-11-20T04:44:52.738Z",
+  "new_hash": "5514b3d08a016df90a9ca037e58132102cc7ed1b32c74153d92713f4224d4fcf",
+  "first_seen_at": "2025-11-21T02:48:26.576Z",
   "confirmed_at": null,
   "status_code": 401,
   "snippet": "Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue."
