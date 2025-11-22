@@ -4,7 +4,7 @@ let parse;
 try {
   ({ parse } = require('xml2js'));
 } catch (e) {
-  console.log('[sitemaps_full] xml2js not installed; skip');
+  console.log('[sitemaps_full] xml2js not installed; skipping optional sitemap generation.');
   process.exit(0);
 }
 
