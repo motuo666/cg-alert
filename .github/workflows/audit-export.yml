@@ -1,0 +1,49 @@
+name: Audit Export
+
+on:
+  workflow_dispatch:
+    inputs:
+      vendor:
+        description: 'Vendor domain (e.g. okta.com)'
+        required: true
+        type: string
+      from:
+        description: 'From date (YYYY-MM-DD)'
+        required: true
+        type: string
+      to:
+        description: 'To date (YYYY-MM-DD)'
+        required: true
+        type: string
+      request_id:
+        description: 'Request id (optional)'
+        required: false
+        type: string
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build audit manifest
+        env:
+          AUDIT_VENDOR: ${{ github.event.inputs.vendor }}
+          AUDIT_FROM: ${{ github.event.inputs.from }}
+          AUDIT_TO: ${{ github.event.inputs.to }}
+          AUDIT_ID: ${{ github.event.inputs.request_id }}
+        run: node scripts/export_audit_bundle.mjs
+
+      - name: Upload manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-manifest
+          path: data/audit_exports/*.json
