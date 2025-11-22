@@ -1,0 +1,12 @@
+{
+  "vendor": "clickup.com",
+  "url": "https://clickup.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "151ce195a476680036dad6d4655f0af6250843522310e5e7cf0f91c3c4419b6f",
+  "new_hash": "cdb42f73b8f9a1fd07893ebd4f521cd3cfef3c1892ef79f1f1bac09118c917a8",
+  "first_seen_at": "2025-11-22T02:42:30.364Z",
+  "confirmed_at": null,
+  "status_code": 200,
+  "snippet": "ClickUp™ | Terms of Service Brain AI Product Solutions Resources Pricing Enterprise Contact Sales Login Sign Up Terms of Service Privacy Policy Security Policy Cookie Policy Developer terms DPA Subprocessors ClickUp AI Additional Integratio"
+}
