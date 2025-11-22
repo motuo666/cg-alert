@@ -1,6 +1,12 @@
 const fs = require('fs');
 const path = require('path');
-const { parse } = require('xml2js');
+let parse;
+try {
+  ({ parse } = require('xml2js'));
+} catch (e) {
+  console.log('[sitemaps_full] xml2js not installed; skip');
+  process.exit(0);
+}
 
 // 设置文件路径
 const rootPath = path.resolve(__dirname, '../'); // 项目根目录
