@@ -1,0 +1,13 @@
+{
+  "vendor": "atlassian.com",
+  "url": "https://atlassian.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "864c3d59b76ca26f651efd342301894808921e32c99b216d3784e575c64cbe97",
+  "new_hash": "ec05f2ef82132f2a9c91dcddc54833905b88cae67637c26ebf592093725e9573",
+  "first_seen_at": "2025-11-22T02:41:22.215Z",
+  "confirmed_at": "2025-11-23T03:03:33.197Z",
+  "status_code": 404,
+  "snippet": "| Atlassian Close View this page in your language ? All languages Choose your language 中文 Deutsch English Español Français Italiano 한국어 Nederlands 日本語 Português Pусский Polski Get it free Products Featured Developers Product Managers IT pro",
+  "r2_key": "atlassian.com/legal-terms/2025-11-23T03-03-33-197Z.html"
+}

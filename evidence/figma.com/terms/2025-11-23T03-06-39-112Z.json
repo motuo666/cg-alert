@@ -1,0 +1,13 @@
+{
+  "vendor": "figma.com",
+  "url": "https://figma.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "ef9decf0ff7919bf21ba142e6cf85b9a14b573bb686c266bfa2b117817988d6c",
+  "new_hash": "52ef908733ab5c072b0392a84f59f0ea580a5be272f26fec6cedec2faa8e0f21",
+  "first_seen_at": "2025-11-22T02:44:19.281Z",
+  "confirmed_at": "2025-11-23T03:06:39.112Z",
+  "status_code": 404,
+  "snippet": "",
+  "r2_key": "figma.com/terms/2025-11-23T03-06-39-112Z.html"
+}

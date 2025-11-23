@@ -1,0 +1,13 @@
+{
+  "vendor": "stripe.com",
+  "url": "https://stripe.com/legal/terms",
+  "page": "/legal/terms",
+  "key": "legal-terms",
+  "old_hash": "6fbc78eaf05bae9b6f2a81b70be40b29b71c31592afd8e115d18512e1f22447d",
+  "new_hash": "253faa61b1fd389744196b4024297baf14fbb5147da84459b590c39e83c661c1",
+  "first_seen_at": "2025-11-22T02:41:57.462Z",
+  "confirmed_at": "2025-11-23T03:04:10.919Z",
+  "status_code": 404,
+  "snippet": "Chat with Stripe sales Page not found! Stripe logo Products Solutions Developers Resources Pricing Dashboard&nbsp; Sign in&nbsp; Sign in&nbsp; Contact sales&nbsp; Open mobile navigation Stripe logo Back Close mobile navigation Products Solu",
+  "r2_key": "stripe.com/legal-terms/2025-11-23T03-04-10-919Z.html"
+}
