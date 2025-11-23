@@ -10,18 +10,13 @@
     "health": "node scripts/weekly_health_check.js",
     "harvest": "node scripts/poller.mjs && node scripts/build_dashboard.js",
     "intakeSync": "node scripts/intake_sync_kv.js && node scripts/sync_unsub_kv.js",
-    "bounce": "node scripts/poll_inbox.js",
-    "suppress": "node scripts/suppression_apply.js",
-    "enrich": "node scripts/lead_enrich_sync.js",
-    "discoverTargets": "node scripts/discover_targets.js",
     "expandEndpoints": "node scripts/expand_endpoints.js",
-    "pricingSync": "node scripts/pricing_sync.js",
+    "pricingSync": "node scripts/pricing_sync.mjs",
     "legalStamp": "node scripts/legal_stamp.js",
     "pricingSyncReports": "node scripts/pricing_sync_reports.js"
   },
   "dependencies": {
     "fast-xml-parser": "4.4.0",
-    "imapflow": "1.0.199",
     "node-fetch": "3.3.2",
     "nodemailer": "6.10.1",
     "stripe": "16.12.0"
