@@ -34,3 +34,24 @@ https://cg-alert.com/*    https://www.cg-alert.com/:splat   301!
 # Stripe checkout redirects
 /thank-you          /thank-you/                             301
 /checkout-cancelled /checkout-cancelled/                    301
+
+# Legacy and SEO cleanups
+
+# Old .html pages -> current canonical URLs
+/terms.html        /terms/            301
+/privacy.html      /privacy/          301
+/samples.html      /reports/          301
+
+# Garbage / scraped paths
+/cgdg/email-protection   /           301
+
+# Old vendor demo paths
+/vendors/acme/*    /vendors/         301
+/vendors/_seed/*   /vendors/         301
+
+# Old per-vendor monthly reports
+/reports/2025-10/*   /reports/2025-10/   301
+
+# Legacy evidence JSON endpoints on main domain -> evidence subdomain
+/evidence/:vendor/:id   https://evidence.cg-alert.com/:vendor/:id   301
+
