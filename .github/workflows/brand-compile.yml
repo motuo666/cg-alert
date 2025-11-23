@@ -58,7 +58,12 @@ jobs:
       with:
         node-version: '20'
     - name: Build outreach templates from brand.json
-      run: node scripts/build_outreach_from_brand.js
+      run: |
+        if [ ! -f scripts/build_outreach_from_brand.js ]; then
+          echo "scripts/build_outreach_from_brand.js missing; outreach brand compile is disabled."
+          exit 0
+        fi
+        node scripts/build_outreach_from_brand.js
     - name: Commit templates
       run: "git config user.email \"bot@cg-alert.com\"\ngit config user.name  \"cg-alert-bot\"\
         \ngit add config/outreach_active.* config/templates/outreach_*.*\nif git diff\
