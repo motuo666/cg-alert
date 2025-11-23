@@ -102,6 +102,26 @@ async function handleStripe(request, env) {
     return new Response(JSON.stringify({ ok: true, ignored: evt.type }), { status: 200 });
   }
 
+  // Idempotency: ensure each Stripe event is processed at most once.
+  // Uses D1 (env.DB) table `stripe_events` with a UNIQUE primary key on `id`.
+  if (env.DB && evt.id) {
+    try {
+      const res = await env.DB
+        .prepare('INSERT OR IGNORE INTO stripe_events (id, type, created_at) VALUES (?, ?, strftime("%s","now"))')
+        .bind(evt.id, evt.type || null)
+        .run();
+      const changes = res && res.meta && typeof res.meta.changes === 'number' ? res.meta.changes : 0;
+      if (changes === 0) {
+        // Already processed: acknowledge to Stripe but skip downstream dispatch.
+        return new Response(JSON.stringify({ ok: true, duplicate: true, event: evt.id }), { status: 200 });
+      }
+    } catch (err) {
+      // If D1 is temporarily unavailable we prefer to continue processing
+      // rather than risk losing a payment event. Downstream workflows should
+      // still be resilient to duplicate dispatches.
+    }
+  }
+
   const payload = extractClientPayload(evt);
   const dispatchURL = `https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/dispatches`;
 
