@@ -1,0 +1,13 @@
+{
+  "vendor": "slack.com",
+  "url": "https://slack.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "5c7f1a7ef0b0bf773974aaa425613a3c3f7ff94367d8d7124c49dbb1a6baff00",
+  "new_hash": "9df5394d47fe9fab6cb87229df0f2310844c9c087d007584b9b3285f6ef6713b",
+  "first_seen_at": "2025-11-23T03:03:49.184Z",
+  "confirmed_at": "2025-11-24T02:59:47.991Z",
+  "status_code": 200,
+  "snippet": "Main Services Agreement | Legal | Slack Skip to main content Features COLLABORATION Channels Organize teams and work Slack Connect Work with external partners Messaging Chat with your team Huddles Meet with audio and video Clips Record and ",
+  "r2_key": "slack.com/terms/2025-11-24T02-59-47-991Z.html"
+}
