@@ -1,0 +1,13 @@
+{
+  "vendor": "asana.com",
+  "url": "https://asana.com/terms",
+  "page": "/terms",
+  "key": "terms",
+  "old_hash": "172b21947e7bb5ca122a8eb1055f7f3817abbe86262707aba75190d7b4683fee",
+  "new_hash": "90da88d13e661ae3cd7d7839907945012beb78d6bea623a1611baea124e37186",
+  "first_seen_at": "2025-11-24T03:00:30.170Z",
+  "confirmed_at": "2025-11-24T11:08:57.094Z",
+  "status_code": 200,
+  "snippet": "Asana User Terms of Service • Asana Asana Home Product chevron-down icon Solutions chevron-down icon Learning &amp; support chevron-down icon Pricing Choose your preferred language Bahasa Indonesia Deutsch English Español Français Italiano ",
+  "r2_key": "asana.com/terms/2025-11-24T11-08-57-094Z.html"
+}
