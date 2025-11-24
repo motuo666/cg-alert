@@ -62,3 +62,9 @@ coverage/
 !updates/
 !reports/
 !public/
+
+# Poller runtime state (not tracked; reduces git conflicts)
+evidence/.pending/
+evidence/.confirmed/
+evidence/_last_poll.json
+
