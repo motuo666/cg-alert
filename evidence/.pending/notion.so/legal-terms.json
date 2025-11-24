@@ -4,8 +4,8 @@
   "page": "/legal/terms",
   "key": "legal-terms",
   "old_hash": "599cb7b0c9f3ef0bc789702a6e1c131b58098678ca10bb08e35c0fe8f8ccbc86",
-  "new_hash": "a1feec05c9fe589c74a6f0782c3205911c50e8a1c8add910d8b232f7d4e82ee2",
-  "first_seen_at": "2025-11-24T11:10:34.421Z",
+  "new_hash": "6f74ff7dfc486c51f13ea49299c238e8ca27c40c9da93ebfb199e800c5497de0",
+  "first_seen_at": "2025-11-24T13:56:20.420Z",
   "confirmed_at": null,
   "status_code": 404,
   "snippet": "Notion JavaScript must be enabled in order to use Notion. Please enable JavaScript to continue."
