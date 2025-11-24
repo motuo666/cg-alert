@@ -1,0 +1,14 @@
+{
+  "vendor": "sentry.io",
+  "url": "https://sentry.io/pricing",
+  "page": "/pricing",
+  "key": "pricing",
+  "old_hash": "de1f518bec80be55dfea001264d9378094531e622181811f34db3e9f4901bd3b",
+  "new_hash": "ffea14a86b5075db8c36d4ea75f974fd2d4342afe18f41244f06a136bc1ea256",
+  "first_seen_at": "2025-11-24T13:56:55.493Z",
+  "confirmed_at": "2025-11-24T16:09:30.099Z",
+  "status_code": 200,
+  "snippet": "Plans and Pricing | Sentry This app works best with JavaScript enabled. Menu Platform Products Products Error Monitoring Logs NEW Session Replay Tracing Seer NEW Uptime Monitoring Profiling Cron Monitoring AI Code Review NEW Integrations In",
+  "r2_key": "sentry.io/pricing/2025-11-24T16-09-30-099Z.html",
+  "r2_url": "https://www.cg-alert.com/evidence/sentry.io%2Fpricing%2F2025-11-24T16-09-30-099Z.html"
+}
