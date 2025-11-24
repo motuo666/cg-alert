@@ -44,6 +44,13 @@ jobs:
           node-version: '20'
       - name: Install deps
         run: npm ci || true
+      - name: Debug R2_EVIDENCE_API_KEY length
+        run: |
+          if [ -z "${R2_EVIDENCE_API_KEY}" ]; then
+            echo "R2_EVIDENCE_API_KEY is EMPTY"
+            exit 1
+          fi
+          echo "R2_EVIDENCE_API_KEY length: ${#R2_EVIDENCE_API_KEY}"
       - name: Poll vendors (two-stage confirmation)
         run: node scripts/poller.mjs
       - name: Build sitemap
