@@ -61,17 +61,17 @@ async function main() {
   let html = orig;
   let changed = false;
 
-  // 1) Portfolio 方案：同步 STRIPE_LINK_PORTFOLIO
+  // 1) Pro（Portfolio）方案：同步 STRIPE_LINK_PORTFOLIO
   if (STRIPE_LINK_PORTFOLIO) {
     const next =
       updateHrefById(html, 'btn-portfolio', STRIPE_LINK_PORTFOLIO) ||
-      updateHrefByPlanGuess(html, 'Portfolio', STRIPE_LINK_PORTFOLIO);
+      updateHrefByPlanGuess(html, 'Pro', STRIPE_LINK_PORTFOLIO);
 
     if (next) {
       html = next;
       changed = true;
     } else {
-      console.warn('WARN: Could not locate Portfolio CTA to update.');
+      console.warn('WARN: Could not locate Pro/Portfolio CTA to update.');
     }
   } else {
     console.warn('WARN: STRIPE_LINK_PORTFOLIO is empty.');
