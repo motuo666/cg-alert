@@ -33,18 +33,35 @@ function cardHTML(it){
 }
 
 function pageHTML(items){
-  const cards = items.slice(0, N).map(cardHTML).join('\n');
+  const cards = items.slice(0, N).map(cardHTML).join('
+');
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Latest Evidence — CG Alert</title>
+<title>Latest evidence — CG Alert</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="stylesheet" href="/assets/cg-theme.css" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<link rel="canonical" href="https://www.cg-alert.com/reports/latest.html" />
+<link rel="stylesheet" href="/assets/home-v3c.css" />
+<meta name="description" content="Browse the latest vendor change evidence captured by CG Alert." />
 </head>
 <body>
-<main class="container">
-  <h1>Latest Evidence</h1>
+<header class="cg-topbar">
+  <div class="cg-wrap cg-nav">
+    <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert" width="40" height="40" /><span>CG&nbsp;Alert</span></a>
+    <nav class="cg-links" id="topnav">
+      <a href="/#pricing">Pricing</a>
+      <a href="/#how">How it works</a>
+      <a href="/#evidence">Evidence</a>
+      <a href="/#compare">Compare</a>
+      <a href="/#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+<main class="cg-wrap">
+  <h1>Latest evidence</h1>
+  <p class="cg-note">A snapshot of recently captured vendor change evidence. For full search and filters, see the main <a href="/reports/">reports page</a>.</p>
   <section class="cards-grid">
     ${cards || '<p>No recent evidence.</p>'}
   </section>
@@ -59,6 +76,7 @@ function pageHTML(items){
 </body>
 </html>`;
 }
+
 
 function main(){
   const items = loadIndexJson();
