@@ -6,7 +6,6 @@ import process from 'process';
 const SITE_ROOT = process.cwd();
 const INDEX_HTML = path.join(SITE_ROOT, 'index.html');
 
-const STRIPE_LINK_PORTFOLIO = process.env.STRIPE_LINK_PORTFOLIO || '';
 const STRIPE_LINK_BUSINESS  = process.env.STRIPE_LINK_BUSINESS  || '';
 
 /**
@@ -43,22 +42,7 @@ async function main() {
 
   let changed = false;
 
-  // Pro (portfolio) tier
-  if (STRIPE_LINK_PORTFOLIO) {
-    let next =
-      updateHrefById(html, 'btn-portfolio', STRIPE_LINK_PORTFOLIO) ||
-      updatePlanCardHref(html, 'Pro', STRIPE_LINK_PORTFOLIO);
-
-    if (next) {
-      html = next;
-      changed = true;
-    } else {
-      console.warn('WARN: Could not locate Pro/Portfolio CTA to update.');
-    }
-  } else {
-    console.warn('WARN: STRIPE_LINK_PORTFOLIO is empty.');
-  }
-
+  // Pro (portfolio) tier removed: Portfolio CTA is no longer updated by script.
   // Business tier
   if (STRIPE_LINK_BUSINESS) {
     let next =

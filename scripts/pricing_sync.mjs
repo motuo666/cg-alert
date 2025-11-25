@@ -6,7 +6,6 @@ import process from 'process';
 const SITE_ROOT = process.cwd();
 const INDEX_HTML = path.join(SITE_ROOT, 'index.html');
 
-const STRIPE_LINK_PORTFOLIO = process.env.STRIPE_LINK_PORTFOLIO || '';
 const STRIPE_LINK_BUSINESS  = process.env.STRIPE_LINK_BUSINESS  || '';
 
 function updateHrefById(html, id, href) {
@@ -61,22 +60,7 @@ async function main() {
   let html = orig;
   let changed = false;
 
-  // 1) Pro（Portfolio）方案：同步 STRIPE_LINK_PORTFOLIO
-  if (STRIPE_LINK_PORTFOLIO) {
-    const next =
-      updateHrefById(html, 'btn-portfolio', STRIPE_LINK_PORTFOLIO) ||
-      updateHrefByPlanGuess(html, 'Pro', STRIPE_LINK_PORTFOLIO);
-
-    if (next) {
-      html = next;
-      changed = true;
-    } else {
-      console.warn('WARN: Could not locate Pro/Portfolio CTA to update.');
-    }
-  } else {
-    console.warn('WARN: STRIPE_LINK_PORTFOLIO is empty.');
-  }
-
+  // Pro（Portfolio）CTA 已下线：保持静态 HTML，不再在脚本里动态替换链接。
   // 2) Business 方案：同步 STRIPE_LINK_BUSINESS
   if (STRIPE_LINK_BUSINESS) {
     const next =
