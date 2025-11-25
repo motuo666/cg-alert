@@ -1,9 +1,0 @@
-name: Customer Digest (daily via Cloudflare)
-on:
-  workflow_dispatch:
-jobs:
-  noop:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Digest moved to Cloudflare
-        run: echo "Customer digest is handled by the cg-alert-digest Cloudflare Worker; this GitHub workflow is a no-op."
