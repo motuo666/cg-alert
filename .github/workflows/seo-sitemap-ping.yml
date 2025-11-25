@@ -23,12 +23,10 @@ jobs:
       run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
         \  \"cg-alert-bot\"\ngit add \"$PUBLISH_DIR/sitemap.xml\"\nif git diff --cached\
         \ --quiet; then\n  echo \"no changes\"\nelse\n  git commit -m \"seo: update\
-        \ sitemap\"\n  git pull --rebase --autostash || true\n  git push\nfi\n"
     - name: Ensure IndexNow key file
       run: "set -e\nmkdir -p \"$PUBLISH_DIR\"\nKEYFILE=\"$PUBLISH_DIR/indexnow-${INDEXNOW_KEY}.txt\"\
         \nif [ ! -f \"$KEYFILE\" ]; then\n  echo \"${INDEXNOW_KEY}\" > \"$KEYFILE\"\
         \n  git add \"$KEYFILE\" && git commit -m \"seo: add indexnow key\" || true\n\
-        \  git pull --rebase --autostash || true\n  git push || true\nfi\n"
     - name: Install deps
       run: npm ci
     - name: Ping IndexNow

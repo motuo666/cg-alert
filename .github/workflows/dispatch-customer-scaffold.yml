@@ -27,7 +27,6 @@ jobs:
       run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
         \  \"cg-alert-bot\"\ngit add -A\nif git diff --cached --quiet; then\n  echo\
         \ \"no changes\"\nelse\n  git commit -m \"Customer scaffold (auto)\"\n  git\
-        \ pull --rebase --autostash || true\n  git push\nfi\n"
 concurrency:
   group: cg-full-pipeline
   cancel-in-progress: false

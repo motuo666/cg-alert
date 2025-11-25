@@ -76,4 +76,3 @@ jobs:
         \  \"cg-alert-bot\"\ngit add data/intakes.csv data/customers.csv data/unsubscribes.csv\
         \ || true\nif git diff --cached --quiet; then\n  echo \"no intake changes\"\
         \nelse\n  git commit -m \"intake-sync: synced KV intake/unsubs\"\n  git pull\
-        \ --rebase --autostash || true\n  git push\nfi\n"

@@ -41,7 +41,6 @@ jobs:
         \ \"$PUBLISH_DIR/sitemap.xml\" \"$PUBLISH_DIR/reports\" || true\nif git diff\
         \ --cached --quiet; then\n  echo \"no content changes\"\nelse\n  git commit\
         \ -m \"content: evidence+vendors+pricing+jsonld+compare+cases+rss+sitemap\"\
-        \n  git pull --rebase --autostash || true\n  git push\nfi\n"
 concurrency:
   group: cg-full-pipeline
   cancel-in-progress: false

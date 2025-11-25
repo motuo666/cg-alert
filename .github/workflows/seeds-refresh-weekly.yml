@@ -66,7 +66,6 @@ jobs:
       run: "git config user.email \"bot@cg-alert.com\"\ngit config user.name  \"cg-alert-bot\"\
         \ngit add data/seed_domains.txt\nif git diff --cached --quiet; then\n  echo\
         \ \"no changes\"\nelse\n  git commit -m \"seeds: refresh from RSS\"\n  git\
-        \ pull --rebase --autostash || true\n  git push\nfi\n"
     - name: Install deps
       run: npm ci
 concurrency:

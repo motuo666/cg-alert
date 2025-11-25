@@ -72,7 +72,6 @@ jobs:
       run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
         \  \"cg-alert-bot\"\ngit add -A reports rss\nif git diff --cached --quiet;\
         \ then\n  echo \"no changes to commit\"\nelse\n  git commit -m \"Reports build:\
-        \ cards/index.json/rss\"\n  git pull --rebase --autostash || true\n  git push\n\
         fi\n"
   digest:
     needs: vendors_build

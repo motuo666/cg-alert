@@ -59,7 +59,6 @@ jobs:
         git add index.html
 
         if git diff --cached --quiet; then echo "no changes"; else git commit -m "site:
-        pricing UI cleanup (drop compliance, rewrite CTA)"; git pull --rebase --autostash
         || true; git push; fi
 
         fi

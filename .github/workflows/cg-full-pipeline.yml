@@ -98,7 +98,6 @@ jobs:
             echo "no changes to commit"
           else
             git commit -m "Reports build (full pipeline)" || echo "WARN: commit failed (maybe no staged changes)."
-            git pull --rebase --autostash || echo "WARN: git pull --rebase failed (likely race)."
             git push || echo "WARN: git push failed (non-fast-forward); will retry on next run."
           fi
 
@@ -134,7 +133,6 @@ jobs:
           fi
 
           git commit -m "chore: auto-update rss/sitemap/reports index (full pipeline)" || echo "WARN: commit failed (likely no staged changes)."
-          git pull --rebase --autostash || echo "WARN: git pull --rebase failed (likely race); continuing."
           git push || echo "WARN: git push failed (non-fast-forward). Another job updated main; will retry on next run."
 
   latest_board:
@@ -160,7 +158,6 @@ jobs:
             echo "no latest board changes"
           else
             git commit -m "chore: add reports/latest.html" || echo "WARN: commit failed (maybe no staged changes)."
-            git pull --rebase --autostash || echo "WARN: git pull --rebase failed (likely race)."
             git push || echo "WARN: git push failed (non-fast-forward); will retry on next run."
           fi
 
