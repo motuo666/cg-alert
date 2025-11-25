@@ -15,6 +15,5 @@ if git diff --cached --quiet; then
   echo "no changes to commit"
 else
   git commit -m "${1:-automated commit}"
-  git pull --rebase --autostash || true
   git push || true
 fi

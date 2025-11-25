@@ -26,6 +26,5 @@ if git diff --cached --quiet; then
   echo "No changes to commit (already up-to-date)."
 else
   git commit -m "Overlay 1196 v3: root redirects+rss; vendors index; outreach limit hardening; pricing CTA tri-tier"
-  git pull --rebase --autostash || true
   git push || true
 fi
