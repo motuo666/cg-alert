@@ -39,3 +39,7 @@ jobs:
           git add data/seed_domains.txt
           git commit -m "chore: sync vendor requests into seeds"
           git push
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false
+
