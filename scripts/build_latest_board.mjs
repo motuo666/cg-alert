@@ -33,8 +33,8 @@ function cardHTML(it){
 }
 
 function pageHTML(items){
-  const cards = items.slice(0, N).map(cardHTML).join('
-');
+  const cards = items.slice(0, N).map(cardHTML).join(String.fromCharCode(10));
+
   return `<!doctype html>
 <html lang="en">
 <head>
