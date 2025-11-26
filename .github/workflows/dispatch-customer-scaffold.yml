@@ -1,32 +1,20 @@
 name: On Stripe Paid → Customer Scaffold
+
 on:
   repository_dispatch:
-    types:
-    - stripe_paid
-  workflow_dispatch: null
+    types: [stripe_paid]
+  workflow_dispatch:
+
 permissions:
-  contents: write
+  contents: read
+
 jobs:
-  scaffold:
+  noop:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - name: Install deps (if package.json exists)
-      run: "if [ -f package.json ]; then\n  npm ci || npm i\nfi\n"
-    - name: Customer scaffold
-      env:
-        SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: 'node ./scripts/customer_scaffold.js || true
+      - name: Customer scaffold retired
+        run: echo "Customer scaffold is handled outside this repo; this workflow is now a no-op."
 
-        '
-    - name: Commit changes
-      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \  \"cg-alert-bot\"\ngit add -A\nif git diff --cached --quiet; then\n  echo\
-        \ \"no changes\"\nelse\n  git commit -m \"Customer scaffold (auto)\"\n  git\
 concurrency:
   group: cg-full-pipeline
   cancel-in-progress: false

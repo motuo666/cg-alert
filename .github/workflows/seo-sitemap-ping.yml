@@ -1,43 +1,20 @@
 name: SEO Sitemap & IndexNow
+
 on:
   schedule:
-  - cron: 20 3 * * *
-  workflow_dispatch: null
+    - cron: '20 3 * * *'
+  workflow_dispatch:
+
 permissions:
-  contents: write
+  contents: read
+
 jobs:
-  seo:
+  noop:
     runs-on: ubuntu-latest
-    env:
-      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
-      INDEXNOW_KEY: ${{ vars.INDEXNOW_KEY }}
-      PUBLISH_DIR: ${{ vars.PUBLISH_DIR || '.' }}
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - name: Build sitemap
-      run: node scripts/build_sitemap.mjs
-    - name: Commit sitemap
-      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \  \"cg-alert-bot\"\ngit add \"$PUBLISH_DIR/sitemap.xml\"\nif git diff --cached\
-        \ --quiet; then\n  echo \"no changes\"\nelse\n  git commit -m \"seo: update\
-    - name: Ensure IndexNow key file
-      run: "set -e\nmkdir -p \"$PUBLISH_DIR\"\nKEYFILE=\"$PUBLISH_DIR/indexnow-${INDEXNOW_KEY}.txt\"\
-        \nif [ ! -f \"$KEYFILE\" ]; then\n  echo \"${INDEXNOW_KEY}\" > \"$KEYFILE\"\
-        \n  git add \"$KEYFILE\" && git commit -m \"seo: add indexnow key\" || true\n\
-    - name: Install deps
-      run: npm ci
-    - name: Ping IndexNow
-      run: 'set -e
+      - name: SEO sitemap ping retired
+        run: echo "SEO sitemap and IndexNow ping are handled by CG Full Pipeline; this workflow is now a no-op."
 
-        URL="${SITE_ORIGIN}/sitemap.xml"
-
-        curl -sS "https://api.indexnow.org/IndexNow?url=${URL}&key=${INDEXNOW_KEY}"
-        || true
-
-        '
 concurrency:
   group: cg-full-pipeline
   cancel-in-progress: false
