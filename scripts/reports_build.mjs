@@ -114,6 +114,24 @@ async function writeCards(items) {
   }
 }
 
+function applyPublicWindow(items) {
+  const now = Date.now();
+  const cutoff = now - 14 * 24 * 60 * 60 * 1000; // 14 days in ms
+  return items.filter(it => {
+    try {
+      // Drop internal heartbeat / non-evidence records
+      if ((it.vendor || '').toLowerCase() === '_last_poll') return false;
+      const d = it.capturedAt || it.observed_at || it.date;
+      if (!d) return false;
+      const t = Date.parse(d);
+      if (Number.isNaN(t)) return false;
+      return t <= cutoff;
+    } catch {
+      return false;
+    }
+  });
+}
+
 async function writeFeed(items) {
   await ensureDir(REPORTS_DIR);
   const data = {
@@ -156,9 +174,10 @@ ${itemsXML}
 async function main() {
   const items = await readEvidence();
   await writeCards(items);
-  await writeFeed(items);
-  await writeRSS(items);
-  console.log(`reports build complete: ${items.length} items`);
+  const publicItems = applyPublicWindow(items);
+  await writeFeed(publicItems);
+  await writeRSS(publicItems);
+  console.log(`reports build complete: ${items.length} items total, ${publicItems.length} public (>=14d)`);
 }
 main().catch(e => {
   console.error(e);
