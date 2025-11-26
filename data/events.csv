@@ -1,2 +1,2 @@
-date,vendor,url,change,impact,tier
-2025-11-12,okta,https://www.okta.com/pricing,Updated pricing tiers,Potential uplift risk,pro
+captured_at,tier,title,url,vendor,date,change,severity,impact,id,fingerprint
+2025-11-12,pro,Updated pricing tiers,https://www.okta.com/pricing,okta,2025-11-12,Updated pricing tiers,medium,Potential uplift risk,Updated-pricing-tiers-20251112,412406a6f2337533361a19f711625832f9b078605d6976f65df049876514fe74
