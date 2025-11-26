@@ -17,12 +17,12 @@ jobs:
       with:
         python-version: 3.x
     - name: Install pre-commit
-      run: 'pip install pre-commit
-
+      if: hashFiles('.pre-commit-config.yaml') != ''
+      run: |
+        pip install pre-commit
         pre-commit install-hooks
-
-        '
     - name: Run pre-commit
+      if: hashFiles('.pre-commit-config.yaml') != ''
       run: pre-commit run --all-files
   python:
     runs-on: ubuntu-latest
