@@ -1,0 +1,211 @@
+name: CG Full Pipeline
+
+on:
+  schedule:
+    - cron: '15 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      is_monday: ${{ steps.dow.outputs.is_monday }}
+    steps:
+      - name: Compute day-of-week
+        id: dow
+        run: |
+          DOW=$(date -u +%u)   # 1..7 (Mon..Sun)
+          if [ "$DOW" = "1" ]; then
+            echo "is_monday=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_monday=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  poller:
+    runs-on: ubuntu-latest
+    needs: prepare
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      R2_EVIDENCE_WRITE_URL: ${{ vars.R2_EVIDENCE_WRITE_URL || '' }}
+      R2_EVIDENCE_API_KEY: ${{ secrets.R2_EVIDENCE_API_KEY || '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: npm ci || true
+      - name: Poll vendors (two-stage confirmation)
+        run: node scripts/poller.mjs
+      - name: Build sitemap
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: node scripts/build_sitemap.mjs
+      - name: Commit poller content
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+
+          git add -A evidence reports rss/index.xml sitemap.xml || true
+
+          if git diff --cached --quiet; then
+            echo "no content changes"
+          else
+            if git commit -m "poller: evidence+pages+rss+sitemap (full pipeline)"; then
+              git push origin HEAD:main
+            else
+              echo "WARN: commit failed (maybe no staged changes)."
+            fi
+          fi
+
+  vendors_build:
+    runs-on: ubuntu-24.04
+    needs: poller
+    env:
+      NODE_OPTIONS: --max-old-space-size=2048
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: npm ci || npm install
+      - name: Build vendors + reports + RSS
+        run: |
+          node scripts/vendors_build.mjs
+          node scripts/reports_build.mjs
+          node scripts/build_reports_rss.js
+      - name: Commit & push reports
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+
+          git add -A reports rss || true
+
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+          else
+            git commit -m "Reports build (full pipeline)" || echo "WARN: commit failed (maybe no staged changes)."
+            git push || echo "WARN: git push failed (non-fast-forward); will retry on next run."
+          fi
+
+  feeds_and_sitemap:
+    runs-on: ubuntu-24.04
+    needs: vendors_build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: pip install pyyaml
+      - name: Generate feeds & pages
+        env:
+          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
+        run: |
+          python scripts/gen_feeds.py
+      - name: Build sitemap
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: node scripts/build_sitemap.mjs
+      - name: Commit feeds/sitemap
+        run: |
+          git config user.name "cg-alert-bot"
+          git config user.email "bot@cg-alert.com"
+
+          git add rss/index.xml sitemap.xml reports/index.html || true
+
+          if git diff --cached --quiet; then
+            echo "No RSS/sitemap changes; skipping commit & push."
+            exit 0
+          fi
+
+          git commit -m "chore: auto-update rss/sitemap/reports index (full pipeline)" || echo "WARN: commit failed (likely no staged changes)."
+          git push || echo "WARN: git push failed (non-fast-forward). Another job updated main; will retry on next run."
+
+  latest_board:
+    runs-on: ubuntu-24.04
+    needs: feeds_and_sitemap
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build latest board
+        env:
+          LATEST_N: 12
+        run: node scripts/build_latest_board.mjs
+      - name: Commit latest board
+        run: |
+          git config user.name "cg-alert-bot"
+          git config user.email "bot@cg-alert.com"
+
+          git add reports/latest.html || true
+
+          if git diff --cached --quiet; then
+            echo "no latest board changes"
+          else
+            git commit -m "chore: add reports/latest.html" || echo "WARN: commit failed (maybe no staged changes)."
+            git push || echo "WARN: git push failed (non-fast-forward); will retry on next run."
+          fi
+
+  pricing_sync:
+    runs-on: ubuntu-latest
+    needs: vendors_build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Sync pricing
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+          STRIPE_LINK_PORTFOLIO: ${{ secrets.STRIPE_LINK_PORTFOLIO || vars.STRIPE_LINK_PORTFOLIO }}
+          STRIPE_LINK_BUSINESS:  ${{ secrets.STRIPE_LINK_BUSINESS  || vars.STRIPE_LINK_BUSINESS  }}
+        run: node scripts/pricing_sync.mjs
+
+  daily_digest:
+    runs-on: ubuntu-24.04
+    needs:
+      - vendors_build
+      - feeds_and_sitemap
+      - pricing_sync
+    steps:
+      - name: Digest moved to Cloudflare
+        run: echo "Customer digest is handled by the cg-alert-digest Cloudflare Worker; this CG Full Pipeline job is now a no-op."
+
+  weekly_digest:
+    runs-on: ubuntu-24.04
+    needs:
+      - vendors_build
+      - feeds_and_sitemap
+    if: ${{ needs.prepare.outputs.is_monday == 'true' }}
+    steps:
+      - name: Digest moved to Cloudflare
+        run: echo "Weekly digest is handled by the cg-alert-digest Cloudflare Worker; this CG Full Pipeline job is now a no-op."
+
+  seo_ping:
+    runs-on: ubuntu-latest
+    needs: feeds_and_sitemap
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Ping IndexNow
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY || vars.INDEXNOW_KEY }}
+        run: node scripts/seo/ping_indexnow.js
