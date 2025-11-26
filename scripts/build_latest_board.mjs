@@ -7,16 +7,23 @@ const REPORTS_DIR = path.join(ROOT, 'reports');
 const OUT_DIR = REPORTS_DIR;
 const N = Number(process.env.LATEST_N || '12');
 
-function loadIndexJson(){
-  const idx1 = path.join(REPORTS_DIR, 'index.json');
-  if (fs.existsSync(idx1)) {
+function loadItems(){
+  const feedPath = path.join(REPORTS_DIR, 'feed.json');
+  if (fs.existsSync(feedPath)) {
     try {
-      const data = JSON.parse(fs.readFileSync(idx1, 'utf-8'));
-      if (Array.isArray(data.items)) return data.items;
+      const data = JSON.parse(fs.readFileSync(feedPath, 'utf-8'));
       if (Array.isArray(data)) return data;
+      if (Array.isArray(data.items)) return data.items;
     } catch {}
   }
-  // fallback: scan a flat evidence dir if present
+  const idxPath = path.join(REPORTS_DIR, 'index.json');
+  if (fs.existsSync(idxPath)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(idxPath, 'utf-8'));
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.items)) return data.items;
+    } catch {}
+  }
   return [];
 }
 
@@ -79,7 +86,7 @@ function pageHTML(items){
 
 
 function main(){
-  const items = loadIndexJson();
+  const items = loadItems();
   const html = pageHTML(items);
   const out = path.join(OUT_DIR, 'latest.html');
   fs.writeFileSync(out, html);
