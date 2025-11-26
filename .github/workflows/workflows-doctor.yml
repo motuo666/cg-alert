@@ -23,8 +23,7 @@ env:
   CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
   KV_NAMESPACE_ID: ${{ vars.KV_NAMESPACE_ID || secrets.KV_NAMESPACE_ID }}
   KV_LEADS_ID: ${{ vars.KV_LEADS_ID || secrets.KV_LEADS_ID }}
-  STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO
-    }}
+  STRIPE_LINK_PORTFOLIO: ${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO }}
   STRIPE_LINK_BUSINESS: ${{ vars.STRIPE_LINK_BUSINESS  || secrets.STRIPE_LINK_BUSINESS  }}
   STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
   INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
@@ -64,6 +63,16 @@ jobs:
     - name: Check workflows
       run: node scripts/workflows_doctor.js
     - name: Commit & push workflows_report.txt
-      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \  \"cg-alert-bot\"\ngit add artifacts/workflows_report.txt || true\nif git\
-        \ diff --cached --quiet; then\n  echo \"no workflows doctor changes\"\nelse\n\
+      run: |
+        set -e
+        git config user.email "bot@cg-alert.com"
+        git config user.name  "cg-alert-bot"
+
+        git add artifacts/workflows_report.txt || true
+
+        if git diff --cached --quiet; then
+          echo "no workflows doctor changes"
+        else
+          git commit -m "chore: update workflows_report.txt" || echo "WARN: commit failed (maybe no staged changes)."
+          git push || echo "WARN: git push failed (non-fast-forward); will retry on next run."
+        fi
