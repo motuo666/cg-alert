@@ -77,7 +77,7 @@ async function main() {
     console.warn('WARN: STRIPE_LINK_BUSINESS is empty.');
   }
 
-  // Enterprise（18k）保留静态 HTML 指向 intake，不在脚本里动它。
+  // Enterprise / Audit 档位保留静态 HTML（指向 intake 或定制 CTA），这里不做自动改写，避免误配额度和权益。
 
   if (changed) {
     await writeFile(INDEX_HTML, html, 'utf-8');
