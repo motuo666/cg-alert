@@ -57,54 +57,7 @@ function slugify(s) {
 
 async function readVendors() {
   const set = new Set();
-
-  // 1) Optional: fetch live customer vendor domains from an external API
-  // This lets us keep customer/vendor configuration outside the repo (e.g. in a Worker + D1),
-  // while still supporting the original CSV + seed_domains.txt flow as a fallback.
-  const apiUrl = process.env.CUSTOMER_VENDORS_URL;
-  if (apiUrl) {
-    try {
-      const url = new URL(apiUrl);
-      console.log("[poller] fetching customer vendors from", url.origin + url.pathname);
-      const headers = { "accept": "application/json" };
-      const ctrl = new AbortController();
-      const timeout = setTimeout(() => ctrl.abort(), 15000);
-      const res = await fetch(url.toString(), { headers, signal: ctrl.signal });
-      clearTimeout(timeout);
-      if (!res.ok) {
-        console.warn("[poller] CUSTOMER_VENDORS_URL responded with", res.status);
-      } else {
-        const data = await res.json();
-        // Two accepted shapes:
-        // { vendors: ["openai.com","notion.so", ...] }
-        // or { customers: [{ vendors: ["a.com","b.com"] }, ...] }
-        const addDomain = (dom) => {
-          if (!dom) return;
-          const d = String(dom).trim().toLowerCase();
-          if (d && /^[a-z0-9.-]+\.[a-z]{2,}$/.test(d)) set.add(d);
-        };
-        if (Array.isArray(data.vendors)) {
-          for (const dom of data.vendors) addDomain(dom);
-        }
-        if (Array.isArray(data.customers)) {
-          for (const c of data.customers) {
-            const vs = c && c.vendors;
-            if (Array.isArray(vs)) {
-              for (const dom of vs) addDomain(dom);
-            } else if (typeof vs === "string") {
-              for (const dom of vs.split(/[,;]/)) addDomain(dom);
-            }
-          }
-        }
-        console.log("[poller] CUSTOMER_VENDORS_URL added", set.size, "domains so far");
-      }
-    } catch (err) {
-      console.warn("[poller] CUSTOMER_VENDORS_URL fetch failed:", err && err.message || err);
-    }
-  }
-
-  // 2) Original CSV + seed_domains.txt sources (kept for compatibility)
-  // customers.csv (root) format: email,company,plan,cadence,vendors (comma/semicolon domains)
+  // customers.csv (root) format: email,company,plan,cadence,vendors (comma domains)
   const customersPath = path.join("customers.csv");
   const seedPath = path.join("data","seed_domains.txt");
   for (const p of [customersPath, seedPath]) {
@@ -130,7 +83,6 @@ async function readVendors() {
     }
   }
   return Array.from(set).slice(0, CONFIG.vendor_limit_per_poll);
-}
 }
 
 async function fetchPage(url) {
