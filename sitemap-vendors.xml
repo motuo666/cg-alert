@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://www.cg-alert.com/vendors/acme/</loc></url>
   <url><loc>https://www.cg-alert.com/vendors/_seed/</loc></url>
+  <url><loc>https://www.cg-alert.com/vendors/acme/</loc></url>
+  <url><loc>https://www.cg-alert.com/vendors/contoso-crm/</loc></url>
+  <url><loc>https://www.cg-alert.com/vendors/example-saas/</loc></url>
+  <url><loc>https://www.cg-alert.com/vendors/fabrikam-analytics/</loc></url>
+  <url><loc>https://www.cg-alert.com/vendors/unknown/</loc></url>
 </urlset>
