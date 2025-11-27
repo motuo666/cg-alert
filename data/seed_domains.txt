@@ -29,3 +29,9 @@ twilio.com
 workday.com
 zendesk.com
 zoom.us
+openai.com
+anthropic.com
+perplexity.ai
+midjourney.com
+huggingface.co
+scale.com
