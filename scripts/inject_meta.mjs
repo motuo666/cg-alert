@@ -45,6 +45,18 @@ function injectMeta(html, title='CG Alert — Evidence-backed vendor change aler
 }
 
 async function main() {
+  let stat;
+  try {
+    stat = await fs.stat(pubRoot);
+  } catch {
+    console.log(JSON.stringify({ scanned: 0, changed: 0, skipped: 'no-public-dir' }));
+    return;
+  }
+  if (!stat.isDirectory()) {
+    console.log(JSON.stringify({ scanned: 0, changed: 0, skipped: 'non-directory-public' }));
+    return;
+  }
+
   let changed = 0, scanned = 0;
   const files = await walk(pubRoot);
   for (const f of files) {
@@ -52,11 +64,12 @@ async function main() {
     scanned++;
     let html; try { html = await fs.readFile(f, 'utf8'); } catch { continue; }
     if (!html.includes('</head>')) continue;
-    const rel = '/' + f.replace(pubRoot + '/', '').replace(/\\/g, '/');
+    const rel = '/' + f.replace(pubRoot + '/', '').replace(/\/g, '/');
     const next = injectMeta(html, undefined, undefined, rel, '/og.png');
     if (next !== html) { await fs.writeFile(f, next, 'utf8'); changed++; }
   }
   console.log(JSON.stringify({ scanned, changed }));
 }
+
 
 main().catch(e => { console.error(e); process.exit(1); });

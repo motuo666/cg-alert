@@ -91,7 +91,7 @@ def write_json(p, rows):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--root", required=True)
+    ap.add_argument("--root", default=".")
     args = ap.parse_args()
     root = pathlib.Path(args.root)
 
