@@ -34,13 +34,23 @@
 <section class="cg-wrap">
 <h1>Reports</h1>
 <p class="cg-note">This is the <strong>public</strong>, free evaluation catalog: a <strong>small subset of sample vendors</strong>, with changes published at least <strong>14 days delayed</strong>. For <strong>near‑real‑time</strong> monitoring of <strong>your own vendor stack</strong> with audit‑ready summaries, choose a paid plan on the <a href="/pricing/">pricing page</a>.</p>
-<div class="cg-searchbar">
-<input id="q" type="search" placeholder="Search vendor, title, hash" aria-label="Search" />
+<div class="cg-grid3">
+<a class="cg-card hover" href="/reports/cards/fabrikam-analytics-2025-11-07t09-46-06-032638z.html">
+<div class="card-meta">Fabrikam Analytics · 2025-11-07</div>
+<h3>Fabrikam Analytics update</h3>
+<p></p>
+</a>
+<a class="cg-card hover" href="/reports/cards/contoso-crm-2025-11-07t09-46-06-032636z.html">
+<div class="card-meta">Contoso CRM · 2025-11-07</div>
+<h3>Contoso CRM update</h3>
+<p></p>
+</a>
+<a class="cg-card hover" href="/reports/cards/example-saas-2025-11-07t09-46-06-032625z.html">
+<div class="card-meta">Example SaaS · 2025-11-07</div>
+<h3>Example SaaS update</h3>
+<p></p>
+</a>
 </div>
-<div class="cg-grid3" id="grid"></div>
-<div class="cg-note" id="empty" style="display:none;margin:1rem 0;">
-    No reports yet. New evidence will appear here automatically after the daily build.
-  </div>
 </section>
 <footer class="cg-footer">
 <div class="cg-wrap cg-footlinks">
@@ -53,47 +63,4 @@
 <span>© CG Alert — evidence-backed SaaS vendor change intelligence.</span>
 </div>
 </footer>
-<script>
-(async () => {
-  const grid = document.getElementById('grid');
-  const empty = document.getElementById('empty');
-  let items = [];
-  try {
-    const res = await fetch('/reports/feed.json', { cache: 'no-store' });
-    if (res.ok) {
-      const out = await res.json();
-      items = Array.isArray(out) ? out : (out.items || []);
-    }
-  } catch (_) {}
-  const fmt = (s)=> (s||'').toString().trim();
-  const render = (list) => {
-    grid.innerHTML = '';
-    if (!list.length){ empty.style.display='block'; return; }
-    empty.style.display='none';
-    list.forEach(it => {
-      const a = document.createElement('a');
-      a.className = 'cg-card hover';
-      a.href = it.url || it.page || '#';
-      const vendor = fmt(it.vendor);
-      const date = fmt(it.date);
-      const sha = fmt(it.sha256);
-      const title = fmt(it.title) || (vendor ? vendor + ' update' : 'Change detected');
-      const snippet = fmt(it.summary || it.snippet);
-      a.innerHTML =
-        `<div class="card-meta">${vendor || 'Vendor'}${date ? ' · ' + date : ''}${sha ? ' · SHA256 ' + sha.slice(0,8) + '…' : ''}</div>
-         <h3>${title}</h3>
-         <p>${snippet}</p>`;
-      grid.appendChild(a);
-    });
-  };
-  render(items);
-  var _q=document.getElementById('q'); if(_q) _q.addEventListener('input', e=>{
-    const q = e.target.value.trim().toLowerCase();
-    if(!q){ render(items); return; }
-    render(items.filter(it =>
-      [it.vendor,it.title,it.summary,it.snippet,it.url,it.sha256].join(' ').toLowerCase().includes(q)
-    ));
-  });
-})();
-</script>
 </body></html>

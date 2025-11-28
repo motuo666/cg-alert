@@ -80,3 +80,6 @@ a, a:visited, a:hover, a:focus { text-decoration: none !important; }
 
 
 /* cache-bust: cb1 */
+
+/* Stories grid cards: extra rounded corners */
+.cg-grid-stories .cg-card{border-radius:24px;overflow:hidden;}
