@@ -38,9 +38,10 @@ jobs:
         \ $r -> $code\"; exit 1\n  fi\ndone\necho \"Smoke OK\"\n"
     - name: Slack notify (optional)
       if: env.SLACK_WEBHOOK_URL != ''
-      run: "curl -s -X POST -H 'Content-type: application/json' \\\n  --data '{\"\
-        text\":\"Drift Guard ✅ Vars/Secrets & Smoke OK\"}' \"$SLACK_WEBHOOK_URL\"\
-        \ || true\n  fi\n"
+      run: |
+        curl -s -X POST -H 'Content-type: application/json' \
+          --data '{"text":"Drift Guard ✅ Vars/Secrets & Smoke OK"}' "$SLACK_WEBHOOK_URL" || true
+
 concurrency:
   group: cg-full-pipeline
   cancel-in-progress: false
