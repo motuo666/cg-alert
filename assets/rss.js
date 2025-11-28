@@ -1,20 +1,44 @@
-(function(){
-  const root = document.getElementById('rss-list');
-  function itemHTML(item){
-    const dateStr = item.date ? new Date(item.date).toISOString().slice(0,10) : "";
-    return `<a class="cg-card hover" href="${item.link}"><h3>${item.title}</h3><p>${item.description||""}</p><small>${dateStr}</small></a>`;
+(async function(){
+  const list = document.getElementById('rss-list');
+  const empty = document.getElementById('rss-empty');
+  function render(items){
+    if(!items || !items.length){ empty.style.display='block'; return; }
+    list.innerHTML = '';
+    for(const it of items){
+      const url = it.url || it.link || '#';
+      const div = document.createElement('div');
+      div.className = 'rss-card';
+      const date = it.date || it.pubDate || it.published || '';
+      const vendor = it.vendor || it.title || 'Update';
+      const excerpt = it.summary || it.description || '';
+      div.innerHTML = `<div class="rss-meta">${(date||'').toString()}</div>
+        <h3><a href="${url}">${vendor}</a></h3>
+        <p>${excerpt}</p>`;
+      list.appendChild(div);
+    }
   }
-  fetch('/rss/index.xml')
-    .then(r => r.text())
-    .then(txt => {
-      const doc = new window.DOMParser().parseFromString(txt, "application/xml");
-      const items = Array.from(doc.querySelectorAll('item')).map(it => ({
-        title: it.querySelector('title')?.textContent || "Change",
-        link: it.querySelector('link')?.textContent || "#",
-        date: it.querySelector('pubDate')?.textContent || "",
-        description: it.querySelector('description')?.textContent || ""
+  try {
+    const res = await fetch('/reports/feed.json', {cache:'no-store'});
+    if (res.ok) {
+      const data = await res.json();
+      return render(data.items || data || []);
+    }
+    throw new Error('feed.json not found');
+  } catch(e) {
+    try {
+      const x = await fetch('/rss/index.xml', {cache:'no-store'});
+      if (!x.ok) throw new Error('rss xml not found');
+      const txt = await x.text();
+      const dom = new DOMParser().parseFromString(txt, 'application/xml');
+      const items = Array.from(dom.querySelectorAll('item')).map(n => ({
+        title: (n.querySelector('title')||{}).textContent || '',
+        link: (n.querySelector('link')||{}).textContent || '#',
+        date: (n.querySelector('pubDate')||{}).textContent || '',
+        description: (n.querySelector('description')||{}).textContent || ''
       }));
-      root.innerHTML = items.map(itemHTML).join("");
-    })
-    .catch(() => { root.innerHTML = '<div class="cg-card">No RSS yet.</div>'; });
+      render(items);
+    } catch(e2){
+      empty.style.display='block';
+    }
+  }
 })();
