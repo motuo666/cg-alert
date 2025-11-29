@@ -24,12 +24,18 @@ jobs:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
     steps:
     - name: Check required Vars/Secrets
-      run: "set -e\nMISSING=0\nreq=(SITE_ORIGIN WORKER_URL INTAKE_FORM_URL STRIPE_LINK_PORTFOLIO\
-        \ SMTP_HOST SMTP_USER SMTP_PASS IMAP_HOST IMAP_USER IMAP_PASS)\nfor k in \"\
-        ${req[@]}\"; do\n  v=\"${!k}\"\n  if [ -z \"$v\" ]; then echo \"::error::$k\
-        \ is missing\"; MISSING=1; fi\ndone\nif [ \"$MISSING\" -eq 1 ]; then\n  echo\
-        \ \"Missing critical vars/secrets\"; exit 1\nfi\necho \"Vars/Secrets OK\"\n\
-        \nfi\n"
+      run: |
+        set -e
+        MISSING=0
+        req=(SITE_ORIGIN WORKER_URL INTAKE_FORM_URL STRIPE_LINK_PORTFOLIO SMTP_HOST SMTP_USER SMTP_PASS IMAP_HOST IMAP_USER IMAP_PASS)
+        for k in "${req[@]}"; do
+          v="${!k}"
+          if [ -z "$v" ]; then echo "::error::$k is missing"; MISSING=1; fi
+        done
+        if [ "$MISSING" -eq 1 ]; then
+          echo "Missing critical vars/secrets"; exit 1
+        fi
+        echo "Vars/Secrets OK"
     - name: Site smoke (core routes)
       run: "set -e\ntest -n \"$SITE_ORIGIN\"\nroutes=(/ /pricing /vendors /reports\
         \ /rss /seo/ /terms /privacy)\nfor r in \"${routes[@]}\"; do\n  code=$(curl\
