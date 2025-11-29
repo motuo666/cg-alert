@@ -64,7 +64,7 @@ async function main() {
     scanned++;
     let html; try { html = await fs.readFile(f, 'utf8'); } catch { continue; }
     if (!html.includes('</head>')) continue;
-    const rel = '/' + f.replace(pubRoot + '/', '').replace(/\/g, '/');
+    const rel = '/' + f.replace(pubRoot + '/', '').replace(/\/+/g, '/');
     const next = injectMeta(html, undefined, undefined, rel, '/og.png');
     if (next !== html) { await fs.writeFile(f, next, 'utf8'); changed++; }
   }
