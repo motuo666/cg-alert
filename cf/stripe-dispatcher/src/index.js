@@ -75,6 +75,16 @@ function extractClientPayload(evt) {
   };
 }
 
+
+function csvEscape(value) {
+  if (value == null) return '';
+  const s = String(value);
+  if (/[",\n]/.test(s)) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
 async function handleStripe(request, env) {
   const body = await request.text();
   const header = request.headers.get('Stripe-Signature') || '';
@@ -123,16 +133,52 @@ async function handleStripe(request, env) {
   }
 
   const payload = extractClientPayload(evt);
+
+  // Upsert customer into D1 (env.DB) keyed by email + tier
+  if (env.DB && payload && payload.email) {
+    const vendorsCsv = (payload.vendors || []).join(',');
+    try {
+      await env.DB.prepare(`
+        INSERT INTO customers (email, company, tier, cadence, vendors, stripe_event_id, stripe_type)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(email, tier) DO UPDATE SET
+          company = excluded.company,
+          cadence = excluded.cadence,
+          vendors = excluded.vendors,
+          stripe_event_id = excluded.stripe_event_id,
+          stripe_type = excluded.stripe_type,
+          updated_at = strftime('%s','now'),
+          active = 1
+      `)
+      .bind(
+        payload.email,
+        payload.company || null,
+        payload.tier || null,
+        payload.cadence || 'weekly',
+        vendorsCsv,
+        payload.stripe_event_id,
+        payload.stripe_type || evt.type || null
+      )
+      .run();
+    } catch (err) {
+      // Do not fail the webhook if D1 is temporarily unavailable.
+      console.log('customers upsert failed', err && err.message);
+    }
+  }
+
   const dispatchURL = `https://api.github.com/repos/${env.GH_OWNER}/${env.GH_REPO}/dispatches`;
 
+  const baseHeaders = {
+    'Authorization': `token ${env.GH_TOKEN}`,
+    'Accept': 'application/vnd.github+json',
+    'Content-Type': 'application/json',
+    'User-Agent': 'cg-alert-stripe-dispatcher'
+  };
+
+  // Primary repository_dispatch for bookkeeping / dashboards
   const ghRes = await fetch(dispatchURL, {
     method: 'POST',
-    headers: {
-      'Authorization': `token ${env.GH_TOKEN}`,
-      'Accept': 'application/vnd.github+json',
-      'Content-Type': 'application/json',
-      'User-Agent': 'cg-alert-stripe-dispatcher'
-    },
+    headers: baseHeaders,
     body: JSON.stringify({
       event_type: 'stripe_paid',
       client_payload: payload
@@ -144,12 +190,64 @@ async function handleStripe(request, env) {
   if (!ok) {
     return new Response(JSON.stringify({ ok: false, error: 'github_dispatch_failed', details: txt }), { status: 500 });
   }
+
+  // Fire-and-forget quick pipeline trigger; failures here should not break the webhook.
+  try {
+    await fetch(dispatchURL, {
+      method: 'POST',
+      headers: baseHeaders,
+      body: JSON.stringify({
+        event_type: 'stripe_paid_quick',
+        client_payload: payload
+      })
+    });
+  } catch (err) {
+    console.log('stripe_paid_quick dispatch failed', err && err.message);
+  }
+
   return new Response(JSON.stringify({ ok: true, dispatched: true }), { status: 200 });
 }
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // Internal CSV export for customers derived from D1.
+    if (url.pathname === '/internal/customers.csv') {
+      const token = url.searchParams.get('token') || request.headers.get('X-Internal-Token') || '';
+      if (!env.CUSTOMERS_PULL_TOKEN || token !== env.CUSTOMERS_PULL_TOKEN) {
+        return new Response('forbidden', { status: 403 });
+      }
+      if (!env.DB) {
+        return new Response('no_db', { status: 500 });
+      }
+      try {
+        const rs = await env.DB.prepare(`
+          SELECT email, company, tier, cadence, vendors
+          FROM customers
+          WHERE active = 1
+        `).all();
+        const rows = rs.results || [];
+        let csv = 'email,company,plan,cadence,vendors\n';
+        for (const r of rows) {
+          csv += [
+            csvEscape(r.email),
+            csvEscape(r.company),
+            csvEscape(r.tier),
+            csvEscape(r.cadence),
+            csvEscape(r.vendors)
+          ].join(',') + '\n';
+        }
+        return new Response(csv, {
+          status: 200,
+          headers: { 'Content-Type': 'text/csv; charset=utf-8' }
+        });
+      } catch (err) {
+        console.log('customers.csv export failed', err && err.message);
+        return new Response('error', { status: 500 });
+      }
+    }
+
     if (request.method === 'GET') {
       // health check
       return new Response(JSON.stringify({ ok: true, name: 'stripe-dispatcher', route: url.pathname }), { status: 200 });

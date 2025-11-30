@@ -17,3 +17,6 @@ Sitemap: https://www.cg-alert.com/sitemap-index.xml
 Disallow: /reports/vendor/
 Disallow: /vendors/
 
+# Reduce exposure of machine-readable raw data (JSON/CSV)
+Disallow: /*.json$
+Disallow: /*.csv$
