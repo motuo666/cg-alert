@@ -1,11 +1,7 @@
 name: On Stripe Paid → Quick Pipeline
 
 on:
-  workflow_dispatch:        # ★ 新增这一行
-  repository_dispatch:
-    types: [stripe_paid_quick]
-
-on:
+  workflow_dispatch:
   repository_dispatch:
     types: [stripe_paid_quick]
 
