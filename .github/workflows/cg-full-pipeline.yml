@@ -44,6 +44,17 @@ jobs:
           node-version: '20'
       - name: Install deps
         run: npm ci || true
+      - name: Fetch customers.csv from Worker (D1)
+        env:
+          CUSTOMERS_PULL_TOKEN: ${{ secrets.CUSTOMERS_PULL_TOKEN || vars.CUSTOMERS_PULL_TOKEN || '' }}
+        run: |
+          if [ -z "${CUSTOMERS_PULL_TOKEN:-}" ]; then
+            echo "No CUSTOMERS_PULL_TOKEN set; skipping remote customers.csv fetch."
+          else
+            curl -fsSL "https://api.cg-alert.com/internal/customers.csv?token=${CUSTOMERS_PULL_TOKEN}" -o customers.csv
+            echo "Fetched customers.csv (head):"
+            head -n 5 customers.csv || true
+          fi
       - name: Poll vendors (two-stage confirmation)
         run: node scripts/poller.mjs
       - name: Build sitemap

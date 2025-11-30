@@ -1,0 +1,65 @@
+name: On Stripe Paid → Quick Pipeline
+
+on:
+  repository_dispatch:
+    types: [stripe_paid_quick]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false
+
+jobs:
+  quick-pipeline:
+    runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+      R2_EVIDENCE_WRITE_URL: ${{ vars.R2_EVIDENCE_WRITE_URL || '' }}
+      R2_EVIDENCE_API_KEY: ${{ secrets.R2_EVIDENCE_API_KEY || '' }}
+      CUSTOMERS_PULL_TOKEN: ${{ secrets.CUSTOMERS_PULL_TOKEN || vars.CUSTOMERS_PULL_TOKEN || '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: npm ci || true
+      - name: Fetch customers.csv from Worker (D1)
+        run: |
+          if [ -z "${CUSTOMERS_PULL_TOKEN:-}" ]; then
+            echo "No CUSTOMERS_PULL_TOKEN set; skipping remote customers.csv fetch."
+          else
+            curl -fsSL "https://api.cg-alert.com/internal/customers.csv?token=${CUSTOMERS_PULL_TOKEN}" -o customers.csv
+            echo "Fetched customers.csv (head):"
+            head -n 5 customers.csv || true
+          fi
+      - name: Poll vendors (quick)
+        run: node scripts/poller.mjs
+      - name: Build vendors + reports + RSS (quick)
+        run: |
+          node scripts/vendors_build.mjs
+          node scripts/reports_build.mjs
+          node scripts/build_reports_rss.js
+      - name: Build sitemap (quick)
+        env:
+          SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+        run: node scripts/build_sitemap.mjs
+      - name: Commit quick poller content
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A evidence reports rss/index.xml sitemap.xml || true
+          if git diff --cached --quiet; then
+            echo "no content changes"
+          else
+            if git commit -m "stripe-paid quick poller run"; then
+              git push origin HEAD:main || echo "WARN: git push failed (non-fast-forward); nightly pipeline will reconcile."
+            else
+              echo "WARN: commit failed (maybe no staged changes)."
+            fi
+          fi
