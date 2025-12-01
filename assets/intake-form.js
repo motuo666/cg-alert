@@ -124,7 +124,7 @@
     hide(ok);
     hide(err);
 
-    var url = workerURL() ? workerURL() + "/lead" : "/lead";
+    var url = workerURL() ? workerURL() + "/intake" : "/intake";
     var payload = {
       email: email.value.trim(),
       company: company.value.trim(),
