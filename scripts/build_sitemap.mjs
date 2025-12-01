@@ -3,6 +3,8 @@ import path from 'path';
 
 const PUBLISH_DIR = process.env.PUBLISH_DIR || '.';
 const SITE = process.env.SITE_ORIGIN || 'https://www.cg-alert.com';
+
+// Core entrypoints we always consider when present
 const BASE_URLS = ['/', '/pricing/', '/reports/', '/evidence/', '/rss/'];
 
 async function fileExists(p) {
@@ -14,6 +16,7 @@ async function fileExists(p) {
   }
 }
 
+// Evidence timelines (per vendor)
 async function listEvidenceDirs() {
   const res = [];
   const base = path.join(PUBLISH_DIR, 'evidence');
@@ -22,29 +25,30 @@ async function listEvidenceDirs() {
     for (const v of vendors) {
       if (!v.isDirectory()) continue;
       const p = path.join(base, v.name, 'timeline.html');
-      if (await fileExists(p)) res.push(`/evidence/${v.name}/timeline.html`);
+      if (await fileExists(p)) {
+        res.push(`/evidence/${v.name}/timeline.html`);
+      }
     }
   } catch {
-    // ignore missing evidence dir
+    // evidence dir might not exist yet in dev
   }
   return res;
 }
 
+// Map URL path to file on disk and return YYYY-MM-DD mtime
 async function getLastmod(urlPath) {
-  // Map URL to a file path under PUBLISH_DIR and use its mtime as lastmod.
   let rel;
   if (urlPath === '/') {
     rel = 'index.html';
   } else if (urlPath.endsWith('/')) {
     rel = path.join(urlPath.slice(1), 'index.html');
   } else {
-    // e.g. /evidence/vendor/timeline.html
+    // e.g. /evidence/vendor/timeline.html or /stories/foo.html
     rel = urlPath.slice(1);
   }
   const full = path.join(PUBLISH_DIR, rel);
   try {
     const stat = await fs.stat(full);
-    // Sitemap lastmod can be date-only; keep it simple and stable.
     return stat.mtime.toISOString().split('T')[0];
   } catch {
     return null;
@@ -54,24 +58,89 @@ async function getLastmod(urlPath) {
 async function main() {
   const urls = new Set(BASE_URLS);
 
+  // Vendors index
   if (await fileExists(path.join(PUBLISH_DIR, 'vendors', 'index.html'))) {
     urls.add('/vendors/');
   }
 
+  // Vendor profile pages that actually exist
+  try {
+    const vendorsDir = path.join(PUBLISH_DIR, 'vendors');
+    const entries = await fs.readdir(vendorsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const idx = path.join(vendorsDir, entry.name, 'index.html');
+      if (await fileExists(idx)) {
+        urls.add(`/vendors/${entry.name}/`);
+      }
+    }
+  } catch {
+    // vendors dir may not exist yet
+  }
+
+  // Evidence timelines
   for (const u of await listEvidenceDirs()) {
     urls.add(u);
   }
 
-  if (await fileExists(path.join(PUBLISH_DIR, 'reports', 'index.html'))) {
+  // Reports root + per-period report index pages
+  const reportsRoot = path.join(PUBLISH_DIR, 'reports');
+  if (await fileExists(path.join(reportsRoot, 'index.html'))) {
     urls.add('/reports/');
   }
+  try {
+    const entries = await fs.readdir(reportsRoot, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const idx = path.join(reportsRoot, entry.name, 'index.html');
+      if (await fileExists(idx)) {
+        urls.add(`/reports/${entry.name}/`);
+      }
+    }
+  } catch {
+    // reports dir may not exist yet
+  }
+
+  // RSS index
   if (await fileExists(path.join(PUBLISH_DIR, 'rss', 'index.html'))) {
     urls.add('/rss/');
   }
 
-  for (const page of ['about', 'intake', 'who-uses', 'deal-desk', 'dashboard']) {
+  // Top-level marketing / legal pages backed by index.html
+  const staticPages = [
+    'about',
+    'intake',
+    'who-uses',
+    'deal-desk',
+    'dashboard',
+    'seo',
+    'faq',
+    'use-cases',
+    'enterprise',
+    'terms',
+    'privacy',
+    'thank-you',
+    'stories',
+  ];
+  for (const page of staticPages) {
     const p = path.join(PUBLISH_DIR, page, 'index.html');
-    if (await fileExists(p)) urls.add(`/${page}/`);
+    if (await fileExists(p)) {
+      urls.add(`/${page}/`);
+    }
+  }
+
+  // Individual story articles under /stories/
+  try {
+    const storiesDir = path.join(PUBLISH_DIR, 'stories');
+    const entries = await fs.readdir(storiesDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) continue;
+      if (!entry.name.endsWith('.html')) continue;
+      if (entry.name === 'index.html') continue;
+      urls.add(`/stories/${entry.name}`);
+    }
+  } catch {
+    // stories dir may not exist yet
   }
 
   const entries = [];

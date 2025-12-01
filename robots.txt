@@ -11,8 +11,6 @@ Disallow: /artifacts/
 
 # 主站固定页面
 Sitemap: https://www.cg-alert.com/sitemap.xml
-# Vendors / Reports 等长尾内容的索引
-Sitemap: https://www.cg-alert.com/sitemap-index.xml
 # Debug & demo paths
 Disallow: /reports/vendor/
 Disallow: /vendors/index.html
