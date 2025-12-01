@@ -61,7 +61,7 @@ jobs:
 
         node scripts/build_rss.js || true
 
-        node scripts/generate_sitemap.js || true
+        node scripts/build_sitemap.mjs || true
 
         '
     - name: Commit changes
