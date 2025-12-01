@@ -1,3 +1,4 @@
 email,company,plan,cadence,vendors
 pow@example.com,POW Test Co,plan_pow,weekly,example.com
 pow@test.com,POW Test Co,pro,weekly,"slack.com,github.com"
+stripe@example.com,Jenny Rosen,pro,weekly,
