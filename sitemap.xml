@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://www.cg-alert.com/</loc><lastmod>2025-12-01</lastmod></url>
   <url><loc>https://www.cg-alert.com/about/</loc><lastmod>2025-12-01</lastmod></url>
@@ -9,6 +9,5 @@
   <url><loc>https://www.cg-alert.com/pricing/</loc><lastmod>2025-12-01</lastmod></url>
   <url><loc>https://www.cg-alert.com/reports/</loc><lastmod>2025-12-01</lastmod></url>
   <url><loc>https://www.cg-alert.com/rss/</loc><lastmod>2025-12-01</lastmod></url>
-  <url><loc>https://www.cg-alert.com/vendors/</loc><lastmod>2025-12-01</lastmod></url>
   <url><loc>https://www.cg-alert.com/who-uses/</loc><lastmod>2025-12-01</lastmod></url>
-</urlset>
+<url><loc>https://www.cg-alert.com/use-cases/</loc><lastmod>2025-12-01</lastmod></url></urlset>

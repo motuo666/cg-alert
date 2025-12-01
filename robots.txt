@@ -15,7 +15,7 @@ Sitemap: https://www.cg-alert.com/sitemap.xml
 Sitemap: https://www.cg-alert.com/sitemap-index.xml
 # Debug & demo paths
 Disallow: /reports/vendor/
-Disallow: /vendors/
+Disallow: /vendors/index.html
 
 # Reduce exposure of machine-readable raw data (JSON/CSV)
 Disallow: /*.json$
