@@ -129,9 +129,9 @@
         el('select',{id:'budget',name:'budget',class:'cg-select'},[
           el('option',{value:'',text:'Select…'}),
           el('option',{value:'<3000',text:'Under $3,000/yr'}),
-          el('option',{value:'3000-6000',text:'$3,000–$6,000/yr'}),
-          el('option',{value:'6000-18000',text:'$6,000–$18,000/yr'}),
-          el('option',{value:'>18000',text:'Over $18,000/yr'}),
+          el('option',{value:'3000-10000',text:'$3k–$10k/yr'}),
+          el('option',{value:'10000-25000',text:'$10k–$25k/yr'}),
+          el('option',{value:'>25000',text:'Over $25,000/yr'}),
           el('option',{value:'unsure',text:"Not sure yet"}),
         ]),
         el('div',{class:'cg-err','data-for':'budget'})
