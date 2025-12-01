@@ -11,75 +11,121 @@
   const ok = $("#flash-ok");
   const err = $("#flash-err");
 
+  // modal elements
+  const modal = document.querySelector("#intake-modal");
+  const modalTitle = document.querySelector("#intake-modal-title");
+  const modalBody = document.querySelector("#intake-modal-body");
+  const modalClose = document.querySelector("#intake-modal-close");
+
   function show(el) {
+    if (!el) return;
     el.style.display = "block";
   }
   function hide(el) {
+    if (!el) return;
     el.style.display = "none";
   }
   function setErr(el, msg) {
+    if (!el) return;
     el.textContent = msg;
     show(el);
   }
   function clearErrs() {
-    document.querySelectorAll("#intake-app .err").forEach(hide);
+    document.querySelectorAll("#intake-app .err").forEach(function (el) {
+      hide(el);
+    });
     hide(ok);
     hide(err);
-    note.textContent = "";
+    if (note) note.textContent = "";
   }
 
   function parseVendors(text) {
     return text
       .split(/[\n,]+/)
-      .map((s) => s.trim().toLowerCase())
+      .map(function (s) { return s.trim().toLowerCase(); })
       .filter(Boolean)
-      .filter((x) =>
-        /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i.test(x)
-      )
+      .filter(function (x) {
+        return /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i.test(x);
+      })
       .slice(0, 200);
   }
 
   function validate() {
     clearErrs();
-    let valid = true;
+    var valid = true;
     if (!email.value.trim()) {
-      setErr($("#err-email"), "Please enter your email.");
+      setErr(document.querySelector("#err-email"), "Please enter your email.");
       valid = false;
     }
     if (!company.value.trim()) {
-      setErr($("#err-company"), "Please enter your company name.");
+      setErr(document.querySelector("#err-company"), "Please enter your company name.");
       valid = false;
     }
-    const list = parseVendors(vendors.value);
+    var list = parseVendors(vendors.value);
     if (list.length === 0) {
-      setErr($("#err-vendors"), "Please provide at least one vendor domain.");
+      setErr(document.querySelector("#err-vendors"), "Please provide at least one vendor domain.");
       valid = false;
     }
     if (!budget.value) {
-      setErr($("#err-budget"), "Please choose a budget.");
+      setErr(document.querySelector("#err-budget"), "Please choose a budget.");
       valid = false;
     }
-    return { valid, list };
+    return { valid: valid, list: list };
   }
 
   function workerURL() {
-    const m = document.querySelector('meta[name="worker-url"]');
+    var m = document.querySelector('meta[name="worker-url"]');
     return m && m.content ? m.content.replace(/\/$/, "") : "";
   }
 
-  form.addEventListener("submit", async (e) => {
+  // modal helpers
+  function openModal(title, message) {
+    if (!modal) {
+      // fallback: avoid silent failure
+      if (typeof alert === "function") {
+        alert(title + "\n\n" + message);
+      }
+      return;
+    }
+    if (modalTitle) modalTitle.textContent = title;
+    if (modalBody) modalBody.textContent = message;
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+  }
+
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+  }
+
+  if (modalClose) {
+    modalClose.addEventListener("click", function () {
+      closeModal();
+    });
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      closeModal();
+    }
+  });
+
+  if (!form) return;
+
+  form.addEventListener("submit", function (e) {
     e.preventDefault();
-    const { valid, list } = validate();
-    if (!valid) return;
+    var r = validate();
+    if (!r.valid) return;
+    var list = r.list;
 
     btn.disabled = true;
     btn.textContent = "Submitting…";
-    note.textContent = "";
+    if (note) note.textContent = "";
     hide(ok);
     hide(err);
 
-    const url = workerURL() ? workerURL() + "/lead" : "/lead";
-    const payload = {
+    var url = workerURL() ? workerURL() + "/lead" : "/lead";
+    var payload = {
       email: email.value.trim(),
       company: company.value.trim(),
       vendors: list,
@@ -87,44 +133,54 @@
       notes: notes.value.trim(),
       path: location.pathname,
       ua: navigator.userAgent,
-      ts: new Date().toISOString(),
+      ts: new Date().toISOString()
     };
 
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        mode: "cors",
-        credentials: "omit",
-      });
-
-      if (res.ok) {
-        show(ok);
-        hide(err);
-        form.reset();
-        note.textContent = "Preferences saved.";
-        alert("Thanks — your vendor list has been updated.");
-      } else {
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      mode: "cors",
+      credentials: "omit"
+    })
+      .then(function (res) {
+        if (res.ok) {
+          show(ok);
+          hide(err);
+          form.reset();
+          if (note) note.textContent = "Preferences saved.";
+          openModal(
+            "Thanks — your vendor list has been updated.",
+            "We’ll use this updated vendor list for future CG Alert digests."
+          );
+        } else {
+          show(err);
+          hide(ok);
+          if (note) {
+            note.textContent =
+              "Submission failed. Please try again, or email ops@cg-alert.com if it keeps happening.";
+          }
+          openModal(
+            "Submission failed",
+            "Please try again, or email ops@cg-alert.com if it keeps happening."
+          );
+        }
+      })
+      .catch(function () {
         show(err);
         hide(ok);
-        note.textContent =
-          "Submission failed. Please try again, or email ops@cg-alert.com if it keeps happening.";
-        alert(
-          "Submission failed.\nPlease try again, or email ops@cg-alert.com if it keeps happening."
+        if (note) {
+          note.textContent =
+            "Network error. Please try again, or email ops@cg-alert.com if it keeps happening.";
+        }
+        openModal(
+          "Network error",
+          "Please try again, or email ops@cg-alert.com if it keeps happening."
         );
-      }
-    } catch (ex) {
-      show(err);
-      hide(ok);
-      note.textContent =
-        "Network error. Please try again, or email ops@cg-alert.com if it keeps happening.";
-      alert(
-        "Network error.\nPlease try again, or email ops@cg-alert.com if it keeps happening."
-      );
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Submit";
-    }
+      })
+      .finally(function () {
+        btn.disabled = false;
+        btn.textContent = "Submit";
+      });
   });
 })();
