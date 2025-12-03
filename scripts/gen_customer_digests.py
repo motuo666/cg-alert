@@ -7,7 +7,7 @@
 - Writes plain text files to artifacts/digests/{customer_id}.txt.
 - Does NOT send email or call webhooks. SMTP/Webhook wiring is a TODO for CI.
 """
-import os, csv, json, datetime, sys
+import os, csv, json, datetime, sys, urllib.request, urllib.error
 from html import escape
 
 ROOT = os.path.dirname(os.path.abspath(os.path.join(__file__, "..")))
@@ -44,13 +44,46 @@ def load_events():
     return items
 
 def load_customers():
+    """Load customer configs.
+
+    Priority:
+    1) If CUSTOMERS_API_URL is set, fetch JSON from that API (D1/DB source of truth).
+       Expected shapes:
+         - a plain list of customer dicts, or
+         - {"items": [...]} / {"customers": [...]} / {"data": [...]}.
+    2) Fallback to config/customers.json or config/customers.example.json.
+    """
     cfg = os.path.join(ROOT, "..", "config", "customers.json")
     ex = os.path.join(ROOT, "..", "config", "customers.example.json")
+    api_url = (os.environ.get("CUSTOMERS_API_URL", "") or "").strip()
+    if api_url:
+        try:
+            req = urllib.request.Request(api_url, headers={"User-Agent": "cg-alert-digests/1.0"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                raw = resp.read().decode("utf-8", errors="replace")
+            data = json.loads(raw)
+            if isinstance(data, dict):
+                for key in ("items", "customers", "data"):
+                    if isinstance(data.get(key), list):
+                        data = data[key]
+                        break
+            if isinstance(data, list):
+                return data
+            else:
+                p("WARN: CUSTOMERS_API_URL returned unexpected shape; falling back to local config")
+        except Exception as e:
+            p("WARN: failed to fetch CUSTOMERS_API_URL:", e)
+
     path = cfg if os.path.exists(cfg) else ex
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        p("ERROR: failed to read customers config:", path, e)
+        return []
 
 def parse_date(s):
+s):
     try:
         if len(s) >= 10:
             return datetime.datetime.strptime(s[:10], "%Y-%m-%d").date()

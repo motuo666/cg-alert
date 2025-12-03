@@ -55,9 +55,84 @@ function slugify(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
 }
 
+async function readVendorsFromApi() {
+  const api = (process.env.CUSTOMERS_API_URL || "").trim();
+  if (!api) return null;
+  try {
+    const res = await fetch(api, { headers: { "User-Agent": CONFIG.user_agent } });
+    if (!res.ok) {
+      console.warn("CUSTOMERS_API_URL non-2xx", res.status);
+      return null;
+    }
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (e) {
+      console.warn("CUSTOMERS_API_URL JSON parse failed", e && e.message || e);
+      return null;
+    }
+    if (Array.isArray(data)) {
+      // ok
+    } else if (data && typeof data === "object") {
+      if (Array.isArray(data.items)) data = data.items;
+      else if (Array.isArray(data.customers)) data = data.customers;
+      else if (Array.isArray(data.data)) data = data.data;
+      else {
+        console.warn("CUSTOMERS_API_URL: unsupported object shape");
+        return null;
+      }
+    } else {
+      console.warn("CUSTOMERS_API_URL: unsupported payload type");
+      return null;
+    }
+    const set = new Set();
+    for (const c of data) {
+      if (!c) continue;
+      let vs = c.vendors || c.vendor_domains || [];
+      if (typeof vs === "string") {
+        vs = vs.split(/[,;\s]+/);
+      }
+      if (!Array.isArray(vs)) continue;
+      for (const dom of vs) {
+        const d = String(dom || "").trim().toLowerCase();
+        if (d && /^[a-z0-9.-]+\.[a-z]{2,}$/.test(d)) set.add(d);
+      }
+    }
+    if (!set.size) {
+      console.warn("CUSTOMERS_API_URL returned 0 vendor domains");
+      return null;
+    }
+    const arr = Array.from(set).slice(0, CONFIG.vendor_limit_per_poll);
+    console.log("readVendorsFromApi: using", arr.length, "vendors from CUSTOMERS_API_URL");
+    return arr;
+  } catch (e) {
+    console.warn("CUSTOMERS_API_URL fetch failed", e && e.message || e);
+    return null;
+  }
+}
+
 async function readVendors() {
+  // 1) Highest priority: explicit list from POLL_VENDOR_LIST (on-demand Poller).
+  const override = (process.env.POLL_VENDOR_LIST || "").trim();
+  if (override) {
+    const set = new Set();
+    for (const part of override.split(/[,;\s]+/)) {
+      const d = part.trim().toLowerCase();
+      if (d && /^[a-z0-9.-]+\.[a-z]{2,}$/.test(d)) set.add(d);
+    }
+    const arr = Array.from(set).slice(0, CONFIG.vendor_limit_per_poll);
+    console.log("readVendors: using POLL_VENDOR_LIST override, vendors:", arr.length);
+    return arr;
+  }
+
+  // 2) Next: customers API (D1/DB source of truth) if configured.
+  const fromApi = await readVendorsFromApi();
+  if (fromApi && fromApi.length) {
+    return fromApi;
+  }
+
+  // 3) Legacy fallback: customers.csv (root) + data/seed_domains.txt
   const set = new Set();
-  // customers.csv (root) format: email,company,plan,cadence,vendors (comma domains)
   const customersPath = path.join("customers.csv");
   const seedPath = path.join("data","seed_domains.txt");
   for (const p of [customersPath, seedPath]) {
@@ -81,6 +156,9 @@ async function readVendors() {
         if (/^[a-z0-9.-]+\.[a-z]{2,}$/.test(l)) set.add(l.toLowerCase());
       }
     }
+  }
+  if (!set.size) {
+    console.warn("readVendors: no vendors found in customers.csv or data/seed_domains.txt");
   }
   return Array.from(set).slice(0, CONFIG.vendor_limit_per_poll);
 }
