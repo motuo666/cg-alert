@@ -43,3 +43,27 @@ jobs:
 
       - name: Rebuild sitemap
         run: node scripts/build_sitemap.mjs
+
+      - name: Commit & push (if any changes)
+        env:
+          CUSTOMER_ID: ${{ github.event.inputs.customer_id }}
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+
+          git add -A evidence reports rss/index.xml sitemap.xml || true
+
+          if git diff --cached --quiet; then
+            echo "no content changes"
+          else
+            msg="poller(on-demand): evidence+pages+rss+sitemap"
+            if [ -n "${CUSTOMER_ID:-}" ]; then
+              msg="$msg (customer: ${CUSTOMER_ID})"
+            fi
+            if git commit -m "$msg"; then
+              git push origin HEAD:main
+            else
+              echo "WARN: commit failed (maybe no staged changes)."
+            fi
+          fi
