@@ -1,0 +1,59 @@
+name: site-build
+on:
+  push:
+    paths:
+    - data/events.*
+    - .github/workflows/site-build.yml
+  workflow_dispatch: null
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: Generate RSS, Reports & Sitemap
+      shell: bash
+      run: "set -e\npython3 - << 'PY'\nimport csv, json, datetime, html, pathlib\n\
+        import xml.sax.saxutils as sx\n\n# 允许在仓库根或者 cg-alert-main 下面运行\nroot = pathlib.Path(\"\
+        cg-alert-main\") if pathlib.Path(\"cg-alert-main\").exists() else pathlib.Path(\"\
+        .\")\n\nevents_csv = root / \"data\" / \"events.csv\"\nevents_json = root\
+        \ / \"data\" / \"events.json\"\n\nrows = []\nif events_csv.exists():\n   \
+        \ with events_csv.open(encoding=\"utf-8\") as f:\n        reader = csv.DictReader(f)\n\
+        \        rows.extend(reader)\nelif events_json.exists():\n    rows = json.loads(events_json.read_text(encoding=\"\
+        utf-8\"))\n\nnorm = []\nfor r in rows:\n    norm.append({\n        \"date\"\
+        : r.get(\"date\", \"\"),\n        \"vendor\": r.get(\"vendor\", \"\"),\n \
+        \       \"url\": r.get(\"url\", \"\"),\n        \"change\": r.get(\"change\"\
+        , \"\"),\n        \"impact\": r.get(\"impact\", \"\"),\n        \"tier\":\
+        \ r.get(\"tier\", \"\"),\n    })\n\n# RSS\nitems = \"\\n\".join(\n    \"<item>\"\
+        \n    f\"<title>{sx.escape(n['vendor'])}: {sx.escape(n['change'])}</title>\"\
+        \n    f\"<link>{sx.escape(n['url'])}</link>\"\n    f\"<description>{sx.escape(n['impact'])}</description>\"\
+        \n    \"</item>\"\n    for n in norm\n)\n\nrss = root / \"rss\" / \"index.xml\"\
+        \nrss.parent.mkdir(parents=True, exist_ok=True)\nlast_build = datetime.datetime.utcnow().strftime(\"\
+        %a, %d %b %Y %H:%M:%S GMT\")\nrss.write_text(\n    '<?xml version=\"1.0\"\
+        \ encoding=\"UTF-8\"?>\\n'\n    '<rss version=\"2.0\"><channel>'\n    '<title>CG\
+        \ Alert — Vendor Change Feed</title>'\n    '<link>https://www.cg-alert.com/</link>'\n\
+        \    '<description>Evidence-backed vendor change alerts.</description>'\n\
+        \    f\"<lastBuildDate>{last_build}</lastBuildDate>\\n\"\n    f\"{items}\\\
+        n\"\n    \"</channel></rss>\\n\",\n    encoding=\"utf-8\",\n)\n\n# Reports\
+        \ (HTML table body fragment)\ntable = \"\".join(\n    \"<tr>\"\n    f\"<td>{sx.escape(n['date'])}</td>\"\
+        \n    f\"<td>{sx.escape(n['vendor'])}</td>\"\n    f\"<td>{sx.escape(n['change'])}</td>\"\
+        \n    f\"<td>{sx.escape(n['impact'])}</td>\"\n    f\"<td>{sx.escape(n['tier'])}</td>\"\
+        \n    \"</tr>\"\n    for n in norm\n)\nrep = root / \"reports\" / \"data.html\"\
+        \nrep.parent.mkdir(parents=True, exist_ok=True)\nrep.write_text(table, encoding=\"\
+        utf-8\")\n\n# Sitemap\nurls = [\"/\", \"/who-uses/\", \"/pricing/\", \"/vendors/\"\
+        , \"/reports/\", \"/rss/index.xml\"]\nsm = root / \"sitemap.xml\"\nsm.write_text(\n\
+        \    '<?xml version=\"1.0\" encoding=\"UTF-8\"?>\\n'\n    '<urlset xmlns=\"\
+        http://www.sitemaps.org/schemas/sitemap/0.9\">'\n    + \"\".join(f\"<url><loc>https://www.cg-alert.com{u}</loc></url>\"\
+        \ for u in urls)\n    + \"\\n</urlset>\\n\",\n    encoding=\"utf-8\",\n)\n\
+        PY\n"
+    - name: Commit artifacts
+      if: github.ref == 'refs/heads/main'
+      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
+        \ \"CG Alert Bot\"\ngit add rss/index.xml reports/data.html sitemap.xml ||\
+        \ true\nif git diff --staged --quiet; then\n  echo \"No changes.\"\nelse\n\
+        \  git commit -m \"chore: auto-regenerate RSS/Reports/Sitemap from data/events.*\"\
+        \n  git push || echo \"WARN: git push failed (non-fast-forward); another job updated main; will retry later.\"\nfi\n"
+permissions:
+  contents: write
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

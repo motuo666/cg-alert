@@ -1,0 +1,45 @@
+name: Vendor Request Sync
+
+on:
+  schedule:
+    # 每小时跑一次；你也可以改成每天，比如 "0 3 * * *"
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Sync vendor requests into seed_domains.txt
+        env:
+          VENDOR_REQUEST_API: https://api.cg-alert.com/vendor-request/seeds
+          VENDOR_SYNC_TOKEN: ${{ secrets.VENDOR_SYNC_TOKEN }}
+        run: node scripts/sync_vendor_requests.mjs
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet; then
+            echo "No changes; nothing to commit."
+            exit 0
+          fi
+          git config user.name "cg-alert-bot"
+          git config user.email "bot@cg-alert.com"
+          git add data/seed_domains.txt
+          git commit -m "chore: sync vendor requests into seeds"
+          git push || echo "WARN: git push failed (non-fast-forward); another job updated main; will retry later."
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false
+

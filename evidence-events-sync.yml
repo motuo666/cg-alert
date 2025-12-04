@@ -1,0 +1,44 @@
+name: Evidence Events Sync
+
+on:
+  schedule:
+    # 每天凌晨 03:20 UTC 跑一次；也可以手动 workflow_dispatch
+    - cron: "20 3 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Promote high-signal evidence into data/events.*
+        run: |
+          set -euo pipefail
+          python3 scripts/promote_evidence_events.py --root .
+
+      - name: Commit and push if changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No changes; nothing to commit."
+            exit 0
+          fi
+          git config user.name "cg-alert-bot"
+          git config user.email "bot@cg-alert.com"
+          git add data/events.raw.csv data/events.backlog.csv
+          git commit -m "chore(ci): promote high-signal evidence into events"
+          git push || echo "WARN: git push failed (non-fast-forward); another job updated main; will retry later."
+
+concurrency:
+  group: cg-full-pipeline
+  cancel-in-progress: false

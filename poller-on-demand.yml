@@ -1,0 +1,69 @@
+name: On-demand Poller
+
+on:
+  workflow_dispatch:
+    inputs:
+      vendors:
+        description: "Comma-separated vendor domains (e.g. airtable.com,asana.com)"
+        required: true
+        type: string
+      customer_id:
+        description: "Optional customer id for commit messages / logs"
+        required: false
+        type: string
+
+env:
+  NODE_OPTIONS: --max-old-space-size=2048
+  SITE_ORIGIN: ${{ vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+  R2_EVIDENCE_WRITE_URL: ${{ vars.R2_EVIDENCE_WRITE_URL || '' }}
+  R2_EVIDENCE_API_KEY: ${{ secrets.R2_EVIDENCE_API_KEY || '' }}
+  POLL_VENDOR_LIST: ${{ github.event.inputs.vendors }}
+  CUSTOMERS_API_URL: ${{ vars.CUSTOMERS_API_URL || '' }}
+
+jobs:
+  poll-once:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run on-demand poller
+        run: node scripts/poller.mjs
+
+      - name: Rebuild sitemap
+        run: node scripts/build_sitemap.mjs
+
+      - name: Commit & push (if any changes)
+        env:
+          CUSTOMER_ID: ${{ github.event.inputs.customer_id }}
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+
+          git add -A evidence reports rss/index.xml sitemap.xml || true
+
+          if git diff --cached --quiet; then
+            echo "no content changes"
+          else
+            msg="poller(on-demand): evidence+pages+rss+sitemap"
+            if [ -n "${CUSTOMER_ID:-}" ]; then
+              msg="$msg (customer: ${CUSTOMER_ID})"
+            fi
+            if git commit -m "$msg"; then
+              git push origin HEAD:main || echo "WARN: git push failed (non-fast-forward); another job updated main; will retry on next run."
+            else
+              echo "WARN: commit failed (maybe no staged changes)."
+            fi
+          fi
