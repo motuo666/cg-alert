@@ -13,13 +13,16 @@
     "expandEndpoints": "node scripts/expand_endpoints.js",
     "pricingSync": "node scripts/pricing_sync.mjs",
     "legalStamp": "node scripts/legal_stamp.js",
-    "pricingSyncReports": "node scripts/pricing_sync_reports.js"
+    "pricingSyncReports": "node scripts/pricing_sync_reports.js",
+
+    "start": "node mail-gateway.js"
   },
   "dependencies": {
     "fast-xml-parser": "^4.5.3",
     "node-fetch": "3.3.2",
     "nodemailer": "^7.0.10",
-    "stripe": "16.12.0"
+    "stripe": "16.12.0",
+    "express": "^4.21.0"
   },
   "engines": {
     "node": ">=20"
