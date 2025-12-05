@@ -143,24 +143,44 @@ def update_reports(items):
     rpt_path = os.path.join(ROOT, "..", "reports", "index.html")
     if not os.path.exists(rpt_path):
         return
-    with open(rpt_path,"r",encoding="utf-8") as f:
+    with open(rpt_path, "r", encoding="utf-8") as f:
         html = f.read()
     if "<!-- BEGIN:REPORTS -->" not in html or "<!-- END:REPORTS -->" not in html:
         return
-    parts = ["<ul class=\"cg-reports\">"]
-    for it in items[:50]:
-        title = escape(it["title"])
-        url = escape(it["url"])
-        v = escape(it.get("vendor",""))
-        c = escape(it.get("category",""))
-        d = escape(it["date"])
-        s = escape(it.get("summary",""))
-        parts.append(f'<li><h3><a href="{url}" rel="noopener">{title}</a></h3><p><time datetime="{d}">{d}</time> · {v} · {c}</p><p class="muted">{s}</p></li>')
+
+    parts = ['<ul class="cg-reports">']
+    subset = list(items[:50]) if items else []
+
+    if not subset:
+        # Keep a human-readable empty state instead of a blank block
+        parts.append('<li>No public reports yet. The automation pipeline is ready; new vendor changes will appear here automatically.</li>')
+    else:
+        for it in subset:
+            title = escape(it["title"])
+            url = escape(it["url"])
+            v = escape(it.get("vendor", ""))
+            c = escape(it.get("category", ""))
+            d = escape(it["date"])
+            s = escape(it.get("summary", ""))
+            parts.append(
+                f'<li><h3><a href="{url}" rel="noopener">{title}</a></h3>'
+                f'<p class="meta"><time datetime="{d}">{d}</time> · {v} · {c}</p>'
+                f'<p class="muted">{s}</p></li>'
+            )
+
     parts.append("</ul>")
-    block = "\n".join(parts)
-    new = re.sub(r"(?s)<!-- BEGIN:REPORTS -->.*?<!-- END:REPORTS -->","<!-- BEGIN:REPORTS -->\n"+block+"\n<!-- END:REPORTS -->", html)
+    block = "
+".join(parts)
+    new = re.sub(
+        r"(?s)<!-- BEGIN:REPORTS -->.*?<!-- END:REPORTS -->",
+        "<!-- BEGIN:REPORTS -->
+" + block + "
+<!-- END:REPORTS -->",
+        html,
+    )
     if new != html:
         write(rpt_path, new)
+
 
 def touch_sitemap():
     path = os.path.join(ROOT, "..", "sitemap.xml")
