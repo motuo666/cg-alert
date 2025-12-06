@@ -1,0 +1,23 @@
+{
+  "min_significant_text_delta": 32,
+  "ignore_patterns": [
+    "last updated",
+    "last modified",
+    "cookie policy",
+    "we use cookies"
+  ],
+  "important_categories": [
+    "pricing",
+    "price",
+    "billing",
+    "privacy",
+    "dpa",
+    "subprocessor",
+    "security"
+  ],
+  "ignore_categories": [
+    "css",
+    "layout",
+    "tracking_pixel"
+  ]
+}
