@@ -20,7 +20,7 @@ jobs:
           node-version: "20"
 
       - name: Install deps
-        run: npm ci
+        run: npm install --omit=dev
 
       - name: Sync vendor requests into seed_domains.txt
         env:
