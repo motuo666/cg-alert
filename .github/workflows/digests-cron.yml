@@ -1,0 +1,35 @@
+name: digests-cron
+
+on:
+  schedule:
+    - cron: '30 4 * * 1'   # 每周一 04:30 UTC 生成一版 digests 工件
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cg-digests
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Generate customer digests (artifacts only)
+        env:
+          CUSTOMERS_API_URL: ${{ vars.CUSTOMERS_API_URL || '' }}
+        run: |
+          set -e
+          python scripts/gen_customer_digests.py
+      - name: Upload digests
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests
+          path: artifacts/digests/*.txt
+          if-no-files-found: warn

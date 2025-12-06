@@ -1,0 +1,24 @@
+name: events-health
+
+on:
+  schedule:
+    - cron: '5 3 * * *'  # 每天 03:05 UTC 跑一次
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cg-events-health
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check events health (no silent poller failures)
+        run: python scripts/check_events_health.py --days 3
