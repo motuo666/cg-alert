@@ -4,9 +4,9 @@
   "page": "/pricing",
   "key": "pricing",
   "old_hash": "",
-  "new_hash": "14cb141c34b06e5c3e9f4fd0e36f157e8cbb70bbb3d6bd131790b0834b017577",
-  "first_seen_at": "2025-12-05T02:57:20.499Z",
+  "new_hash": "6abfb0e5633cbc60f2b3064ff582379ea88c52f67dcd9f6ccfaa3c0c2283281c",
+  "first_seen_at": "2025-12-06T02:48:10.419Z",
   "confirmed_at": null,
-  "status_code": 200,
-  "snippet": "Notion Pricing Plans: Free, Plus, Business, &amp; Enterprise. Notion Features Notion AI Build, write, automate Agents New Handles manual tasks Enterprise Search Find answers instantly AI Meeting Notes Perfectly written by AI Docs Simple &am"
+  "status_code": 403,
+  "snippet": "Attention Required! | Cloudflare Please enable cookies. Sorry, you have been blocked You are unable to access notion.so Why have I been blocked? This website is using a security service to protect itself from online attacks. The action you "
 }
