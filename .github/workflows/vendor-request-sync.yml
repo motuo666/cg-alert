@@ -19,7 +19,6 @@ jobs:
         with:
           node-version: "20"
 
-      # 不再装依赖，直接用 Node 跑脚本（脚本只用内置模块）
       - name: Sync vendor requests into seed_domains.txt
         env:
           VENDOR_REQUEST_API: https://api.cg-alert.com/vendor-request/seeds
@@ -36,7 +35,7 @@ jobs:
           git config user.email "bot@cg-alert.com"
           git add data/seed_domains.txt
           git commit -m "chore: sync vendor requests into seeds"
-          git push
+          git push || echo "WARN: git push failed (non-fast-forward); another job updated main; will retry later."
 
 concurrency:
   group: cg-full-pipeline
