@@ -26,6 +26,13 @@ jobs:
           set -euo pipefail
           python3 scripts/promote_evidence_events.py --root .
 
+      - name: Build canonical events.csv from raw/backlog
+        run: |
+          set -euo pipefail
+          python3 scripts/build_events_canonical.py --root .
+          python3 scripts/normalize_events.py --root .
+          python3 scripts/check_data_schema.py --root .
+
       - name: Commit and push if changed
         run: |
           set -euo pipefail
@@ -35,8 +42,8 @@ jobs:
           fi
           git config user.name "cg-alert-bot"
           git config user.email "bot@cg-alert.com"
-          git add data/events.raw.csv data/events.backlog.csv
-          git commit -m "chore(ci): promote high-signal evidence into events"
+          git add data/events.raw.csv data/events.backlog.csv data/events.csv
+          git commit -m "chore(ci): promote evidence and rebuild canonical events feed"
           git push
 
 concurrency:
