@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Latest evidence — CG Alert</title>
+<title>Latest vendor change evidence — CG Alert</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="icon" href="/icon.svg" type="image/svg+xml" />
 <link rel="canonical" href="https://www.cg-alert.com/reports/latest.html" />
 <link rel="stylesheet" href="/assets/home-v3c.css" />
-<meta name="description" content="Browse the latest vendor change evidence captured by CG Alert." />
+<meta name="description" content="See what CG Alert actually surfaces when your SaaS vendors change pricing, terms, DPAs or security commitments." />
 </head>
+
 <body>
 <header class="cg-topbar">
   <div class="cg-wrap cg-nav">
@@ -22,32 +23,117 @@
     </nav>
   </div>
 </header>
-<main class="cg-wrap">
-  <h1>Latest evidence</h1>
-  <p class="cg-note">A snapshot of recently captured vendor change evidence. For full search and filters, see the main <a href="/reports/">reports page</a>.</p>
-  <section class="cards-grid">
-  <article class="evidence-card">
-  <h4><a href="https://example.com/pricing">Example SaaS</a></h4>
-  <time>2025-11-08T03:39:48.251Z</time>
-  <p></p>
-</article>
-  <article class="evidence-card">
-  <h4><a href="https://contoso.com/terms">Contoso CRM</a></h4>
-  <time>2025-11-08T03:39:48.251Z</time>
-  <p></p>
-</article>
-  <article class="evidence-card">
-  <h4><a href="https://fabrikam.io/subprocessors">Fabrikam Analytics</a></h4>
-  <time>2025-11-08T03:39:48.252Z</time>
-  <p></p>
-</article>
-  <article class="evidence-card">
-  <h4><a href="#">vendor</a></h4>
-  <time>2025-11-08T03:39:48.252Z</time>
-  <p></p>
-</article>
+
+<section class="cg-hero cg-hero-narrow" id="latest-evidence-hero">
+  <div class="cg-wrap">
+    <h1>Latest SaaS vendor change evidence</h1>
+    <p class="cg-sub">
+      This page shows the kind of pricing, terms, DPA and security changes CG Alert turns into
+      renewal-ready evidence for security, legal and procurement teams.
+    </p>
+    <div class="cg-cta">
+      <a class="cg-btn" href="/#pricing">Track my own vendors</a>
+      <a class="cg-btn ghost" href="/reports/">Back to reports overview</a>
+    </div>
+    <p class="cg-note">
+      Sample data only. Real customer boards are private and filtered to each company&apos;s actual vendor list and contracts.
+    </p>
+  </div>
+</section>
+
+<main>
+  <section class="cg-preview" id="latest-evidence-list">
+    <div class="cg-wrap">
+      <header class="cg-preview-header">
+        <h2>Sample evidence cards</h2>
+        <p class="cg-subtle">
+          Each card below represents a single detected change: what moved on the vendor site,
+          why it matters, and how teams use it at renewal or during audits.
+        </p>
+      </header>
+
+      <div class="cards-grid">
+        <article class="evidence-card">
+          <h4><a href="https://example.com/pricing">Example SaaS — pricing &amp; packaging change</a></h4>
+          <time datetime="2025-11-08T03:39:48.251Z">Captured 2025-11-08</time>
+          <p>
+            Detected a 14% price increase on the annual Growth plan and a new 5-seat minimum.
+            Revenue and procurement use this card as leverage to lock in current pricing before renewal.
+          </p>
+        </article>
+
+        <article class="evidence-card">
+          <h4><a href="https://contoso.com/terms">Contoso CRM — terms of service update</a></h4>
+          <time datetime="2025-11-08T03:39:48.251Z">Captured 2025-11-08</time>
+          <p>
+            Liability cap shifted from 12 to 6 months of fees and data residency language was tightened.
+            Legal flags this for review and attaches the evidence when pushing back on the change.
+          </p>
+        </article>
+
+        <article class="evidence-card">
+          <h4><a href="https://fabrikam.io/subprocessors">Fabrikam Analytics — new subprocessors</a></h4>
+          <time datetime="2025-11-08T03:39:48.252Z">Captured 2025-11-08</time>
+          <p>
+            Two new cloud providers were added to the DPA subprocessor list.
+            Security and privacy teams use this card to assess impact and update internal records.
+          </p>
+        </article>
+
+        <article class="evidence-card">
+          <h4><a href="#">Collaboration Suite — AI training clause</a></h4>
+          <time datetime="2025-11-08T03:39:48.252Z">Captured 2025-11-08</time>
+          <p>
+            Introduced a new clause allowing product data to be used for model training by default.
+            Risk owners escalate this internally and require an opt-out before signing the renewal.
+          </p>
+        </article>
+      </div>
+
+      <p class="cg-subtle">
+        In production, this board is filtered to just your vendors, grouped by risk and renewal dates,
+        with alerts routed to the right owner instead of a shared inbox.
+      </p>
+    </div>
+  </section>
+
+  <section class="cg-how" id="how-to-use-latest">
+    <div class="cg-wrap">
+      <div class="cg-grid cg-grid-2">
+        <div>
+          <h2>How teams use this evidence</h2>
+          <ol class="cg-steps">
+            <li>Security and legal get a live feed of material vendor changes instead of static screenshots.</li>
+            <li>Procurement bookmarks high-impact cards as renewal leverage for price and terms.</li>
+            <li>Audit and compliance export evidence to answer “when did this change?” with a single link.</li>
+          </ol>
+        </div>
+        <div>
+          <h3>Turn this into your own board</h3>
+          <ul class="cg-list">
+            <li>Connect your vendor list and contract / policy URLs.</li>
+            <li>Tell CG Alert which changes are “high impact” for your organisation.</li>
+            <li>Let the system run in the background and surface only useful, evidence-backed changes.</li>
+          </ul>
+          <p><a class="cg-btn" href="/#pricing">Compare plans</a></p>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
+
+<footer class="cg-footer">
+  <div class="cg-wrap cg-footlinks">
+    <a href="/who-uses/">Who uses</a>
+    <a href="/about/">About</a>
+    <a href="/reports/">Reports</a>
+    <a href="/rss/">RSS</a>
+    <a href="/terms/">Terms</a>
+    <a href="/privacy/">Privacy</a>
+    <span>© CG Alert — evidence-backed SaaS vendor change intelligence.</span>
+  </div>
+</footer>
+
 <style>
 .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:18px 0;}
 .evidence-card{border:1px solid #e5e5e5;border-radius:10px;padding:12px;background:#fff}
@@ -55,5 +141,9 @@
 .evidence-card time{display:block;color:#777;font-size:12px;margin-bottom:6px}
 .evidence-card p{margin:0;color:#444;font-size:13px;line-height:1.4}
 </style>
+
+<script src="/assets/home-v3c.js"></script>
+<script src="/assets/pricing.js" defer></script>
 </body>
+
 </html>
