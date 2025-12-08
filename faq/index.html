@@ -8,7 +8,39 @@
   <meta name="description" content="FAQ — CG Alert">
   <link rel="stylesheet" href="/assets/home-v3c.css?v=cb1">
 
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;"></head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'self'; connect-src 'self'; frame-ancestors 'self'; form-action 'self' https://buy.stripe.com https://forms.gle;">
+  <script type="application/ld+json">{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What sources do you monitor?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We monitor public vendor pages such as pricing, terms, DPAs, privacy, subprocessors and status/security pages, respecting robots and sitemaps."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How noisy are alerts?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Alerts are filtered through a two-stage de-noise pipeline targeting a low false positive rate, focusing on material changes."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What does evidence-backed mean?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Each change is stored with a timestamp, diff and cryptographic hash so you can hand it to legal, security or procurement as audit-ready evidence."
+        }
+      }
+    ]
+  }</script>
+
+</head>
 <body>
 <header class="cg-topbar"><div class="cg-wrap cg-nav">
   <a class="cg-brand" href="/"><img src="/icon.svg" alt="CG Alert"><span>CG&nbsp;Alert</span></a>
@@ -27,6 +59,15 @@
   <div class="cg-card hover"><h3>How do I receive alerts?</h3><p>Email only. No calls.</p></div>
   <div class="cg-card hover"><h3>Refund policy</h3><p>Audit plan ($2,988/year): 30‑day money‑back if no "material change".</p></div>
   <div class="cg-card hover"><h3>Can I add named vendors?</h3><p>Yes — Renewal Leverage (3) and Compliance & Vendor Risk (6) include named vendors.</p></div>
+</div>
+
+  <div class="cg-card hover">
+    <h3>Where should I start?</h3>
+    <p>Most teams start by checking the <a href="/reports/latest.html">Latest SaaS vendor change evidence</a>,
+    then picking a plan on the <a href="/pricing/">pricing</a> page and sending their vendor list via the
+    <a href="/intake/">intake form</a>.</p>
+  </div>
+
 </div>
 
 </main>
