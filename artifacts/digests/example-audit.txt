@@ -1,0 +1,6 @@
+CG Alert — Digest for example-audit (audit)
+
+No vendor changes in the last 7 days for this customer.
+
+—
+TODO: wire up SMTP / Webhook in CI, this script only generates digest artifacts.

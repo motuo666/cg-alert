@@ -44,11 +44,16 @@ def load_events() -> List[Dict[str, Any]]:
 
 def parse_date(s: str) -> datetime:
     s = (s or "").strip()
-    for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ"):
-        try:
-            return datetime.strptime(s[: len(fmt)], fmt)
-        except Exception:
-            continue
+    if not s:
+        return datetime.utcfromtimestamp(0)
+    # Accept date-only (YYYY-MM-DD) and common ISO 8601 datetime strings
+    candidates = [s, s[:10]]
+    for raw in candidates:
+        for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%SZ"):
+            try:
+                return datetime.strptime(raw, fmt)
+            except Exception:
+                continue
     return datetime.utcfromtimestamp(0)
 
 

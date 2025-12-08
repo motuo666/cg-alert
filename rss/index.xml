@@ -1,29 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0"><channel>
-<title>CG Alert Reports</title>
-<link>https://www.cg-alert.com/reports/</link>
-<description>Evidence-backed vendor change alerts</description>
-<lastBuildDate>Wed, 03 Dec 2025 07:53:38 GMT</lastBuildDate>
-
-  <item>
-    <title>Fabrikam Analytics</title>
-    <link>https://www.cg-alert.com/reports/cards/fabrikam-analytics-2025-11-07t09-46-06-032638z.html</link>
-    <pubDate>Fri, 07 Nov 2025 09:46:06 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">demo-hash-3</guid>
-  </item>
-  <item>
-    <title>Contoso CRM</title>
-    <link>https://www.cg-alert.com/reports/cards/contoso-crm-2025-11-07t09-46-06-032636z.html</link>
-    <pubDate>Fri, 07 Nov 2025 09:46:06 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">demo-hash-2</guid>
-  </item>
-  <item>
-    <title>Example SaaS</title>
-    <link>https://www.cg-alert.com/reports/cards/example-saas-2025-11-07t09-46-06-032625z.html</link>
-    <pubDate>Fri, 07 Nov 2025 09:46:06 GMT</pubDate>
-    <description></description>
-    <guid isPermaLink="false">demo-hash-1</guid>
-  </item>
+<rss version="2.0">
+<channel>
+<title>CG Alert — vendor change feed</title>
+<link>https://www.cg-alert.com</link>
+<description>Evidence-backed vendor change alerts.</description>
+<lastBuildDate>Mon, 08 Dec 2025 03:07:58 +0000</lastBuildDate>
 </channel></rss>

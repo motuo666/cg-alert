@@ -8,7 +8,7 @@ from html import escape
 
 def load_feeds_config():
     """Read public feed filtering rules from config/feeds.json (repo-relative)."""
-    cfg_path = os.path.join(ROOT, "..", "config", "feeds.json")
+    cfg_path = os.path.join(ROOT, "config", "feeds.json")
     try:
         with open(cfg_path, "r", encoding="utf-8") as f:
             return json.load(f)
@@ -140,7 +140,7 @@ def gen_rss(items):
 
 def update_reports(items):
     # only replace content between markers if present
-    rpt_path = os.path.join(ROOT, "..", "reports", "index.html")
+    rpt_path = os.path.join(ROOT, "reports", "index.html")
     if not os.path.exists(rpt_path):
         return
     with open(rpt_path, "r", encoding="utf-8") as f:
@@ -169,13 +169,10 @@ def update_reports(items):
             )
 
     parts.append("</ul>")
-    block = "
-".join(parts)
+    block = "\n".join(parts)
     new = re.sub(
         r"(?s)<!-- BEGIN:REPORTS -->.*?<!-- END:REPORTS -->",
-        "<!-- BEGIN:REPORTS -->
-" + block + "
-<!-- END:REPORTS -->",
+        "<!-- BEGIN:REPORTS -->\n" + block + "\n<!-- END:REPORTS -->",
         html,
     )
     if new != html:
@@ -183,7 +180,7 @@ def update_reports(items):
 
 
 def touch_sitemap():
-    path = os.path.join(ROOT, "..", "sitemap.xml")
+    path = os.path.join(ROOT, "sitemap.xml")
     if not os.path.exists(path): 
         return
     with open(path,"r",encoding="utf-8") as f:
@@ -203,7 +200,7 @@ def main():
     cfg = load_feeds_config()
     public_items = filter_public_items(items, cfg)
     rss_out = gen_rss(public_items)
-    write(os.path.join(ROOT,"..","rss","index.xml"), rss_out)
+    write(os.path.join(ROOT,"rss","index.xml"), rss_out)
     update_reports(public_items)
     touch_sitemap()
     p("Done. Items (public):", len(public_items))

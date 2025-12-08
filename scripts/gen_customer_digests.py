@@ -53,8 +53,8 @@ def load_customers():
          - {"items": [...]} / {"customers": [...]} / {"data": [...]}.
     2) Fallback to config/customers.json or config/customers.example.json.
     """
-    cfg = os.path.join(ROOT, "..", "config", "customers.json")
-    ex = os.path.join(ROOT, "..", "config", "customers.example.json")
+    cfg = os.path.join(ROOT, "config", "customers.json")
+    ex = os.path.join(ROOT, "config", "customers.example.json")
     api_url = (os.environ.get("CUSTOMERS_API_URL", "") or "").strip()
     if api_url:
         try:
@@ -83,8 +83,10 @@ def load_customers():
         return []
 
 def parse_date(s):
-s):
     try:
+        if not s:
+            return None
+
         if len(s) >= 10:
             return datetime.datetime.strptime(s[:10], "%Y-%m-%d").date()
     except Exception:
@@ -111,7 +113,7 @@ def ensure_dir(pth):
     os.makedirs(os.path.dirname(pth), exist_ok=True)
 
 def write_digest(cid, customer, events):
-    dst = os.path.join(ROOT, "..", "artifacts", "digests", f"{cid}.txt")
+    dst = os.path.join(ROOT, "artifacts", "digests", f"{cid}.txt")
     ensure_dir(dst)
     lines = []
     lines.append(f"CG Alert — Digest for {cid} ({customer.get('plan','')})")
