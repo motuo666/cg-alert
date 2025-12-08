@@ -128,6 +128,11 @@ jobs:
           python3 scripts/build_events_canonical.py --root .
           python3 scripts/normalize_events.py --root .
 
+      - name: Build SEO content hubs (vendors/topics/digests)
+        run: |
+          set -e
+          python3 scripts/build_seo_hubs.py
+
       - name: Generate feeds & pages
         env:
           SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
@@ -142,7 +147,7 @@ jobs:
           git config user.name "cg-alert-bot"
           git config user.email "bot@cg-alert.com"
 
-          git add rss/index.xml sitemap.xml reports/index.html || true
+          git add rss/index.xml sitemap.xml reports/index.html reports/vendors/ reports/topics/ reports/digests/ || true
 
           if git diff --cached --quiet; then
             echo "No RSS/sitemap changes; skipping commit & push."
