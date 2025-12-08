@@ -153,7 +153,7 @@ def update_reports(items):
 
     if not subset:
         # Keep a human-readable empty state instead of a blank block
-        parts.append('<li>No public reports yet. The automation pipeline is ready; new vendor changes will appear here automatically.</li>')
+        parts.append('<li>No public reports yet.</li>')
     else:
         for it in subset:
             title = escape(it["title"])
