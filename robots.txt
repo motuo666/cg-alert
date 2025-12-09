@@ -8,6 +8,8 @@ Disallow: /data/
 Disallow: /deploy/
 Disallow: /scripts/
 Disallow: /artifacts/
+Disallow: /ops/
+
 
 # 主站固定页面
 Sitemap: https://www.cg-alert.com/sitemap.xml
