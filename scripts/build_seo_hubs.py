@@ -23,6 +23,8 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
 REPORTS = ROOT / "reports"
+CONFIG = ROOT / "config"
+FEEDS_JSON = CONFIG / "feeds.json"
 
 EVENTS_CSV = DATA / "events.csv"
 VENDOR_PRIORITY_CSV = DATA / "vendor_priority.csv"
@@ -618,6 +620,42 @@ def build_sample_digests(events: List[Event], chrome: Dict[str, str]) -> None:
             body_html=body,
         )
         (dig_root / f"{slug}.html").write_text(html_out, encoding="utf-8")
+
+
+
+def load_public_config() -> Dict[str, object]:
+    try:
+        with FEEDS_JSON.open("r", encoding="utf-8") as f:
+            cfg = json.load(f)
+    except Exception:
+        cfg = {}
+    if not isinstance(cfg, dict):
+        return {}
+    return cfg
+
+
+def filter_public_events(events: List[Event], cfg: Dict[str, object]) -> List[Event]:
+    public_vendors = set((cfg or {}).get("public_vendors", []) or [])
+    try:
+        min_age = int((cfg or {}).get("public_min_age_days", 14))
+    except Exception:
+        min_age = 14
+    today = datetime.utcnow().date()
+    out: List[Event] = []
+    for e in events:
+        age = (today - e.date.date()).days
+        if age < min_age:
+            continue
+        if public_vendors and e.vendor not in public_vendors:
+            continue
+        out.append(e)
+    return out
+
+
+def load_public_events() -> List[Event]:
+    events = load_public_events()
+    cfg = load_public_config()
+    return filter_public_events(events, cfg)
 
 
 def main() -> None:
