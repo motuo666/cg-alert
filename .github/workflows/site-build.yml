@@ -4,7 +4,7 @@ on:
     paths:
     - data/events.*
     - .github/workflows/site-build.yml
-  workflow_dispatch: null
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -12,46 +12,184 @@ jobs:
     - uses: actions/checkout@v4
     - name: Generate RSS, Reports & Sitemap
       shell: bash
-      run: "set -e\npython3 - << 'PY'\nimport csv, json, datetime, html, pathlib\n\
-        import xml.sax.saxutils as sx\n\n# 允许在仓库根或者 cg-alert-main 下面运行\nroot = pathlib.Path(\"\
-        cg-alert-main\") if pathlib.Path(\"cg-alert-main\").exists() else pathlib.Path(\"\
-        .\")\n\nevents_csv = root / \"data\" / \"events.csv\"\nevents_json = root\
-        \ / \"data\" / \"events.json\"\n\nrows = []\nif events_csv.exists():\n   \
-        \ with events_csv.open(encoding=\"utf-8\") as f:\n        reader = csv.DictReader(f)\n\
-        \        rows.extend(reader)\nelif events_json.exists():\n    rows = json.loads(events_json.read_text(encoding=\"\
-        utf-8\"))\n\nnorm = []\nfor r in rows:\n    norm.append({\n        \"date\"\
-        : r.get(\"date\", \"\"),\n        \"vendor\": r.get(\"vendor\", \"\"),\n \
-        \       \"url\": r.get(\"url\", \"\"),\n        \"change\": r.get(\"change\"\
-        , \"\"),\n        \"impact\": r.get(\"impact\", \"\"),\n        \"tier\":\
-        \ r.get(\"tier\", \"\"),\n    })\n\n# RSS\nitems = \"\\n\".join(\n    \"<item>\"\
-        \n    f\"<title>{sx.escape(n['vendor'])}: {sx.escape(n['change'])}</title>\"\
-        \n    f\"<link>{sx.escape(n['url'])}</link>\"\n    f\"<description>{sx.escape(n['impact'])}</description>\"\
-        \n    \"</item>\"\n    for n in norm\n)\n\nrss = root / \"rss\" / \"index.xml\"\
-        \nrss.parent.mkdir(parents=True, exist_ok=True)\nlast_build = datetime.datetime.utcnow().strftime(\"\
-        %a, %d %b %Y %H:%M:%S GMT\")\nrss.write_text(\n    '<?xml version=\"1.0\"\
-        \ encoding=\"UTF-8\"?>\\n'\n    '<rss version=\"2.0\"><channel>'\n    '<title>CG\
-        \ Alert — Vendor Change Feed</title>'\n    '<link>https://www.cg-alert.com/</link>'\n\
-        \    '<description>Evidence-backed vendor change alerts.</description>'\n\
-        \    f\"<lastBuildDate>{last_build}</lastBuildDate>\\n\"\n    f\"{items}\\\
-        n\"\n    \"</channel></rss>\\n\",\n    encoding=\"utf-8\",\n)\n\n# Reports\
-        \ (HTML table body fragment)\ntable = \"\".join(\n    \"<tr>\"\n    f\"<td>{sx.escape(n['date'])}</td>\"\
-        \n    f\"<td>{sx.escape(n['vendor'])}</td>\"\n    f\"<td>{sx.escape(n['change'])}</td>\"\
-        \n    f\"<td>{sx.escape(n['impact'])}</td>\"\n    f\"<td>{sx.escape(n['tier'])}</td>\"\
-        \n    \"</tr>\"\n    for n in norm\n)\nrep = root / \"reports\" / \"data.html\"\
-        \nrep.parent.mkdir(parents=True, exist_ok=True)\nrep.write_text(table, encoding=\"\
-        utf-8\")\n\n# Sitemap\nurls = [\"/\", \"/who-uses/\", \"/pricing/\", \"/vendors/\"\
-        , \"/reports/\", \"/rss/index.xml\"]\nsm = root / \"sitemap.xml\"\nsm.write_text(\n\
-        \    '<?xml version=\"1.0\" encoding=\"UTF-8\"?>\\n'\n    '<urlset xmlns=\"\
-        http://www.sitemaps.org/schemas/sitemap/0.9\">'\n    + \"\".join(f\"<url><loc>https://www.cg-alert.com{u}</loc></url>\"\
-        \ for u in urls)\n    + \"\\n</urlset>\\n\",\n    encoding=\"utf-8\",\n)\n\
-        PY\n"
+      run: |
+        set -e
+        python3 - << 'PY'
+        import csv, json, datetime, pathlib
+        import xml.sax.saxutils as sx
+
+        # Allow running from repo root or cg-alert-main/
+        root = pathlib.Path("cg-alert-main") if pathlib.Path("cg-alert-main").exists() else pathlib.Path(".")
+
+        events_csv = root / "data" / "events.csv"
+        events_json = root / "data" / "events.json"
+
+        rows = []
+        if events_csv.exists():
+            with events_csv.open(encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows.extend(reader)
+        elif events_json.exists():
+            rows = json.loads(events_json.read_text(encoding='utf-8'))
+
+        norm = []
+        for r in rows:
+            norm.append({
+                'date': r.get('date', ''),
+                'vendor': r.get('vendor', ''),
+                'url': r.get('url', ''),
+                'change': r.get('change', ''),
+                'impact': r.get('impact', ''),
+                'tier': r.get('tier', ''),
+                'severity': r.get('severity', ''),
+                'title': r.get('title', ''),
+            })
+
+        # Load public feed config (14-day delay by default)
+        cfg_path = root / 'config' / 'feeds.json'
+        cfg = {'public_vendors': [], 'public_min_age_days': 14}
+        if cfg_path.exists():
+            try:
+                cfg.update(json.loads(cfg_path.read_text(encoding='utf-8')))
+            except Exception:
+                pass
+
+        public_vendors = set(cfg.get('public_vendors') or [])
+        try:
+            min_age = int(cfg.get('public_min_age_days', 14))
+        except Exception:
+            min_age = 14
+
+        def parse_date(value):
+            if not value:
+                return None
+            try:
+                if len(value) == 10:
+                    return datetime.datetime.strptime(value, '%Y-%m-%d')
+                return datetime.datetime.fromisoformat(value)
+            except Exception:
+                return None
+
+        today = datetime.datetime.utcnow().date()
+        public = []
+        for n in norm:
+            d = parse_date(n['date'])
+            if not d:
+                continue
+            age = (today - d.date()).days
+            if age < min_age:
+                continue
+            if public_vendors and n['vendor'] not in public_vendors:
+                continue
+            public.append(n)
+
+        # RSS from public events only
+        items = '\n'.join(
+            '<item>'
+            f"<title>{sx.escape(n['vendor'])}: {sx.escape(n['change'])}</title>"
+            f"<link>{sx.escape(n['url'])}</link>"
+            f"<description>{sx.escape(n['impact'])}</description>"
+            '</item>'
+            for n in public
+        )
+
+        rss = root / 'rss' / 'index.xml'
+        rss.parent.mkdir(parents=True, exist_ok=True)
+        last_build = datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')
+        rss.write_text(
+            "<?xml version='1.0' encoding='UTF-8'?>\n"
+            "<rss version='2.0'><channel>"
+            "<title>CG Alert — Vendor Change Feed</title>"
+            "<link>https://www.cg-alert.com/</link>"
+            "<description>Evidence-backed vendor change alerts.</description>"
+            f"<lastBuildDate>{last_build}</lastBuildDate>\n"
+            f"{items}\n"
+            "</channel></rss>\n",
+            encoding='utf-8',
+        )
+
+        # Reports table body fragment (public events only)
+        table = ''.join(
+            '<tr>'
+            f"<td>{sx.escape(n['date'])}</td>"
+            f"<td>{sx.escape(n['vendor'])}</td>"
+            f"<td>{sx.escape(n['change'])}</td>"
+            f"<td>{sx.escape(n['impact'])}</td>"
+            f"<td>{sx.escape(n['tier'])}</td>"
+            '</tr>'
+            for n in public
+        )
+        rep = root / 'reports' / 'data.html'
+        rep.parent.mkdir(parents=True, exist_ok=True)
+        rep.write_text(table, encoding='utf-8')
+
+        # Optionally refresh /reports/events/ archive table
+        archive = root / 'reports' / 'events' / 'index.html'
+        if archive.exists():
+            html_text = archive.read_text(encoding='utf-8')
+
+            def classify(n):
+                text = f"{n.get('title','')} {n.get('change','')} {n.get('url','')}".lower()
+                if 'dpa' in text:
+                    return 'DPA'
+                if 'pricing' in text or 'price' in text:
+                    return 'Pricing'
+                if 'status' in text:
+                    return 'Status'
+                if 'privacy' in text:
+                    return 'Privacy'
+                if 'terms' in text or 'tos' in text:
+                    return 'Terms'
+                if 'subprocessor' in text or 'sub-processor' in text:
+                    return 'DPA'
+                return 'Update'
+
+            ev_rows = ''.join(
+                '<tr>'
+                f"<td><time datetime='{sx.escape(n['date'])}'>{sx.escape(n['date'])}</time></td>"
+                f"<td>{sx.escape(n['vendor'])}</td>"
+                "<td><span class='cg-badges'>"
+                f"<span class='cg-badge'>{sx.escape(classify(n))}</span> "
+                f"<span class='cg-badge'>{sx.escape((n.get('severity') or '').lower())}</span>"
+                "</span></td>"
+                f"<td><a href='{sx.escape(n['url'])}' rel='noopener noreferrer'>{sx.escape(n['change'])}</a></td>"
+                f"<td class='cg-subtle'>{sx.escape(n['impact'])}</td>"
+                '</tr>'
+                for n in public
+            )
+
+            start = html_text.find('<tbody')
+            if start != -1:
+                start_close = html_text.find('>', start)
+                end = html_text.find('</tbody>', start_close)
+                if start_close != -1 and end != -1:
+                    new_html = html_text[: start_close + 1] + '\n' + ev_rows + '\n      ' + html_text[end:]
+                    archive.write_text(new_html, encoding='utf-8')
+
+        # Sitemap (static URL set)
+        urls = ['/', '/about/', '/dashboard/', '/deal-desk/', '/enterprise/', '/evidence/', '/faq/', '/intake/', '/pricing/', '/privacy/', '/reports/', '/reports/rss/', '/reports/who-uses/', '/rss/', '/seo/', '/stories/', '/stories/five-changes-you-probably-missed.html', '/stories/how-we-filter-noise.html', '/stories/why-terms-changes-matter.html', '/terms/', '/thank-you/', '/use-cases/', '/vendors/', '/who-uses/']
+        sm = root / 'sitemap.xml'
+        sm.write_text(
+            "<?xml version='1.0' encoding='UTF-8'?>\n"
+            "<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>"
+            + ''.join(f"<url><loc>https://www.cg-alert.com{u}</loc></url>" for u in urls)
+            + "\n</urlset>\n",
+            encoding='utf-8',
+        )
+        PY
     - name: Commit artifacts
       if: github.ref == 'refs/heads/main'
-      run: "set -e\ngit config user.email \"bot@cg-alert.com\"\ngit config user.name\
-        \ \"CG Alert Bot\"\ngit add rss/index.xml reports/data.html sitemap.xml ||\
-        \ true\nif git diff --staged --quiet; then\n  echo \"No changes.\"\nelse\n\
-        \  git commit -m \"chore: auto-regenerate RSS/Reports/Sitemap from data/events.*\"\
-        \n  git push\nfi\n"
+      run: |
+        set -e
+        git config user.email "bot@cg-alert.com"
+        git config user.name "CG Alert Bot"
+        git add rss/index.xml reports/data.html sitemap.xml reports/events/index.html || true
+        if git diff --staged --quiet; then
+          echo "No changes."
+        else
+          git commit -m "chore: auto-regenerate RSS/Reports/Sitemap from data/events.*"
+          git push
+        fi
 permissions:
   contents: write
 concurrency:
