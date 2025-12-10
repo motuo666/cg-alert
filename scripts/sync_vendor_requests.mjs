@@ -90,6 +90,19 @@ async function main() {
 }
 
 main().catch((e) => {
+  // 网络 / DNS 等临时错误，不要让整个 workflow 挂掉
+  const transientCodes = new Set(["ENOTFOUND", "ECONNREFUSED", "EAI_AGAIN", "ETIMEDOUT"]);
+  if (e && e.code && transientCodes.has(e.code)) {
+    console.error("sync_vendor_requests: transient network error, skipping sync:", {
+      code: e.code,
+      hostname: e.hostname,
+      syscall: e.syscall,
+    });
+    // Treat as soft-fail: keep workflow green while上游 API 尚未就绪
+    process.exit(0);
+    return;
+  }
+
   console.error("sync_vendor_requests failed:", e);
   process.exit(1);
 });

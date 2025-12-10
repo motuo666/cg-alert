@@ -42,9 +42,9 @@ def sanitize_placeholders(text: str) -> tuple[str, int]:
     return new_text, n
 
 
-def rewrite_local_anchors(text: str, page_is_root_index: bool) -> tuple[str, int]:
-    """非根页的 #id 改写为 /#id；根 index.html 保持不变"""
-    if page_is_root_index:
+def rewrite_local_anchors(text: str, page_is_root_index: bool, skip_anchor_rewrite: bool = False) -> tuple[str, int]:
+    """非根页的 #id 改写为 /#id；根 index.html 保持不变；某些页面可以选择跳过改写"""
+    if page_is_root_index or skip_anchor_rewrite:
         return text, 0
 
     def _repl(m: re.Match) -> str:
@@ -70,8 +70,9 @@ def process_html(html_path: pathlib.Path) -> tuple[bool, list[str]]:
         changed = True
         notes.append(f"placeholder:{n1}")
 
-    # 2) 本页锚点 -> 站点根锚点（仅非根页）
-    txt3, n2 = rewrite_local_anchors(txt2, is_root_index(html_path))
+    # 2) 本页锚点 -> 站点根锚点（仅非根页；reports/index.html 保持本地锚点不变）
+    skip_anchor_rewrite = (html_path.name == "index.html" and html_path.parent.name == "reports")
+    txt3, n2 = rewrite_local_anchors(txt2, is_root_index(html_path), skip_anchor_rewrite)
     if n2:
         changed = True
         notes.append(f"anchors:{n2}")
