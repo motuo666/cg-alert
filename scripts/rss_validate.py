@@ -48,7 +48,7 @@ for rel in cands:
         if not root.findall(f"{ns}entry"):
             status["notes"].append("0 <entry>")
     # Treat known stub feeds that intentionally have 0 items as OK
-    if status.get("file") in ("./rss.xml", "./reports/rss.xml", "./reports/rss/index.xml"):
+    if status.get("file") in ("./rss.xml", "./reports/rss.xml", "./reports/rss/index.xml", "./rss/index.xml"):
         status["notes"] = [n for n in status.get("notes", []) if n not in ("0 <item>", "0 <entry>")]
     report.append(status)
 
