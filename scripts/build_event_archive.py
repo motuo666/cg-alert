@@ -254,13 +254,13 @@ def filter_public_events(events: List[Event], cfg: Dict[str, object]) -> List[Ev
 
 
 def load_public_events() -> List[Event]:
-    events = load_public_events()
+    events = load_events()
     cfg = load_public_config()
     return filter_public_events(events, cfg)
 
 
 def main() -> None:
-    events = load_events()
+    events = load_public_events()
     chrome = load_site_chrome()
     build_archive(events, chrome)
 
