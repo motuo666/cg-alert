@@ -51,9 +51,14 @@ jobs:
           if [ -z "${CUSTOMERS_PULL_TOKEN:-}" ]; then
             echo "No CUSTOMERS_PULL_TOKEN set; skipping remote customers.csv fetch."
           else
-            curl -fsSL "https://api.cg-alert.com/internal/customers.csv?token=${CUSTOMERS_PULL_TOKEN}" -o customers.csv
-            echo "Fetched customers.csv (head):"
-            head -n 5 customers.csv || true
+            echo "Attempting to fetch customers.csv from Worker..."
+            if curl -fsSL "https://api.cg-alert.com/internal/customers.csv?token=${CUSTOMERS_PULL_TOKEN}" -o customers.csv; then
+              echo "Fetched customers.csv (head):"
+              head -n 5 customers.csv || true
+            else
+              echo "WARN: failed to fetch customers.csv from Worker (api.cg-alert.com); continuing without remote customers."
+              rm -f customers.csv || true
+            fi
           fi
       - name: Poll vendors (two-stage confirmation)
         run: node scripts/poller.mjs
@@ -73,7 +78,7 @@ jobs:
             echo "no content changes"
           else
             if git commit -m "poller: evidence+pages+rss+sitemap (full pipeline)"; then
-              git push origin HEAD:main || echo "WARN: git push failed (non-fast-forward); another job updated main; will retry on next run."
+              git push origin HEAD:main
             else
               echo "WARN: commit failed (maybe no staged changes)."
             fi
@@ -122,9 +127,26 @@ jobs:
           python-version: '3.11'
       - name: Install deps
         run: pip install pyyaml
+      - name: Build canonical events feed
+        run: |
+          set -e
+          python3 scripts/build_events_canonical.py --root .
+          python3 scripts/normalize_events.py --root .
+
+      - name: Build SEO content hubs (vendors/topics/digests)
+        run: |
+          set -e
+          python3 scripts/build_seo_hubs.py
+
+      - name: Build event archive & rankings
+        run: |
+          set -e
+          python3 scripts/build_event_archive.py
+          python3 scripts/build_rankings.py
+
       - name: Generate feeds & pages
         env:
-          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL || vars.SITE_ORIGIN || 'https://www.cg-alert.com' }}
+          SITE_BASE_URL: ${{ secrets.SITE_BASE_URL }}
         run: |
           python scripts/gen_feeds.py
       - name: Build sitemap
@@ -136,7 +158,7 @@ jobs:
           git config user.name "cg-alert-bot"
           git config user.email "bot@cg-alert.com"
 
-          git add rss/index.xml sitemap.xml reports/index.html || true
+          git add rss/index.xml sitemap.xml reports/index.html reports/vendors/ reports/topics/ reports/digests/ reports/events/ reports/rankings/ || true
 
           if git diff --cached --quiet; then
             echo "No RSS/sitemap changes; skipping commit & push."
