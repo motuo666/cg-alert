@@ -22,6 +22,17 @@ jobs:
         name: digests
         path: artifacts/digests/*.txt
         if-no-files-found: warn
+    - name: Optionally deliver digests via webhook
+      env:
+        CUSTOMERS_API_URL: ${{ vars.CUSTOMERS_API_URL || '' }}
+        DIGEST_WEBHOOK_URL: ${{ secrets.DIGEST_WEBHOOK_URL || '' }}
+      run: |
+        set -e
+        if [ -z "${DIGEST_WEBHOOK_URL}" ]; then
+          echo "DIGEST_WEBHOOK_URL not set; skipping webhook delivery."
+        else
+          python scripts/send_digests_via_webhook.py || echo "WARN: digest webhook delivery soft-failed."
+        fi
 concurrency:
   group: cg-full-pipeline
   cancel-in-progress: false
