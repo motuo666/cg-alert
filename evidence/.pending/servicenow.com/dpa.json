@@ -4,9 +4,9 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "",
-  "new_hash": "078ed1c0c3cad68a9d9d3ed43d77413d67c87890b0c051c952cfbe75f83328bb",
-  "first_seen_at": "2025-12-30T03:05:44.828Z",
+  "new_hash": "888fbea89b99529d5632914a4842c5d52ad3ba82843d6fb501ff3a30cf4f710c",
+  "first_seen_at": "2025-12-31T03:04:36.786Z",
   "confirmed_at": null,
   "status_code": 403,
-  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;dpa\" on this server. Reference&#32;&#35;18&#46;aaf4d517&#46;1767063943&#46;71e5a476 https&#58;&#47;&#47;errors&#46;edgesuite&"
+  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;dpa\" on this server. Reference&#32;&#35;18&#46;260f3417&#46;1767150275&#46;14379691 https&#58;&#47;&#47;errors&#46;edgesuite&"
 }
