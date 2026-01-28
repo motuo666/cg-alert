@@ -4,9 +4,9 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "",
-  "new_hash": "3ef18a4b1f3ac31f758927a1633dab08fd48a4c5fd618a7abc65ed88674609d5",
-  "first_seen_at": "2026-01-27T03:18:23.440Z",
+  "new_hash": "f6eb4bd3eb364e6d668fd16f3d5f3ca22141f58008cc0475edf75778b5db4bff",
+  "first_seen_at": "2026-01-28T03:14:05.973Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sign In | Sentry Join our live 25-min Intro to Sentry Demo. Bi-weekly, Thursdays at 10am PT. &nbsp RSVP Terms of service Sign In Request to Join Account * Password * Sign In Lost your password? Sign in with Google Sign in with GitHub Sign i"
+  "snippet": "Sign In | Sentry Seer now catches issues in PRs, explains what broke in prod, and fixes what you missed. &nbsp Learn More Terms of service Sign In Request to Join Account * Password * Sign In Lost your password? Sign in with Google Sign in "
 }

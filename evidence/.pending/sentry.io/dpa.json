@@ -4,9 +4,9 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "",
-  "new_hash": "f803200195a179ba643d077481aa31744054d46e6b528c8eca40eaf1149a3bc9",
-  "first_seen_at": "2026-01-27T03:18:29.289Z",
+  "new_hash": "ba9b438c94d3f1e261f0db6d6516a11d74f2d8403d3c6bfc6586938875aa40d3",
+  "first_seen_at": "2026-01-28T03:14:08.410Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sign In | Sentry Join our live 25-min Intro to Sentry Demo. Bi-weekly, Thursdays at 10am PT. &nbsp RSVP DPA Sign In Request to Join Account * Password * Sign In Lost your password? Sign in with Google Sign in with GitHub Sign in with Azure "
+  "snippet": "Sign In | Sentry Seer now catches issues in PRs, explains what broke in prod, and fixes what you missed. &nbsp Learn More DPA Sign In Request to Join Account * Password * Sign In Lost your password? Sign in with Google Sign in with GitHub S"
 }
