@@ -4,9 +4,9 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "",
-  "new_hash": "94e88d4baa144d0c8539da4c8251ecd27f6ceaf8f30b554b82cfda22273cef4a",
-  "first_seen_at": "2026-02-18T03:48:44.676Z",
+  "new_hash": "31aa2f0ce9e2d8ab78800133d1490b44a584aa0f3687201290b0e0bf355b6928",
+  "first_seen_at": "2026-02-19T03:48:39.892Z",
   "confirmed_at": null,
   "status_code": 403,
-  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;terms&#45;of&#45;service\" on this server. Reference&#32;&#35;18&#46;635ed617&#46;1771386523&#46;63860c7 https&#58;&#47;&#47;e"
+  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;terms&#45;of&#45;service\" on this server. Reference&#32;&#35;18&#46;f318d017&#46;1771472918&#46;433d53c7 https&#58;&#47;&#47;"
 }
