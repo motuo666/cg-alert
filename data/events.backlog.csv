@@ -1134,3 +1134,17 @@ date,vendor,url,change,impact,tier
 2026-02-23,stripe.com,https://stripe.com/pricing,stripe.com pricing/plan page changed,Potential pricing/packaging change (auto-detected),pro
 2026-02-23,stripe.com,https://stripe.com/terms,stripe.com terms updated,High-impact legal/security change (auto-detected),business
 2026-02-23,zoom.us,https://zoom.us/terms,zoom.us terms updated,High-impact legal/security change (auto-detected),business
+2026-02-24,airtable.com,https://airtable.com/pricing,airtable.com pricing/plan page changed,Potential pricing/packaging change (auto-detected),pro
+2026-02-24,dropbox.com,https://dropbox.com/pricing,dropbox.com pricing/plan page changed,Potential pricing/packaging change (auto-detected),pro
+2026-02-24,dropbox.com,https://dropbox.com/terms,dropbox.com terms updated,High-impact legal/security change (auto-detected),business
+2026-02-24,github.com,https://github.com/pricing,github.com pricing/plan page changed,Potential pricing/packaging change (auto-detected),pro
+2026-02-24,github.com,https://github.com/terms-of-service,github.com terms of service updated,High-impact legal/security change (auto-detected),business
+2026-02-24,gitlab.com,https://gitlab.com/terms,gitlab.com terms updated,High-impact legal/security change (auto-detected),business
+2026-02-24,intercom.com,https://intercom.com/pricing,intercom.com pricing/plan page changed,Potential pricing/packaging change (auto-detected),pro
+2026-02-24,intercom.com,https://intercom.com/terms-of-service,intercom.com terms of service updated,High-impact legal/security change (auto-detected),business
+2026-02-24,monday.com,https://monday.com/pricing,monday.com pricing/plan page changed,Potential pricing/packaging change (auto-detected),pro
+2026-02-24,notion.so,https://notion.so/pricing,notion.so pricing/plan page changed,Potential pricing/packaging change (auto-detected),pro
+2026-02-24,sentry.io,https://sentry.io/terms-of-service,sentry.io terms of service updated,High-impact legal/security change (auto-detected),business
+2026-02-24,stripe.com,https://stripe.com/pricing,stripe.com pricing/plan page changed,Potential pricing/packaging change (auto-detected),pro
+2026-02-24,stripe.com,https://stripe.com/terms,stripe.com terms updated,High-impact legal/security change (auto-detected),business
+2026-02-24,zoom.us,https://zoom.us/terms,zoom.us terms updated,High-impact legal/security change (auto-detected),business
