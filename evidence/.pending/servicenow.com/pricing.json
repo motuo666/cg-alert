@@ -4,9 +4,9 @@
   "page": "/pricing",
   "key": "pricing",
   "old_hash": "",
-  "new_hash": "38b208370c885efc4549cea1f275e9a27ec95dc4d2485dd398711c4fa2fd2252",
-  "first_seen_at": "2026-02-25T03:47:18.983Z",
+  "new_hash": "7b0b463f80405db930eb031ee71a23bcab2961851e7f4b9e585fd3f4c5e608a2",
+  "first_seen_at": "2026-02-26T03:43:22.085Z",
   "confirmed_at": null,
   "status_code": 403,
-  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;pricing\" on this server. Reference&#32;&#35;18&#46;f318d017&#46;1771991238&#46;6863d57 https&#58;&#47;&#47;errors&#46;edgesui"
+  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;pricing\" on this server. Reference&#32;&#35;18&#46;996bdc17&#46;1772077401&#46;be0197cd https&#58;&#47;&#47;errors&#46;edgesu"
 }
