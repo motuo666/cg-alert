@@ -4,8 +4,8 @@
   "page": "/terms",
   "key": "terms",
   "old_hash": "",
-  "new_hash": "43ef628fbe87a5a4e9692e601ee191f271d4996b4a9a76beeb63d0200c58c689",
-  "first_seen_at": "2026-02-27T03:38:22.242Z",
+  "new_hash": "baff547c118bf23b9a8ef629dfc4350bcd97ecbe7c6eee5d811669eca2fe76f5",
+  "first_seen_at": "2026-02-28T03:20:32.185Z",
   "confirmed_at": null,
   "status_code": 200,
   "snippet": "terms · GitLab T terms"
