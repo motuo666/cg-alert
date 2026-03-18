@@ -412,3 +412,8 @@ date,vendor,url,change,impact,tier
 2026-03-17,github.com,https://github.com/dpa,github.com dpa updated,High-impact legal/security change (auto-detected),business
 2026-03-17,gitlab.com,https://gitlab.com/dpa,gitlab.com dpa updated,High-impact legal/security change (auto-detected),business
 2026-03-17,sentry.io,https://sentry.io/dpa,sentry.io dpa updated,High-impact legal/security change (auto-detected),business
+2026-03-18,airtable.com,https://airtable.com/dpa,airtable.com dpa updated,High-impact legal/security change (auto-detected),business
+2026-03-18,github.com,https://github.com/dpa,github.com dpa updated,High-impact legal/security change (auto-detected),business
+2026-03-18,gitlab.com,https://gitlab.com/dpa,gitlab.com dpa updated,High-impact legal/security change (auto-detected),business
+2026-03-18,intercom.com,https://intercom.com/terms-of-service,intercom.com terms of service updated,High-impact legal/security change (auto-detected),business
+2026-03-18,sentry.io,https://sentry.io/dpa,sentry.io dpa updated,High-impact legal/security change (auto-detected),business
