@@ -4,8 +4,8 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "",
-  "new_hash": "6a91c097b2daa692600b2bbe77e610ec7c794b9b2d9aa64c7ebbcafb9f354c7c",
-  "first_seen_at": "2026-05-15T05:02:59.408Z",
+  "new_hash": "9ce4235002716fae17e64aabce458ceca8b89b08d42f1df36382bde475b26525",
+  "first_seen_at": "2026-05-16T04:39:15.540Z",
   "confirmed_at": null,
   "status_code": 200,
   "snippet": "Sign In | Sentry Seer now catches issues in PRs, explains what broke in prod, and fixes what you missed. &nbsp Learn More Terms of service Sign In Request to Join Account * Password * Sign In Lost your password? Sign in with Google Sign in "
