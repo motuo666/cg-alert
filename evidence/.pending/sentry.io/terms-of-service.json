@@ -4,9 +4,9 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "",
-  "new_hash": "c01c8858e80300f277d3375297cb06bb94bde57cd67bf6eb206458c02ca4f3ff",
-  "first_seen_at": "2026-08-03T04:46:50.740Z",
+  "new_hash": "31304c9a734a2dcd721059b1253ef9962bee47a98b3835913c2db5e4b8b88da2",
+  "first_seen_at": "2026-08-04T04:30:09.018Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sign In | Sentry Register for Sentry 201: Making Sentry More Useful. &nbsp RSVP Terms of service Sign In Request to Join Account * Password * Sign In Lost your password? Sign in with Google Sign in with GitHub Sign in with Azure DevOps Regi"
+  "snippet": "Sign In | Sentry Did you know you can use Sentry to monitor your agents? Well you can, &nbsp learn more about agent tracing now . Terms of service Sign In Request to Join Account * Password * Sign In Lost your password? Sign in with Google "
 }
