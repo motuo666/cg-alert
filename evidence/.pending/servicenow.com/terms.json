@@ -4,9 +4,9 @@
   "page": "/terms",
   "key": "terms",
   "old_hash": "",
-  "new_hash": "a3bd81b79d6a416edf3840e0658c270ca83ef967bb451265b1c038da403c483f",
-  "first_seen_at": "2026-08-08T03:02:10.434Z",
+  "new_hash": "3259b275ef39d634f8fe4c3d167c9c01f091be1c7515650556caa85048faeca5",
+  "first_seen_at": "2026-08-09T03:09:05.072Z",
   "confirmed_at": null,
   "status_code": 403,
-  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;terms\" on this server. Reference&#32;&#35;18&#46;840c0317&#46;1786158129&#46;998c539c https&#58;&#47;&#47;errors&#46;edgesuit"
+  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;terms\" on this server. Reference&#32;&#35;18&#46;f318d017&#46;1786244944&#46;b753a1c2 https&#58;&#47;&#47;errors&#46;edgesuit"
 }
