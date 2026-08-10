@@ -1,0 +1,38 @@
+name: Daily KPI Report
+on:
+  schedule:
+    - cron: "50 11 * * *"  # 20:50 JST daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}
+      TARGET_EVID_TODAY: ${{ vars.TARGET_EVID_TODAY || '10' }}
+      TARGET_SENT: ${{ vars.TARGET_SENT || '12' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Compute counters
+        run: |
+          node -e "const fs=require('fs'),p='public/evidence';let n=0;function w(d){if(!fs.existsSync(d))return;for(const e of fs.readdirSync(d,{withFileTypes:true})){const q=d+'/'+e.name;if(e.isDirectory())w(q);else{const st=fs.statSync(q);if(Date.now()-st.mtimeMs<24*3600*1000)n++;}}}w(p);fs.mkdirSync('reports/metrics',{recursive:true});const r={ts:new Date().toISOString(), evidence24:n};fs.writeFileSync('reports/metrics/daily.json',JSON.stringify(r,null,2));console.log(r)"
+      - name: Commit metrics
+        run: |
+          if git diff --quiet; then echo "no changes"; else \
+            git config user.email "bot@cg-alert.com"; \
+            git config user.name  "cg-alert-bot"; \
+            git add reports/metrics/daily.json; \
+            if git diff --cached --quiet; then echo "no changes"; else git commit -m "metrics: daily evidence24"; \
+            git push; \
+          fi
+      - name: Slack summary (optional)
+        if: env.SLACK_WEBHOOK_URL != ''
+        run: |
+          EVID=$(cat reports/metrics/daily.json | jq -r '.evidence24')
+          PAYLOAD=$(jq -n --arg t "Daily KPI" --arg e "$EVID" --arg te "${TARGET_EVID_TODAY}" '{text: ($t + ": evidence24=" + $e + "/" + $te)}')
+          curl -s -X POST -H 'Content-type: application/json' --data "$PAYLOAD" "$SLACK_WEBHOOK_URL" || true

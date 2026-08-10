@@ -1,0 +1,47 @@
+name: SEO Publish & Ping
+on:
+  push:
+    paths:
+      - 'public/evidence/**'
+      - 'config/endpoints.json'
+      - 'public/**/*.html'
+      - '.github/workflows/seo-publish.yml'
+  schedule:
+    - cron: "5 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  seo:
+    runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+      INDEXNOW_KEY: ${{ vars.INDEXNOW_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Build vendor change pages
+        run: node scripts/seo/build_vendor_changes.js
+      - name: Update sitemap.xml
+        run: node scripts/seo/update_sitemap.js
+      - name: Commit if changed
+        run: |
+          if git diff --quiet; then
+            echo "no changes"
+          else
+            git config user.email "bot@cg-alert.com"
+            git config user.name  "cg-alert-bot"
+            git add public/vendors public/sitemap.xml
+            git commit -m "seo: vendor change pages + sitemap refresh"
+            git push
+          fi
+      - name: Expose IndexNow key (static file)
+        run: |
+          test -n "${{ env.INDEXNOW_KEY }}" || exit 0
+          echo "${{ env.INDEXNOW_KEY }}" > "public/indexnow-${{ env.INDEXNOW_KEY }}.txt"
+          git add public/indexnow-${{ env.INDEXNOW_KEY }}.txt || true
+          git diff --cached --quiet || (git -c user.email=bot@cg-alert.com -c user.name=cg-alert-bot commit -m "seo: indexnow key file" && git push)
+      - name: Ping IndexNow
+        run: node scripts/seo/ping_indexnow.js

@@ -1,0 +1,26 @@
+name: Reports Metrics Publish
+on:
+  push:
+    paths:
+      - 'reports/metrics/daily.json'
+  schedule:
+    - cron: '10 0 * * *'
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Build metrics page
+        run: node scripts/reports/build_metrics_page.js
+      - name: Commit if changed
+        run: |
+          if git diff --quiet; then echo no changes; else
+            git config user.email "bot@cg-alert.com"
+            git config user.name  "cg-alert-bot"
+            git add public/reports/metrics/index.html
+            if git diff --cached --quiet; then echo "no changes"; else git commit -m "reports: metrics page refresh"
+            git push
+          fi

@@ -1,0 +1,42 @@
+name: Assets Guard
+
+on:
+  push:
+    branches: [ main, master ]
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check public/ critical assets
+        run: |
+          set -e
+          critical=(
+            public/_headers
+            public/_redirects
+            public/rss.xml
+            public/robots.txt
+            public/.well-known/security.txt
+            public/sitemap.xml
+            public/seo/index.html
+            public/vendors
+            public/reports
+            public/enterprise
+          )
+          missing=0
+          for p in "${critical[@]}"; do
+            if [ ! -e "$p" ]; then
+              echo "::error::Missing $p"
+              missing=$((missing+1))
+            fi
+          done
+          if [ "$missing" -gt 0 ]; then
+            exit 1
+          fi

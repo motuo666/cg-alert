@@ -1,0 +1,77 @@
+name: Daily Evidence
+
+env:
+  SITE_ORIGIN: "${{ vars.SITE_ORIGIN }}"
+  WORKER_URL:  "${{ vars.WORKER_URL }}"
+  UNSUB_ORIGIN: "${{ vars.UNSUB_ORIGIN || secrets.UNSUB_ORIGIN }}"
+  INTAKE_FORM_URL: "${{ vars.INTAKE_FORM_URL }}"
+
+  MAIL_FROM: "${{ vars.MAIL_FROM }}"
+  REPLY_TO:  "${{ vars.REPLY_TO }}"
+  SENDER_NAME: "${{ vars.SENDER_NAME }}"
+  MAIL_POSTAL_ADDRESS: "${{ vars.MAIL_POSTAL_ADDRESS }}"
+  MAIL_RETURN_PATH: "${{ vars.MAIL_RETURN_PATH }}"
+  BCC_TO: "${{ secrets.BCC_TO }}"
+
+  SLACK_WEBHOOK_URL: "${{ secrets.SLACK_WEBHOOK_URL || vars.SLACK_WEBHOOK_URL }}"
+
+  SMTP_HOST: "${{ secrets.SMTP_HOST }}"
+  SMTP_PORT: "${{ secrets.SMTP_PORT }}"
+  SMTP_USER: "${{ secrets.SMTP_USER }}"
+  SMTP_PASS: "${{ secrets.SMTP_PASS }}"
+  IMAP_HOST: "${{ secrets.IMAP_HOST }}"
+  IMAP_PORT: "${{ secrets.IMAP_PORT }}"
+  IMAP_USER: "${{ secrets.IMAP_USER }}"
+  IMAP_PASS: "${{ secrets.IMAP_PASS }}"
+
+  CF_ACCOUNT_ID: "${{ vars.CF_ACCOUNT_ID }}"
+  CF_API_TOKEN:  "${{ secrets.CF_API_TOKEN }}"
+  KV_NAMESPACE_ID: "${{ vars.KV_NAMESPACE_ID || secrets.KV_NAMESPACE_ID }}"
+  KV_LEADS_ID:    "${{ vars.KV_LEADS_ID || secrets.KV_LEADS_ID }}"
+
+  STRIPE_LINK_PORTFOLIO: "${{ vars.STRIPE_LINK_PORTFOLIO || secrets.STRIPE_LINK_PORTFOLIO }}"
+  STRIPE_LINK_BUSINESS:  "${{ vars.STRIPE_LINK_BUSINESS  || secrets.STRIPE_LINK_BUSINESS  }}"
+  STRIPE_WEBHOOK_SECRET: "${{ secrets.STRIPE_WEBHOOK_SECRET }}"
+
+  INDEXNOW_KEY: "${{ secrets.INDEXNOW_KEY }}"
+  OBS_KEY: "${{ secrets.OBS_KEY }}"
+  ENRICH_API_TOKEN: "${{ secrets.ENRICH_API_TOKEN }}"
+
+  TARGET_DISCOVERY_API_URL:   "${{ vars.TARGET_DISCOVERY_API_URL }}"
+  TARGET_DISCOVERY_API_TOKEN: "${{ secrets.TARGET_DISCOVERY_API_TOKEN }}"
+
+  MIN_HASH_RATIO: "${{ vars.MIN_HASH_RATIO }}"
+  MIN_SENT7_FOR_DLVR: "${{ vars.MIN_SENT7_FOR_DLVR }}"
+  P95_TTD_MAX_HOURS: "${{ vars.P95_TTD_MAX_HOURS }}"
+  TARGET_EVID_TODAY: "${{ vars.TARGET_EVID_TODAY }}"
+  TARGET_SENT: "${{ vars.TARGET_SENT }}"
+  TTD_LOOKBACK_HOURS: "${{ vars.TTD_LOOKBACK_HOURS }}"
+  UNSUB_7D_MAX: "${{ vars.UNSUB_7D_MAX }}"
+  COMPLAINT_7D_MAX: "${{ vars.COMPLAINT_7D_MAX }}"
+  BOUNCE_7D_MAX: "${{ vars.BOUNCE_7D_MAX }}"
+  REQUIRE_CHANGED_VENDORS: "${{ vars.REQUIRE_CHANGED_VENDORS }}"
+
+on:
+  schedule: [ { cron: '30 0,6,12,18 * * *' } ]  # 4x daily UTC
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - name: Harvest
+        run: node scripts/poll_public_endpoints.js || true
+      - name: Build reports+rss
+        run: |
+          node scripts/build_change_pack.js || true
+          node scripts/generate_reports_index.js || true
+          node scripts/build_rss.js || true
+      - name: Commit
+        run: |
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A public/evidence reports rss.xml
+          if git diff --cached --quiet; then echo "no changes"; else git commit -m "evidence/reports refresh"; git pull --rebase --autostash || true; git push; fi

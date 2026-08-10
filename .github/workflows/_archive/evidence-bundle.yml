@@ -1,0 +1,17 @@
+name: Evidence Bundles
+on:
+  push:
+    paths:
+      - 'public/evidence/**'
+  schedule:
+    - cron: '20 0 * * *'
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Make bundles
+        run: node scripts/evidence/make_bundles.js

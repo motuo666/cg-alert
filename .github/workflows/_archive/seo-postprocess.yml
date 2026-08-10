@@ -1,0 +1,28 @@
+name: SEO Postprocess
+on:
+  push:
+    paths:
+      - 'public/vendors/**'
+      - 'public/**/*.html'
+  schedule:
+    - cron: '15 0 * * *'
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: node scripts/seo/build_vendor_timeline.js
+      - run: node scripts/seo/inject_meta.js
+      - run: node scripts/seo/update_sitemap.js
+      - name: Commit if changed
+        run: |
+          if git diff --quiet; then echo no changes; else
+            git config user.email "bot@cg-alert.com"
+            git config user.name  "cg-alert-bot"
+            git add public/vendors/** public/sitemap*.xml public/sitemaps/**
+            if git diff --cached --quiet; then echo "no changes"; else git commit -m "seo: postprocess (timeline + meta inject + sitemaps)"
+            git push
+          fi

@@ -1,0 +1,40 @@
+name: Public Change Poller
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # every 6 hours
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install deps
+        run: |
+          if [ -f package.json ]; then npm ci || npm i; fi
+      - name: Poll vendor pages → evidence
+        run: node scripts/poller.js
+      - name: Build vendors index
+        run: node scripts/build_vendors_index.js || true
+      - name: Update RSS
+        run: node scripts/evidence_to_rss.js || true
+      - name: Commit updates
+        run: |
+          set -e
+          git config user.email "bot@cg-alert.com"
+          git config user.name  "cg-alert-bot"
+          git add -A evidence public/vendors rss state
+          if git diff --cached --quiet; then
+            echo "no evidence changes"
+          else
+            git commit -m "poller: evidence + vendors + rss"
+            git pull --rebase --autostash || true
+            git push
+          fi

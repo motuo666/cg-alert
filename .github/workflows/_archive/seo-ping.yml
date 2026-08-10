@@ -1,0 +1,31 @@
+name: SEO Ping
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'public/**'
+      - '.github/workflows/seo-ping.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    env:
+      SITE_ORIGIN: ${{ vars.SITE_ORIGIN }}
+    steps:
+      - name: Validate SITE_ORIGIN
+        run: |
+          if [ -z "$SITE_ORIGIN" ]; then
+            echo "::error::Set Actions → Variables → SITE_ORIGIN (e.g., https://www.cg-alert.com)"; exit 1
+          fi
+      - name: Ping Google/Bing for sitemap
+        run: |
+          set -e
+          SITEMAP="$SITE_ORIGIN/sitemap.xml"
+          curl -fsS "https://www.google.com/ping?sitemap=$SITEMAP" -o /dev/null || true
+          curl -fsS "https://www.bing.com/ping?sitemap=$SITEMAP" -o /dev/null || true
+          echo "Pinged search engines for $SITEMAP"
