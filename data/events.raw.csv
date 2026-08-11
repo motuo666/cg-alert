@@ -1087,3 +1087,7 @@ date,vendor,url,change,impact,tier
 2026-08-10,gitlab.com,https://gitlab.com/dpa,gitlab.com dpa updated,High-impact legal/security change (auto-detected),business
 2026-08-10,sentry.io,https://sentry.io/dpa,sentry.io dpa updated,High-impact legal/security change (auto-detected),business
 2026-08-10,zoom.us,https://zoom.us/terms,zoom.us terms updated,High-impact legal/security change (auto-detected),business
+2026-08-11,github.com,https://github.com/dpa,github.com dpa updated,High-impact legal/security change (auto-detected),business
+2026-08-11,gitlab.com,https://gitlab.com/dpa,gitlab.com dpa updated,High-impact legal/security change (auto-detected),business
+2026-08-11,sentry.io,https://sentry.io/dpa,sentry.io dpa updated,High-impact legal/security change (auto-detected),business
+2026-08-11,zoom.us,https://zoom.us/terms,zoom.us terms updated,High-impact legal/security change (auto-detected),business
