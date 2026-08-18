@@ -4,8 +4,8 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "",
-  "new_hash": "67666edc55224389f4156ebb790807d8a8e463ef8e2e75ed04e9495151376a41",
-  "first_seen_at": "2026-08-17T02:35:40.652Z",
+  "new_hash": "e32cd7f559f6509f1311492361cc53a41701c31974908cd263002e17859f379c",
+  "first_seen_at": "2026-08-18T02:22:38.678Z",
   "confirmed_at": null,
   "status_code": 200,
   "snippet": "Sign In | Sentry Did you know you can use Sentry to monitor your agents? Well you can, learn more about agent tracing now . Terms of service Sign In Request to Join Account * Password * Sign In Lost your password? Sign in with Google Sign i"
