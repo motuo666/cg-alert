@@ -4,9 +4,9 @@
   "page": "/legal/terms",
   "key": "legal-terms",
   "old_hash": "",
-  "new_hash": "8eda7836f4a452470592e4e2f6dfd8967e81e8c7cd711b96aaf42946ade2172a",
-  "first_seen_at": "2026-08-19T02:25:33.995Z",
+  "new_hash": "0bb13396a1e97f004f98a303ce518fbb6f7b7ab0d98e3d0d98ba417926e1aefc",
+  "first_seen_at": "2026-08-20T02:24:11.337Z",
   "confirmed_at": null,
   "status_code": 403,
-  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;legal&#47;terms\" on this server. Reference&#32;&#35;18&#46;500ed217&#46;1787106333&#46;97fdf212 https&#58;&#47;&#47;errors&#4"
+  "snippet": "Access Denied Access Denied You don't have permission to access \"http&#58;&#47;&#47;www&#46;servicenow&#46;com&#47;legal&#47;terms\" on this server. Reference&#32;&#35;18&#46;6412df17&#46;1787192650&#46;4901acb3 https&#58;&#47;&#47;errors&#4"
 }
