@@ -4,9 +4,9 @@
   "page": "/pricing",
   "key": "pricing",
   "old_hash": "",
-  "new_hash": "3fed7308303acd64b79f81ba4e55316e7b28ad82fb6652dacf98a557e5f68ce8",
-  "first_seen_at": "2026-09-17T06:08:26.750Z",
+  "new_hash": "94b4fa36ecfc951e01785b717422b74ea3a3215aa49f2b143d40ad12227dbc5b",
+  "first_seen_at": "2026-09-18T05:54:40.893Z",
   "confirmed_at": null,
-  "status_code": 200,
-  "snippet": "Notion Pricing Plans: Free, Plus, Business, &amp; Enterprise. Product Notion AI AI tools for work Agents Automate busywork AI Meeting Notes Perfectly written by AI Enterprise Search Find answers instantly Knowledge Base Centralize your know"
+  "status_code": 429,
+  "snippet": "Access denied | www.notion.so used Cloudflare to restrict access | www.notion.so | Cloudflare Please enable cookies. Error 1015 Ray ID: a3ce18e7eb0af9a7 &bull; 2026-09-18 05:54:39 UTC You are being rate limited What happened? The owner of t"
 }
