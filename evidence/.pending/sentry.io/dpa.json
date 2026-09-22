@@ -4,9 +4,9 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "",
-  "new_hash": "dd602d93b12ff655076e5fb0757518d72f2968a4eec0a544f94163a8d19d7861",
-  "first_seen_at": "2026-09-21T06:18:37.920Z",
+  "new_hash": "ce313ce9f90cd5b3742f61b5c3be09e73768c12fe22b3165fd137cffd01238ac",
+  "first_seen_at": "2026-09-22T06:11:24.161Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sign In | Sentry Did you know you can use Sentry to monitor your agents? Well you can, learn more about agent tracing now . DPA Sign In Request to Join Account * Password * Sign In Lost your password? Sign in with Google Sign in with GitHub"
+  "snippet": "Sentry Loading a $#!% -ton of JavaScript&hellip; You may need to disable adblocking extensions to load Sentry."
 }
