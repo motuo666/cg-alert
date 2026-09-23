@@ -4,8 +4,8 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "",
-  "new_hash": "701e9a8f5f2489a9c731eca85a47c946bf00d5036251f8aaa221165efa29fb09",
-  "first_seen_at": "2026-09-22T06:11:21.718Z",
+  "new_hash": "92a5db2e9ab085a4551c84993d94580697c6f0d646dafea7dff0af1cbfecbbff",
+  "first_seen_at": "2026-09-23T05:57:39.207Z",
   "confirmed_at": null,
   "status_code": 200,
   "snippet": "Sentry Installing left-pad &hellip; You may need to disable adblocking extensions to load Sentry."
