@@ -4,8 +4,8 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "",
-  "new_hash": "3777877c844058c64d9893cbe0061f1c3148f373cec1be06c8c60041283cbf1d",
-  "first_seen_at": "2026-10-03T06:29:04.453Z",
+  "new_hash": "af1ed1bf0a4e5970cc1d36aa1157bbc22fbefd326bb1e0eeaf95fa6736ed6a3d",
+  "first_seen_at": "2026-10-04T06:51:17.592Z",
   "confirmed_at": null,
   "status_code": 200,
   "snippet": "Sentry Awaiting solution to the halting problem&hellip; You may need to disable adblocking extensions to load Sentry."
