@@ -4,9 +4,9 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "",
-  "new_hash": "072249ee6784c89a6c781323dc824371f3a31f04756188ef2780c2542f24ce07",
-  "first_seen_at": "2026-10-07T07:14:02.214Z",
+  "new_hash": "2ca25bd32bf390e6db1f00c47bd4d7ac72113a55f31b49e7c044fd723d928d0a",
+  "first_seen_at": "2026-10-08T07:21:08.169Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sentry Loading a $#!% -ton of JavaScript&hellip; You may need to disable adblocking extensions to load Sentry."
+  "snippet": "Sentry Deploying swarm of autonomous agents&hellip; You may need to disable adblocking extensions to load Sentry."
 }
