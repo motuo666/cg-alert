@@ -4,9 +4,9 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "",
-  "new_hash": "e8136148476f0a940928d096703fa69ba7f6339d4691530336b32f67e0208653",
-  "first_seen_at": "2026-10-10T07:03:52.523Z",
+  "new_hash": "c452f94d89a5e6288c9824f7cbb22cf4982340aa07eacdafc159382634788bac",
+  "first_seen_at": "2026-10-11T07:10:47.964Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sentry Loading a $#!% -ton of JavaScript&hellip; You may need to disable adblocking extensions to load Sentry."
+  "snippet": "Sentry Reticulating splines&hellip; You may need to disable adblocking extensions to load Sentry."
 }
