@@ -4,9 +4,9 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "",
-  "new_hash": "3a048201bdda00ee4b4766b31ff959b85b1eeae929eb0fb2090ed72ba944bc59",
-  "first_seen_at": "2026-10-12T07:20:56.526Z",
+  "new_hash": "c742537bf4f29587bb8a6bb4217ff0761d2cc1766b92326f43ef749f05704661",
+  "first_seen_at": "2026-10-13T07:42:31.487Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sentry Installing left-pad &hellip; You may need to disable adblocking extensions to load Sentry."
+  "snippet": "Sentry Loading a $#!% -ton of JavaScript&hellip; You may need to disable adblocking extensions to load Sentry."
 }
