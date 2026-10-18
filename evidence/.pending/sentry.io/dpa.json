@@ -4,9 +4,9 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "",
-  "new_hash": "8b7f6dda9c7ea6e5c643fc4f852f2cc530abc30a4aa123572b6c890992b83550",
-  "first_seen_at": "2026-10-17T05:35:28.127Z",
+  "new_hash": "4738b8f549d889269a8ac272d04a58552085acf003e58fdee05748e226989247",
+  "first_seen_at": "2026-10-18T05:53:02.200Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sentry Collapsing wavefunctions&hellip; You may need to disable adblocking extensions to load Sentry."
+  "snippet": "Sentry Parallelizing webpack builders&hellip; You may need to disable adblocking extensions to load Sentry."
 }
