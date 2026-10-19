@@ -4,9 +4,9 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "",
-  "new_hash": "e11ac945544e006e419801b0c3ea392c8211e7ff328e4a2cf1a185b5388b8236",
-  "first_seen_at": "2026-10-18T05:52:59.945Z",
+  "new_hash": "e9b92eb71e38a45f8ee4967c8101105560068a338999f5fcd6bc834877cd1be3",
+  "first_seen_at": "2026-10-19T06:09:56.831Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sentry Escaping node_modules gravity well&hellip; You may need to disable adblocking extensions to load Sentry."
+  "snippet": "Sentry Installing left-pad &hellip; You may need to disable adblocking extensions to load Sentry."
 }
