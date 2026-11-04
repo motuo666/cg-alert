@@ -4,9 +4,9 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "",
-  "new_hash": "9b4a6a6154260202e84af8f29a3147195780e1ba20a5876de4881c53826518b4",
-  "first_seen_at": "2026-11-03T07:54:52.378Z",
+  "new_hash": "51dbe255ece14f5887016c98d95c79bfae24b7a77eb19c2e8bb63213f9792103",
+  "first_seen_at": "2026-11-04T07:30:25.289Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sentry Escaping node_modules gravity well&hellip; You may need to disable adblocking extensions to load Sentry."
+  "snippet": "Sentry Awaiting solution to the halting problem&hellip; You may need to disable adblocking extensions to load Sentry."
 }
