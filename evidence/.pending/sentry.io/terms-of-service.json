@@ -4,9 +4,9 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "",
-  "new_hash": "6693a16c54b85d47c49ebeabdc81143e75101586d134eedcb3a2aa40b9358083",
-  "first_seen_at": "2026-11-04T07:30:22.877Z",
+  "new_hash": "0245e4edd92684a9b57f08c6b7d6979244fe3926800ba96e23c1f7bdfdcbd957",
+  "first_seen_at": "2026-11-05T07:55:08.288Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sentry Parallelizing webpack builders&hellip; You may need to disable adblocking extensions to load Sentry."
+  "snippet": "Sentry Escaping node_modules gravity well&hellip; You may need to disable adblocking extensions to load Sentry."
 }
