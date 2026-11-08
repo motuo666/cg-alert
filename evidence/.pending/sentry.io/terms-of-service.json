@@ -4,9 +4,9 @@
   "page": "/terms-of-service",
   "key": "terms-of-service",
   "old_hash": "",
-  "new_hash": "fe7c3d4111da4eefe58b7d8fb6b128a855afc62bd7dce07d3577f0b68f1a0069",
-  "first_seen_at": "2026-11-07T07:05:45.135Z",
+  "new_hash": "a293c52df92b44b4544c05fb677e842d1695c364a6a87c7f580eca0db9a945a3",
+  "first_seen_at": "2026-11-08T07:18:02.305Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sentry Loading a $#!% -ton of JavaScript&hellip; You may need to disable adblocking extensions to load Sentry."
+  "snippet": "Sentry Installing left-pad &hellip; You may need to disable adblocking extensions to load Sentry."
 }

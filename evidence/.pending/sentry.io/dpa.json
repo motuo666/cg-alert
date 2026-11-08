@@ -4,9 +4,9 @@
   "page": "/dpa",
   "key": "dpa",
   "old_hash": "",
-  "new_hash": "ce26d20e9f1b9d8fd7fcbc84a7b8e739f10e5b0889ca043bd7946f3ac74ce046",
-  "first_seen_at": "2026-11-07T07:05:47.424Z",
+  "new_hash": "f44ae6d53f42a72f493236e008076213a15d9508cb84f21f86aa7960db4f7c1b",
+  "first_seen_at": "2026-11-08T07:18:04.658Z",
   "confirmed_at": null,
   "status_code": 200,
-  "snippet": "Sentry Parallelizing webpack builders&hellip; You may need to disable adblocking extensions to load Sentry."
+  "snippet": "Sentry Escaping node_modules gravity well&hellip; You may need to disable adblocking extensions to load Sentry."
 }
